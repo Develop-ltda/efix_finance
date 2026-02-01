@@ -15,7 +15,7 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     
     <style>
         :root {
@@ -1258,6 +1258,7 @@
 
             // Format number
             const formatNum = (num, decimals = 2) => {
+                if (num === '∞' || num === 'Infinity') return '∞';
                 const n = parseFloat(num);
                 if (isNaN(n)) return '0.00';
                 return n.toLocaleString('pt-BR', { 
@@ -1284,14 +1285,17 @@
 
             // Get health factor status
             const getHealthStatus = (hf) => {
+                if (hf === '∞' || hf === 'Infinity') return 'safe';
                 const val = parseFloat(hf);
-                if (val >= 1.5) return 'safe';
+                if (isNaN(val) || val >= 1.5) return 'safe';
                 if (val >= 1.2) return 'warning';
                 return 'danger';
             };
 
             const getHealthWidth = (hf) => {
+                if (hf === '∞' || hf === 'Infinity') return 100;
                 const val = parseFloat(hf);
+                if (isNaN(val)) return 100;
                 return Math.min((val / 2.5) * 100, 100);
             };
 
@@ -1380,11 +1384,20 @@
                         const debt = ethers.utils.formatUnits(pos.debt, 6);
                         const leverage = parseFloat(ethers.utils.formatEther(pos.leverage)) || 1;
                         
+                        // Health Factor: se muito alto (sem dívida), mostrar infinito
+                        let healthFactor = ethers.utils.formatEther(hf);
+                        const hfNum = parseFloat(healthFactor);
+                        if (hfNum > 1000000 || isNaN(hfNum)) {
+                            healthFactor = '∞';
+                        } else {
+                            healthFactor = hfNum.toFixed(2);
+                        }
+                        
                         setPosition({
                             collateral,
                             debt,
                             leverage: leverage.toFixed(2),
-                            healthFactor: ethers.utils.formatEther(hf)
+                            healthFactor
                         });
                     } catch (e) {
                         // Position not available yet
