@@ -1196,12 +1196,11 @@
 
         const VAULT_ABI = [
             'function deposit(uint256 amount) external',
-            'function withdraw(uint256 amount) external',
+            'function withdraw(uint256 efixDIAmount, string pixKey) external',
             'function applyLeverage(uint256 loops) external',
             'function removeLeverage(uint256 loops) external',
             'function getPosition(address user) external view returns (uint256 collateral, uint256 debt, uint256 leverage)',
-            'function getHealthFactor(address user) external view returns (uint256)',
-            'function requestWithdrawal(uint256 amount, string pixKey) external'
+            'function getHealthFactor(address user) external view returns (uint256)'
         ];
 
         const PIX_BRIDGE_ABI = [
@@ -1485,10 +1484,10 @@
                     setLoading(true);
                     showToast('Iniciando saque...');
                     
-                    const pixBridge = new ethers.Contract(CONTRACTS.pixBridge, PIX_BRIDGE_ABI, signer);
+                    const vault = new ethers.Contract(CONTRACTS.vault, VAULT_ABI, signer);
                     const amountWei = ethers.utils.parseEther(amount);
                     
-                    const tx = await pixBridge.requestWithdrawal(amountWei, pixKey);
+                    const tx = await vault.withdraw(amountWei, pixKey);
                     await tx.wait();
                     
                     await loadBalances();
