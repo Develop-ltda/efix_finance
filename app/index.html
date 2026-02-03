@@ -3,1979 +3,983 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>efixDI+ Protocol | Renda Fixa Tokenizada com Alavancagem DeFi</title>
-    <meta name="description" content="Invista em renda fixa brasileira tokenizada com yields de 25-35% APY através de alavancagem DeFi segura.">
-    
-    <!-- Fonts -->
+    <title>Efix DeFi - Arquitetura do Produto</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- React & Ethers -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #06090f;
-            --bg-secondary: #0d1117;
-            --bg-card: #161b22;
-            --bg-card-hover: #1c2128;
-            --bg-elevated: #21262d;
-            --border-color: rgba(48, 54, 61, 0.8);
-            --border-glow: #58a6ff;
-            
-            --text-primary: #f0f6fc;
-            --text-secondary: #8b949e;
-            --text-muted: #6e7681;
-            
-            --accent-blue: #58a6ff;
-            --accent-purple: #a371f7;
-            --accent-green: #3fb950;
-            --accent-yellow: #d29922;
-            --accent-orange: #db6d28;
-            --accent-red: #f85149;
-            --accent-cyan: #39d353;
-            
-            --gradient-hero: linear-gradient(135deg, #58a6ff 0%, #a371f7 50%, #db6d28 100%);
-            --gradient-gold: linear-gradient(135deg, #d29922 0%, #db6d28 100%);
-            --gradient-success: linear-gradient(135deg, #238636 0%, #3fb950 100%);
-            
-            --shadow-glow: 0 0 60px rgba(88, 166, 255, 0.15);
-            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
-            
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 14px;
-            --radius-xl: 20px;
-            
-            --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --black: #000000;
+            --white: #ffffff;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-700: #404040;
+            --gray-800: #262626;
+            --gray-900: #171717;
         }
-
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         html {
             scroll-behavior: smooth;
         }
-
+        
         body {
-            font-family: var(--font-main);
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Syne', -apple-system, sans-serif;
+            background: var(--white);
+            color: var(--black);
+            line-height: 1.7;
             min-height: 100vh;
-            overflow-x: hidden;
-            line-height: 1.5;
+            font-size: 16px;
         }
-
-        /* Animated Background */
-        .bg-grid {
+        
+        ::selection {
+            background: var(--black);
+            color: var(--white);
+        }
+        
+        /* Navigation */
+        nav {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            background-image: 
-                linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--gray-200);
+            z-index: 1000;
+            padding: 1rem 2rem;
         }
-
-        .bg-glow {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            background: 
-                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(88, 166, 255, 0.12) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 40% at 80% 110%, rgba(163, 113, 247, 0.08) 0%, transparent 50%);
-        }
-
-        /* App Container */
-        .app {
-            position: relative;
-            z-index: 1;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header */
-        .header {
+        
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 32px;
-            border-bottom: 1px solid var(--border-color);
-            backdrop-filter: blur(16px);
-            background: rgba(6, 9, 15, 0.8);
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
+        
         .logo {
+            height: 32px;
+            width: auto;
+        }
+        
+        .nav-links {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: var(--gray-600);
             text-decoration: none;
-        }
-
-        .logo-mark {
-            width: 38px;
-            height: 38px;
-            background: var(--gradient-hero);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 16px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
-        }
-
-        .logo-text {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
-
-        .logo-plus {
-            color: var(--accent-yellow);
-        }
-
-        .beta-tag {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 3px 8px;
-            background: var(--gradient-gold);
-            border-radius: 20px;
-            color: #000;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .nav {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-link {
-            padding: 10px 18px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
+            font-size: 0.875rem;
             font-weight: 500;
-            border-radius: var(--radius-md);
-            transition: all 0.2s;
+            letter-spacing: 0.02em;
+            transition: color 0.2s;
         }
-
-        .nav-link:hover {
-            color: var(--text-primary);
-            background: var(--bg-card);
+        
+        .nav-links a:hover {
+            color: var(--black);
         }
-
-        .nav-link.active {
-            color: var(--text-primary);
-            background: var(--bg-card);
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .network-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 14px;
-            background: rgba(63, 185, 80, 0.1);
-            border: 1px solid rgba(63, 185, 80, 0.3);
-            border-radius: var(--radius-md);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--accent-green);
-        }
-
-        .network-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(0.9); }
-        }
-
-        .connect-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: var(--gradient-hero);
-            border: none;
-            border-radius: var(--radius-md);
-            color: white;
-            font-family: var(--font-main);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.25);
-        }
-
-        .connect-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(88, 166, 255, 0.35);
-        }
-
-        .connect-btn.connected {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            box-shadow: none;
-        }
-
-        .connect-btn.connected:hover {
-            border-color: var(--accent-blue);
-        }
-
-        /* Main Content */
-        .main {
-            flex: 1;
-            padding: 32px;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        /* Stats Row */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 20px 24px;
-            transition: all 0.3s;
+        
+        /* Hero */
+        header {
+            padding: 10rem 2rem 6rem;
+            text-align: center;
+            background: var(--white);
             position: relative;
             overflow: hidden;
         }
-
-        .stat-card::before {
+        
+        header::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: var(--gradient-hero);
-            opacity: 0;
-            transition: opacity 0.3s;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0,0,0,0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(0,0,0,0.02) 0%, transparent 50%);
+            pointer-events: none;
         }
-
-        .stat-card:hover {
-            border-color: var(--accent-blue);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-glow);
+        
+        .hero-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out;
         }
-
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-
-        .stat-icon {
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            letter-spacing: -1px;
-        }
-
-        .stat-value.green {
-            color: var(--accent-green);
-        }
-
-        .stat-value.gold {
-            color: var(--accent-yellow);
-        }
-
-        .stat-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* Dashboard Grid */
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 24px;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-xl);
-            overflow: hidden;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-body {
-            padding: 24px;
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 4px;
-            padding: 4px;
-            background: var(--bg-secondary);
-            border-radius: var(--radius-md);
-        }
-
-        .tab {
-            flex: 1;
-            padding: 10px 16px;
-            background: transparent;
-            border: none;
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            font-family: var(--font-main);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tab:hover {
-            color: var(--text-primary);
-        }
-
-        .tab.active {
-            background: var(--bg-card);
-            color: var(--text-primary);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        .balance-hint {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-        }
-
-        .input-box {
-            display: flex;
-            align-items: center;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 4px;
-            transition: all 0.2s;
-        }
-
-        .input-box:focus-within {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
-        }
-
-        .input-box input {
-            flex: 1;
-            padding: 14px 16px;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            font-size: 20px;
-            font-weight: 600;
-            outline: none;
-            min-width: 0;
-        }
-
-        .input-box input::placeholder {
-            color: var(--text-muted);
-            font-weight: 400;
-        }
-
-        .input-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding-right: 8px;
-        }
-
-        .max-btn {
-            padding: 6px 12px;
-            background: rgba(88, 166, 255, 0.1);
-            border: 1px solid rgba(88, 166, 255, 0.3);
-            border-radius: var(--radius-sm);
-            color: var(--accent-blue);
-            font-family: var(--font-main);
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .max-btn:hover {
-            background: rgba(88, 166, 255, 0.2);
-        }
-
-        .token-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            background: var(--bg-elevated);
-            border-radius: var(--radius-sm);
-        }
-
-        .token-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--gradient-hero);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .token-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        /* Info Panel */
-        .info-panel {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin: 20px 0;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-        }
-
-        .info-row:not(:last-child) {
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .info-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .info-value {
-            font-size: 13px;
-            font-weight: 600;
-            font-family: var(--font-mono);
-            color: var(--text-primary);
-        }
-
-        .info-value.highlight {
-            color: var(--accent-green);
-        }
-
-        .info-value.gold {
-            color: var(--accent-yellow);
-        }
-
-        /* Action Button */
-        .action-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--gradient-hero);
-            border: none;
-            border-radius: var(--radius-md);
-            color: white;
-            font-family: var(--font-main);
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .action-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(88, 166, 255, 0.35);
-        }
-
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .action-btn.gold {
-            background: var(--gradient-gold);
-            box-shadow: 0 4px 16px rgba(210, 153, 34, 0.25);
-        }
-
-        .action-btn.gold:hover:not(:disabled) {
-            box-shadow: 0 6px 24px rgba(210, 153, 34, 0.35);
-        }
-
-        .action-btn.outline {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            box-shadow: none;
-        }
-
-        .action-btn.outline:hover:not(:disabled) {
-            border-color: var(--accent-blue);
-            background: rgba(88, 166, 255, 0.05);
-        }
-
-        /* Leverage Slider */
-        .leverage-section {
-            margin: 24px 0;
-        }
-
-        .leverage-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 16px;
-        }
-
-        .leverage-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        .leverage-value {
-            font-size: 36px;
+        
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
             font-weight: 800;
-            font-family: var(--font-mono);
-            background: var(--gradient-gold);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--black);
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
         }
-
-        .leverage-slider {
-            width: 100%;
-            height: 8px;
-            -webkit-appearance: none;
-            background: var(--bg-secondary);
-            border-radius: 4px;
-            outline: none;
-            margin: 16px 0;
+        
+        .subtitle {
+            color: var(--gray-500);
+            font-size: 1.25rem;
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
         }
-
-        .leverage-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 28px;
-            height: 28px;
-            background: var(--gradient-gold);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 12px rgba(210, 153, 34, 0.5);
-            transition: transform 0.2s;
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-
-        .leverage-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
+        
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
         }
-
-        .leverage-marks {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
+        
+        /* Sections */
+        .section {
+            padding: 5rem 0;
+            border-bottom: 1px solid var(--gray-200);
         }
-
-        /* Position Panel */
-        .position-card {
-            background: linear-gradient(135deg, rgba(88, 166, 255, 0.05) 0%, rgba(163, 113, 247, 0.05) 100%);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-
-        .position-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .position-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .position-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            background: rgba(63, 185, 80, 0.1);
-            border: 1px solid rgba(63, 185, 80, 0.3);
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--accent-green);
-        }
-
-        .position-value {
-            font-size: 32px;
-            font-weight: 700;
-            font-family: var(--font-mono);
-            margin-bottom: 4px;
-        }
-
-        .position-sub {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        /* Health Bar */
-        .health-section {
-            margin-top: 20px;
-        }
-
-        .health-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .health-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .health-value {
-            font-size: 18px;
-            font-weight: 700;
-            font-family: var(--font-mono);
-        }
-
-        .health-value.safe { color: var(--accent-green); }
-        .health-value.warning { color: var(--accent-yellow); }
-        .health-value.danger { color: var(--accent-red); }
-
-        .health-bar-bg {
-            height: 8px;
-            background: var(--bg-secondary);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .health-bar {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease, background 0.3s;
-        }
-
-        .health-bar.safe { background: linear-gradient(90deg, var(--accent-green), #56d364); }
-        .health-bar.warning { background: linear-gradient(90deg, var(--accent-yellow), #e3b341); }
-        .health-bar.danger { background: linear-gradient(90deg, var(--accent-red), #ff7b72); }
-
-        .health-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 6px;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        /* Activity List */
-        .activity-list {
-            max-height: 320px;
-            overflow-y: auto;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .activity-item:last-child {
+        
+        .section:last-child {
             border-bottom: none;
         }
-
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: var(--radius-md);
+        
+        .section-header {
+            margin-bottom: 3rem;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        h2 .icon {
+            width: 48px;
+            height: 48px;
+            background: var(--black);
+            color: var(--white);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-        }
-
-        .activity-icon.deposit { background: rgba(63, 185, 80, 0.1); }
-        .activity-icon.withdraw { background: rgba(248, 81, 73, 0.1); }
-        .activity-icon.leverage { background: rgba(210, 153, 34, 0.1); }
-
-        .activity-info {
-            flex: 1;
-        }
-
-        .activity-title {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-
-        .activity-time {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .activity-amount {
-            font-family: var(--font-mono);
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .activity-amount.positive { color: var(--accent-green); }
-        .activity-amount.negative { color: var(--accent-red); }
-
-        /* Alert Box */
-        .alert {
-            display: flex;
-            gap: 12px;
-            padding: 16px;
-            border-radius: var(--radius-md);
-            margin-bottom: 20px;
-        }
-
-        .alert.info {
-            background: rgba(88, 166, 255, 0.08);
-            border: 1px solid rgba(88, 166, 255, 0.2);
-        }
-
-        .alert.warning {
-            background: rgba(210, 153, 34, 0.08);
-            border: 1px solid rgba(210, 153, 34, 0.2);
-        }
-
-        .alert.success {
-            background: rgba(63, 185, 80, 0.08);
-            border: 1px solid rgba(63, 185, 80, 0.2);
-        }
-
-        .alert-icon {
-            font-size: 20px;
+            font-size: 1.25rem;
             flex-shrink: 0;
         }
-
-        .alert-content {
-            flex: 1;
+        
+        .section-desc {
+            color: var(--gray-500);
+            font-size: 1.1rem;
+            max-width: 700px;
         }
-
-        .alert-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
+        
+        /* Flow Diagram */
+        .flow-diagram {
+            background: var(--gray-100);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin: 2rem 0;
         }
-
-        .alert-text {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.5;
+        
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 1.5rem 0;
+            gap: 1.5rem;
         }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
+        
+        .step-number {
+            min-width: 48px;
+            height: 48px;
+            background: var(--black);
+            color: var(--white);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
         }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
+        
+        .step-content {
+            flex: 1;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
         }
-
-        .modal {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-xl);
-            width: 90%;
-            max-width: 440px;
-            max-height: 90vh;
-            overflow-y: auto;
-            transform: translateY(20px) scale(0.98);
-            transition: transform 0.3s;
+        
+        .step-content:hover {
+            border-color: var(--black);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
-
-        .modal-overlay.active .modal {
-            transform: translateY(0) scale(1);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .modal-title {
-            font-size: 18px;
+        
+        .step-title {
+            color: var(--black);
             font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
         }
-
-        .modal-close {
+        
+        .step-text {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+        }
+        
+        .arrow {
+            text-align: center;
+            color: var(--gray-400);
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        /* Tech Stack Grid */
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .tech-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .tech-card:hover {
+            border-color: var(--black);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        }
+        
+        .tech-title {
+            color: var(--black);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .tech-desc {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+        }
+        
+        /* Formula Box */
+        .formula {
+            background: var(--gray-900);
+            color: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+        
+        .formula strong {
+            color: var(--white);
+        }
+        
+        .formula .highlight {
+            color: var(--gray-300);
+        }
+        
+        /* Metrics */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .metric-card {
+            background: var(--black);
+            color: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: scale(1.02);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .metric-label {
+            color: var(--gray-400);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Warning Box */
+        .warning {
+            background: var(--gray-100);
+            border-left: 4px solid var(--black);
+            border-radius: 0 12px 12px 0;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+        }
+        
+        .warning-title {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .warning ul {
+            margin-left: 1.5rem;
+            color: var(--gray-700);
+        }
+        
+        .warning li {
+            margin: 0.5rem 0;
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--gray-300);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding: 1.5rem 0 1.5rem 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 1.75rem;
+            width: 12px;
+            height: 12px;
+            background: var(--black);
+            border-radius: 50%;
+            transform: translateX(-5px);
+        }
+        
+        .timeline-phase {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .timeline-content {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+        
+        /* Contract Spec */
+        .contract-spec {
+            background: var(--gray-900);
+            color: var(--gray-300);
+            border-radius: 12px;
+            padding: 2rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.9;
+            overflow-x: auto;
+        }
+        
+        .contract-spec .keyword {
+            color: var(--white);
+        }
+        
+        .contract-spec .comment {
+            color: var(--gray-500);
+        }
+        
+        /* Two Column Grid */
+        .two-col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .col-card {
+            background: var(--gray-100);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        
+        .col-card.dark {
+            background: var(--black);
+            color: var(--white);
+        }
+        
+        .col-card h3 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .col-card ul {
+            margin-left: 1.25rem;
+            color: var(--gray-600);
+        }
+        
+        .col-card.dark ul {
+            color: var(--gray-400);
+        }
+        
+        .col-card li {
+            margin: 0.5rem 0;
+        }
+        
+        /* Lists */
+        .feature-list {
+            margin: 2rem 0;
+        }
+        
+        .feature-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list .icon-small {
+            width: 24px;
+            height: 24px;
+            background: var(--black);
+            color: var(--white);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        /* Ordered List */
+        .steps-list {
+            counter-reset: step;
+            list-style: none;
+            margin: 2rem 0;
+        }
+        
+        .steps-list li {
+            counter-increment: step;
+            padding: 1.25rem 0 1.25rem 3.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            position: relative;
+        }
+        
+        .steps-list li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 1.25rem;
             width: 32px;
             height: 32px;
+            background: var(--black);
+            color: var(--white);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.2s;
+            font-weight: 700;
+            font-size: 0.9rem;
         }
-
-        .modal-close:hover {
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-            border-color: var(--accent-red);
+        
+        .steps-list li:last-child {
+            border-bottom: none;
         }
-
-        .modal-body {
-            padding: 24px;
-        }
-
-        /* QR Code Section */
-        .qr-section {
-            text-align: center;
-        }
-
-        .qr-container {
-            background: white;
-            padding: 16px;
-            border-radius: var(--radius-lg);
-            display: inline-block;
-            margin: 20px 0;
-        }
-
-        .qr-container img {
-            display: block;
-        }
-
-        .pix-code-box {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            margin: 16px 0;
-            font-family: var(--font-mono);
-            font-size: 10px;
-            word-break: break-all;
-            color: var(--text-muted);
-            max-height: 70px;
-            overflow-y: auto;
-            text-align: left;
-        }
-
-        .copy-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-family: var(--font-main);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .copy-btn:hover {
-            background: var(--bg-elevated);
-            border-color: var(--accent-blue);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 48px 24px;
-        }
-
-        .empty-icon {
-            font-size: 56px;
-            margin-bottom: 20px;
-            opacity: 0.8;
-        }
-
-        .empty-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .empty-text {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
+        
         /* Footer */
-        .footer {
-            padding: 20px 32px;
-            border-top: 1px solid var(--border-color);
+        footer {
+            background: var(--black);
+            color: var(--white);
+            padding: 4rem 2rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 13px;
-            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 2rem;
         }
-
-        .footer-links {
-            display: flex;
-            gap: 24px;
+        
+        .footer-logo {
+            height: 28px;
+            filter: invert(1);
         }
-
-        .footer-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.2s;
+        
+        .footer-text {
+            color: var(--gray-500);
+            font-size: 0.9rem;
         }
-
-        .footer-link:hover {
-            color: var(--accent-blue);
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--bg-elevated);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
-
+        
         /* Responsive */
-        @media (max-width: 1100px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 900px) {
-            .stats-row {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
         @media (max-width: 768px) {
-            .header {
-                padding: 12px 16px;
+            nav {
+                padding: 1rem;
             }
             
-            .nav {
+            .nav-links {
                 display: none;
             }
             
-            .main {
-                padding: 20px 16px;
+            header {
+                padding: 8rem 1.5rem 4rem;
             }
             
-            .stats-row {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 1.5rem;
+            }
+            
+            .section {
+                padding: 3rem 0;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .flow-diagram {
+                padding: 1.5rem;
+            }
+            
+            .flow-step {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .two-col {
                 grid-template-columns: 1fr;
             }
-
-            .stat-value {
-                font-size: 24px;
+        }
+        
+        /* Smooth scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateX(-50%) translateY(0);
             }
-
-            .footer {
-                flex-direction: column;
-                gap: 16px;
-                text-align: center;
+            40% {
+                transform: translateX(-50%) translateY(-10px);
             }
-        }
-
-        /* Loading Spinner */
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 16px 24px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-card);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 1001;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.success {
-            border-color: var(--accent-green);
-        }
-
-        .toast.error {
-            border-color: var(--accent-red);
+            60% {
+                transform: translateX(-50%) translateY(-5px);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="bg-grid"></div>
-    <div class="bg-glow"></div>
-    
-    <div id="root"></div>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-content">
+            <img src="logo_efix_400x400.jpg" alt="Efix" class="logo">
+            <ul class="nav-links">
+                <li><a href="#visao">Visão Geral</a></li>
+                <li><a href="#apy">APY</a></li>
+                <li><a href="#riscos">Riscos</a></li>
+                <li><a href="#roadmap">Roadmap</a></li>
+                <li><a href="#contratos">Contratos</a></li>
+            </ul>
+        </div>
+    </nav>
 
-    <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+    <!-- Hero -->
+    <header>
+        <img src="logo_efix_400x400.jpg" alt="Efix" class="hero-logo">
+        <h1>Efix DeFi</h1>
+        <p class="subtitle">Arquitetura do Produto — Yield Otimizado com Fundo DI Tokenizado</p>
+        <div class="scroll-indicator">↓</div>
+    </header>
 
-        // Contract Addresses (Polygon Mainnet)
-        const CONTRACTS = {
-            efixDI: '0x04082b283818D9d0dd9Ee8742892eEe5CC396441',
-            vault: '0x25b9b9E942Ae36261EB697226A60D5b73aec2b8A',
-            oracle: '0xD9d24596DDAbB1CcE603D4d8AD04A97c1836Ae94',
-            pixBridge: '0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3',
-            usdc: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-            aaveAdapter: '0x13AB76468eFE0d35f2700DEcBd52Ce28f8827A0C'
-        };
+    <div class="container">
+        <!-- Visão Geral -->
+        <section class="section" id="visao">
+            <div class="section-header">
+                <h2><span class="icon">◆</span>Visão Geral do Produto</h2>
+                <p class="section-desc">Plataforma DeFi que permite brasileiros acessarem rendimentos otimizados do CDI com alavancagem segura via protocolos de lending.</p>
+            </div>
 
-        // Minimal ABIs
-        const ERC20_ABI = [
-            'function balanceOf(address) view returns (uint256)',
-            'function approve(address, uint256) returns (bool)',
-            'function allowance(address, address) view returns (uint256)',
-            'function decimals() view returns (uint8)'
-        ];
-
-        const VAULT_ABI = [
-            'function deposit(uint256 amount) external',
-            'function withdraw(uint256 efixDIAmount, string pixKey) external',
-            'function applyLeverage(uint256 loops) external',
-            'function removeLeverage(uint256 loops) external',
-            'function getPosition(address user) external view returns (uint256 collateral, uint256 debt, uint256 leverage)',
-            'function getHealthFactor(address user) external view returns (uint256)'
-        ];
-
-        const PIX_BRIDGE_ABI = [
-            'function requestWithdrawal(uint256 amount, string pixKey) external returns (bytes32)',
-            'event WithdrawalRequested(bytes32 indexed withdrawalId, address indexed user, uint256 amount, string pixKey)'
-        ];
-
-        // PIX EMV Code
-        const PIX_EMV = '00020126580014br.gov.bcb.pix013668c635d1-8540-404d-a8d2-7f9f0a6a49035204000053039865802BR5923ERNESTO LUIZ OTERO NETO6014RIO DE JANEIRO621605124917698940896304BC13';
-
-        // Polygon Chain ID
-        const POLYGON_CHAIN_ID = 137;
-
-        function App() {
-            // State
-            const [wallet, setWallet] = useState(null);
-            const [provider, setProvider] = useState(null);
-            const [signer, setSigner] = useState(null);
-            const [chainId, setChainId] = useState(null);
-            const [loading, setLoading] = useState(false);
-            const [activeTab, setActiveTab] = useState('deposit');
-            const [amount, setAmount] = useState('');
-            const [pixKey, setPixKey] = useState('');
-            const [leverageLoops, setLeverageLoops] = useState(2);
-            const [showPixModal, setShowPixModal] = useState(false);
-            const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-            
-            const [balances, setBalances] = useState({
-                efixDI: '0',
-                usdc: '0',
-                matic: '0'
-            });
-            
-            const [position, setPosition] = useState({
-                collateral: '0',
-                debt: '0',
-                leverage: '1.00',
-                healthFactor: '2.00'
-            });
-
-            const [tvl, setTvl] = useState('1,247.14');
-
-            // Show toast notification
-            const showToast = (message, type = 'success') => {
-                setToast({ show: true, message, type });
-                setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 4000);
-            };
-
-            // Format address
-            const formatAddress = (addr) => {
-                if (!addr) return '';
-                return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-            };
-
-            // Format number
-            const formatNum = (num, decimals = 2) => {
-                if (num === '∞' || num === 'Infinity') return '∞';
-                const n = parseFloat(num);
-                if (isNaN(n)) return '0.00';
-                return n.toLocaleString('pt-BR', { 
-                    minimumFractionDigits: decimals,
-                    maximumFractionDigits: decimals 
-                });
-            };
-
-            // Calculate APY
-            const calculateAPY = (loops) => {
-                const baseAPY = 14.25; // CDI
-                const spread = 9.25; // CDI - USDC borrow
-                const ltv = 0.7;
-                let apy = baseAPY;
-                let mult = ltv;
-                
-                for (let i = 0; i < loops; i++) {
-                    apy += spread * mult;
-                    mult *= ltv;
-                }
-                
-                return apy.toFixed(1);
-            };
-
-            // Get health factor status
-            const getHealthStatus = (hf) => {
-                if (hf === '∞' || hf === 'Infinity') return 'safe';
-                const val = parseFloat(hf);
-                if (isNaN(val) || val >= 1.5) return 'safe';
-                if (val >= 1.2) return 'warning';
-                return 'danger';
-            };
-
-            const getHealthWidth = (hf) => {
-                if (hf === '∞' || hf === 'Infinity') return 100;
-                const val = parseFloat(hf);
-                if (isNaN(val)) return 100;
-                return Math.min((val / 2.5) * 100, 100);
-            };
-
-            // Connect wallet
-            const connectWallet = async () => {
-                if (!window.ethereum) {
-                    showToast('MetaMask não encontrada! Instale a extensão.', 'error');
-                    return;
-                }
-
-                try {
-                    setLoading(true);
-                    const accounts = await window.ethereum.request({ 
-                        method: 'eth_requestAccounts' 
-                    });
-                    
-                    const prov = new ethers.providers.Web3Provider(window.ethereum);
-                    const sign = prov.getSigner();
-                    const network = await prov.getNetwork();
-                    
-                    setWallet(accounts[0]);
-                    setProvider(prov);
-                    setSigner(sign);
-                    setChainId(network.chainId);
-
-                    // Switch to Polygon if needed
-                    if (network.chainId !== POLYGON_CHAIN_ID) {
-                        try {
-                            await window.ethereum.request({
-                                method: 'wallet_switchEthereumChain',
-                                params: [{ chainId: '0x89' }]
-                            });
-                            setChainId(POLYGON_CHAIN_ID);
-                        } catch (switchError) {
-                            if (switchError.code === 4902) {
-                                await window.ethereum.request({
-                                    method: 'wallet_addEthereumChain',
-                                    params: [{
-                                        chainId: '0x89',
-                                        chainName: 'Polygon Mainnet',
-                                        nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
-                                        rpcUrls: ['https://polygon-rpc.com'],
-                                        blockExplorerUrls: ['https://polygonscan.com']
-                                    }]
-                                });
-                            }
-                        }
-                    }
-
-                    showToast('Carteira conectada com sucesso!');
-                } catch (error) {
-                    console.error('Connection error:', error);
-                    showToast('Erro ao conectar carteira', 'error');
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            // Load balances
-            const loadBalances = useCallback(async () => {
-                if (!provider || !wallet) return;
-
-                try {
-                    const efixDI = new ethers.Contract(CONTRACTS.efixDI, ERC20_ABI, provider);
-                    const usdc = new ethers.Contract(CONTRACTS.usdc, ERC20_ABI, provider);
-                    
-                    const [efixBalance, usdcBalance, maticBalance] = await Promise.all([
-                        efixDI.balanceOf(wallet),
-                        usdc.balanceOf(wallet),
-                        provider.getBalance(wallet)
-                    ]);
-
-                    setBalances({
-                        efixDI: ethers.utils.formatEther(efixBalance),
-                        usdc: ethers.utils.formatUnits(usdcBalance, 6),
-                        matic: ethers.utils.formatEther(maticBalance)
-                    });
-
-                    // Try to load position
-                    try {
-                        const vault = new ethers.Contract(CONTRACTS.vault, VAULT_ABI, provider);
-                        const pos = await vault.getPosition(wallet);
-                        const hf = await vault.getHealthFactor(wallet);
-                        
-                        const collateral = ethers.utils.formatEther(pos.collateral);
-                        let debt = ethers.utils.formatUnits(pos.debt, 6);
-                        const leverage = parseFloat(ethers.utils.formatEther(pos.leverage)) || 1;
-                        
-                        // Debt: se muito alto (valor máximo uint256), mostrar 0
-                        const debtNum = parseFloat(debt);
-                        if (debtNum > 1000000000000 || isNaN(debtNum)) {
-                            debt = '0';
-                        }
-                        
-                        // Health Factor: se muito alto (sem dívida), mostrar infinito
-                        let healthFactor = ethers.utils.formatEther(hf);
-                        const hfNum = parseFloat(healthFactor);
-                        if (hfNum > 1000000 || isNaN(hfNum)) {
-                            healthFactor = '∞';
-                        } else {
-                            healthFactor = hfNum.toFixed(2);
-                        }
-                        
-                        setPosition({
-                            collateral,
-                            debt,
-                            leverage: leverage.toFixed(2),
-                            healthFactor
-                        });
-                    } catch (e) {
-                        // Position not available yet
-                    }
-                } catch (error) {
-                    console.error('Error loading balances:', error);
-                }
-            }, [provider, wallet]);
-
-            // Effects
-            useEffect(() => {
-                if (wallet) {
-                    loadBalances();
-                    const interval = setInterval(loadBalances, 15000);
-                    return () => clearInterval(interval);
-                }
-            }, [wallet, loadBalances]);
-
-            useEffect(() => {
-                if (window.ethereum) {
-                    window.ethereum.on('accountsChanged', (accounts) => {
-                        if (accounts.length > 0) {
-                            setWallet(accounts[0]);
-                        } else {
-                            setWallet(null);
-                            setProvider(null);
-                            setSigner(null);
-                        }
-                    });
-
-                    window.ethereum.on('chainChanged', () => {
-                        window.location.reload();
-                    });
-                }
-            }, []);
-
-            // Handle leverage
-            const handleLeverage = async () => {
-                if (!signer || leverageLoops < 1) return;
-                
-                try {
-                    setLoading(true);
-                    
-                    // First approve efixDI tokens
-                    const efixDI = new ethers.Contract(CONTRACTS.efixDI, ERC20_ABI, signer);
-                    const currentAllowance = await efixDI.allowance(wallet, CONTRACTS.vault);
-                    const balance = await efixDI.balanceOf(wallet);
-                    
-                    if (currentAllowance.lt(balance)) {
-                        showToast('Aprovando tokens...');
-                        const approveTx = await efixDI.approve(CONTRACTS.vault, ethers.constants.MaxUint256);
-                        await approveTx.wait();
-                    }
-                    
-                    // Apply leverage
-                    showToast('Aplicando alavancagem...');
-                    const vault = new ethers.Contract(CONTRACTS.vault, VAULT_ABI, signer);
-                    const tx = await vault.applyLeverage(leverageLoops);
-                    await tx.wait();
-                    
-                    await loadBalances();
-                    showToast(`Alavancagem ${leverageLoops}x aplicada com sucesso!`);
-                } catch (error) {
-                    console.error('Leverage error:', error);
-                    showToast('Erro ao aplicar alavancagem: ' + (error.reason || error.message), 'error');
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            // Handle withdraw
-            const handleWithdraw = async () => {
-                if (!signer || !amount || !pixKey) {
-                    showToast('Preencha o valor e a chave PIX', 'error');
-                    return;
-                }
-                
-                try {
-                    setLoading(true);
-                    showToast('Iniciando saque...');
-                    
-                    const vault = new ethers.Contract(CONTRACTS.vault, VAULT_ABI, signer);
-                    const amountWei = ethers.utils.parseEther(amount);
-                    
-                    const tx = await vault.withdraw(amountWei, pixKey);
-                    await tx.wait();
-                    
-                    await loadBalances();
-                    setAmount('');
-                    showToast('Saque solicitado! PIX será enviado em breve.');
-                } catch (error) {
-                    console.error('Withdraw error:', error);
-                    showToast('Erro no saque: ' + (error.reason || error.message), 'error');
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            // Copy to clipboard
-            const copyToClipboard = async (text) => {
-                try {
-                    await navigator.clipboard.writeText(text);
-                    showToast('Código PIX copiado!');
-                } catch (err) {
-                    // Fallback
-                    const textarea = document.createElement('textarea');
-                    textarea.value = text;
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textarea);
-                    showToast('Código PIX copiado!');
-                }
-            };
-
-            return (
-                <div className="app">
-                    {/* Header */}
-                    <header className="header">
-                        <div className="logo-section">
-                            <a href="#" className="logo">
-                                <div className="logo-mark">E</div>
-                                <span className="logo-text">efixDI<span className="logo-plus">+</span></span>
-                            </a>
-                            <span className="beta-tag">Beta</span>
-                        </div>
-                        
-                        <nav className="nav">
-                            <a href="#" className="nav-link active">App</a>
-                            <a href="https://efix.finance" className="nav-link">Início</a>
-                            <a href="#" className="nav-link">Docs</a>
-                            <a href={`https://polygonscan.com/address/${CONTRACTS.vault}`} className="nav-link" target="_blank" rel="noopener">Contratos</a>
-                        </nav>
-                        
-                        <div className="header-right">
-                            {wallet && chainId === POLYGON_CHAIN_ID && (
-                                <div className="network-badge">
-                                    <span className="network-dot"></span>
-                                    Polygon
-                                </div>
-                            )}
-                            
-                            {wallet ? (
-                                <button className="connect-btn connected">
-                                    <span className="network-dot"></span>
-                                    {formatAddress(wallet)}
-                                </button>
-                            ) : (
-                                <button className="connect-btn" onClick={connectWallet} disabled={loading}>
-                                    {loading ? <div className="spinner"></div> : '🔗'} Conectar
-                                </button>
-                            )}
-                        </div>
-                    </header>
-
-                    {/* Main */}
-                    <main className="main">
-                        {/* Stats */}
-                        <div className="stats-row">
-                            <div className="stat-card">
-                                <div className="stat-icon">💰</div>
-                                <div className="stat-label">Seu Saldo</div>
-                                <div className="stat-value">{formatNum(balances.efixDI)}</div>
-                                <div className="stat-sub">efixDI tokens</div>
-                            </div>
-                            <div className="stat-card">
-                                <div className="stat-icon">📈</div>
-                                <div className="stat-label">APY Estimado</div>
-                                <div className="stat-value green">{calculateAPY(parseInt(position.leverage) - 1 || 0)}%</div>
-                                <div className="stat-sub">CDI + Alavancagem</div>
-                            </div>
-                            <div className="stat-card">
-                                <div className="stat-icon">⚡</div>
-                                <div className="stat-label">Alavancagem</div>
-                                <div className="stat-value gold">{position.leverage}x</div>
-                                <div className="stat-sub">Health: {formatNum(position.healthFactor)}</div>
-                            </div>
-                            <div className="stat-card">
-                                <div className="stat-icon">🏦</div>
-                                <div className="stat-label">TVL Protocolo</div>
-                                <div className="stat-value">R$ {tvl}</div>
-                                <div className="stat-sub">+R$ 211 hoje</div>
-                            </div>
-                        </div>
-
-                        {/* Dashboard */}
-                        <div className="dashboard">
-                            {/* Main Panel */}
-                            <div className="card">
-                                <div className="card-header">
-                                    <h2 className="card-title">💼 Operações</h2>
-                                    <div className="tabs">
-                                        <button 
-                                            className={`tab ${activeTab === 'deposit' ? 'active' : ''}`}
-                                            onClick={() => setActiveTab('deposit')}
-                                        >
-                                            Depositar
-                                        </button>
-                                        <button 
-                                            className={`tab ${activeTab === 'leverage' ? 'active' : ''}`}
-                                            onClick={() => setActiveTab('leverage')}
-                                        >
-                                            Alavancagem
-                                        </button>
-                                        <button 
-                                            className={`tab ${activeTab === 'withdraw' ? 'active' : ''}`}
-                                            onClick={() => setActiveTab('withdraw')}
-                                        >
-                                            Sacar
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div className="card-body">
-                                    {!wallet ? (
-                                        <div className="empty-state">
-                                            <div className="empty-icon">🔐</div>
-                                            <h3 className="empty-title">Conecte sua Carteira</h3>
-                                            <p className="empty-text">
-                                                Conecte sua MetaMask para acessar renda fixa tokenizada com yields de até 35% APY
-                                            </p>
-                                            <button className="action-btn" onClick={connectWallet} disabled={loading} style={{maxWidth: '280px', margin: '0 auto'}}>
-                                                {loading ? <div className="spinner"></div> : '🔗'} Conectar MetaMask
-                                            </button>
-                                        </div>
-                                    ) : activeTab === 'deposit' ? (
-                                        <>
-                                            <div className="alert info">
-                                                <span className="alert-icon">💡</span>
-                                                <div className="alert-content">
-                                                    <div className="alert-title">Depósito via PIX</div>
-                                                    <div className="alert-text">
-                                                        Faça um PIX para nossa conta e receba tokens efixDI automaticamente. Valor 1:1 com o Real brasileiro.
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="form-group">
-                                                <div className="form-label">
-                                                    <span>Valor do Depósito</span>
-                                                </div>
-                                                <div className="input-box">
-                                                    <input 
-                                                        type="number" 
-                                                        placeholder="0.00"
-                                                        value={amount}
-                                                        onChange={(e) => setAmount(e.target.value)}
-                                                    />
-                                                    <div className="input-actions">
-                                                        <div className="token-badge">
-                                                            <span className="token-name">R$</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="info-panel">
-                                                <div className="info-row">
-                                                    <span className="info-label">Taxa de depósito</span>
-                                                    <span className="info-value highlight">0%</span>
-                                                </div>
-                                                <div className="info-row">
-                                                    <span className="info-label">Você receberá</span>
-                                                    <span className="info-value highlight">{amount || '0'} efixDI</span>
-                                                </div>
-                                                <div className="info-row">
-                                                    <span className="info-label">Rendimento base</span>
-                                                    <span className="info-value">14.25% a.a. (CDI)</span>
-                                                </div>
-                                                <div className="info-row">
-                                                    <span className="info-label">Liquidez</span>
-                                                    <span className="info-value highlight">D+0 (instantâneo)</span>
-                                                </div>
-                                            </div>
-
-                                            <button className="action-btn gold" onClick={() => setShowPixModal(true)}>
-                                                📱 Gerar QR Code PIX
-                                            </button>
-                                        </>
-                                    ) : activeTab === 'leverage' ? (
-                                        <>
-                                            <div className="alert warning">
-                                                <span className="alert-icon">⚠️</span>
-                                                <div className="alert-content">
-                                                    <div className="alert-title">Risco de Liquidação</div>
-                                                    <div className="alert-text">
-                                                        Alavancagem amplifica ganhos e perdas. Mantenha Health Factor acima de 1.2 para evitar liquidação.
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="leverage-section">
-                                                <div className="leverage-header">
-                                                    <span className="leverage-label">Loops de Alavancagem</span>
-                                                    <span className="leverage-value">{leverageLoops}x</span>
-                                                </div>
-                                                <input 
-                                                    type="range" 
-                                                    className="leverage-slider"
-                                                    min="1" 
-                                                    max="5" 
-                                                    value={leverageLoops}
-                                                    onChange={(e) => setLeverageLoops(parseInt(e.target.value))}
-                                                />
-                                                <div className="leverage-marks">
-                                                    <span>1x</span>
-                                                    <span>2x</span>
-                                                    <span>3x</span>
-                                                    <span>4x</span>
-                                                    <span>5x</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="info-panel">
-                                                <div className="info-row">
-                                                    <span className="info-label">Colateral disponível</span>
-                                                    <span className="info-value">{formatNum(balances.efixDI)} efixDI</span>
-                                                </div>
-                                                <div className="info-row">
-                                                    <span className="info-label">Dívida atual</span>
-                                                    <span className="info-value">${formatNum(position.debt)} USDC</span>
-                                                </div>
-                                                <div className="info-row">
-                                                    <span className="info-label">APY projetado</span>
-                                                    <span className="info-value gold">{calculateAPY(leverageLoops)}%</span>
-                                                </div>
-                                                <div className="info-row">
-                                                    <span className="info-label">Health Factor estimado</span>
-                                                    <span className="info-value">{(2.0 / leverageLoops).toFixed(2)}</span>
-                                                </div>
-                                            </div>
-
-                                            <div style={{display: 'flex', gap: '12px'}}>
-                                                <button 
-                                                    className="action-btn gold" 
-                                                    onClick={handleLeverage}
-                                                    disabled={loading || parseFloat(balances.efixDI) === 0}
-                                                    style={{flex: 1}}
-                                                >
-                                                    {loading ? <div className="spinner"></div> : '📈'} Aplicar {leverageLoops}x
-                                                </button>
-                                                <button 
-                                                    className="action-btn outline"
-                                                    disabled={loading || parseFloat(position.leverage) <= 1}
-                                                    style={{flex: 1}}
-                                                >
-                                                    📉 Remover
-                                                </button>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="form-group">
-                                                <div className="form-label">
-                                                    <span>Valor do Saque</span>
-                                                    <span className="balance-hint">Saldo: {formatNum(balances.efixDI)} efixDI</span>
-                                                </div>
-                                                <div className="input-box">
-                                                    <input 
-                                                        type="number" 
-                                                        placeholder="0.00"
-                                                        value={amount}
-                                                        onChange={(e) => setAmount(e.target.value)}
-                                                    />
-                                                    <div className="input-actions">
-                                                        <button 
-                                                            className="max-btn"
-                                                            onClick={() => setAmount(balances.efixDI)}
-                                                        >
-                                                            Max
-                                                        </button>
-                                                        <div className="token-badge">
-                                                            <div className="token-icon">E</div>
-                                                            <span className="token-name">efixDI</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="form-group">
-                                                <div className="form-label">
-                                                    <span>Chave PIX (destino)</span>
-                                                </div>
-                                                <div className="input-box">
-                                                    <input 
-                                                        type="text" 
-                                                        placeholder="email@exemplo.com, CPF ou telefone"
-                                                        value={pixKey}
-                                                        onChange={(e) => setPixKey(e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="info-panel">
-                                                <div className="info-row">
-                                                    <span className="info-label">Taxa de saque</span>
-                                                    <span className="info-value">0.5%</span>
-                                                </div>
-                                                <div className="info-row">
-                                                    <span className="info-label">Você receberá</span>
-                                                    <span className="info-value highlight">R$ {formatNum((parseFloat(amount) || 0) * 0.995)}</span>
-                                                </div>
-                                                <div className="info-row">
-                                                    <span className="info-label">Tempo estimado</span>
-                                                    <span className="info-value highlight">Instantâneo (D+0)</span>
-                                                </div>
-                                            </div>
-
-                                            <button 
-                                                className="action-btn" 
-                                                onClick={handleWithdraw}
-                                                disabled={loading || !amount || parseFloat(amount) <= 0 || !pixKey}
-                                            >
-                                                {loading ? <div className="spinner"></div> : '💸'} Sacar via PIX
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Side Panel */}
-                            <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
-                                {/* Position */}
-                                <div className="card">
-                                    <div className="card-header">
-                                        <h3 className="card-title">📊 Sua Posição</h3>
-                                    </div>
-                                    <div className="card-body">
-                                        <div className="position-card">
-                                            <div className="position-header">
-                                                <span className="position-label">Valor Total</span>
-                                                {parseFloat(balances.efixDI) > 0 && (
-                                                    <span className="position-status">
-                                                        <span className="network-dot"></span>
-                                                        Ativo
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="position-value">R$ {formatNum(balances.efixDI)}</div>
-                                            <div className="position-sub">{formatNum(balances.efixDI)} efixDI</div>
-                                        </div>
-
-                                        <div className="health-section">
-                                            <div className="health-header">
-                                                <span className="health-label">Health Factor</span>
-                                                <span className={`health-value ${getHealthStatus(position.healthFactor)}`}>
-                                                    {formatNum(position.healthFactor)}
-                                                </span>
-                                            </div>
-                                            <div className="health-bar-bg">
-                                                <div 
-                                                    className={`health-bar ${getHealthStatus(position.healthFactor)}`}
-                                                    style={{width: `${getHealthWidth(position.healthFactor)}%`}}
-                                                />
-                                            </div>
-                                            <div className="health-labels">
-                                                <span>Liquidação (1.0)</span>
-                                                <span>Seguro (2.0+)</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Activity */}
-                                <div className="card">
-                                    <div className="card-header">
-                                        <h3 className="card-title">📜 Atividade Recente</h3>
-                                    </div>
-                                    <div className="card-body">
-                                        <div className="activity-list">
-                                            <div className="activity-item">
-                                                <div className="activity-icon deposit">📥</div>
-                                                <div className="activity-info">
-                                                    <div className="activity-title">Depósito PIX</div>
-                                                    <div className="activity-time">Hoje, 18:02</div>
-                                                </div>
-                                                <div className="activity-amount positive">+211.17</div>
-                                            </div>
-                                            <div className="activity-item">
-                                                <div className="activity-icon withdraw">📤</div>
-                                                <div className="activity-info">
-                                                    <div className="activity-title">Saque PIX</div>
-                                                    <div className="activity-time">Hoje, 18:01</div>
-                                                </div>
-                                                <div className="activity-amount negative">-199.00</div>
-                                            </div>
-                                            <div className="activity-item">
-                                                <div className="activity-icon leverage">⚡</div>
-                                                <div className="activity-info">
-                                                    <div className="activity-title">Leverage 1.7x</div>
-                                                    <div className="activity-time">Hoje, 17:45</div>
-                                                </div>
-                                                <div className="activity-amount">+139.99</div>
-                                            </div>
-                                            <div className="activity-item">
-                                                <div className="activity-icon deposit">📥</div>
-                                                <div className="activity-info">
-                                                    <div className="activity-title">Depósito Inicial</div>
-                                                    <div className="activity-time">Hoje, 17:30</div>
-                                                </div>
-                                                <div className="activity-amount positive">+200.00</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </main>
-
-                    {/* Footer */}
-                    <footer className="footer">
-                        <span>© 2026 efixDI+ Protocol • Powered by EFIX Securitizadora</span>
-                        <div className="footer-links">
-                            <a href="#" className="footer-link">Termos</a>
-                            <a href="#" className="footer-link">Privacidade</a>
-                            <a href={`https://polygonscan.com/address/${CONTRACTS.vault}`} className="footer-link" target="_blank">Contratos</a>
-                            <a href="https://github.com/Develop-ltda/efix_finance" className="footer-link" target="_blank">GitHub</a>
-                        </div>
-                    </footer>
-
-                    {/* PIX Modal */}
-                    <div className={`modal-overlay ${showPixModal ? 'active' : ''}`} onClick={() => setShowPixModal(false)}>
-                        <div className="modal" onClick={(e) => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h3 className="modal-title">📱 Depositar via PIX</h3>
-                                <button className="modal-close" onClick={() => setShowPixModal(false)}>×</button>
-                            </div>
-                            <div className="modal-body">
-                                <div className="qr-section">
-                                    <p style={{color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '14px'}}>
-                                        Escaneie o QR Code ou copie o código Copia e Cola
-                                    </p>
-                                    
-                                    <div className="qr-container">
-                                        <img 
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(PIX_EMV)}&bgcolor=ffffff&color=000000`}
-                                            alt="QR Code PIX"
-                                            width="180"
-                                            height="180"
-                                        />
-                                    </div>
-                                    
-                                    <div className="pix-code-box">
-                                        {PIX_EMV}
-                                    </div>
-                                    
-                                    <button className="copy-btn" onClick={() => copyToClipboard(PIX_EMV)}>
-                                        📋 Copiar Código PIX
-                                    </button>
-
-                                    <div className="alert success" style={{marginTop: '20px', textAlign: 'left'}}>
-                                        <span className="alert-icon">✅</span>
-                                        <div className="alert-content">
-                                            <div className="alert-title">Após o pagamento</div>
-                                            <div className="alert-text">
-                                                Seus tokens efixDI serão creditados automaticamente em até 2 minutos. Taxa de conversão: 1 BRL = 1 efixDI.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Toast */}
-                    <div className={`toast ${toast.show ? 'show' : ''} ${toast.type}`}>
-                        {toast.type === 'success' ? '✅' : '❌'} {toast.message}
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Entrada via PIX ou BRTH</div>
+                        <div class="step-text">Usuário deposita BRL via PIX (instantâneo) ou BRTH (stablecoin). PIX vai direto para conta da SPE no HausBank.</div>
                     </div>
                 </div>
-            );
-        }
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Compra de Cotas do Fundo DI</div>
+                        <div class="step-text">SPE Efix automaticamente compra cotas do Fundo DI via API HausBank. Rendimento: CDI ~ 15% a.a.</div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Mint do Token efixDI</div>
+                        <div class="step-text">Smart contract minta tokens efixDI 1:1 com BRL depositado. Token é yield-bearing (acumula rendimento automaticamente).</div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Alavancagem com USDC/USDT</div>
+                        <div class="step-text">Usuário pode usar efixDI como colateral para pegar empréstimo em USDC/USDT (via Aave/Compound). Taxa: ~5% a.a.</div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <div class="step-title">Loop de Yield</div>
+                        <div class="step-text">USDC emprestado é convertido em BRL e reinvestido no Fundo DI, gerando mais efixDI. Spread: 15% - 5% = 10% por loop.</div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <div class="step-title">Resgate a Qualquer Momento</div>
+                        <div class="step-text">Fundo DI D+0 permite resgate instantâneo. Queima efixDI → Resgata cotas → PIX para usuário.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-    </script>
+        <!-- Stack Tecnológico -->
+        <section class="section">
+            <div class="section-header">
+                <h2><span class="icon">⚡</span>Stack Tecnológico</h2>
+            </div>
+
+            <div class="tech-stack">
+                <div class="tech-card">
+                    <div class="tech-title">Blockchain</div>
+                    <div class="tech-desc">Polygon (baixo custo, EVM compatível) com possibilidade de bridge para outras L2s</div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-title">Custódia TradFi</div>
+                    <div class="tech-desc">HausBank — Conta de custódia com acesso a Fundo DI via API</div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-title">Lending Protocol</div>
+                    <div class="tech-desc">Fork Aave V3 customizado ou integração com Morpho Blue</div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-title">Oracle</div>
+                    <div class="tech-desc">Chainlink para BRL/USD + Oracle proprietário para NAV do Fundo DI</div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-title">Bridge BRL/Crypto</div>
+                    <div class="tech-desc">PIX via HausBank + Swap BRTH/BRL via pool dedicado</div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-title">Hedge Cambial</div>
+                    <div class="tech-desc">Opções on-chain ou NDF via parceiro OTC para proteção USD/BRL</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cálculo do APY -->
+        <section class="section" id="apy">
+            <div class="section-header">
+                <h2><span class="icon">%</span>Cálculo do APY com Alavancagem</h2>
+            </div>
+
+            <div class="formula">
+                <strong>Fórmula Base:</strong><br><br>
+                APY_total = CDI_base + Σ(spread × LTV^n) para n loops<br><br>
+                
+                <span class="highlight">Parâmetros:</span><br>
+                • CDI_base = 15% a.a. (atual)<br>
+                • LTV = 0.75 (75% loan-to-value)<br>
+                • Custo empréstimo USDC/USDT = ~5% a.a.<br>
+                • <strong>Exposição cambial mitigada via hedge</strong><br><br>
+                
+                <strong>Exemplo com 3 loops:</strong><br>
+                Loop 0: 15% sobre 100% = 15.00%<br>
+                Loop 1: (15% - 5%) sobre 75% = 7.50%<br>
+                Loop 2: (15% - 5%) sobre 56.25% = 5.63%<br>
+                Loop 3: (15% - 5%) sobre 42.19% = 4.22%<br>
+                <strong>Total: ~32.35% APY</strong> (antes de fees e hedge)<br><br>
+                
+                ✓ Vantagem USDC: Taxa baixa = Maior spread<br>
+                ⚠ Considerar: Custo de hedge cambial ~2-3% a.a.
+            </div>
+        </section>
+
+        <!-- Gestão de Riscos -->
+        <section class="section" id="riscos">
+            <div class="section-header">
+                <h2><span class="icon">■</span>Gestão de Riscos</h2>
+            </div>
+            
+            <div class="warning">
+                <div class="warning-title">⚠ Parâmetros de Segurança</div>
+                <ul>
+                    <li><strong>LTV Máximo:</strong> 75% (liquidação em 80%)</li>
+                    <li><strong>Buffer de Segurança:</strong> 5% do Health Factor</li>
+                    <li><strong>Auto-Deleverage:</strong> Ativa quando HF < 1.15</li>
+                    <li><strong>Stop Loss:</strong> Fecha posições se perda > 10%</li>
+                    <li><strong>TVL Cap:</strong> R$ 10M na fase inicial</li>
+                </ul>
+            </div>
+            
+            <ul class="feature-list" style="list-style: none; margin-left: 0;">
+                <li><span class="icon-small">✓</span><div><strong>Risco de Câmbio:</strong> Hedge automático via opções USDBRL on-chain</div></li>
+                <li><span class="icon-small">✓</span><div><strong>Risco de Liquidez:</strong> Fundo DI D+0 + pools USDC/USDT profundos</div></li>
+                <li><span class="icon-small">✓</span><div><strong>Risco Operacional:</strong> SPE regulada + Conta Bacen no HausBank</div></li>
+                <li><span class="icon-small">✓</span><div><strong>Risco de Lending:</strong> Multi-protocol para diversificar (Aave + Compound)</div></li>
+                <li><span class="icon-small">✓</span><div><strong>Risco de Smart Contract:</strong> Auditoria CertiK + Seguro on-chain</div></li>
+                <li><span class="icon-small">✓</span><div><strong>Risco Regulatório:</strong> Estrutura 100% compliance CMN/Bacen</div></li>
+            </ul>
+        </section>
+
+        <!-- Roadmap -->
+        <section class="section" id="roadmap">
+            <div class="section-header">
+                <h2><span class="icon">→</span>Roadmap de Implementação</h2>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-phase">Fase 1: MVP (2 semanas)</div>
+                    <div class="timeline-content">
+                        • Deploy contratos na testnet<br>
+                        • Integração com Fundo DI sandbox<br>
+                        • Interface básica de depósito/saque<br>
+                        • Testes com capital interno (R$ 100k)
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-phase">Fase 2: Beta Privado (4 semanas)</div>
+                    <div class="timeline-content">
+                        • Deploy mainnet com cap de R$ 1M<br>
+                        • 50 usuários selecionados<br>
+                        • Implementar auto-rebalancing<br>
+                        • Dashboard de analytics
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-phase">Fase 3: Lançamento Público (6 semanas)</div>
+                    <div class="timeline-content">
+                        • Remover caps de TVL gradualmente<br>
+                        • Lançar token de governança<br>
+                        • Integração com agregadores DeFi<br>
+                        • Mobile app
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Smart Contracts -->
+        <section class="section" id="contratos">
+            <div class="section-header">
+                <h2><span class="icon">{}</span>Especificação dos Smart Contracts</h2>
+            </div>
+            
+            <div class="contract-spec">
+                <span class="comment">// Interface Principal do Vault Efix</span><br><br>
+                
+                <span class="keyword">interface</span> IEfixVault {<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> depositPIX(bytes32 pixId, uint256 brlAmount) <span class="keyword">external</span>;<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> depositBRTH(uint256 brthAmount) <span class="keyword">external</span>;<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> withdraw(uint256 efixDIAmount) <span class="keyword">external</span>;<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> leverageWithUSDC(uint8 loops) <span class="keyword">external</span>;<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> deleverage(uint8 loops) <span class="keyword">external</span>;<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> harvest() <span class="keyword">external</span>;<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> activateHedge(bool enable) <span class="keyword">external</span>;<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> getPosition(address user) <span class="keyword">external view returns</span> (Position memory);<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> getHealthFactor(address user) <span class="keyword">external view returns</span> (uint256);<br>
+                &nbsp;&nbsp;<span class="keyword">function</span> getCurrentAPY() <span class="keyword">external view returns</span> (uint256);<br>
+                }<br><br>
+                
+                <span class="keyword">struct</span> Position {<br>
+                &nbsp;&nbsp;uint256 principal;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// BRL depositado</span><br>
+                &nbsp;&nbsp;uint256 efixDIBalance;&nbsp;&nbsp;<span class="comment">// Tokens efixDI</span><br>
+                &nbsp;&nbsp;uint256 borrowedUSDC;&nbsp;&nbsp;&nbsp;<span class="comment">// USDC emprestado</span><br>
+                &nbsp;&nbsp;uint256 healthFactor;&nbsp;&nbsp;&nbsp;<span class="comment">// Saúde da posição</span><br>
+                &nbsp;&nbsp;uint256 currentAPY;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// APY atual</span><br>
+                &nbsp;&nbsp;uint8 leverageLevel;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Nível de alavancagem</span><br>
+                &nbsp;&nbsp;bool hedgeActive;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Status do hedge cambial</span><br>
+                }
+            </div>
+        </section>
+
+        <!-- KPIs -->
+        <section class="section">
+            <div class="section-header">
+                <h2><span class="icon">↗</span>KPIs de Sucesso</h2>
+            </div>
+            
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-value">R$ 50M</div>
+                    <div class="metric-label">TVL em 6 meses</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">1000+</div>
+                    <div class="metric-label">Usuários ativos</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">< 2%</div>
+                    <div class="metric-label">Taxa de perda</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">25%+</div>
+                    <div class="metric-label">APY médio</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BRTH -->
+        <section class="section">
+            <div class="section-header">
+                <h2><span class="icon">◈</span>Papel do BRTH no Ecossistema</h2>
+                <p class="section-desc">O BRTH funciona como gateway de entrada para holders do token, mas a alavancagem vem de lending pools globais de USDC/USDT por questões de eficiência.</p>
+            </div>
+            
+            <div class="two-col">
+                <div class="col-card">
+                    <h3>✓ BRTH para Capital</h3>
+                    <ul>
+                        <li>Entrada simplificada para holders</li>
+                        <li>Liquidez instantânea BRL ↔ BRTH</li>
+                        <li>Integração com ecossistema Efix</li>
+                        <li>Utility adicional para o token</li>
+                    </ul>
+                </div>
+                
+                <div class="col-card dark">
+                    <h3>$ USDC para Alavancagem</h3>
+                    <ul>
+                        <li>Taxa de 5% a.a. (vs 8-10% BRTH)</li>
+                        <li>Liquidez global massiva</li>
+                        <li>Integração com Aave/Compound</li>
+                        <li>Spread de 10% maximiza APY</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="formula">
+                <strong>Comparação de Cenários:</strong><br><br>
+                
+                Alavancagem com BRTH (8% custo):<br>
+                • Spread: 15% - 8% = 7%<br>
+                • APY final: ~27%<br><br>
+                
+                Alavancagem com USDC (5% custo + 2% hedge):<br>
+                • Spread líquido: 15% - 5% - 2% = 8%<br>
+                • APY final: ~30%<br><br>
+                
+                <strong>Conclusão:</strong> USDC oferece +3% APY adicional mesmo com hedge
+            </div>
+        </section>
+
+        <!-- Próximos Passos -->
+        <section class="section">
+            <div class="section-header">
+                <h2><span class="icon">✓</span>Próximos Passos</h2>
+            </div>
+            
+            <ol class="steps-list">
+                <li><strong>Setup SPE:</strong> Constituir SPE Efix Yield+ com conta no Bacen via HausBank</li>
+                <li><strong>Integração HausBank:</strong> Configurar API para compra/venda de cotas do Fundo DI</li>
+                <li><strong>Deploy Lending Pool:</strong> Fork Aave/Compound com suporte a efixDI como collateral</li>
+                <li><strong>Bridge USDC/BRL:</strong> Integrar DEX ou parceiro para conversão eficiente</li>
+                <li><strong>Módulo de Hedge:</strong> Implementar estratégia automatizada de proteção cambial</li>
+                <li><strong>Teste Alpha:</strong> R$ 100k do treasury para validar fluxo completo com hedge</li>
+            </ol>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <img src="logo_efix_400x400.jpg" alt="Efix" class="footer-logo">
+            <p class="footer-text">© 2026 Efix Finance. Todos os direitos reservados.</p>
+        </div>
+    </footer>
 </body>
 </html>
+
