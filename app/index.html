@@ -1106,15 +1106,22 @@
             document.getElementById('withdrawTab').classList.toggle('hidden', tab !== 'withdraw');
         }
 
+        // Backend URL - PIX Bridge Server
+        const PIX_BACKEND_URL = 'https://prointegration-bastioned-yaretzi.ngrok-free.dev';
+
         async function generatePixQR() {
             const amount = parseFloat(document.getElementById('depositAmount').value);
             
-            if (!amount || amount < 10) {
-                showToast('Valor mínimo: R$ 10,00', 'error');
+            if (!amount || amount < 1) {
+                showToast('Valor mínimo: R$ 1,00', 'error');
+                return;
+            }
+
+            if (!userAddress) {
+                showToast('Conecte sua wallet primeiro', 'error');
                 return;
             }
             
-            // Simulate QR generation (in production, call your backend)
             showToast('Gerando QR Code...', 'success');
             
             const qrContainer = document.getElementById('qrContainer');
@@ -1123,18 +1130,44 @@
             qrContainer.classList.remove('hidden');
             qrCode.innerHTML = '<div class="loading"></div>';
             
-            // Simulate API call delay
-            setTimeout(() => {
-                // In production, this would be a real QR code from your PIX API
-                pixCode = '00020126580014br.gov.bcb.pix0136' + CONTRACTS.pixBridge + '5204000053039865802BR5925EFIX FINANCE6009SAO PAULO62070503***6304';
+            try {
+                // Call backend to generate real PIX QR Code
+                const response = await fetch(PIX_BACKEND_URL + '/api/pix/qrcode', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        amount: amount.toFixed(2),
+                        walletAddress: userAddress
+                    })
+                });
                 
-                // Generate QR using an API or library
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Erro ao gerar QR Code');
+                }
+                
+                // Store the EMV code for copy function
+                pixCode = data.qrcode.emv;
+                
+                // Display QR Code
                 qrCode.innerHTML = `
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pixCode)}" alt="QR Code PIX">
+                    <img src="${data.qrcode.imageUrl}" alt="QR Code PIX" style="border-radius: 8px;">
+                    <p style="margin-top: 12px; font-size: 0.875rem; color: var(--gray-500);">
+                        Valor: <strong>R$ ${parseFloat(data.qrcode.amount).toFixed(2).replace('.', ',')}</strong>
+                    </p>
                 `;
                 
-                showToast('QR Code gerado!', 'success');
-            }, 1500);
+                showToast('QR Code gerado com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('PIX QR Error:', error);
+                qrCode.innerHTML = '<p style="color: red;">Erro ao gerar QR Code</p>';
+                showToast('Erro: ' + error.message, 'error');
+            }
         }
 
         function copyPixCode() {
