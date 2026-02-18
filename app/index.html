@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Efix DeFi - Renda Fixa Tokenizada</title>
-    <link rel="icon" type="image/jpeg" href="logo_efix_400x400.jpg">
+    <title>EFIX — Tokenized Brazilian Fixed Income | DeFi Yield Protocol</title>
+    <meta name="description" content="EFIX bridges Brazilian DI fixed-income assets into DeFi. CVM-regulated securitizer offering 25-35% APY through tokenized collateral and cross-chain leverage on Morpho Blue.">
+    <meta property="og:title" content="EFIX — Tokenized Brazilian Fixed Income">
+    <meta property="og:description" content="Regulated RWA protocol bridging Brazilian DI funds into DeFi with D+0 redemption.">
+    <meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
+    <link rel="icon" href="./logo_efix_400x400.jpg" type="image/jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
     <style>
         :root {
             --black: #000000;
@@ -23,27 +26,25 @@
             --gray-800: #262626;
             --gray-900: #171717;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
         body {
             font-family: 'Syne', -apple-system, sans-serif;
             background: var(--white);
             color: var(--black);
             line-height: 1.7;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
-        
+
         ::selection {
             background: var(--black);
             color: var(--white);
         }
-        
-        /* Navigation */
+
+        /* ─── Nav ─── */
         nav {
             position: fixed;
             top: 0;
@@ -56,7 +57,7 @@
             z-index: 1000;
             padding: 1rem 2rem;
         }
-        
+
         .nav-content {
             max-width: 1400px;
             margin: 0 auto;
@@ -64,24 +65,24 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .logo {
             height: 32px;
             width: auto;
         }
-        
+
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 2rem;
         }
-        
+
         .nav-links {
             display: flex;
             gap: 2rem;
             list-style: none;
         }
-        
+
         .nav-links a {
             color: var(--gray-600);
             text-decoration: none;
@@ -90,13 +91,10 @@
             letter-spacing: 0.02em;
             transition: color 0.2s;
         }
-        
-        .nav-links a:hover {
-            color: var(--black);
-        }
-        
-        /* Connect Button */
-        .connect-btn {
+
+        .nav-links a:hover { color: var(--black); }
+
+        .nav-cta {
             background: var(--black);
             color: var(--white);
             border: none;
@@ -107,33 +105,30 @@
             cursor: pointer;
             transition: all 0.2s;
             font-family: inherit;
+            text-decoration: none;
+            display: inline-block;
         }
-        
-        .connect-btn:hover {
+
+        .nav-cta:hover {
             background: var(--gray-800);
             transform: translateY(-1px);
         }
-        
-        .connect-btn.connected {
-            background: var(--white);
-            color: var(--black);
-            border: 2px solid var(--black);
-        }
-        
-        /* Hero */
+
+        /* ─── Hero ─── */
         .hero {
             padding: 10rem 2rem 4rem;
             text-align: center;
             background: var(--white);
             position: relative;
         }
-        
+
         .hero-logo {
             width: 80px;
             height: 80px;
             margin-bottom: 2rem;
+            border-radius: 16px;
         }
-        
+
         h1 {
             font-size: clamp(2.5rem, 6vw, 4rem);
             font-weight: 800;
@@ -142,16 +137,59 @@
             letter-spacing: -0.03em;
             line-height: 1.1;
         }
-        
+
         .subtitle {
             color: var(--gray-500);
             font-size: 1.25rem;
             font-weight: 400;
-            max-width: 600px;
-            margin: 0 auto 2rem;
+            max-width: 620px;
+            margin: 0 auto 2.5rem;
         }
-        
-        /* Status Badge */
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--gray-800);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--black);
+            border: 2px solid var(--black);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-100);
+            transform: translateY(-2px);
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -162,1134 +200,978 @@
             font-size: 0.875rem;
             color: var(--gray-600);
         }
-        
+
         .status-badge .dot {
             width: 8px;
             height: 8px;
-            background: var(--gray-400);
-            border-radius: 50%;
-        }
-        
-        .status-badge.connected .dot {
             background: #22c55e;
+            border-radius: 50%;
             animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-        
-        /* Container */
+
+        /* ─── Container ─── */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
         }
-        
-        /* App Section */
-        .app-section {
-            padding: 4rem 0;
-        }
-        
-        .app-grid {
+
+        /* ─── Stats Bar ─── */
+        .stats-bar {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-        
-        @media (max-width: 900px) {
-            .app-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        /* Cards */
-        .card {
-            background: var(--white);
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--gray-200);
             border: 1px solid var(--gray-200);
             border-radius: 16px;
-            padding: 2rem;
-            transition: all 0.3s ease;
+            overflow: hidden;
+            margin-bottom: 6rem;
         }
-        
-        .card:hover {
-            border-color: var(--black);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-        
-        .card-badge {
-            background: var(--black);
-            color: var(--white);
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        /* Position Card */
-        .position-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
+
         .stat-item {
-            background: var(--gray-100);
-            padding: 1rem;
-            border-radius: 12px;
+            background: var(--white);
+            padding: 2rem;
+            text-align: center;
+            transition: background 0.2s;
         }
-        
+
+        .stat-item:hover { background: var(--gray-100); }
+
+        .stat-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 0.25rem;
+        }
+
         .stat-label {
             font-size: 0.75rem;
             color: var(--gray-500);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.25rem;
         }
-        
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            font-family: 'Space Mono', monospace;
+
+        /* ─── Section Headers ─── */
+        .section {
+            padding: 5rem 0;
         }
-        
-        .stat-value.highlight {
-            color: var(--black);
-        }
-        
-        /* Health Factor */
-        .health-bar {
-            height: 8px;
-            background: var(--gray-200);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 1rem;
-        }
-        
-        .health-fill {
-            height: 100%;
-            background: var(--black);
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-        
-        .health-fill.safe { background: #22c55e; }
-        .health-fill.warning { background: #f59e0b; }
-        .health-fill.danger { background: #ef4444; }
-        
-        /* Action Buttons */
-        .action-group {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-        }
-        
-        .btn {
-            flex: 1;
-            padding: 1rem;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            border: none;
-        }
-        
-        .btn-primary {
-            background: var(--black);
-            color: var(--white);
-        }
-        
-        .btn-primary:hover {
-            background: var(--gray-800);
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background: var(--white);
-            color: var(--black);
-            border: 2px solid var(--black);
-        }
-        
-        .btn-secondary:hover {
-            background: var(--gray-100);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        /* Input Group */
-        .input-group {
-            margin-bottom: 1rem;
-        }
-        
-        .input-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-        
-        .input-wrapper {
-            display: flex;
-            background: var(--gray-100);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid transparent;
-            transition: border-color 0.2s;
-        }
-        
-        .input-wrapper:focus-within {
-            border-color: var(--black);
-        }
-        
-        .input-wrapper input {
-            flex: 1;
-            padding: 1rem;
-            border: none;
-            background: transparent;
-            font-size: 1.1rem;
-            font-family: 'Space Mono', monospace;
-            outline: none;
-        }
-        
-        .input-suffix {
-            padding: 1rem;
-            background: var(--gray-200);
-            font-weight: 600;
-            color: var(--gray-600);
-        }
-        
-        /* Tabs */
-        .tabs {
-            display: flex;
-            background: var(--gray-100);
-            border-radius: 10px;
-            padding: 4px;
-            margin-bottom: 1.5rem;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 0.75rem;
-            text-align: center;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            background: transparent;
-            font-family: inherit;
-        }
-        
-        .tab.active {
-            background: var(--white);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        /* Leverage Slider */
-        .leverage-control {
-            margin: 1.5rem 0;
-        }
-        
-        .leverage-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.75rem;
-        }
-        
-        .leverage-value {
-            font-family: 'Space Mono', monospace;
-            font-weight: 700;
-        }
-        
-        .leverage-slider {
-            width: 100%;
-            height: 8px;
-            -webkit-appearance: none;
-            background: var(--gray-200);
-            border-radius: 4px;
-            outline: none;
-        }
-        
-        .leverage-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
-            background: var(--black);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .leverage-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
-        
-        /* QR Code */
-        .qr-container {
-            text-align: center;
-            padding: 2rem;
-            background: var(--gray-100);
-            border-radius: 12px;
-            margin-top: 1rem;
-        }
-        
-        .qr-code {
-            width: 200px;
-            height: 200px;
-            background: var(--white);
-            margin: 0 auto 1rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            color: var(--gray-500);
-        }
-        
-        .qr-code img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        .copy-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: var(--white);
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        
-        .copy-btn:hover {
-            background: var(--gray-100);
-        }
-        
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--black);
-            color: var(--white);
-            padding: 1rem 2rem;
-            border-radius: 10px;
-            font-weight: 500;
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 9999;
-        }
-        
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-        
-        .toast.error {
-            background: #ef4444;
-        }
-        
-        .toast.success {
-            background: #22c55e;
-        }
-        
-        /* Contract Links */
-        .contracts-links {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        .contract-link {
-            font-size: 0.75rem;
-            color: var(--gray-500);
-            text-decoration: none;
-            padding: 0.25rem 0.5rem;
-            background: var(--gray-100);
-            border-radius: 4px;
-            font-family: 'Space Mono', monospace;
-        }
-        
-        .contract-link:hover {
-            background: var(--gray-200);
-            color: var(--black);
-        }
-        
-        /* Info Section */
-        .info-section {
-            padding: 4rem 0;
+
+        .section-border {
             border-top: 1px solid var(--gray-200);
         }
-        
-        .info-grid {
+
+        .section-gray {
+            background: var(--gray-100);
+        }
+
+        .section-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: var(--gray-500);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin-bottom: 3rem;
+        }
+
+        /* ─── Flow Grid (How It Works) ─── */
+        .flow-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--gray-200);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            overflow: hidden;
         }
-        
-        .info-card {
-            text-align: center;
-            padding: 2rem;
+
+        .flow-step {
+            background: var(--white);
+            padding: 2.5rem 2rem;
+            transition: all 0.3s;
         }
-        
-        .info-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--black);
-            color: var(--white);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            font-size: 1.25rem;
+
+        .flow-step:hover { background: var(--gray-100); }
+
+        .flow-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--gray-400);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
         }
-        
-        .info-title {
+
+        .flow-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .flow-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .flow-desc {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            line-height: 1.7;
+        }
+
+        /* ─── Card Grid ─── */
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--black);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .card-icon {
+            font-size: 1.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-title {
             font-size: 1.1rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
-        
-        .info-desc {
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            line-height: 1.75;
+        }
+
+        /* ─── Yield Table ─── */
+        .yield-table-wrap {
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            overflow: hidden;
+            max-width: 900px;
+        }
+
+        .yield-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .yield-table th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            background: var(--gray-100);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-500);
+            font-weight: 600;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .yield-table td {
+            padding: 1rem 1.5rem;
+            font-size: 0.92rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .yield-table tr:last-child td { border-bottom: none; }
+
+        .yield-table tr.highlight td {
+            background: var(--gray-100);
+            font-weight: 700;
+        }
+
+        .yield-table .mono {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .table-note {
+            font-size: 0.8rem;
+            color: var(--gray-400);
+            margin-top: 1rem;
+            max-width: 900px;
+        }
+
+        /* ─── Contracts Grid ─── */
+        .contracts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .chain-card {
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .chain-card:hover {
+            border-color: var(--black);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .chain-header {
+            padding: 1.25rem 1.5rem;
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .chain-name { font-weight: 700; }
+
+        .chain-id {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--gray-400);
+            margin-left: auto;
+        }
+
+        .contract-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            transition: background 0.2s;
+        }
+
+        .contract-row:last-child { border-bottom: none; }
+        .contract-row:hover { background: var(--gray-100); }
+
+        .contract-label {
+            font-size: 0.85rem;
             color: var(--gray-600);
-            font-size: 0.95rem;
         }
-        
-        /* Footer */
-        footer {
+
+        .contract-addr {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--black);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .contract-addr:hover { color: var(--gray-500); }
+
+        /* ─── Whitepaper Section ─── */
+        .wp-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .wp-visual {
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 3rem 2.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .wp-visual:hover {
+            border-color: var(--black);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .wp-visual::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
             background: var(--black);
-            color: var(--white);
-            padding: 3rem 2rem;
-            margin-top: 4rem;
         }
-        
-        .footer-content {
+
+        .wp-logo {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .wp-doc-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .wp-doc-sub {
+            font-size: 0.85rem;
+            color: var(--gray-400);
+            margin-bottom: 2rem;
+        }
+
+        .wp-toc {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .wp-toc li {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--gray-600);
+        }
+
+        .wp-toc li:last-child { border-bottom: none; }
+
+        .wp-toc-num {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--gray-400);
+            width: 24px;
+            flex-shrink: 0;
+        }
+
+        /* ─── Regulatory Grid ─── */
+        .reg-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--gray-200);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .reg-item {
+            background: var(--white);
+            padding: 2rem 1.75rem;
+            transition: background 0.2s;
+        }
+
+        .reg-item:hover { background: var(--gray-100); }
+
+        .reg-label {
+            font-size: 0.72rem;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+        }
+
+        .reg-value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .reg-value.mono {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            padding: 4rem 2rem 2.5rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .footer-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-brand-text {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-top: 1rem;
+            max-width: 300px;
+            line-height: 1.7;
+        }
+
+        .footer-col h4 {
+            font-size: 0.72rem;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.25rem;
+        }
+
+        .footer-col a {
+            display: block;
+            color: var(--gray-600);
+            text-decoration: none;
+            font-size: 0.875rem;
+            padding: 0.35rem 0;
+            transition: color 0.2s;
+        }
+
+        .footer-col a:hover { color: var(--black); }
+
+        .footer-bottom {
             max-width: 1200px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-200);
             flex-wrap: wrap;
             gap: 1rem;
         }
-        
-        .footer-logo {
-            height: 24px;
-            filter: invert(1);
+
+        .footer-copy {
+            font-size: 0.78rem;
+            color: var(--gray-400);
         }
-        
-        .footer-text {
-            color: var(--gray-500);
+
+        /* ─── Responsive ─── */
+        @media (max-width: 900px) {
+            .nav-links { display: none; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .flow-grid { grid-template-columns: 1fr 1fr; }
+            .card-grid { grid-template-columns: 1fr; }
+            .contracts-grid { grid-template-columns: 1fr; }
+            .wp-layout { grid-template-columns: 1fr; }
+            .reg-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .stats-bar { grid-template-columns: 1fr; }
+            .flow-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .hero { padding: 8rem 1.5rem 3rem; }
+        }
+
+        /* ─── Sticky CTA Bar (mobile + scroll) ─── */
+        .sticky-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--gray-200);
+            padding: 1rem 2rem;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sticky-cta.visible { transform: translateY(0); }
+
+        .sticky-cta-text {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .sticky-cta-text strong {
+            color: var(--black);
+        }
+
+        .sticky-cta .btn {
+            padding: 0.75rem 1.75rem;
             font-size: 0.875rem;
+            white-space: nowrap;
         }
-        
-        /* Loading */
-        .loading {
-            display: inline-block;
+
+        /* ─── CTA Section ─── */
+        .cta-section {
+            padding: 5rem 0;
+            text-align: center;
+            border-top: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .cta-section .section-title {
+            color: var(--white);
+            margin-bottom: 1rem;
+        }
+
+        .cta-section .cta-desc {
+            color: var(--gray-400);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto 2.5rem;
+        }
+
+        .cta-section .btn-primary {
+            background: var(--white);
+            color: var(--black);
+            padding: 1.1rem 2.5rem;
+            font-size: 1.05rem;
+        }
+
+        .cta-section .btn-primary:hover {
+            background: var(--gray-200);
+        }
+
+        /* ─── Mobile menu ─── */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-menu-btn span {
+            display: block;
             width: 20px;
-            height: 20px;
-            border: 2px solid var(--gray-300);
-            border-top-color: var(--black);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            height: 2px;
+            background: var(--black);
+            margin: 4px 0;
+            transition: 0.2s;
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            nav {
-                padding: 1rem;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-            
-            .hero {
-                padding: 8rem 1.5rem 3rem;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .container {
-                padding: 0 1rem;
-            }
-            
-            .position-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .action-group {
-                flex-direction: column;
-            }
-        }
-        
-        /* Hidden */
-        .hidden {
-            display: none !important;
+
+        @media (max-width: 900px) {
+            .mobile-menu-btn { display: block; }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
-        <div class="nav-content">
-            <img src="logo_efix_400x400.jpg" alt="Efix" class="logo">
-            <div class="nav-right">
-                <ul class="nav-links">
-                    <li><a href="#app">App</a></li>
-                    <li><a href="#info">Como Funciona</a></li>
-                    <li><a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank">Contratos</a></li>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+    <div class="nav-content">
+        <a href="#">
+            <img src="./logo_efix_400x400.jpg" alt="EFIX" class="logo">
+        </a>
+        <div class="nav-right">
+            <ul class="nav-links">
+                <li><a href="#how">How It Works</a></li>
+                <li><a href="#yield">Yield</a></li>
+                <li><a href="#contracts">Contracts</a></li>
+                <li><a href="#whitepaper">Whitepaper</a></li>
+                <li><a href="#regulatory">Regulatory</a></li>
+            </ul>
+            <a href="/app" class="nav-cta">Launch App →</a>
+        </div>
+        <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('show')">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+    <img src="./logo_efix_400x400.jpg" alt="EFIX" class="hero-logo">
+    <h1>Brazilian Fixed Income,<br>DeFi-Native Yield</h1>
+    <p class="subtitle">
+        EFIX tokenizes Brazilian DI fund shares — tracking the CDI rate at ~15% APY — and bridges them into 
+        decentralized lending markets. Regulated collateral. Same-day redemption. Cross-chain leverage.
+    </p>
+    <div class="hero-actions">
+        <a href="/app" class="btn btn-primary">Start Earning →</a>
+        <a href="./efixDI_Whitepaper_v1.pdf" target="_blank" class="btn btn-secondary">Read Whitepaper</a>
+    </div>
+    <div class="status-badge">
+        <span class="dot"></span>
+        Live on Polygon &amp; Base Mainnet
+    </div>
+</section>
+
+<!-- ═══ STATS ═══ -->
+<div class="container">
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="stat-value">~15%</div>
+            <div class="stat-label">CDI Base Rate</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">25-35%</div>
+            <div class="stat-label">Target APY (Leveraged)</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">D+0</div>
+            <div class="stat-label">Redemption Speed</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">CVM</div>
+            <div class="stat-label">Regulated Entity</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section id="how" class="section section-border">
+    <div class="container">
+        <div class="section-label">Protocol</div>
+        <h2 class="section-title">From PIX to DeFi Yield<br>in Four Steps</h2>
+        <p class="section-desc">EFIX bridges the gap between Brazil's regulated financial infrastructure and permissionless DeFi lending markets.</p>
+        <div class="flow-grid">
+            <div class="flow-step">
+                <div class="flow-number">Step 01</div>
+                <div class="flow-icon">💳</div>
+                <div class="flow-title">Deposit via PIX</div>
+                <div class="flow-desc">Send BRL via PIX to the EFIX SPE. Funds are received instantly through HausBank's payment infrastructure.</div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-number">Step 02</div>
+                <div class="flow-icon">🏦</div>
+                <div class="flow-title">Buy DI Fund Shares</div>
+                <div class="flow-desc">The SPE purchases DI-linked fund shares through Genial IAAS, tracking the CDI interbank rate (~15% p.a.).</div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-number">Step 03</div>
+                <div class="flow-icon">🪙</div>
+                <div class="flow-title">Mint efixDI Tokens</div>
+                <div class="flow-desc">efixDI tokens are minted 1:1 on Polygon, representing the underlying fund shares. Tokens accrue daily CDI yield.</div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-number">Step 04</div>
+                <div class="flow-icon">⚡</div>
+                <div class="flow-title">Leverage on Morpho</div>
+                <div class="flow-desc">Bridge efixDI to Base via LayerZero, deposit as collateral on Morpho Blue, borrow USDC, and loop for enhanced yield.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ WHY EFIX ═══ -->
+<section class="section">
+    <div class="container">
+        <div class="section-label">Advantages</div>
+        <h2 class="section-title">Why Tokenized DI Funds?</h2>
+        <p class="section-desc">The protocol's core innovation: leveraging D+0 redemption of Brazilian DI funds to eliminate FX hedge costs while maintaining capital protection.</p>
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">🛡️</div>
+                <div class="card-title">Regulated Collateral</div>
+                <div class="card-desc">efixDI is backed 1:1 by ANBIMA-certified DI fund shares held at a CVM-registered securitizer. Unlike crypto-native collateral, the underlying asset has guaranteed capital protection and daily yield accrual.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">⏱️</div>
+                <div class="card-title">D+0 Same-Day Redemption</div>
+                <div class="card-desc">DI funds offer same-day liquidity (D+0), enabling instant collateral liquidation. This eliminates the need for expensive FX derivatives that cost 2-3% annually in traditional RWA strategies.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🌐</div>
+                <div class="card-title">Cross-Chain Architecture</div>
+                <div class="card-desc">Built on Polygon (minting &amp; yield) and Base (DeFi leverage) with LayerZero V2 OFT bridging. Composable with the broader DeFi ecosystem — Morpho Blue, Aave, and beyond.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Sustainable Yield Spread</div>
+                <div class="card-desc">The protocol earns the spread between CDI returns (~15% APY) and USDC borrow costs (~1-5% APY). This is a structural, non-speculative yield source independent of crypto market conditions.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ YIELD ═══ -->
+<section id="yield" class="section section-border section-gray">
+    <div class="container">
+        <div class="section-label">Economics</div>
+        <h2 class="section-title">Yield Enhancement Model</h2>
+        <p class="section-desc">Each leverage loop multiplies exposure to the CDI-USDC spread. The protocol targets conservative 2-3 loops for optimal risk-adjusted returns.</p>
+        <div class="yield-table-wrap">
+            <table class="yield-table">
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Multiplier</th>
+                        <th>Gross APY</th>
+                        <th>Net APY</th>
+                        <th>Health Factor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Hold (no leverage)</td>
+                        <td class="mono">1.00×</td>
+                        <td class="mono">15.0%</td>
+                        <td class="mono">12.5%</td>
+                        <td>∞</td>
+                    </tr>
+                    <tr>
+                        <td>1 Loop</td>
+                        <td class="mono">1.77×</td>
+                        <td class="mono">22.7%</td>
+                        <td class="mono">20.0%</td>
+                        <td class="mono">1.77</td>
+                    </tr>
+                    <tr class="highlight">
+                        <td><strong>2 Loops ★ Recommended</strong></td>
+                        <td class="mono">2.36×</td>
+                        <td class="mono">28.6%</td>
+                        <td class="mono">25.6%</td>
+                        <td class="mono">1.49</td>
+                    </tr>
+                    <tr>
+                        <td>3 Loops</td>
+                        <td class="mono">2.82×</td>
+                        <td class="mono">33.2%</td>
+                        <td class="mono">29.8%</td>
+                        <td class="mono">1.38</td>
+                    </tr>
+                    <tr>
+                        <td>4 Loops (max)</td>
+                        <td class="mono">3.05×</td>
+                        <td class="mono">35.5%</td>
+                        <td class="mono">33.0%</td>
+                        <td class="mono">1.28</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="table-note">
+            * Net APY after 20% performance fee. Morpho Blue LLTV: 77%. Auto-deleverage triggers at Health Factor &lt; 1.15. 
+            CDI rate: ~14.9% (Feb 2026). USDC borrow rate varies with market utilization.
+        </p>
+    </div>
+</section>
+
+<!-- ═══ CONTRACTS ═══ -->
+<section id="contracts" class="section section-border">
+    <div class="container">
+        <div class="section-label">Infrastructure</div>
+        <h2 class="section-title">Deployed Contracts</h2>
+        <p class="section-desc">All contracts are live on mainnet. OpenZeppelin security audit is in progress.</p>
+        <div class="contracts-grid">
+            <div class="chain-card">
+                <div class="chain-header">
+                    <span style="font-size: 1.2rem;">🟣</span>
+                    <span class="chain-name">Polygon</span>
+                    <span class="chain-id">Chain 137</span>
+                </div>
+                <div class="contract-row">
+                    <span class="contract-label">EfixDI Token</span>
+                    <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank" class="contract-addr">0x0408...6441</a>
+                </div>
+                <div class="contract-row">
+                    <span class="contract-label">EfixVault V2</span>
+                    <a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank" class="contract-addr">0x2eA5...307C</a>
+                </div>
+                <div class="contract-row">
+                    <span class="contract-label">PIX Bridge</span>
+                    <a href="https://polygonscan.com/address/0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3" target="_blank" class="contract-addr">0x1d97...f4C3</a>
+                </div>
+                <div class="contract-row">
+                    <span class="contract-label">LayerZero OFT</span>
+                    <a href="https://polygonscan.com/address/0x60327dD21CFfB0Ab2DA65C22e0e80FD42e91258Fc" target="_blank" class="contract-addr">0x6032...58Fc</a>
+                </div>
+            </div>
+            <div class="chain-card">
+                <div class="chain-header">
+                    <span style="font-size: 1.2rem;">🔵</span>
+                    <span class="chain-name">Base</span>
+                    <span class="chain-id">Chain 8453</span>
+                </div>
+                <div class="contract-row">
+                    <span class="contract-label">EfixDI Token</span>
+                    <a href="https://basescan.org/address/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" class="contract-addr">0xF5cA...5608</a>
+                </div>
+                <div class="contract-row">
+                    <span class="contract-label">Morpho Vault V2</span>
+                    <a href="https://basescan.org/address/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank" class="contract-addr">0xf4A3...CBd5</a>
+                </div>
+                <div class="contract-row">
+                    <span class="contract-label">Oracle V2</span>
+                    <a href="https://basescan.org/address/0xFC6a6Af4B7F398F70103F2f4b76E81afefc6Ea86" target="_blank" class="contract-addr">0xFC6a...Ea86</a>
+                </div>
+                <div class="contract-row">
+                    <span class="contract-label">Morpho Market</span>
+                    <a href="https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a/efixdi-usdc" target="_blank" class="contract-addr">efixDI/USDC (77% LLTV)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ WHITEPAPER ═══ -->
+<section id="whitepaper" class="section section-border section-gray">
+    <div class="container">
+        <div class="wp-layout">
+            <div>
+                <div class="section-label">Documentation</div>
+                <h2 class="section-title">efixDI+ Protocol<br>Whitepaper</h2>
+                <p style="color: var(--gray-500); font-size: 1rem; margin-bottom: 1.5rem; line-height: 1.75; max-width: 480px;">
+                    A comprehensive technical document covering the protocol's architecture, yield mechanics, 
+                    risk framework, smart contract design, and regulatory compliance structure.
+                </p>
+                <p style="color: var(--gray-500); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.75; max-width: 480px;">
+                    The whitepaper details how EFIX creates a sustainable yield spread by bridging Brazil's R$6+ trillion 
+                    fixed-income market into permissionless DeFi lending protocols. It covers the mathematical model 
+                    behind recursive leverage loops, liquidation risk analysis, oracle design, and the regulatory 
+                    framework under CVM Resolution 60.
+                </p>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <a href="./efixDI_Whitepaper_v1.pdf" target="_blank" class="btn btn-primary">Download PDF</a>
+                    <a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank" class="btn btn-secondary">GitHub →</a>
+                </div>
+            </div>
+            <div class="wp-visual">
+                <img src="./logo_efix_400x400.jpg" alt="EFIX" class="wp-logo">
+                <div class="wp-doc-title">efixDI+ Whitepaper v1.0</div>
+                <div class="wp-doc-sub">February 2026 · 11 pages</div>
+                <ul class="wp-toc">
+                    <li><span class="wp-toc-num">01</span> Executive Summary</li>
+                    <li><span class="wp-toc-num">02</span> Market Opportunity</li>
+                    <li><span class="wp-toc-num">03</span> Protocol Architecture</li>
+                    <li><span class="wp-toc-num">04</span> Smart Contract Infrastructure</li>
+                    <li><span class="wp-toc-num">05</span> Yield Enhancement Mathematics</li>
+                    <li><span class="wp-toc-num">06</span> Oracle &amp; Price Feeds</li>
+                    <li><span class="wp-toc-num">07</span> Risk Framework</li>
+                    <li><span class="wp-toc-num">08</span> Cross-Chain (LayerZero V2)</li>
+                    <li><span class="wp-toc-num">09</span> Morpho Blue Integration</li>
+                    <li><span class="wp-toc-num">10</span> Regulatory Compliance</li>
+                    <li><span class="wp-toc-num">11</span> Security &amp; Audit</li>
+                    <li><span class="wp-toc-num">12</span> Roadmap</li>
+                    <li><span class="wp-toc-num">13</span> Contact &amp; Links</li>
                 </ul>
-                <button id="connectBtn" class="connect-btn">Conectar Wallet</button>
+                <a href="./efixDI_Whitepaper_v1.pdf" target="_blank" class="btn btn-primary" style="width: 100%; justify-content: center;">Download Whitepaper</a>
             </div>
         </div>
-    </nav>
+    </div>
+</section>
 
-    <!-- Hero -->
-    <section class="hero">
-        <img src="logo_efix_400x400.jpg" alt="Efix" class="hero-logo">
-        <h1>Renda Fixa Tokenizada</h1>
-        <p class="subtitle">Deposite BRL via PIX, receba tokens efixDI lastreados em CDI com rendimento de até 25% a.a.</p>
-        <div id="statusBadge" class="status-badge">
-            <span class="dot"></span>
-            <span id="statusText">Desconectado</span>
-        </div>
-        <div class="contracts-links">
-            <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank" class="contract-link">Token</a>
-            <a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank" class="contract-link">Vault</a>
-            <a href="https://polygonscan.com/address/0x13AB76468eFE0d35f2700DEcBd52Ce28f8827A0C" target="_blank" class="contract-link">Pool</a>
-        </div>
-    </section>
-
-    <!-- App Section -->
-    <section id="app" class="app-section">
-        <div class="container">
-            <div class="app-grid">
-                <!-- Position Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Sua Posição</span>
-                        <span class="card-badge" id="apyBadge">~22% APY</span>
-                    </div>
-                    
-                    <div class="position-stats">
-                        <div class="stat-item">
-                            <div class="stat-label">Principal</div>
-                            <div class="stat-value" id="principalValue">R$ 0,00</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">efixDI</div>
-                            <div class="stat-value highlight" id="efixdiValue">0,00</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Dívida USDC</div>
-                            <div class="stat-value" id="debtValue">$0,00</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Loops</div>
-                            <div class="stat-value" id="loopsValue">0</div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
-                            <span>Health Factor</span>
-                            <span id="healthValue" style="font-weight: 700;">∞</span>
-                        </div>
-                        <div class="health-bar">
-                            <div class="health-fill safe" id="healthFill" style="width: 100%;"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Leverage Control -->
-                    <div class="leverage-control">
-                        <div class="leverage-header">
-                            <span class="input-label">Alavancagem</span>
-                            <span class="leverage-value" id="leverageDisplay">0x</span>
-                        </div>
-                        <input type="range" class="leverage-slider" id="leverageSlider" min="0" max="3" value="0" step="1">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--gray-500); margin-top: 0.5rem;">
-                            <span>0x (15%)</span>
-                            <span>1x (22%)</span>
-                            <span>2x (27%)</span>
-                            <span>3x (32%)</span>
-                        </div>
-                    </div>
-                    
-                    <div class="action-group">
-                        <button class="btn btn-primary" id="leverageBtn" disabled>Aplicar Leverage</button>
-                        <button class="btn btn-secondary" id="deleverageBtn" disabled>Remover</button>
-                    </div>
-                </div>
-                
-                <!-- Deposit/Withdraw Card -->
-                <div class="card">
-                    <div class="tabs">
-                        <button class="tab active" data-tab="deposit">Depositar</button>
-                        <button class="tab" data-tab="withdraw">Sacar</button>
-                    </div>
-                    
-                    <!-- Deposit Tab -->
-                    <div id="depositTab">
-                        <div class="input-group">
-                            <label class="input-label">Valor do Depósito</label>
-                            <div class="input-wrapper">
-                                <input type="number" id="depositAmount" placeholder="0,00" min="10" step="0.01">
-                                <span class="input-suffix">BRL</span>
-                            </div>
-                        </div>
-                        
-                        <button class="btn btn-primary" id="generatePixBtn" style="width: 100%;">
-                            Gerar QR Code PIX
-                        </button>
-                        
-                        <div id="qrContainer" class="qr-container hidden">
-                            <div class="qr-code" id="qrCode">
-                                Gerando QR Code...
-                            </div>
-                            <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 1rem;">
-                                Escaneie o QR Code ou copie o código
-                            </p>
-                            <button class="copy-btn" id="copyPixBtn">
-                                📋 Copiar código PIX
-                            </button>
-                            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 1rem;">
-                                Após o pagamento, seus tokens serão mintados automaticamente.
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <!-- Withdraw Tab -->
-                    <div id="withdrawTab" class="hidden">
-                        <div class="input-group">
-                            <label class="input-label">Valor do Saque</label>
-                            <div class="input-wrapper">
-                                <input type="number" id="withdrawAmount" placeholder="0,00" min="1" step="0.01">
-                                <span class="input-suffix">efixDI</span>
-                            </div>
-                        </div>
-                        
-                        <div class="input-group">
-                            <label class="input-label">Chave PIX</label>
-                            <div class="input-wrapper">
-                                <input type="text" id="pixKey" placeholder="CPF, email, telefone ou chave aleatória">
-                            </div>
-                        </div>
-                        
-                        <button class="btn btn-primary" id="withdrawBtn" style="width: 100%;" disabled>
-                            Sacar via PIX
-                        </button>
-                        
-                        <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 1rem; text-align: center;">
-                            ⚠️ Você deve remover toda alavancagem antes de sacar.
-                        </p>
-                    </div>
-                </div>
+<!-- ═══ REGULATORY ═══ -->
+<section id="regulatory" class="section section-border">
+    <div class="container">
+        <div class="section-label">Compliance</div>
+        <h2 class="section-title">Regulatory Framework</h2>
+        <p class="section-desc">EFIX operates as a CVM-registered closed securitizer under Brazilian securities law, issuing Certificados de Recebiveis (CRs).</p>
+        <div class="reg-grid">
+            <div class="reg-item">
+                <div class="reg-label">Entity</div>
+                <div class="reg-value">Efix Securitizadora S.A.</div>
+            </div>
+            <div class="reg-item">
+                <div class="reg-label">CNPJ</div>
+                <div class="reg-value mono">60.756.859/0001-57</div>
+            </div>
+            <div class="reg-item">
+                <div class="reg-label">CVM Act</div>
+                <div class="reg-value mono">23.635 / 2025</div>
+            </div>
+            <div class="reg-item">
+                <div class="reg-label">Instrument</div>
+                <div class="reg-value">Certificados de Recebiveis</div>
+            </div>
+            <div class="reg-item">
+                <div class="reg-label">License Type</div>
+                <div class="reg-value">Closed Securitization Co.</div>
+            </div>
+            <div class="reg-item">
+                <div class="reg-label">Security Audit</div>
+                <div class="reg-value">OpenZeppelin (In Progress)</div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Info Section -->
-    <section id="info" class="info-section">
-        <div class="container">
-            <div class="info-grid">
-                <div class="info-card">
-                    <div class="info-icon">💰</div>
-                    <div class="info-title">Depósito via PIX</div>
-                    <div class="info-desc">Deposite reais instantaneamente via PIX. Seus tokens são mintados automaticamente.</div>
-                </div>
-                <div class="info-card">
-                    <div class="info-icon">📈</div>
-                    <div class="info-title">Rendimento CDI</div>
-                    <div class="info-desc">Tokens lastreados em Fundo DI com liquidez D+0 e rendimento de ~15% a.a.</div>
-                </div>
-                <div class="info-card">
-                    <div class="info-icon">⚡</div>
-                    <div class="info-title">Alavancagem DeFi</div>
-                    <div class="info-desc">Amplifique seus rendimentos com alavancagem segura usando USDC. Até 32% APY.</div>
-                </div>
-                <div class="info-card">
-                    <div class="info-icon">🔒</div>
-                    <div class="info-title">100% On-Chain</div>
-                    <div class="info-desc">Contratos auditados na Polygon. Seus tokens, sua custódia.</div>
-                </div>
-            </div>
+<!-- ═══ CTA SECTION ═══ -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="section-title">Start Earning 15%+ APY<br>on Brazilian Fixed Income</h2>
+        <p class="cta-desc">Deposit via PIX. Earn CDI yields. Leverage on Morpho. All in one interface.</p>
+        <a href="/app" class="btn btn-primary">Launch App →</a>
+    </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+    <div class="footer-grid">
+        <div>
+            <img src="./logo_efix_400x400.jpg" alt="EFIX" class="logo" style="margin-bottom: 0.25rem;">
+            <p class="footer-brand-text">Bridging Brazilian fixed-income assets into decentralized finance. CVM-regulated. Built for composability.</p>
         </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <img src="logo_efix_400x400.jpg" alt="Efix" class="footer-logo">
-            <p class="footer-text">© 2026 Efix Finance. Todos os direitos reservados.</p>
+        <div class="footer-col">
+            <h4>Protocol</h4>
+            <a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho Vault</a>
+            <a href="https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a/efixdi-usdc" target="_blank">Morpho Market</a>
+            <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token (Polygon)</a>
+            <a href="https://basescan.org/address/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank">Token (Base)</a>
         </div>
-    </footer>
+        <div class="footer-col">
+            <h4>Resources</h4>
+            <a href="./efixDI_Whitepaper_v1.pdf" target="_blank">Whitepaper</a>
+            <a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank">GitHub</a>
+            <a href="#how">Documentation</a>
+        </div>
+        <div class="footer-col">
+            <h4>Contact</h4>
+            <a href="mailto:contato@efix.com.br">contato@efix.com.br</a>
+            <a href="mailto:ernesto.otero@hausbank.com.br">ernesto.otero@hausbank.com.br</a>
+            <a>Rio de Janeiro, Brazil</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span class="footer-copy">© 2026 Efix Securitizadora S.A. · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025</span>
+        <span class="footer-copy">Polygon · Base · Morpho Blue · LayerZero</span>
+    </div>
+</footer>
 
-    <!-- Toast -->
-    <div id="toast" class="toast"></div>
+<!-- ═══ STICKY CTA BAR ═══ -->
+<div class="sticky-cta" id="stickyCta">
+    <span class="sticky-cta-text"><strong>~25% APY</strong> on tokenized Brazilian fixed income</span>
+    <a href="/app" class="btn btn-primary">Launch App →</a>
+</div>
 
-    <script>
-        // Contract Addresses (Polygon Mainnet)
-        const CONTRACTS = {
-            vault: '0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C',
-            efixDIToken: '0x04082b283818D9d0dd9Ee8742892eEe5CC396441',
-            pixBridge: '0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3',
-            lendingPool: '0x13AB76468eFE0d35f2700DEcBd52Ce28f8827A0C',
-            oracle: '0xD9d24596DDAbB1CcE603D4d8AD04A97c1836Ae94'
-        };
+<script>
+const stickyCta = document.getElementById('stickyCta');
+const hero = document.querySelector('.hero');
+let ticking = false;
+window.addEventListener('scroll', () => {
+    if (!ticking) {
+        window.requestAnimationFrame(() => {
+            const heroBottom = hero.offsetTop + hero.offsetHeight;
+            stickyCta.classList.toggle('visible', window.scrollY > heroBottom);
+            ticking = false;
+        });
+        ticking = true;
+    }
+});
+</script>
 
-        const POLYGON_CHAIN_ID = '0x89'; // 137
-
-        // ABIs
-        const VAULT_ABI = [
-            'function positions(address) view returns (uint256 principal, uint256 efixDIBalance, uint256 borrowedUSDC, uint256 leverageLoops, uint256 lastUpdateTimestamp, bool hedgeActive)',
-            'function getHealthFactor(address) view returns (uint256)',
-            'function applyLeverage(uint8 loops) external',
-            'function deleverage(uint8 loops) external',
-            'function withdraw(uint256 amount, string pixKey) external'
-        ];
-
-        const TOKEN_ABI = [
-            'function balanceOf(address) view returns (uint256)',
-            'function approve(address spender, uint256 amount) external returns (bool)',
-            'function allowance(address owner, address spender) view returns (uint256)'
-        ];
-
-        // State
-        let provider = null;
-        let signer = null;
-        let userAddress = null;
-        let contracts = {};
-        let currentPosition = null;
-        let pixCode = null;
-
-        // DOM Elements
-        const connectBtn = document.getElementById('connectBtn');
-        const statusBadge = document.getElementById('statusBadge');
-        const statusText = document.getElementById('statusText');
-        const toast = document.getElementById('toast');
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', init);
-
-        async function init() {
-            // Setup event listeners
-            connectBtn.addEventListener('click', connectWallet);
-            
-            // Tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-            });
-            
-            // Leverage slider
-            document.getElementById('leverageSlider').addEventListener('input', updateLeverageDisplay);
-            
-            // Buttons
-            document.getElementById('generatePixBtn').addEventListener('click', generatePixQR);
-            document.getElementById('copyPixBtn').addEventListener('click', copyPixCode);
-            document.getElementById('leverageBtn').addEventListener('click', applyLeverage);
-            document.getElementById('deleverageBtn').addEventListener('click', removeLeverage);
-            document.getElementById('withdrawBtn').addEventListener('click', withdrawFunds);
-            
-            // Check if already connected
-            if (window.ethereum) {
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length > 0) {
-                    await connectWallet();
-                }
-                
-                // Listen for account changes
-                window.ethereum.on('accountsChanged', handleAccountChange);
-                window.ethereum.on('chainChanged', () => window.location.reload());
-            }
-        }
-
-        async function connectWallet() {
-            if (!window.ethereum) {
-                showToast('Por favor, instale a MetaMask!', 'error');
-                window.open('https://metamask.io/download/', '_blank');
-                return;
-            }
-
-            try {
-                // Request accounts
-                const accounts = await window.ethereum.request({ 
-                    method: 'eth_requestAccounts' 
-                });
-                
-                // Check network
-                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-                if (chainId !== POLYGON_CHAIN_ID) {
-                    await switchToPolygon();
-                }
-                
-                // Setup provider
-                provider = new ethers.BrowserProvider(window.ethereum);
-                signer = await provider.getSigner();
-                userAddress = accounts[0];
-                
-                // Setup contracts
-                contracts.vault = new ethers.Contract(CONTRACTS.vault, VAULT_ABI, signer);
-                contracts.token = new ethers.Contract(CONTRACTS.efixDIToken, TOKEN_ABI, signer);
-                
-                // Update UI
-                updateConnectedUI();
-                await loadPosition();
-                
-                showToast('Wallet conectada!', 'success');
-                
-            } catch (error) {
-                console.error('Connect error:', error);
-                showToast('Erro ao conectar: ' + error.message, 'error');
-            }
-        }
-
-        async function switchToPolygon() {
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: POLYGON_CHAIN_ID }]
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: POLYGON_CHAIN_ID,
-                            chainName: 'Polygon Mainnet',
-                            nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-                            rpcUrls: ['https://polygon-rpc.com'],
-                            blockExplorerUrls: ['https://polygonscan.com']
-                        }]
-                    });
-                }
-            }
-        }
-
-        function handleAccountChange(accounts) {
-            if (accounts.length === 0) {
-                userAddress = null;
-                updateDisconnectedUI();
-            } else {
-                userAddress = accounts[0];
-                updateConnectedUI();
-                loadPosition();
-            }
-        }
-
-        function updateConnectedUI() {
-            const shortAddr = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
-            connectBtn.textContent = shortAddr;
-            connectBtn.classList.add('connected');
-            statusBadge.classList.add('connected');
-            statusText.textContent = 'Polygon Mainnet';
-            
-            // Enable buttons
-            document.getElementById('leverageBtn').disabled = false;
-            document.getElementById('deleverageBtn').disabled = false;
-            document.getElementById('withdrawBtn').disabled = false;
-        }
-
-        function updateDisconnectedUI() {
-            connectBtn.textContent = 'Conectar Wallet';
-            connectBtn.classList.remove('connected');
-            statusBadge.classList.remove('connected');
-            statusText.textContent = 'Desconectado';
-            
-            // Disable buttons
-            document.getElementById('leverageBtn').disabled = true;
-            document.getElementById('deleverageBtn').disabled = true;
-            document.getElementById('withdrawBtn').disabled = true;
-        }
-
-        async function loadPosition() {
-            if (!contracts.vault || !userAddress) return;
-            
-            try {
-                const position = await contracts.vault.positions(userAddress);
-                const hf = await contracts.vault.getHealthFactor(userAddress);
-                
-                currentPosition = {
-                    principal: position[0],
-                    efixDIBalance: position[1],
-                    borrowedUSDC: position[2],
-                    leverageLoops: Number(position[3])
-                };
-                
-                // Update UI
-                document.getElementById('principalValue').textContent = 
-                    'R$ ' + parseFloat(ethers.formatEther(position[0])).toFixed(2).replace('.', ',');
-                document.getElementById('efixdiValue').textContent = 
-                    parseFloat(ethers.formatEther(position[1])).toFixed(2).replace('.', ',');
-                document.getElementById('debtValue').textContent = 
-                    '$' + parseFloat(ethers.formatUnits(position[2], 6)).toFixed(2);
-                document.getElementById('loopsValue').textContent = position[3].toString();
-                
-                // Health Factor
-                let hfValue = '∞';
-                let hfPercent = 100;
-                let hfClass = 'safe';
-                
-                if (hf.toString() !== ethers.MaxUint256.toString()) {
-                    const hfNum = Number(hf) / 1e16;
-                    hfValue = hfNum.toFixed(2);
-                    hfPercent = Math.min(100, (hfNum / 3) * 100);
-                    
-                    if (hfNum < 1.1) hfClass = 'danger';
-                    else if (hfNum < 1.3) hfClass = 'warning';
-                }
-                
-                document.getElementById('healthValue').textContent = hfValue;
-                const healthFill = document.getElementById('healthFill');
-                healthFill.style.width = hfPercent + '%';
-                healthFill.className = 'health-fill ' + hfClass;
-                
-                // Update APY badge
-                const loops = Number(position[3]);
-                const apys = [15, 22, 27, 32];
-                document.getElementById('apyBadge').textContent = '~' + apys[Math.min(loops, 3)] + '% APY';
-                
-                // Update leverage slider
-                document.getElementById('leverageSlider').value = loops;
-                updateLeverageDisplay();
-                
-            } catch (error) {
-                console.error('Load position error:', error);
-            }
-        }
-
-        function updateLeverageDisplay() {
-            const slider = document.getElementById('leverageSlider');
-            const value = parseInt(slider.value);
-            document.getElementById('leverageDisplay').textContent = value + 'x';
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            
-            document.getElementById('depositTab').classList.toggle('hidden', tab !== 'deposit');
-            document.getElementById('withdrawTab').classList.toggle('hidden', tab !== 'withdraw');
-        }
-
-        // Backend URL - PIX Bridge Server
-        const PIX_BACKEND_URL = 'https://prointegration-bastioned-yaretzi.ngrok-free.dev';
-
-        async function generatePixQR() {
-            const amount = parseFloat(document.getElementById('depositAmount').value);
-            
-            if (!amount || amount < 1) {
-                showToast('Valor mínimo: R$ 1,00', 'error');
-                return;
-            }
-
-            if (!userAddress) {
-                showToast('Conecte sua wallet primeiro', 'error');
-                return;
-            }
-            
-            showToast('Gerando QR Code...', 'success');
-            
-            const qrContainer = document.getElementById('qrContainer');
-            const qrCode = document.getElementById('qrCode');
-            
-            qrContainer.classList.remove('hidden');
-            qrCode.innerHTML = '<div class="loading"></div>';
-            
-            try {
-                // Call backend to generate real PIX QR Code
-                const response = await fetch(PIX_BACKEND_URL + '/api/pix/qrcode', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true'
-                    },
-                    body: JSON.stringify({
-                        amount: amount.toFixed(2),
-                        walletAddress: userAddress
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (!data.success) {
-                    throw new Error(data.error || 'Erro ao gerar QR Code');
-                }
-                
-                // Store the EMV code for copy function
-                pixCode = data.qrcode.emv;
-                
-                // Display QR Code
-                qrCode.innerHTML = `
-                    <img src="${data.qrcode.imageUrl}" alt="QR Code PIX" style="border-radius: 8px;">
-                    <p style="margin-top: 12px; font-size: 0.875rem; color: var(--gray-500);">
-                        Valor: <strong>R$ ${parseFloat(data.qrcode.amount).toFixed(2).replace('.', ',')}</strong>
-                    </p>
-                `;
-                
-                showToast('QR Code gerado com sucesso!', 'success');
-                
-            } catch (error) {
-                console.error('PIX QR Error:', error);
-                qrCode.innerHTML = '<p style="color: red;">Erro ao gerar QR Code</p>';
-                showToast('Erro: ' + error.message, 'error');
-            }
-        }
-
-        function copyPixCode() {
-            if (pixCode) {
-                navigator.clipboard.writeText(pixCode);
-                showToast('Código PIX copiado!', 'success');
-            }
-        }
-
-        async function applyLeverage() {
-            if (!contracts.vault || !userAddress) {
-                showToast('Conecte sua wallet primeiro', 'error');
-                return;
-            }
-            
-            const targetLoops = parseInt(document.getElementById('leverageSlider').value);
-            const currentLoops = currentPosition?.leverageLoops || 0;
-            
-            if (targetLoops <= currentLoops) {
-                showToast('Selecione um nível maior de alavancagem', 'error');
-                return;
-            }
-            
-            const loopsToApply = targetLoops - currentLoops;
-            
-            try {
-                // Check allowance
-                const allowance = await contracts.token.allowance(userAddress, CONTRACTS.vault);
-                if (allowance < ethers.MaxUint256 / 2n) {
-                    showToast('Aprovando tokens...', 'success');
-                    const approveTx = await contracts.token.approve(CONTRACTS.vault, ethers.MaxUint256);
-                    await approveTx.wait();
-                }
-                
-                showToast('Aplicando alavancagem...', 'success');
-                const tx = await contracts.vault.applyLeverage(loopsToApply);
-                await tx.wait();
-                
-                showToast('Alavancagem aplicada!', 'success');
-                await loadPosition();
-                
-            } catch (error) {
-                console.error('Leverage error:', error);
-                showToast('Erro: ' + (error.reason || error.message), 'error');
-            }
-        }
-
-        async function removeLeverage() {
-            if (!contracts.vault || !userAddress) {
-                showToast('Conecte sua wallet primeiro', 'error');
-                return;
-            }
-            
-            const currentLoops = currentPosition?.leverageLoops || 0;
-            
-            if (currentLoops === 0) {
-                showToast('Você não tem alavancagem ativa', 'error');
-                return;
-            }
-            
-            try {
-                showToast('Removendo alavancagem...', 'success');
-                const tx = await contracts.vault.deleverage(1);
-                await tx.wait();
-                
-                showToast('Alavancagem removida!', 'success');
-                await loadPosition();
-                
-            } catch (error) {
-                console.error('Deleverage error:', error);
-                showToast('Erro: ' + (error.reason || error.message), 'error');
-            }
-        }
-
-        async function withdrawFunds() {
-            if (!contracts.vault || !userAddress) {
-                showToast('Conecte sua wallet primeiro', 'error');
-                return;
-            }
-            
-            const amount = parseFloat(document.getElementById('withdrawAmount').value);
-            const pixKey = document.getElementById('pixKey').value;
-            
-            if (!amount || amount <= 0) {
-                showToast('Digite um valor válido', 'error');
-                return;
-            }
-            
-            if (!pixKey) {
-                showToast('Digite sua chave PIX', 'error');
-                return;
-            }
-            
-            if (currentPosition?.leverageLoops > 0) {
-                showToast('Remova toda alavancagem antes de sacar', 'error');
-                return;
-            }
-            
-            try {
-                showToast('Processando saque...', 'success');
-                const amountWei = ethers.parseEther(amount.toString());
-                const tx = await contracts.vault.withdraw(amountWei, pixKey);
-                await tx.wait();
-                
-                showToast('Saque solicitado! PIX em até 30 min.', 'success');
-                await loadPosition();
-                
-            } catch (error) {
-                console.error('Withdraw error:', error);
-                showToast('Erro: ' + (error.reason || error.message), 'error');
-            }
-        }
-
-        function showToast(message, type = 'info') {
-            toast.textContent = message;
-            toast.className = 'toast show ' + type;
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-    </script>
 </body>
 </html>
