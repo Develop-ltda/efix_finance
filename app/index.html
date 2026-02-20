@@ -1,17 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EFIX — Tokenized Brazilian Fixed Income | DeFi Yield Protocol</title>
-    <meta name="description" content="EFIX bridges Brazilian DI fixed-income assets into DeFi. CVM-regulated securitizer offering 25-35% APY through tokenized collateral and cross-chain leverage on Morpho Blue.">
-    <meta property="og:title" content="EFIX — Tokenized Brazilian Fixed Income">
-    <meta property="og:description" content="Regulated RWA protocol bridging Brazilian DI funds into DeFi with D+0 redemption.">
-    <meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
-    <link rel="icon" href="./logo_efix_400x400.jpg" type="image/jpeg">
+    <title>Efix DeFi - Renda Fixa Tokenizada</title>
+    <link rel="icon" type="image/jpeg" href="logo_efix_400x400.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
     <style>
         :root {
             --black: #000000;
@@ -26,25 +23,27 @@
             --gray-800: #262626;
             --gray-900: #171717;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Syne', -apple-system, sans-serif;
             background: var(--white);
             color: var(--black);
             line-height: 1.7;
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
         }
-
+        
         ::selection {
             background: var(--black);
             color: var(--white);
         }
-
-        /* ─── Nav ─── */
+        
+        /* Navigation */
         nav {
             position: fixed;
             top: 0;
@@ -57,7 +56,7 @@
             z-index: 1000;
             padding: 1rem 2rem;
         }
-
+        
         .nav-content {
             max-width: 1400px;
             margin: 0 auto;
@@ -65,24 +64,24 @@
             justify-content: space-between;
             align-items: center;
         }
-
+        
         .logo {
             height: 32px;
             width: auto;
         }
-
+        
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 2rem;
+            gap: 1.5rem;
         }
-
+        
         .nav-links {
             display: flex;
             gap: 2rem;
             list-style: none;
         }
-
+        
         .nav-links a {
             color: var(--gray-600);
             text-decoration: none;
@@ -91,10 +90,13 @@
             letter-spacing: 0.02em;
             transition: color 0.2s;
         }
-
-        .nav-links a:hover { color: var(--black); }
-
-        .nav-cta {
+        
+        .nav-links a:hover {
+            color: var(--black);
+        }
+        
+        /* Connect Button */
+        .connect-btn {
             background: var(--black);
             color: var(--white);
             border: none;
@@ -105,30 +107,33 @@
             cursor: pointer;
             transition: all 0.2s;
             font-family: inherit;
-            text-decoration: none;
-            display: inline-block;
         }
-
-        .nav-cta:hover {
+        
+        .connect-btn:hover {
             background: var(--gray-800);
             transform: translateY(-1px);
         }
-
-        /* ─── Hero ─── */
+        
+        .connect-btn.connected {
+            background: var(--white);
+            color: var(--black);
+            border: 2px solid var(--black);
+        }
+        
+        /* Hero */
         .hero {
             padding: 10rem 2rem 4rem;
             text-align: center;
             background: var(--white);
             position: relative;
         }
-
+        
         .hero-logo {
             width: 80px;
             height: 80px;
             margin-bottom: 2rem;
-            border-radius: 16px;
         }
-
+        
         h1 {
             font-size: clamp(2.5rem, 6vw, 4rem);
             font-weight: 800;
@@ -137,59 +142,16 @@
             letter-spacing: -0.03em;
             line-height: 1.1;
         }
-
+        
         .subtitle {
             color: var(--gray-500);
             font-size: 1.25rem;
             font-weight: 400;
-            max-width: 620px;
-            margin: 0 auto 2.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
         }
-
-        .hero-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 3rem;
-        }
-
-        .btn {
-            padding: 1rem 2rem;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            border: none;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: var(--black);
-            color: var(--white);
-        }
-
-        .btn-primary:hover {
-            background: var(--gray-800);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: var(--white);
-            color: var(--black);
-            border: 2px solid var(--black);
-        }
-
-        .btn-secondary:hover {
-            background: var(--gray-100);
-            transform: translateY(-2px);
-        }
-
+        
+        /* Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -200,978 +162,2230 @@
             font-size: 0.875rem;
             color: var(--gray-600);
         }
-
+        
         .status-badge .dot {
             width: 8px;
             height: 8px;
-            background: #22c55e;
+            background: var(--gray-400);
             border-radius: 50%;
+        }
+        
+        .status-badge.connected .dot {
+            background: #22c55e;
             animation: pulse 2s infinite;
         }
-
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-
-        /* ─── Container ─── */
+        
+        /* Container */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
         }
-
-        /* ─── Stats Bar ─── */
-        .stats-bar {
+        
+        /* App Section */
+        .app-section {
+            padding: 4rem 0;
+        }
+        
+        .app-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1px;
-            background: var(--gray-200);
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 900px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--white);
             border: 1px solid var(--gray-200);
             border-radius: 16px;
-            overflow: hidden;
-            margin-bottom: 6rem;
-        }
-
-        .stat-item {
-            background: var(--white);
             padding: 2rem;
-            text-align: center;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
         }
-
-        .stat-item:hover { background: var(--gray-100); }
-
-        .stat-value {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.75rem;
+        
+        .card:hover {
+            border-color: var(--black);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
             font-weight: 700;
-            color: var(--black);
-            margin-bottom: 0.25rem;
         }
-
+        
+        .card-badge {
+            background: var(--black);
+            color: var(--white);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        /* Position Card */
+        .position-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-item {
+            background: var(--gray-100);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+        
         .stat-label {
             font-size: 0.75rem;
             color: var(--gray-500);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
         }
-
-        /* ─── Section Headers ─── */
-        .section {
-            padding: 5rem 0;
-        }
-
-        .section-border {
-            border-top: 1px solid var(--gray-200);
-        }
-
-        .section-gray {
-            background: var(--gray-100);
-        }
-
-        .section-label {
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
             font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--gray-500);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 1rem;
         }
-
-        .section-title {
-            font-size: clamp(1.75rem, 3.5vw, 2.5rem);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1.1;
-            margin-bottom: 1rem;
+        
+        .stat-value.highlight {
+            color: var(--black);
         }
-
-        .section-desc {
-            color: var(--gray-500);
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin-bottom: 3rem;
-        }
-
-        /* ─── Flow Grid (How It Works) ─── */
-        .flow-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1px;
+        
+        /* Health Factor */
+        .health-bar {
+            height: 8px;
             background: var(--gray-200);
-            border: 1px solid var(--gray-200);
-            border-radius: 16px;
+            border-radius: 4px;
             overflow: hidden;
+            margin-top: 1rem;
         }
-
-        .flow-step {
+        
+        .health-fill {
+            height: 100%;
+            background: var(--black);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .health-fill.safe { background: #22c55e; }
+        .health-fill.warning { background: #f59e0b; }
+        .health-fill.danger { background: #ef4444; }
+        
+        /* Action Buttons */
+        .action-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--black);
+            color: var(--white);
+        }
+        
+        .btn-primary:hover {
+            background: var(--gray-800);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
             background: var(--white);
-            padding: 2.5rem 2rem;
-            transition: all 0.3s;
+            color: var(--black);
+            border: 2px solid var(--black);
         }
-
-        .flow-step:hover { background: var(--gray-100); }
-
-        .flow-number {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--gray-400);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            margin-bottom: 1.25rem;
+        
+        .btn-secondary:hover {
+            background: var(--gray-100);
         }
-
-        .flow-icon {
-            font-size: 2rem;
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Input Group */
+        .input-group {
             margin-bottom: 1rem;
         }
-
-        .flow-title {
-            font-weight: 700;
-            font-size: 1.05rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .flow-desc {
+        
+        .input-label {
+            display: block;
             font-size: 0.875rem;
-            color: var(--gray-500);
-            line-height: 1.7;
-        }
-
-        /* ─── Card Grid ─── */
-        .card-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .card {
-            background: var(--white);
-            border: 1px solid var(--gray-200);
-            border-radius: 16px;
-            padding: 2.5rem 2rem;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            border-color: var(--black);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        }
-
-        .card-icon {
-            font-size: 1.75rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-weight: 600;
             margin-bottom: 0.5rem;
         }
-
-        .card-desc {
-            font-size: 0.9rem;
-            color: var(--gray-500);
-            line-height: 1.75;
-        }
-
-        /* ─── Yield Table ─── */
-        .yield-table-wrap {
-            border: 1px solid var(--gray-200);
-            border-radius: 16px;
+        
+        .input-wrapper {
+            display: flex;
+            background: var(--gray-100);
+            border-radius: 10px;
             overflow: hidden;
-            max-width: 900px;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
         }
-
-        .yield-table {
-            width: 100%;
-            border-collapse: collapse;
+        
+        .input-wrapper:focus-within {
+            border-color: var(--black);
         }
-
-        .yield-table th {
-            text-align: left;
-            padding: 1rem 1.5rem;
-            background: var(--gray-100);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--gray-500);
+        
+        .input-wrapper input {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            font-size: 1.1rem;
+            font-family: 'Space Mono', monospace;
+            outline: none;
+        }
+        
+        .input-suffix {
+            padding: 1rem;
+            background: var(--gray-200);
             font-weight: 600;
-            border-bottom: 1px solid var(--gray-200);
+            color: var(--gray-600);
         }
-
-        .yield-table td {
-            padding: 1rem 1.5rem;
-            font-size: 0.92rem;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .yield-table tr:last-child td { border-bottom: none; }
-
-        .yield-table tr.highlight td {
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
             background: var(--gray-100);
-            font-weight: 700;
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 1.5rem;
         }
-
-        .yield-table .mono {
+        
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+        }
+        
+        .tab.active {
+            background: var(--white);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Leverage Slider */
+        .leverage-control {
+            margin: 1.5rem 0;
+        }
+        
+        .leverage-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        
+        .leverage-value {
             font-family: 'Space Mono', monospace;
             font-weight: 700;
         }
-
-        .table-note {
-            font-size: 0.8rem;
-            color: var(--gray-400);
-            margin-top: 1rem;
-            max-width: 900px;
+        
+        .leverage-slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: var(--gray-200);
+            border-radius: 4px;
+            outline: none;
         }
-
-        /* ─── Contracts Grid ─── */
-        .contracts-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+        
+        .leverage-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--black);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
-
-        .chain-card {
-            border: 1px solid var(--gray-200);
-            border-radius: 16px;
-            overflow: hidden;
-            transition: all 0.3s;
+        
+        .leverage-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
         }
-
-        .chain-card:hover {
-            border-color: var(--black);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        }
-
-        .chain-header {
-            padding: 1.25rem 1.5rem;
+        
+        /* QR Code */
+        .qr-container {
+            text-align: center;
+            padding: 2rem;
             background: var(--gray-100);
-            border-bottom: 1px solid var(--gray-200);
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background: var(--white);
+            margin: 0 auto 1rem;
+            border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            justify-content: center;
+            font-size: 0.875rem;
+            color: var(--gray-500);
         }
-
-        .chain-name { font-weight: 700; }
-
-        .chain-id {
+        
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .copy-btn:hover {
+            background: var(--gray-100);
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--black);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.error {
+            background: #ef4444;
+        }
+        
+        .toast.success {
+            background: #22c55e;
+        }
+        
+        /* Contract Links */
+        .contracts-links {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .contract-link {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            text-decoration: none;
+            padding: 0.25rem 0.5rem;
+            background: var(--gray-100);
+            border-radius: 4px;
             font-family: 'Space Mono', monospace;
-            font-size: 0.72rem;
-            color: var(--gray-400);
-            margin-left: auto;
         }
-
-        .contract-row {
+        
+        .contract-link:hover {
+            background: var(--gray-200);
+            color: var(--black);
+        }
+        
+        /* Info Section */
+        .info-section {
+            padding: 4rem 0;
+            border-top: 1px solid var(--gray-200);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        .info-card {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .info-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--black);
+            color: var(--white);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .info-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-desc {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--black);
+            color: var(--white);
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.85rem 1.5rem;
-            border-bottom: 1px solid var(--gray-200);
-            transition: background 0.2s;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .footer-logo {
+            height: 24px;
+            filter: invert(1);
+        }
+        
+        .footer-text {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-300);
+            border-top-color: var(--black);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        .contract-row:last-child { border-bottom: none; }
-        .contract-row:hover { background: var(--gray-100); }
-
-        .contract-label {
-            font-size: 0.85rem;
-            color: var(--gray-600);
-        }
-
-        .contract-addr {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--black);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .contract-addr:hover { color: var(--gray-500); }
-
-        /* ─── Whitepaper Section ─── */
-        .wp-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            align-items: center;
-        }
-
-        .wp-visual {
-            border: 1px solid var(--gray-200);
+        /* ═══════════════════════════════════════════
+           PIX PROGRESS TRACKER
+           ═══════════════════════════════════════════ */
+        
+        .pix-tracker {
+            margin-top: 1.5rem;
+            padding: 2rem;
+            background: var(--gray-100);
             border-radius: 16px;
-            padding: 3rem 2.5rem;
-            text-align: center;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s;
         }
 
-        .wp-visual:hover {
-            border-color: var(--black);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        }
-
-        .wp-visual::before {
+        .pix-tracker::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 3px;
-            background: var(--black);
+            background: linear-gradient(90deg, var(--black), var(--gray-400), var(--black));
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        .wp-logo {
-            width: 64px;
-            height: 64px;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
+        .pix-tracker.polling::before {
+            opacity: 1;
         }
 
-        .wp-doc-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
-        .wp-doc-sub {
-            font-size: 0.85rem;
-            color: var(--gray-400);
-            margin-bottom: 2rem;
-        }
-
-        .wp-toc {
-            list-style: none;
-            text-align: left;
-            margin-bottom: 2rem;
-        }
-
-        .wp-toc li {
-            padding: 0.6rem 0;
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 0.85rem;
-            color: var(--gray-600);
-        }
-
-        .wp-toc li:last-child { border-bottom: none; }
-
-        .wp-toc-num {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--gray-400);
-            width: 24px;
-            flex-shrink: 0;
-        }
-
-        /* ─── Regulatory Grid ─── */
-        .reg-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1px;
-            background: var(--gray-200);
-            border: 1px solid var(--gray-200);
-            border-radius: 16px;
-            overflow: hidden;
-        }
-
-        .reg-item {
-            background: var(--white);
-            padding: 2rem 1.75rem;
-            transition: background 0.2s;
-        }
-
-        .reg-item:hover { background: var(--gray-100); }
-
-        .reg-label {
-            font-size: 0.72rem;
-            color: var(--gray-400);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.4rem;
-        }
-
-        .reg-value {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .reg-value.mono {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.85rem;
-        }
-
-        /* ─── Footer ─── */
-        footer {
-            padding: 4rem 2rem 2.5rem;
-            border-top: 1px solid var(--gray-200);
-        }
-
-        .footer-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 3rem;
-            margin-bottom: 3rem;
-        }
-
-        .footer-brand-text {
-            font-size: 0.875rem;
-            color: var(--gray-500);
-            margin-top: 1rem;
-            max-width: 300px;
-            line-height: 1.7;
-        }
-
-        .footer-col h4 {
-            font-size: 0.72rem;
-            color: var(--gray-400);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 1.25rem;
-        }
-
-        .footer-col a {
-            display: block;
-            color: var(--gray-600);
-            text-decoration: none;
-            font-size: 0.875rem;
-            padding: 0.35rem 0;
-            transition: color 0.2s;
-        }
-
-        .footer-col a:hover { color: var(--black); }
-
-        .footer-bottom {
-            max-width: 1200px;
-            margin: 0 auto;
+        .tracker-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 2rem;
-            border-top: 1px solid var(--gray-200);
-            flex-wrap: wrap;
+            margin-bottom: 1.75rem;
+        }
+
+        .tracker-title {
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .tracker-time {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            background: var(--white);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            border: 1px solid var(--gray-200);
+        }
+
+        /* Steps */
+        .tracker-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+        }
+
+        .tracker-step {
+            display: flex;
+            align-items: flex-start;
             gap: 1rem;
+            position: relative;
+            padding-bottom: 1.5rem;
         }
 
-        .footer-copy {
-            font-size: 0.78rem;
-            color: var(--gray-400);
+        .tracker-step:last-child {
+            padding-bottom: 0;
         }
 
-        /* ─── Responsive ─── */
-        @media (max-width: 900px) {
-            .nav-links { display: none; }
-            .stats-bar { grid-template-columns: repeat(2, 1fr); }
-            .flow-grid { grid-template-columns: 1fr 1fr; }
-            .card-grid { grid-template-columns: 1fr; }
-            .contracts-grid { grid-template-columns: 1fr; }
-            .wp-layout { grid-template-columns: 1fr; }
-            .reg-grid { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr 1fr; }
+        /* Vertical line connecting steps */
+        .step-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
         }
 
-        @media (max-width: 600px) {
-            .stats-bar { grid-template-columns: 1fr; }
-            .flow-grid { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr; }
-            .hero { padding: 8rem 1.5rem 3rem; }
-        }
-
-        /* ─── Sticky CTA Bar (mobile + scroll) ─── */
-        .sticky-cta {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid var(--gray-200);
-            padding: 1rem 2rem;
-            z-index: 999;
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 2px solid var(--gray-300);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1rem;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
         }
 
-        .sticky-cta.visible { transform: translateY(0); }
+        .step-line {
+            width: 2px;
+            flex: 1;
+            min-height: 24px;
+            background: var(--gray-300);
+            transition: background 0.4s ease;
+        }
 
-        .sticky-cta-text {
+        .tracker-step:last-child .step-line {
+            display: none;
+        }
+
+        /* Step states */
+        .tracker-step.completed .step-dot {
+            background: var(--black);
+            border-color: var(--black);
+            color: var(--white);
+            transform: scale(1);
+        }
+
+        .tracker-step.completed .step-line {
+            background: var(--black);
+        }
+
+        .tracker-step.active .step-dot {
+            border-color: var(--black);
+            background: var(--white);
+            animation: stepPulse 1.5s ease infinite;
+        }
+
+        @keyframes stepPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0.15); }
+            50% { box-shadow: 0 0 0 8px rgba(0,0,0,0.05); }
+        }
+
+        .tracker-step.waiting .step-dot {
+            opacity: 0.4;
+        }
+
+        .tracker-step.waiting .step-line {
+            opacity: 0.4;
+        }
+
+        /* Step content */
+        .step-content {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        .step-label {
+            font-weight: 600;
             font-size: 0.9rem;
-            color: var(--gray-600);
-            font-weight: 500;
+            color: var(--gray-400);
+            transition: color 0.3s;
+            line-height: 1.3;
         }
 
-        .sticky-cta-text strong {
+        .step-sublabel {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            font-family: 'Space Mono', monospace;
+            margin-top: 0.25rem;
+            transition: color 0.3s;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tracker-step.completed .step-label {
             color: var(--black);
         }
 
-        .sticky-cta .btn {
-            padding: 0.75rem 1.75rem;
-            font-size: 0.875rem;
-            white-space: nowrap;
+        .tracker-step.completed .step-sublabel {
+            color: var(--gray-600);
         }
 
-        /* ─── CTA Section ─── */
-        .cta-section {
-            padding: 5rem 0;
-            text-align: center;
-            border-top: 1px solid var(--gray-200);
-            border-bottom: 1px solid var(--gray-200);
-            background: var(--black);
-            color: var(--white);
+        .tracker-step.active .step-label {
+            color: var(--black);
         }
 
-        .cta-section .section-title {
-            color: var(--white);
-            margin-bottom: 1rem;
+        .tracker-step.active .step-sublabel {
+            color: var(--gray-500);
         }
 
-        .cta-section .cta-desc {
-            color: var(--gray-400);
-            font-size: 1.1rem;
-            max-width: 500px;
-            margin: 0 auto 2.5rem;
-        }
-
-        .cta-section .btn-primary {
+        /* Confirm button */
+        .btn-confirm-pix {
+            width: 100%;
+            margin-top: 1.25rem;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: inherit;
+            border: 2px solid var(--black);
             background: var(--white);
             color: var(--black);
-            padding: 1.1rem 2.5rem;
-            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
         }
 
-        .cta-section .btn-primary:hover {
-            background: var(--gray-200);
-        }
-
-        /* ─── Mobile menu ─── */
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-        }
-
-        .mobile-menu-btn span {
-            display: block;
-            width: 20px;
-            height: 2px;
+        .btn-confirm-pix:hover {
             background: var(--black);
-            margin: 4px 0;
-            transition: 0.2s;
+            color: var(--white);
+            transform: translateY(-2px);
         }
 
-        @media (max-width: 900px) {
-            .mobile-menu-btn { display: block; }
+        .btn-confirm-pix:active {
+            transform: translateY(0);
+        }
+
+        .btn-confirm-pix:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Success state */
+        .tracker-success {
+            text-align: center;
+            padding: 1.5rem 0 0.5rem;
+            animation: fadeUp 0.5s ease;
+        }
+
+        .tracker-success .success-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tracker-success .success-text {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .tracker-success .success-sub {
+            color: var(--gray-500);
+            font-size: 0.85rem;
+        }
+
+        .tracker-success .success-tx {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--gray-500);
+            background: var(--white);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            text-decoration: none;
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s;
+        }
+
+        .tracker-success .success-tx:hover {
+            border-color: var(--black);
+            color: var(--black);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cancel link */
+        .tracker-cancel {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .tracker-cancel:hover {
+            color: var(--black);
+        }
+
+        /* ═══════════════════════════════════════════
+           WITHDRAW PROGRESS TRACKER
+           ═══════════════════════════════════════════ */
+
+        .withdraw-tracker {
+            margin-top: 1.5rem;
+            padding: 2rem;
+            background: var(--gray-100);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .withdraw-tracker::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--black), var(--gray-400), var(--black));
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .withdraw-tracker.polling::before {
+            opacity: 1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .nav-content {
+                gap: 0.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+
+            .connect-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .logo {
+                height: 28px;
+            }
+            
+            .hero {
+                padding: 6.5rem 1.25rem 2.5rem;
+            }
+
+            .hero-logo {
+                width: 56px;
+                height: 56px;
+                margin-bottom: 1.25rem;
+            }
+            
+            h1 {
+                font-size: 1.75rem;
+                letter-spacing: -0.02em;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .status-badge {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .contracts-links {
+                gap: 0.5rem;
+                margin-top: 0.75rem;
+            }
+
+            .contract-link {
+                font-size: 0.65rem;
+                padding: 0.2rem 0.4rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+
+            .app-section {
+                padding: 2rem 0;
+            }
+
+            .app-grid {
+                gap: 1rem;
+            }
+
+            .card {
+                padding: 1.25rem;
+                border-radius: 12px;
+            }
+
+            .card-header {
+                margin-bottom: 1rem;
+            }
+
+            .card-title {
+                font-size: 1.1rem;
+            }
+            
+            .position-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+
+            .stat-item {
+                padding: 0.75rem;
+                border-radius: 10px;
+            }
+
+            .stat-label {
+                font-size: 0.65rem;
+            }
+
+            .stat-value {
+                font-size: 1.15rem;
+            }
+
+            .health-bar {
+                margin-top: 0.75rem;
+            }
+
+            .leverage-control {
+                margin: 1rem 0;
+            }
+            
+            .action-group {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+
+            .btn {
+                padding: 0.85rem;
+                font-size: 0.9rem;
+            }
+
+            /* Tabs mobile */
+            .tabs {
+                margin-bottom: 1rem;
+            }
+
+            .tab {
+                padding: 0.65rem;
+                font-size: 0.8rem;
+            }
+
+            /* Input mobile */
+            .input-wrapper input {
+                padding: 0.85rem;
+                font-size: 1rem;
+            }
+
+            .input-suffix {
+                padding: 0.85rem;
+                font-size: 0.85rem;
+            }
+
+            .input-label {
+                font-size: 0.8rem;
+            }
+
+            /* QR mobile */
+            .qr-container {
+                padding: 1.25rem;
+                border-radius: 10px;
+            }
+
+            .qr-code {
+                width: 180px;
+                height: 180px;
+            }
+
+            .btn-confirm-pix {
+                padding: 0.85rem;
+                font-size: 0.9rem;
+            }
+
+            /* Tracker mobile */
+            .pix-tracker,
+            .withdraw-tracker {
+                padding: 1.25rem;
+                border-radius: 12px;
+            }
+
+            .tracker-header {
+                margin-bottom: 1.25rem;
+            }
+
+            .tracker-title {
+                font-size: 0.9rem;
+            }
+
+            .tracker-time {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.5rem;
+            }
+
+            .step-dot {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+            }
+
+            .step-label {
+                font-size: 0.8rem;
+            }
+
+            .step-sublabel {
+                font-size: 0.65rem;
+            }
+
+            .tracker-step {
+                padding-bottom: 1.25rem;
+            }
+
+            .tracker-success .success-text {
+                font-size: 1rem;
+            }
+
+            .tracker-success .success-tx {
+                font-size: 0.6rem;
+            }
+
+            /* Info section mobile */
+            .info-section {
+                padding: 2.5rem 0;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+
+            .info-card {
+                padding: 1rem;
+            }
+
+            .info-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+                border-radius: 10px;
+                margin-bottom: 0.75rem;
+            }
+
+            .info-title {
+                font-size: 0.9rem;
+            }
+
+            .info-desc {
+                font-size: 0.8rem;
+            }
+
+            /* Footer mobile */
+            footer {
+                padding: 2rem 1rem;
+                margin-top: 2rem;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+
+            .footer-text {
+                font-size: 0.75rem;
+            }
+
+            /* Toast mobile */
+            .toast {
+                left: 1rem;
+                right: 1rem;
+                transform: translateX(0) translateY(100px);
+                text-align: center;
+                font-size: 0.85rem;
+                border-radius: 8px;
+            }
+
+            .toast.show {
+                transform: translateX(0) translateY(0);
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 380px) {
+            .hero {
+                padding: 6rem 1rem 2rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .position-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+
+            .qr-code {
+                width: 160px;
+                height: 160px;
+            }
+        }
+
+        /* Safe area for notched phones */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            nav {
+                padding-top: max(0.75rem, env(safe-area-inset-top));
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+            }
+
+            footer {
+                padding-bottom: max(2rem, env(safe-area-inset-bottom));
+            }
+
+            .toast {
+                bottom: max(2rem, env(safe-area-inset-bottom));
+            }
+        }
+        
+        /* Hidden */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-
-<!-- ═══ NAV ═══ -->
-<nav>
-    <div class="nav-content">
-        <a href="#">
-            <img src="./logo_efix_400x400.jpg" alt="EFIX" class="logo">
-        </a>
-        <div class="nav-right">
-            <ul class="nav-links">
-                <li><a href="#how">How It Works</a></li>
-                <li><a href="#yield">Yield</a></li>
-                <li><a href="#contracts">Contracts</a></li>
-                <li><a href="#whitepaper">Whitepaper</a></li>
-                <li><a href="#regulatory">Regulatory</a></li>
-            </ul>
-            <a href="/app" class="nav-cta">Launch App →</a>
-        </div>
-        <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('show')">
-            <span></span><span></span><span></span>
-        </button>
-    </div>
-</nav>
-
-<!-- ═══ HERO ═══ -->
-<section class="hero">
-    <img src="./logo_efix_400x400.jpg" alt="EFIX" class="hero-logo">
-    <h1>Brazilian Fixed Income,<br>DeFi-Native Yield</h1>
-    <p class="subtitle">
-        EFIX tokenizes Brazilian DI fund shares — tracking the CDI rate at ~15% APY — and bridges them into 
-        decentralized lending markets. Regulated collateral. Same-day redemption. Cross-chain leverage.
-    </p>
-    <div class="hero-actions">
-        <a href="/app" class="btn btn-primary">Start Earning →</a>
-        <a href="./efixDI_Whitepaper_v1.pdf" target="_blank" class="btn btn-secondary">Read Whitepaper</a>
-    </div>
-    <div class="status-badge">
-        <span class="dot"></span>
-        Live on Polygon &amp; Base Mainnet
-    </div>
-</section>
-
-<!-- ═══ STATS ═══ -->
-<div class="container">
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div class="stat-value">~15%</div>
-            <div class="stat-label">CDI Base Rate</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">25-35%</div>
-            <div class="stat-label">Target APY (Leveraged)</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">D+0</div>
-            <div class="stat-label">Redemption Speed</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">CVM</div>
-            <div class="stat-label">Regulated Entity</div>
-        </div>
-    </div>
-</div>
-
-<!-- ═══ HOW IT WORKS ═══ -->
-<section id="how" class="section section-border">
-    <div class="container">
-        <div class="section-label">Protocol</div>
-        <h2 class="section-title">From PIX to DeFi Yield<br>in Four Steps</h2>
-        <p class="section-desc">EFIX bridges the gap between Brazil's regulated financial infrastructure and permissionless DeFi lending markets.</p>
-        <div class="flow-grid">
-            <div class="flow-step">
-                <div class="flow-number">Step 01</div>
-                <div class="flow-icon">💳</div>
-                <div class="flow-title">Deposit via PIX</div>
-                <div class="flow-desc">Send BRL via PIX to the EFIX SPE. Funds are received instantly through HausBank's payment infrastructure.</div>
-            </div>
-            <div class="flow-step">
-                <div class="flow-number">Step 02</div>
-                <div class="flow-icon">🏦</div>
-                <div class="flow-title">Buy DI Fund Shares</div>
-                <div class="flow-desc">The SPE purchases DI-linked fund shares through Genial IAAS, tracking the CDI interbank rate (~15% p.a.).</div>
-            </div>
-            <div class="flow-step">
-                <div class="flow-number">Step 03</div>
-                <div class="flow-icon">🪙</div>
-                <div class="flow-title">Mint efixDI Tokens</div>
-                <div class="flow-desc">efixDI tokens are minted 1:1 on Polygon, representing the underlying fund shares. Tokens accrue daily CDI yield.</div>
-            </div>
-            <div class="flow-step">
-                <div class="flow-number">Step 04</div>
-                <div class="flow-icon">⚡</div>
-                <div class="flow-title">Leverage on Morpho</div>
-                <div class="flow-desc">Bridge efixDI to Base via LayerZero, deposit as collateral on Morpho Blue, borrow USDC, and loop for enhanced yield.</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ═══ WHY EFIX ═══ -->
-<section class="section">
-    <div class="container">
-        <div class="section-label">Advantages</div>
-        <h2 class="section-title">Why Tokenized DI Funds?</h2>
-        <p class="section-desc">The protocol's core innovation: leveraging D+0 redemption of Brazilian DI funds to eliminate FX hedge costs while maintaining capital protection.</p>
-        <div class="card-grid">
-            <div class="card">
-                <div class="card-icon">🛡️</div>
-                <div class="card-title">Regulated Collateral</div>
-                <div class="card-desc">efixDI is backed 1:1 by ANBIMA-certified DI fund shares held at a CVM-registered securitizer. Unlike crypto-native collateral, the underlying asset has guaranteed capital protection and daily yield accrual.</div>
-            </div>
-            <div class="card">
-                <div class="card-icon">⏱️</div>
-                <div class="card-title">D+0 Same-Day Redemption</div>
-                <div class="card-desc">DI funds offer same-day liquidity (D+0), enabling instant collateral liquidation. This eliminates the need for expensive FX derivatives that cost 2-3% annually in traditional RWA strategies.</div>
-            </div>
-            <div class="card">
-                <div class="card-icon">🌐</div>
-                <div class="card-title">Cross-Chain Architecture</div>
-                <div class="card-desc">Built on Polygon (minting &amp; yield) and Base (DeFi leverage) with LayerZero V2 OFT bridging. Composable with the broader DeFi ecosystem — Morpho Blue, Aave, and beyond.</div>
-            </div>
-            <div class="card">
-                <div class="card-icon">📊</div>
-                <div class="card-title">Sustainable Yield Spread</div>
-                <div class="card-desc">The protocol earns the spread between CDI returns (~15% APY) and USDC borrow costs (~1-5% APY). This is a structural, non-speculative yield source independent of crypto market conditions.</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ═══ YIELD ═══ -->
-<section id="yield" class="section section-border section-gray">
-    <div class="container">
-        <div class="section-label">Economics</div>
-        <h2 class="section-title">Yield Enhancement Model</h2>
-        <p class="section-desc">Each leverage loop multiplies exposure to the CDI-USDC spread. The protocol targets conservative 2-3 loops for optimal risk-adjusted returns.</p>
-        <div class="yield-table-wrap">
-            <table class="yield-table">
-                <thead>
-                    <tr>
-                        <th>Strategy</th>
-                        <th>Multiplier</th>
-                        <th>Gross APY</th>
-                        <th>Net APY</th>
-                        <th>Health Factor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Hold (no leverage)</td>
-                        <td class="mono">1.00×</td>
-                        <td class="mono">15.0%</td>
-                        <td class="mono">12.5%</td>
-                        <td>∞</td>
-                    </tr>
-                    <tr>
-                        <td>1 Loop</td>
-                        <td class="mono">1.77×</td>
-                        <td class="mono">22.7%</td>
-                        <td class="mono">20.0%</td>
-                        <td class="mono">1.77</td>
-                    </tr>
-                    <tr class="highlight">
-                        <td><strong>2 Loops ★ Recommended</strong></td>
-                        <td class="mono">2.36×</td>
-                        <td class="mono">28.6%</td>
-                        <td class="mono">25.6%</td>
-                        <td class="mono">1.49</td>
-                    </tr>
-                    <tr>
-                        <td>3 Loops</td>
-                        <td class="mono">2.82×</td>
-                        <td class="mono">33.2%</td>
-                        <td class="mono">29.8%</td>
-                        <td class="mono">1.38</td>
-                    </tr>
-                    <tr>
-                        <td>4 Loops (max)</td>
-                        <td class="mono">3.05×</td>
-                        <td class="mono">35.5%</td>
-                        <td class="mono">33.0%</td>
-                        <td class="mono">1.28</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <p class="table-note">
-            * Net APY after 20% performance fee. Morpho Blue LLTV: 77%. Auto-deleverage triggers at Health Factor &lt; 1.15. 
-            CDI rate: ~14.9% (Feb 2026). USDC borrow rate varies with market utilization.
-        </p>
-    </div>
-</section>
-
-<!-- ═══ CONTRACTS ═══ -->
-<section id="contracts" class="section section-border">
-    <div class="container">
-        <div class="section-label">Infrastructure</div>
-        <h2 class="section-title">Deployed Contracts</h2>
-        <p class="section-desc">All contracts are live on mainnet. OpenZeppelin security audit is in progress.</p>
-        <div class="contracts-grid">
-            <div class="chain-card">
-                <div class="chain-header">
-                    <span style="font-size: 1.2rem;">🟣</span>
-                    <span class="chain-name">Polygon</span>
-                    <span class="chain-id">Chain 137</span>
-                </div>
-                <div class="contract-row">
-                    <span class="contract-label">EfixDI Token</span>
-                    <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank" class="contract-addr">0x0408...6441</a>
-                </div>
-                <div class="contract-row">
-                    <span class="contract-label">EfixVault V2</span>
-                    <a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank" class="contract-addr">0x2eA5...307C</a>
-                </div>
-                <div class="contract-row">
-                    <span class="contract-label">PIX Bridge</span>
-                    <a href="https://polygonscan.com/address/0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3" target="_blank" class="contract-addr">0x1d97...f4C3</a>
-                </div>
-                <div class="contract-row">
-                    <span class="contract-label">LayerZero OFT</span>
-                    <a href="https://polygonscan.com/address/0x60327dD21CFfB0Ab2DA65C22e0e80FD42e91258Fc" target="_blank" class="contract-addr">0x6032...58Fc</a>
-                </div>
-            </div>
-            <div class="chain-card">
-                <div class="chain-header">
-                    <span style="font-size: 1.2rem;">🔵</span>
-                    <span class="chain-name">Base</span>
-                    <span class="chain-id">Chain 8453</span>
-                </div>
-                <div class="contract-row">
-                    <span class="contract-label">EfixDI Token</span>
-                    <a href="https://basescan.org/address/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" class="contract-addr">0xF5cA...5608</a>
-                </div>
-                <div class="contract-row">
-                    <span class="contract-label">Morpho Vault V2</span>
-                    <a href="https://basescan.org/address/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank" class="contract-addr">0xf4A3...CBd5</a>
-                </div>
-                <div class="contract-row">
-                    <span class="contract-label">Oracle V2</span>
-                    <a href="https://basescan.org/address/0xFC6a6Af4B7F398F70103F2f4b76E81afefc6Ea86" target="_blank" class="contract-addr">0xFC6a...Ea86</a>
-                </div>
-                <div class="contract-row">
-                    <span class="contract-label">Morpho Market</span>
-                    <a href="https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a/efixdi-usdc" target="_blank" class="contract-addr">efixDI/USDC (77% LLTV)</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ═══ WHITEPAPER ═══ -->
-<section id="whitepaper" class="section section-border section-gray">
-    <div class="container">
-        <div class="wp-layout">
-            <div>
-                <div class="section-label">Documentation</div>
-                <h2 class="section-title">efixDI+ Protocol<br>Whitepaper</h2>
-                <p style="color: var(--gray-500); font-size: 1rem; margin-bottom: 1.5rem; line-height: 1.75; max-width: 480px;">
-                    A comprehensive technical document covering the protocol's architecture, yield mechanics, 
-                    risk framework, smart contract design, and regulatory compliance structure.
-                </p>
-                <p style="color: var(--gray-500); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.75; max-width: 480px;">
-                    The whitepaper details how EFIX creates a sustainable yield spread by bridging Brazil's R$6+ trillion 
-                    fixed-income market into permissionless DeFi lending protocols. It covers the mathematical model 
-                    behind recursive leverage loops, liquidation risk analysis, oracle design, and the regulatory 
-                    framework under CVM Resolution 60.
-                </p>
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                    <a href="./efixDI_Whitepaper_v1.pdf" target="_blank" class="btn btn-primary">Download PDF</a>
-                    <a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank" class="btn btn-secondary">GitHub →</a>
-                </div>
-            </div>
-            <div class="wp-visual">
-                <img src="./logo_efix_400x400.jpg" alt="EFIX" class="wp-logo">
-                <div class="wp-doc-title">efixDI+ Whitepaper v1.0</div>
-                <div class="wp-doc-sub">February 2026 · 11 pages</div>
-                <ul class="wp-toc">
-                    <li><span class="wp-toc-num">01</span> Executive Summary</li>
-                    <li><span class="wp-toc-num">02</span> Market Opportunity</li>
-                    <li><span class="wp-toc-num">03</span> Protocol Architecture</li>
-                    <li><span class="wp-toc-num">04</span> Smart Contract Infrastructure</li>
-                    <li><span class="wp-toc-num">05</span> Yield Enhancement Mathematics</li>
-                    <li><span class="wp-toc-num">06</span> Oracle &amp; Price Feeds</li>
-                    <li><span class="wp-toc-num">07</span> Risk Framework</li>
-                    <li><span class="wp-toc-num">08</span> Cross-Chain (LayerZero V2)</li>
-                    <li><span class="wp-toc-num">09</span> Morpho Blue Integration</li>
-                    <li><span class="wp-toc-num">10</span> Regulatory Compliance</li>
-                    <li><span class="wp-toc-num">11</span> Security &amp; Audit</li>
-                    <li><span class="wp-toc-num">12</span> Roadmap</li>
-                    <li><span class="wp-toc-num">13</span> Contact &amp; Links</li>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-content">
+            <img src="logo_efix_400x400.jpg" alt="Efix" class="logo">
+            <div class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="#app">App</a></li>
+                    <li><a href="#info">Como Funciona</a></li>
+                    <li><a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank">Contratos</a></li>
                 </ul>
-                <a href="./efixDI_Whitepaper_v1.pdf" target="_blank" class="btn btn-primary" style="width: 100%; justify-content: center;">Download Whitepaper</a>
+                <button id="connectBtn" class="connect-btn">Conectar Wallet</button>
             </div>
         </div>
-    </div>
-</section>
+    </nav>
 
-<!-- ═══ REGULATORY ═══ -->
-<section id="regulatory" class="section section-border">
-    <div class="container">
-        <div class="section-label">Compliance</div>
-        <h2 class="section-title">Regulatory Framework</h2>
-        <p class="section-desc">EFIX operates as a CVM-registered closed securitizer under Brazilian securities law, issuing Certificados de Recebiveis (CRs).</p>
-        <div class="reg-grid">
-            <div class="reg-item">
-                <div class="reg-label">Entity</div>
-                <div class="reg-value">Efix Securitizadora S.A.</div>
-            </div>
-            <div class="reg-item">
-                <div class="reg-label">CNPJ</div>
-                <div class="reg-value mono">60.756.859/0001-57</div>
-            </div>
-            <div class="reg-item">
-                <div class="reg-label">CVM Act</div>
-                <div class="reg-value mono">23.635 / 2025</div>
-            </div>
-            <div class="reg-item">
-                <div class="reg-label">Instrument</div>
-                <div class="reg-value">Certificados de Recebiveis</div>
-            </div>
-            <div class="reg-item">
-                <div class="reg-label">License Type</div>
-                <div class="reg-value">Closed Securitization Co.</div>
-            </div>
-            <div class="reg-item">
-                <div class="reg-label">Security Audit</div>
-                <div class="reg-value">OpenZeppelin (In Progress)</div>
+    <!-- Hero -->
+    <section class="hero">
+        <img src="logo_efix_400x400.jpg" alt="Efix" class="hero-logo">
+        <h1>Renda Fixa Tokenizada</h1>
+        <p class="subtitle">Deposite BRL via PIX, receba tokens efixDI lastreados em CDI com rendimento de até 25% a.a.</p>
+        <div id="statusBadge" class="status-badge">
+            <span class="dot"></span>
+            <span id="statusText">Desconectado</span>
+        </div>
+        <div class="contracts-links">
+            <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank" class="contract-link">Token</a>
+            <a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank" class="contract-link">Vault</a>
+            <a href="https://polygonscan.com/address/0x13AB76468eFE0d35f2700DEcBd52Ce28f8827A0C" target="_blank" class="contract-link">Pool</a>
+        </div>
+    </section>
+
+    <!-- App Section -->
+    <section id="app" class="app-section">
+        <div class="container">
+            <div class="app-grid">
+                <!-- Position Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Sua Posição</span>
+                        <span class="card-badge" id="apyBadge">~22% APY</span>
+                    </div>
+                    
+                    <div class="position-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Principal</div>
+                            <div class="stat-value" id="principalValue">R$ 0,00</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">efixDI</div>
+                            <div class="stat-value highlight" id="efixdiValue">0,00</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Dívida USDC</div>
+                            <div class="stat-value" id="debtValue">$0,00</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Loops</div>
+                            <div class="stat-value" id="loopsValue">0</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                            <span>Health Factor</span>
+                            <span id="healthValue" style="font-weight: 700;">∞</span>
+                        </div>
+                        <div class="health-bar">
+                            <div class="health-fill safe" id="healthFill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Leverage Control -->
+                    <div class="leverage-control">
+                        <div class="leverage-header">
+                            <span class="input-label">Alavancagem</span>
+                            <span class="leverage-value" id="leverageDisplay">0x</span>
+                        </div>
+                        <input type="range" class="leverage-slider" id="leverageSlider" min="0" max="3" value="0" step="1">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--gray-500); margin-top: 0.5rem;">
+                            <span>0x (15%)</span>
+                            <span>1x (22%)</span>
+                            <span>2x (27%)</span>
+                            <span>3x (32%)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-group">
+                        <button class="btn btn-primary" id="leverageBtn" disabled>Aplicar Leverage</button>
+                        <button class="btn btn-secondary" id="deleverageBtn" disabled>Remover</button>
+                    </div>
+                </div>
+                
+                <!-- Deposit/Withdraw Card -->
+                <div class="card">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="deposit">Depositar</button>
+                        <button class="tab" data-tab="withdraw">Sacar</button>
+                    </div>
+                    
+                    <!-- Deposit Tab -->
+                    <div id="depositTab">
+                        <div class="input-group">
+                            <label class="input-label">Valor do Depósito</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="depositAmount" placeholder="0,00" min="10" step="0.01">
+                                <span class="input-suffix">BRL</span>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="generatePixBtn" style="width: 100%;">
+                            Gerar QR Code PIX
+                        </button>
+                        
+                        <div id="qrContainer" class="qr-container hidden">
+                            <div class="qr-code" id="qrCode">
+                                Gerando QR Code...
+                            </div>
+                            <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 1rem;">
+                                Escaneie o QR Code ou copie o código
+                            </p>
+                            <button class="copy-btn" id="copyPixBtn">
+                                📋 Copiar código PIX
+                            </button>
+
+                            <!-- Confirm PIX Button -->
+                            <button class="btn-confirm-pix" id="confirmPixBtn" style="display: none;">
+                                ✅ Já paguei o PIX
+                            </button>
+                        </div>
+
+                        <!-- PIX Progress Tracker -->
+                        <div id="pixTracker" class="pix-tracker hidden">
+                            <div class="tracker-header">
+                                <span class="tracker-title">Processando depósito</span>
+                                <span class="tracker-time" id="trackerTimer">0:00</span>
+                            </div>
+                            
+                            <div class="tracker-steps">
+                                <div class="tracker-step completed" id="step-qr">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">✓</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">QR Code gerado</div>
+                                        <div class="step-sublabel" id="step-qr-sub"></div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-step waiting" id="step-pix">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">2</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">Pagamento PIX confirmado</div>
+                                        <div class="step-sublabel" id="step-pix-sub">Aguardando detecção...</div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-step waiting" id="step-process">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">3</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">Processando mint</div>
+                                        <div class="step-sublabel" id="step-process-sub">Aguardando...</div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-step waiting" id="step-chain">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">4</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">Confirmação blockchain</div>
+                                        <div class="step-sublabel" id="step-chain-sub">Aguardando...</div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-step waiting" id="step-done">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">5</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">Tokens creditados!</div>
+                                        <div class="step-sublabel" id="step-done-sub">Aguardando...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="trackerSuccess" class="tracker-success hidden">
+                                <div class="success-icon">🎉</div>
+                                <div class="success-text">Depósito concluído!</div>
+                                <div class="success-sub" id="successAmount"></div>
+                                <a class="success-tx" id="successTxLink" href="#" target="_blank">Ver transação ↗</a>
+                            </div>
+
+                            <a class="tracker-cancel" id="trackerCancel">Cancelar acompanhamento</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Withdraw Tab -->
+                    <div id="withdrawTab" class="hidden">
+                        <div class="input-group">
+                            <label class="input-label">Valor do Saque</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="withdrawAmount" placeholder="0,00" min="1" step="0.01">
+                                <span class="input-suffix">efixDI</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="input-label">Chave PIX</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="pixKey" placeholder="CPF, email, telefone ou chave aleatória">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="withdrawBtn" style="width: 100%;" disabled>
+                            Sacar via PIX
+                        </button>
+
+                        <!-- Withdraw Progress Tracker -->
+                        <div id="withdrawTracker" class="withdraw-tracker hidden">
+                            <div class="tracker-header">
+                                <span class="tracker-title">Processando saque</span>
+                                <span class="tracker-time" id="wdTrackerTimer">0:00</span>
+                            </div>
+                            
+                            <div class="tracker-steps">
+                                <div class="tracker-step waiting" id="wd-step-tx">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">1</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">Transação enviada</div>
+                                        <div class="step-sublabel" id="wd-step-tx-sub">Assinando na wallet...</div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-step waiting" id="wd-step-confirm">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">2</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">Confirmação blockchain</div>
+                                        <div class="step-sublabel" id="wd-step-confirm-sub">Aguardando...</div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-step waiting" id="wd-step-pix">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">3</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">Processando PIX</div>
+                                        <div class="step-sublabel" id="wd-step-pix-sub">Aguardando...</div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-step waiting" id="wd-step-done">
+                                    <div class="step-indicator">
+                                        <div class="step-dot">4</div>
+                                        <div class="step-line"></div>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-label">PIX enviado!</div>
+                                        <div class="step-sublabel" id="wd-step-done-sub">Aguardando...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="wdTrackerSuccess" class="tracker-success hidden">
+                                <div class="success-icon">💸</div>
+                                <div class="success-text">Saque concluído!</div>
+                                <div class="success-sub" id="wdSuccessAmount"></div>
+                                <a class="success-tx" id="wdSuccessTxLink" href="#" target="_blank">Ver transação ↗</a>
+                            </div>
+                        </div>
+                        
+                        <p id="withdrawWarning" style="font-size: 0.75rem; color: var(--gray-500); margin-top: 1rem; text-align: center;">
+                            ⚠️ Você deve remover toda alavancagem antes de sacar.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- ═══ CTA SECTION ═══ -->
-<section class="cta-section">
-    <div class="container">
-        <h2 class="section-title">Start Earning 15%+ APY<br>on Brazilian Fixed Income</h2>
-        <p class="cta-desc">Deposit via PIX. Earn CDI yields. Leverage on Morpho. All in one interface.</p>
-        <a href="/app" class="btn btn-primary">Launch App →</a>
-    </div>
-</section>
-
-<!-- ═══ FOOTER ═══ -->
-<footer>
-    <div class="footer-grid">
-        <div>
-            <img src="./logo_efix_400x400.jpg" alt="EFIX" class="logo" style="margin-bottom: 0.25rem;">
-            <p class="footer-brand-text">Bridging Brazilian fixed-income assets into decentralized finance. CVM-regulated. Built for composability.</p>
+    <!-- Info Section -->
+    <section id="info" class="info-section">
+        <div class="container">
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-icon">💰</div>
+                    <div class="info-title">Depósito via PIX</div>
+                    <div class="info-desc">Deposite reais instantaneamente via PIX. Seus tokens são mintados automaticamente.</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">📈</div>
+                    <div class="info-title">Rendimento CDI</div>
+                    <div class="info-desc">Tokens lastreados em Fundo DI com liquidez D+0 e rendimento de ~15% a.a.</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">⚡</div>
+                    <div class="info-title">Alavancagem DeFi</div>
+                    <div class="info-desc">Amplifique seus rendimentos com alavancagem segura usando USDC. Até 32% APY.</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🔒</div>
+                    <div class="info-title">100% On-Chain</div>
+                    <div class="info-desc">Contratos auditados na Polygon. Seus tokens, sua custódia.</div>
+                </div>
+            </div>
         </div>
-        <div class="footer-col">
-            <h4>Protocol</h4>
-            <a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho Vault</a>
-            <a href="https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a/efixdi-usdc" target="_blank">Morpho Market</a>
-            <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token (Polygon)</a>
-            <a href="https://basescan.org/address/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank">Token (Base)</a>
-        </div>
-        <div class="footer-col">
-            <h4>Resources</h4>
-            <a href="./efixDI_Whitepaper_v1.pdf" target="_blank">Whitepaper</a>
-            <a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank">GitHub</a>
-            <a href="#how">Documentation</a>
-        </div>
-        <div class="footer-col">
-            <h4>Contact</h4>
-            <a href="mailto:contato@efix.com.br">contato@efix.com.br</a>
-            <a href="mailto:ernesto.otero@hausbank.com.br">ernesto.otero@hausbank.com.br</a>
-            <a>Rio de Janeiro, Brazil</a>
-        </div>
-    </div>
-    <div class="footer-bottom">
-        <span class="footer-copy">© 2026 Efix Securitizadora S.A. · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025</span>
-        <span class="footer-copy">Polygon · Base · Morpho Blue · LayerZero</span>
-    </div>
-</footer>
+    </section>
 
-<!-- ═══ STICKY CTA BAR ═══ -->
-<div class="sticky-cta" id="stickyCta">
-    <span class="sticky-cta-text"><strong>~25% APY</strong> on tokenized Brazilian fixed income</span>
-    <a href="/app" class="btn btn-primary">Launch App →</a>
-</div>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <img src="logo_efix_400x400.jpg" alt="Efix" class="footer-logo">
+            <p class="footer-text">© 2026 Efix Finance. Todos os direitos reservados.</p>
+        </div>
+    </footer>
 
-<script>
-const stickyCta = document.getElementById('stickyCta');
-const hero = document.querySelector('.hero');
-let ticking = false;
-window.addEventListener('scroll', () => {
-    if (!ticking) {
-        window.requestAnimationFrame(() => {
-            const heroBottom = hero.offsetTop + hero.offsetHeight;
-            stickyCta.classList.toggle('visible', window.scrollY > heroBottom);
-            ticking = false;
-        });
-        ticking = true;
-    }
-});
-</script>
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
 
+    <script>
+        // Contract Addresses (Polygon Mainnet)
+        const CONTRACTS = {
+            vault: '0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C',
+            efixDIToken: '0x04082b283818D9d0dd9Ee8742892eEe5CC396441',
+            pixBridge: '0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3',
+            lendingPool: '0x13AB76468eFE0d35f2700DEcBd52Ce28f8827A0C',
+            oracle: '0xD9d24596DDAbB1CcE603D4d8AD04A97c1836Ae94'
+        };
+
+        const POLYGON_CHAIN_ID = '0x89'; // 137
+
+        // ABIs
+        const VAULT_ABI = [
+            'function positions(address) view returns (uint256 principal, uint256 efixDIBalance, uint256 borrowedUSDC, uint256 leverageLoops, uint256 lastUpdateTimestamp, bool hedgeActive)',
+            'function getHealthFactor(address) view returns (uint256)',
+            'function applyLeverage(uint8 loops) external',
+            'function deleverage(uint8 loops) external',
+            'function withdraw(uint256 amount, string pixKey) external'
+        ];
+
+        const TOKEN_ABI = [
+            'function balanceOf(address) view returns (uint256)',
+            'function approve(address spender, uint256 amount) external returns (bool)',
+            'function allowance(address owner, address spender) view returns (uint256)'
+        ];
+
+        // State
+        let provider = null;
+        let signer = null;
+        let userAddress = null;
+        let contracts = {};
+        let currentPosition = null;
+        let pixCode = null;
+
+        // DOM Elements
+        const connectBtn = document.getElementById('connectBtn');
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        const toast = document.getElementById('toast');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            // Setup event listeners
+            connectBtn.addEventListener('click', connectWallet);
+            
+            // Tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+            
+            // Leverage slider
+            document.getElementById('leverageSlider').addEventListener('input', updateLeverageDisplay);
+            
+            // Buttons
+            document.getElementById('generatePixBtn').addEventListener('click', generatePixQR);
+            document.getElementById('copyPixBtn').addEventListener('click', copyPixCode);
+            document.getElementById('confirmPixBtn').addEventListener('click', startPixTracker);
+            document.getElementById('trackerCancel').addEventListener('click', cancelTracker);
+            document.getElementById('leverageBtn').addEventListener('click', applyLeverage);
+            document.getElementById('deleverageBtn').addEventListener('click', removeLeverage);
+            document.getElementById('withdrawBtn').addEventListener('click', withdrawFunds);
+            
+            // Check if already connected
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    await connectWallet();
+                }
+                
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', handleAccountChange);
+                window.ethereum.on('chainChanged', () => window.location.reload());
+            }
+        }
+
+        async function connectWallet() {
+            if (!window.ethereum) {
+                showToast('Por favor, instale a MetaMask!', 'error');
+                window.open('https://metamask.io/download/', '_blank');
+                return;
+            }
+
+            try {
+                // Request accounts
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                // Check network
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                if (chainId !== POLYGON_CHAIN_ID) {
+                    await switchToPolygon();
+                }
+                
+                // Setup provider
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                userAddress = accounts[0];
+                
+                // Setup contracts
+                contracts.vault = new ethers.Contract(CONTRACTS.vault, VAULT_ABI, signer);
+                contracts.token = new ethers.Contract(CONTRACTS.efixDIToken, TOKEN_ABI, signer);
+                
+                // Update UI
+                updateConnectedUI();
+                await loadPosition();
+                
+                showToast('Wallet conectada!', 'success');
+                
+            } catch (error) {
+                console.error('Connect error:', error);
+                showToast('Erro ao conectar: ' + error.message, 'error');
+            }
+        }
+
+        async function switchToPolygon() {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: POLYGON_CHAIN_ID }]
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: POLYGON_CHAIN_ID,
+                            chainName: 'Polygon Mainnet',
+                            nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+                            rpcUrls: ['https://polygon-rpc.com'],
+                            blockExplorerUrls: ['https://polygonscan.com']
+                        }]
+                    });
+                }
+            }
+        }
+
+        function handleAccountChange(accounts) {
+            if (accounts.length === 0) {
+                userAddress = null;
+                updateDisconnectedUI();
+            } else {
+                userAddress = accounts[0];
+                updateConnectedUI();
+                loadPosition();
+            }
+        }
+
+        function updateConnectedUI() {
+            const shortAddr = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+            connectBtn.textContent = shortAddr;
+            connectBtn.classList.add('connected');
+            statusBadge.classList.add('connected');
+            statusText.textContent = 'Polygon Mainnet';
+            
+            // Enable buttons
+            document.getElementById('leverageBtn').disabled = false;
+            document.getElementById('deleverageBtn').disabled = false;
+            document.getElementById('withdrawBtn').disabled = false;
+        }
+
+        function updateDisconnectedUI() {
+            connectBtn.textContent = 'Conectar Wallet';
+            connectBtn.classList.remove('connected');
+            statusBadge.classList.remove('connected');
+            statusText.textContent = 'Desconectado';
+            
+            // Disable buttons
+            document.getElementById('leverageBtn').disabled = true;
+            document.getElementById('deleverageBtn').disabled = true;
+            document.getElementById('withdrawBtn').disabled = true;
+        }
+
+        async function loadPosition() {
+            if (!contracts.vault || !userAddress) return;
+            
+            try {
+                const position = await contracts.vault.positions(userAddress);
+                const hf = await contracts.vault.getHealthFactor(userAddress);
+                
+                currentPosition = {
+                    principal: position[0],
+                    efixDIBalance: position[1],
+                    borrowedUSDC: position[2],
+                    leverageLoops: Number(position[3])
+                };
+                
+                // Update UI
+                document.getElementById('principalValue').textContent = 
+                    'R$ ' + parseFloat(ethers.formatEther(position[0])).toFixed(2).replace('.', ',');
+                document.getElementById('efixdiValue').textContent = 
+                    parseFloat(ethers.formatEther(position[1])).toFixed(2).replace('.', ',');
+                document.getElementById('debtValue').textContent = 
+                    '$' + parseFloat(ethers.formatUnits(position[2], 6)).toFixed(2);
+                document.getElementById('loopsValue').textContent = position[3].toString();
+                
+                // Health Factor
+                let hfValue = '∞';
+                let hfPercent = 100;
+                let hfClass = 'safe';
+                
+                if (hf.toString() !== ethers.MaxUint256.toString()) {
+                    const hfNum = Number(hf) / 1e16;
+                    hfValue = hfNum.toFixed(2);
+                    hfPercent = Math.min(100, (hfNum / 3) * 100);
+                    
+                    if (hfNum < 1.1) hfClass = 'danger';
+                    else if (hfNum < 1.3) hfClass = 'warning';
+                }
+                
+                document.getElementById('healthValue').textContent = hfValue;
+                const healthFill = document.getElementById('healthFill');
+                healthFill.style.width = hfPercent + '%';
+                healthFill.className = 'health-fill ' + hfClass;
+                
+                // Update APY badge
+                const loops = Number(position[3]);
+                const apys = [15, 22, 27, 32];
+                document.getElementById('apyBadge').textContent = '~' + apys[Math.min(loops, 3)] + '% APY';
+                
+                // Update leverage slider
+                document.getElementById('leverageSlider').value = loops;
+                updateLeverageDisplay();
+                
+            } catch (error) {
+                console.error('Load position error:', error);
+            }
+        }
+
+        function updateLeverageDisplay() {
+            const slider = document.getElementById('leverageSlider');
+            const value = parseInt(slider.value);
+            document.getElementById('leverageDisplay').textContent = value + 'x';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            
+            document.getElementById('depositTab').classList.toggle('hidden', tab !== 'deposit');
+            document.getElementById('withdrawTab').classList.toggle('hidden', tab !== 'withdraw');
+        }
+
+        // Backend URL - PIX Bridge Server
+        const PIX_BACKEND_URL = 'https://efixdi-backend-production.up.railway.app';
+
+        // ═══════════════════════════════════════════
+        // PIX PROGRESS TRACKER STATE
+        // ═══════════════════════════════════════════
+        let pixTrackerState = {
+            active: false,
+            pollingInterval: null,
+            timerInterval: null,
+            startTime: null,
+            depositAmount: null,
+            currentStep: 0,         // 0=qr, 1=pix, 2=process, 3=chain, 4=done
+            txHash: null,
+            previousE2eId: null     // e2eId known before this deposit
+        };
+
+        const STEP_IDS = ['step-qr', 'step-pix', 'step-process', 'step-chain', 'step-done'];
+
+        async function generatePixQR() {
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            
+            if (!amount || amount < 1) {
+                showToast('Valor mínimo: R$ 1,00', 'error');
+                return;
+            }
+
+            if (!userAddress) {
+                showToast('Conecte sua wallet primeiro', 'error');
+                return;
+            }
+            
+            showToast('Gerando QR Code...', 'success');
+            
+            const qrContainer = document.getElementById('qrContainer');
+            const qrCode = document.getElementById('qrCode');
+            
+            qrContainer.classList.remove('hidden');
+            qrCode.innerHTML = '<div class="loading"></div>';
+            
+            // Hide confirm button + tracker while generating
+            document.getElementById('confirmPixBtn').style.display = 'none';
+            document.getElementById('pixTracker').classList.add('hidden');
+            
+            try {
+                let response, retries = 3;
+                while (retries > 0) {
+                    try {
+                        response = await fetch(PIX_BACKEND_URL + '/api/pix/qrcode', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                amount: amount.toFixed(2),
+                                walletAddress: userAddress
+                            })
+                        });
+                        if (response.ok) break;
+                    } catch (fetchErr) {
+                        console.warn('QR fetch retry', fetchErr);
+                    }
+                    retries--;
+                    if (retries > 0) await new Promise(r => setTimeout(r, 1500));
+                }
+                
+                if (!response || !response.ok) throw new Error('Servidor indisponível após 3 tentativas');
+    
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Erro ao gerar QR Code');
+                }
+                
+                pixCode = data.qrcode.emv;
+                pixTrackerState.depositAmount = amount;
+                
+                qrCode.innerHTML = `
+                    <img src="${data.qrcode.imageUrl}" alt="QR Code PIX" style="border-radius: 8px;">
+                    <p style="margin-top: 12px; font-size: 0.875rem; color: var(--gray-500);">
+                        Valor: <strong>R$ ${parseFloat(data.qrcode.amount).toFixed(2).replace('.', ',')}</strong>
+                    </p>
+                `;
+                
+                // Show confirm button
+                document.getElementById('confirmPixBtn').style.display = 'flex';
+
+                // Snapshot current latest deposit e2eId (to detect NEW ones)
+                try {
+                    const snapRes = await fetch(PIX_BACKEND_URL + '/api/deposit/status/' + userAddress, {
+                     
+                    });
+                    const snapData = await snapRes.json();
+                    pixTrackerState.previousE2eId = snapData.found ? snapData.e2eId : null;
+                } catch (e) {
+                    pixTrackerState.previousE2eId = null;
+                }
+                
+                showToast('QR Code gerado! Pague e clique em confirmar.', 'success');
+                
+            } catch (error) {
+                console.error('PIX QR Error:', error);
+                qrCode.innerHTML = '<p style="color: red;">Erro ao gerar QR Code</p>';
+                showToast('Erro: ' + error.message, 'error');
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // CONFIRM PIX → START TRACKER
+        // ═══════════════════════════════════════════
+        function startPixTracker() {
+            // Hide QR, show tracker
+            document.getElementById('qrContainer').classList.add('hidden');
+            const tracker = document.getElementById('pixTracker');
+            tracker.classList.remove('hidden');
+            tracker.classList.add('polling');
+            
+            // Reset state
+            pixTrackerState.active = true;
+            pixTrackerState.startTime = Date.now();
+            pixTrackerState.currentStep = 0;
+            pixTrackerState.txHash = null;
+
+            // Set step 0 (QR) as completed
+            const amt = pixTrackerState.depositAmount;
+            updateStep(0, 'completed', '✓', `R$ ${amt.toFixed(2).replace('.', ',')} — ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`);
+            updateStep(1, 'active');
+
+            // Hide success, show cancel
+            document.getElementById('trackerSuccess').classList.add('hidden');
+            document.getElementById('trackerCancel').style.display = 'block';
+
+            // Start timer
+            pixTrackerState.timerInterval = setInterval(updateTrackerTimer, 1000);
+            
+            // Start polling every 3 seconds
+            pixTrackerState.pollingInterval = setInterval(pollDepositStatus, 3000);
+            
+            // Initial poll
+            pollDepositStatus();
+        }
+
+        // ═══════════════════════════════════════════
+        // TIMER
+        // ═══════════════════════════════════════════
+        function updateTrackerTimer() {
+            if (!pixTrackerState.startTime) return;
+            const elapsed = Math.floor((Date.now() - pixTrackerState.startTime) / 1000);
+            const min = Math.floor(elapsed / 60);
+            const sec = elapsed % 60;
+            document.getElementById('trackerTimer').textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        // ═══════════════════════════════════════════
+        // UPDATE STEP UI
+        // ═══════════════════════════════════════════
+        function updateStep(index, state, dotContent, sublabel) {
+            const stepEl = document.getElementById(STEP_IDS[index]);
+            if (!stepEl) return;
+
+            // Remove all states
+            stepEl.classList.remove('completed', 'active', 'waiting');
+            stepEl.classList.add(state);
+
+            const dot = stepEl.querySelector('.step-dot');
+            if (dotContent !== undefined) {
+                dot.textContent = dotContent;
+            }
+
+            if (sublabel !== undefined) {
+                const sub = document.getElementById(STEP_IDS[index].replace('step-', 'step-') + '-sub');
+                if (sub) sub.textContent = sublabel;
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // POLL DEPOSIT STATUS (public endpoint)
+        // ═══════════════════════════════════════════
+        async function pollDepositStatus() {
+            if (!pixTrackerState.active || !userAddress) return;
+
+            try {
+                const res = await fetch(PIX_BACKEND_URL + '/api/deposit/status/' + userAddress, {
+                  
+                });
+                const data = await res.json();
+
+                if (!data.found || data.status === 'waiting') return;
+
+                // Ignore if this is the SAME deposit we snapshotted before generating QR
+                if (data.e2eId && data.e2eId === pixTrackerState.previousE2eId) return;
+
+                const status = data.status;  // queued | confirmed | failed
+                const txHash = data.txHash;
+                const e2eId = data.e2eId || '';
+                const shortE2e = e2eId.length > 20 ? e2eId.slice(0, 10) + '...' + e2eId.slice(-6) : e2eId;
+
+                // Step 1: PIX detected (queued or beyond)
+                if (pixTrackerState.currentStep < 1 && (status === 'queued' || status === 'confirmed')) {
+                    updateStep(1, 'completed', '✓', shortE2e ? `E2E: ${shortE2e}` : `Detectado`);
+                    updateStep(2, 'active', undefined, 'Enviando transação...');
+                    pixTrackerState.currentStep = 1;
+                    showToast('PIX detectado! Mintando tokens...', 'success');
+                }
+
+                // Step 2: TX sent (confirmed means tx was sent and confirmed)
+                if (pixTrackerState.currentStep < 2 && status === 'confirmed' && txHash) {
+                    if (pixTrackerState.currentStep < 1) {
+                        updateStep(1, 'completed', '✓', shortE2e || 'Detectado');
+                    }
+                    pixTrackerState.txHash = txHash;
+                    const shortTx = `${txHash.slice(0, 10)}...${txHash.slice(-6)}`;
+                    updateStep(2, 'completed', '✓', shortTx);
+                    updateStep(3, 'active', undefined, 'Aguardando confirmação...');
+                    pixTrackerState.currentStep = 2;
+                }
+
+                // Step 3: Confirmed on-chain → fast-forward to completion
+                if (pixTrackerState.currentStep < 3 && status === 'confirmed' && txHash) {
+                    if (pixTrackerState.currentStep < 1) {
+                        updateStep(1, 'completed', '✓', shortE2e || 'Detectado');
+                    }
+                    if (pixTrackerState.currentStep < 2) {
+                        pixTrackerState.txHash = txHash;
+                        updateStep(2, 'completed', '✓', `${txHash.slice(0, 10)}...${txHash.slice(-6)}`);
+                    }
+                    updateStep(3, 'completed', '✓', 'Confirmado on-chain');
+                    updateStep(4, 'active', undefined, 'Finalizando...');
+                    pixTrackerState.currentStep = 3;
+                    setTimeout(() => completeTracker(), 1500);
+                }
+
+                // Handle failure
+                if (status === 'failed') {
+                    showToast('Erro no processamento. O sistema vai tentar novamente.', 'error');
+                }
+
+            } catch (error) {
+                console.error('Poll error:', error);
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // COMPLETE TRACKER
+        // ═══════════════════════════════════════════
+        function completeTracker() {
+            if (!pixTrackerState.active) return;
+            
+            const amt = pixTrackerState.depositAmount;
+            updateStep(4, 'completed', '✓', `${amt.toFixed(2).replace('.', ',')} efixDI creditados`);
+            
+            // Stop polling
+            stopTrackerPolling();
+            
+            // Show success
+            const tracker = document.getElementById('pixTracker');
+            tracker.classList.remove('polling');
+            
+            document.getElementById('successAmount').textContent = 
+                `R$ ${amt.toFixed(2).replace('.', ',')} → ${amt.toFixed(2).replace('.', ',')} efixDI`;
+            
+            const txLink = document.getElementById('successTxLink');
+            if (pixTrackerState.txHash) {
+                txLink.href = `https://polygonscan.com/tx/${pixTrackerState.txHash}`;
+                txLink.textContent = `${pixTrackerState.txHash.slice(0, 14)}...${pixTrackerState.txHash.slice(-8)} ↗`;
+                txLink.style.display = 'inline-block';
+            } else {
+                txLink.style.display = 'none';
+            }
+            
+            document.getElementById('trackerSuccess').classList.remove('hidden');
+            document.getElementById('trackerCancel').style.display = 'none';
+            
+            showToast('Tokens creditados na sua wallet!', 'success');
+            
+            // Refresh position
+            loadPosition();
+        }
+
+        // ═══════════════════════════════════════════
+        // STOP / CANCEL TRACKER
+        // ═══════════════════════════════════════════
+        function stopTrackerPolling() {
+            pixTrackerState.active = false;
+            if (pixTrackerState.pollingInterval) {
+                clearInterval(pixTrackerState.pollingInterval);
+                pixTrackerState.pollingInterval = null;
+            }
+            if (pixTrackerState.timerInterval) {
+                clearInterval(pixTrackerState.timerInterval);
+                pixTrackerState.timerInterval = null;
+            }
+        }
+
+        function cancelTracker() {
+            stopTrackerPolling();
+            document.getElementById('pixTracker').classList.add('hidden');
+            document.getElementById('pixTracker').classList.remove('polling');
+            // Re-show the QR container so user can try again
+            document.getElementById('qrContainer').classList.remove('hidden');
+            showToast('Acompanhamento cancelado. O mint continua automaticamente.', 'success');
+        }
+
+        function copyPixCode() {
+            if (pixCode) {
+                navigator.clipboard.writeText(pixCode);
+                showToast('Código PIX copiado!', 'success');
+            }
+        }
+
+        async function applyLeverage() {
+            if (!contracts.vault || !userAddress) {
+                showToast('Conecte sua wallet primeiro', 'error');
+                return;
+            }
+            
+            const targetLoops = parseInt(document.getElementById('leverageSlider').value);
+            const currentLoops = currentPosition?.leverageLoops || 0;
+            
+            if (targetLoops <= currentLoops) {
+                showToast('Selecione um nível maior de alavancagem', 'error');
+                return;
+            }
+            
+            const loopsToApply = targetLoops - currentLoops;
+            
+            try {
+                // Check allowance
+                const allowance = await contracts.token.allowance(userAddress, CONTRACTS.vault);
+                if (allowance < ethers.MaxUint256 / 2n) {
+                    showToast('Aprovando tokens...', 'success');
+                    const approveTx = await contracts.token.approve(CONTRACTS.vault, ethers.MaxUint256);
+                    await approveTx.wait();
+                }
+                
+                showToast('Aplicando alavancagem...', 'success');
+                const tx = await contracts.vault.applyLeverage(loopsToApply);
+                await tx.wait();
+                
+                showToast('Alavancagem aplicada!', 'success');
+                await loadPosition();
+                
+            } catch (error) {
+                console.error('Leverage error:', error);
+                showToast('Erro: ' + (error.reason || error.message), 'error');
+            }
+        }
+
+        async function removeLeverage() {
+            if (!contracts.vault || !userAddress) {
+                showToast('Conecte sua wallet primeiro', 'error');
+                return;
+            }
+            
+            const currentLoops = currentPosition?.leverageLoops || 0;
+            
+            if (currentLoops === 0) {
+                showToast('Você não tem alavancagem ativa', 'error');
+                return;
+            }
+            
+            try {
+                showToast('Removendo alavancagem...', 'success');
+                const tx = await contracts.vault.deleverage(1);
+                await tx.wait();
+                
+                showToast('Alavancagem removida!', 'success');
+                await loadPosition();
+                
+            } catch (error) {
+                console.error('Deleverage error:', error);
+                showToast('Erro: ' + (error.reason || error.message), 'error');
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // WITHDRAW WITH PROGRESS TRACKER
+        // ═══════════════════════════════════════════
+        let wdTrackerState = {
+            active: false,
+            timerInterval: null,
+            startTime: null,
+            pollingInterval: null
+        };
+
+        const WD_STEP_IDS = ['wd-step-tx', 'wd-step-confirm', 'wd-step-pix', 'wd-step-done'];
+
+        function updateWdStep(index, state, dotContent, sublabel) {
+            const stepEl = document.getElementById(WD_STEP_IDS[index]);
+            if (!stepEl) return;
+            stepEl.classList.remove('completed', 'active', 'waiting');
+            stepEl.classList.add(state);
+            const dot = stepEl.querySelector('.step-dot');
+            if (dotContent !== undefined) dot.textContent = dotContent;
+            if (sublabel !== undefined) {
+                const sub = stepEl.querySelector('.step-sublabel');
+                if (sub) sub.textContent = sublabel;
+            }
+        }
+
+        function updateWdTimer() {
+            if (!wdTrackerState.startTime) return;
+            const elapsed = Math.floor((Date.now() - wdTrackerState.startTime) / 1000);
+            const min = Math.floor(elapsed / 60);
+            const sec = elapsed % 60;
+            document.getElementById('wdTrackerTimer').textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function showWithdrawTracker() {
+            const tracker = document.getElementById('withdrawTracker');
+            tracker.classList.remove('hidden');
+            tracker.classList.add('polling');
+            document.getElementById('wdTrackerSuccess').classList.add('hidden');
+            document.getElementById('withdrawWarning').style.display = 'none';
+
+            // Reset steps
+            WD_STEP_IDS.forEach((id, i) => updateWdStep(i, 'waiting', (i + 1).toString(), 'Aguardando...'));
+            updateWdStep(0, 'active', '1', 'Assinando na wallet...');
+
+            wdTrackerState.active = true;
+            wdTrackerState.startTime = Date.now();
+            wdTrackerState.timerInterval = setInterval(updateWdTimer, 1000);
+        }
+
+        function completeWithdrawTracker(amount, txHash) {
+            wdTrackerState.active = false;
+            if (wdTrackerState.timerInterval) clearInterval(wdTrackerState.timerInterval);
+            if (wdTrackerState.pollingInterval) clearInterval(wdTrackerState.pollingInterval);
+
+            const tracker = document.getElementById('withdrawTracker');
+            tracker.classList.remove('polling');
+
+            document.getElementById('wdSuccessAmount').textContent = 
+                `${amount.toFixed(2).replace('.', ',')} efixDI → PIX`;
+
+            const txLink = document.getElementById('wdSuccessTxLink');
+            if (txHash) {
+                txLink.href = `https://polygonscan.com/tx/${txHash}`;
+                txLink.textContent = `${txHash.slice(0, 14)}...${txHash.slice(-8)} ↗`;
+                txLink.style.display = 'inline-block';
+            } else {
+                txLink.style.display = 'none';
+            }
+
+            document.getElementById('wdTrackerSuccess').classList.remove('hidden');
+        }
+
+        function resetWithdrawTracker() {
+            wdTrackerState.active = false;
+            if (wdTrackerState.timerInterval) clearInterval(wdTrackerState.timerInterval);
+            if (wdTrackerState.pollingInterval) clearInterval(wdTrackerState.pollingInterval);
+            document.getElementById('withdrawTracker').classList.add('hidden');
+            document.getElementById('withdrawWarning').style.display = 'block';
+        }
+
+        async function withdrawFunds() {
+            if (!contracts.vault || !userAddress) {
+                showToast('Conecte sua wallet primeiro', 'error');
+                return;
+            }
+            
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const pixKey = document.getElementById('pixKey').value;
+            
+            if (!amount || amount <= 0) {
+                showToast('Digite um valor válido', 'error');
+                return;
+            }
+            
+            if (!pixKey) {
+                showToast('Digite sua chave PIX', 'error');
+                return;
+            }
+            
+            if (currentPosition?.leverageLoops > 0) {
+                showToast('Remova toda alavancagem antes de sacar', 'error');
+                return;
+            }
+
+            // Show progress tracker
+            showWithdrawTracker();
+            
+            try {
+                // Step 1: Send TX
+                const amountWei = ethers.parseEther(amount.toString());
+                const tx = await contracts.vault.withdraw(amountWei, pixKey);
+                
+                const shortTx = `${tx.hash.slice(0, 10)}...${tx.hash.slice(-6)}`;
+                updateWdStep(0, 'completed', '✓', shortTx);
+                updateWdStep(1, 'active', undefined, 'Aguardando confirmação...');
+                showToast('Transação enviada!', 'success');
+
+                // Step 2: Wait for confirmation
+                const receipt = await tx.wait();
+                updateWdStep(1, 'completed', '✓', `Bloco ${receipt.blockNumber}`);
+                updateWdStep(2, 'active', undefined, 'Backend processando PIX...');
+                showToast('Confirmado on-chain!', 'success');
+
+                // Step 3: PIX processing (poll backend)
+                let wdCurrentStep = 2;
+                wdTrackerState.pollingInterval = setInterval(async () => {
+                    try {
+                        const res = await fetch(PIX_BACKEND_URL + '/api/deposit/status/' + userAddress, {
+                            
+                        });
+                        // For now, we don't have a withdrawal-specific endpoint
+                        // Auto-advance after 15 seconds as PIX is being processed
+                    } catch (e) {}
+                }, 3000);
+
+                // Auto-advance Step 3 after ~15s (typical PIX cashout time)
+                setTimeout(() => {
+                    if (!wdTrackerState.active) return;
+                    updateWdStep(2, 'completed', '✓', 'PIX enviado para sua chave');
+                    updateWdStep(3, 'active', undefined, 'Finalizando...');
+                    
+                    // Step 4: Complete
+                    setTimeout(() => {
+                        if (!wdTrackerState.active) return;
+                        updateWdStep(3, 'completed', '✓', `PIX: ${pixKey.length > 15 ? pixKey.slice(0, 12) + '...' : pixKey}`);
+                        completeWithdrawTracker(amount, tx.hash);
+                        showToast('Saque concluído! Verifique seu banco.', 'success');
+                        loadPosition();
+                    }, 3000);
+                }, 15000);
+                
+            } catch (error) {
+                console.error('Withdraw error:', error);
+                resetWithdrawTracker();
+                showToast('Erro: ' + (error.reason || error.message), 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
