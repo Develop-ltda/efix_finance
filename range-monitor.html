@@ -423,59 +423,25 @@
     }
     const $=id=>document.getElementById(id);
 
-    // Fetch holder count by checking Transfer events
+    // Fetch holder count via Polygonscan + Basescan APIs (free, no key needed for basic)
     async function fetchHolders() {
+        let total = 0;
         try {
-            const pv = await gp(C.rpcs);
-            const token = new ethers.Contract(C.efixDI, [
-                'event Transfer(address indexed from, address indexed to, uint256 value)',
-                'function balanceOf(address) view returns (uint256)'
-            ], pv);
-            // Get all Transfer events (limited approach - check known addresses)
-            // For a small token, we query recent Transfer events and count unique holders
-            const filter = token.filters.Transfer();
-            const bn = await pv.getBlockNumber();
-            const fromBlock = Math.max(bn - 500000, 0); // ~last 2 weeks
-            const events = await token.queryFilter(filter, fromBlock, bn);
-            const addrs = new Set();
-            events.forEach(e => {
-                if (e.args[1] !== '0x0000000000000000000000000000000000000000') addrs.add(e.args[1]);
-                if (e.args[0] !== '0x0000000000000000000000000000000000000000') addrs.add(e.args[0]);
-            });
-            // Check balances to filter out zero-balance addresses
-            let holders = 0;
-            for (const addr of addrs) {
-                try {
-                    const bal = await token.balanceOf(addr);
-                    if (bal > 0n) holders++;
-                } catch { continue; }
-                if (holders > 50) break; // safety limit
+            // Polygonscan: get token holder count from page
+            const resp = await fetch('https://api.polygonscan.com/api?module=token&action=tokeninfo&contractaddress='+C.efixDI);
+            const data = await resp.json();
+            if (data.result && data.result[0] && data.result[0].holdersCount) {
+                total += parseInt(data.result[0].holdersCount);
             }
-            // Also check Base chain
-            try {
-                const pvBase = await gp(C.rpcs_base);
-                const tokenBase = new ethers.Contract(C.efixDI_base, [
-                    'event Transfer(address indexed from, address indexed to, uint256 value)',
-                    'function balanceOf(address) view returns (uint256)'
-                ], pvBase);
-                const bnBase = await pvBase.getBlockNumber();
-                const eventsBase = await tokenBase.queryFilter(tokenBase.filters.Transfer(), Math.max(bnBase - 500000, 0), bnBase);
-                const addrsBase = new Set();
-                eventsBase.forEach(e => {
-                    if (e.args[1] !== '0x0000000000000000000000000000000000000000') addrsBase.add(e.args[1]);
-                });
-                for (const addr of addrsBase) {
-                    try {
-                        const bal = await tokenBase.balanceOf(addr);
-                        if (bal > 0n) holders++;
-                    } catch { continue; }
-                }
-            } catch(e) { console.log('[Holders] Base chain error:', e.message); }
-            $('holders').textContent = holders;
-        } catch(e) {
-            console.error('[Holders] Error:', e);
-            $('holders').textContent = '—';
-        }
+        } catch(e) { console.log('[Holders] Polygonscan error:', e.message); }
+        try {
+            const resp2 = await fetch('https://api.basescan.org/api?module=token&action=tokeninfo&contractaddress='+C.efixDI_base);
+            const data2 = await resp2.json();
+            if (data2.result && data2.result[0] && data2.result[0].holdersCount) {
+                total += parseInt(data2.result[0].holdersCount);
+            }
+        } catch(e) { console.log('[Holders] Basescan error:', e.message); }
+        $('holders').textContent = total > 0 ? total : '—';
     }
 
     async function fetchData() {
@@ -569,9 +535,9 @@
         }
     }
 
-    async function go(){try{ui(await fetchData());}catch(e){console.error('[RM]',e);$('navBlock').textContent='RPC Error';}}
+    async function go(){try{ui(await fetchData());}catch(e){console.error('[RM]',e);}}
     go(); setInterval(go,C.ms);
-    fetchHolders(); // Run once on load
+    setTimeout(fetchHolders, 2000); // Run after main data loads
 })();
 
 function copyVal(id){
