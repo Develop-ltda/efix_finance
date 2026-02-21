@@ -423,36 +423,32 @@
     }
     const $=id=>document.getElementById(id);
 
-    // Fetch holder count via Polygonscan/Basescan tokentx API
-    // Scans all Transfer events, computes net balance per address, counts > 0
+    // Fetch holder count via Polygonscan/Basescan getLogs API
+    const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
     async function fetchHolders() {
         let allHolders = new Set();
-        // Helper: scan one chain's token transfers
         async function scanChain(apiBase, contract, label) {
             const balances = {};
-            let page = 1;
-            while (page <= 10) { // safety limit
-                try {
-                    const url = apiBase + '/api?module=account&action=tokentx&contractaddress=' + contract +
-                        '&page=' + page + '&offset=1000&sort=asc';
-                    const resp = await fetch(url);
-                    const data = await resp.json();
-                    if (data.status !== '1' || !data.result || data.result.length === 0) break;
-                    for (const tx of data.result) {
-                        const from = tx.from.toLowerCase();
-                        const to = tx.to.toLowerCase();
-                        const val = parseFloat(tx.value) / 1e18;
-                        if (from !== '0x0000000000000000000000000000000000000000') {
-                            balances[from] = (balances[from] || 0) - val;
-                        }
-                        if (to !== '0x0000000000000000000000000000000000000000') {
-                            balances[to] = (balances[to] || 0) + val;
-                        }
+            try {
+                // Single query — works for tokens with <1000 transfers
+                const url = apiBase + '/api?module=logs&action=getLogs' +
+                    '&address=' + contract +
+                    '&topic0=' + TRANSFER_TOPIC +
+                    '&fromBlock=0&toBlock=99999999';
+                const resp = await fetch(url);
+                const data = await resp.json();
+                console.log('[Holders] ' + label + ' API status:', data.status, 'events:', data.result?.length || 0);
+                if (data.status === '1' && data.result) {
+                    for (const log of data.result) {
+                        const fromAddr = '0x' + log.topics[1].slice(26).toLowerCase();
+                        const toAddr = '0x' + log.topics[2].slice(26).toLowerCase();
+                        const val = parseInt(log.data, 16) / 1e18;
+                        const zero = '0x0000000000000000000000000000000000000000';
+                        if (fromAddr !== zero) balances[fromAddr] = (balances[fromAddr] || 0) - val;
+                        if (toAddr !== zero) balances[toAddr] = (balances[toAddr] || 0) + val;
                     }
-                    if (data.result.length < 1000) break;
-                    page++;
-                } catch(e) { console.log('[Holders] ' + label + ' page ' + page + ':', e.message); break; }
-            }
+                }
+            } catch(e) { console.log('[Holders] ' + label + ' error:', e.message); }
             let count = 0;
             for (const addr in balances) {
                 if (balances[addr] > 0.0001) { count++; allHolders.add(addr); }
@@ -461,7 +457,6 @@
             return count;
         }
         const poly = await scanChain('https://api.polygonscan.com', C.efixDI, 'Polygon');
-        // Small delay to avoid rate limit
         await new Promise(r => setTimeout(r, 1500));
         const base = await scanChain('https://api.basescan.org', C.efixDI_base, 'Base');
         const total = allHolders.size;
