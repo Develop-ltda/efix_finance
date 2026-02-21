@@ -136,6 +136,32 @@
         .meth { font-size:14px; line-height:1.85; color:var(--text2); }
         .meth code { background:rgba(34,197,94,.08); color:var(--green); padding:1px 5px; border-radius:3px; font-family:var(--mono); font-size:12px; }
 
+        /* ACTION PANEL */
+        .act { background:var(--surface); border:2px solid var(--green-border); border-radius:16px; padding:28px; margin-bottom:32px; position:relative; overflow:hidden; }
+        .act::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--green),var(--cyan)); }
+        .act-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; }
+        .act-sub { font-size:13px; color:var(--text2); margin-bottom:24px; }
+        .act-steps { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+        .act-step { background:var(--surface2); border-radius:12px; padding:20px; position:relative; }
+        .act-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--green); color:#fff; font-size:12px; font-weight:700; margin-bottom:12px; }
+        .act-step h4 { font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px; }
+        .act-step p { font-size:12px; color:var(--text2); line-height:1.5; margin-bottom:12px; }
+        .act-btn { display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:600; text-decoration:none; cursor:pointer; border:none; transition:all .2s; }
+        .act-btn-primary { background:var(--green); color:#fff; }
+        .act-btn-primary:hover { background:#16a34a; }
+        .act-btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text); }
+        .act-btn-outline:hover { border-color:var(--green); color:var(--green); }
+        .act-btn-danger { background:var(--red-bg); border:1px solid var(--red-border); color:var(--red); }
+        .act-btn-danger:hover { background:#fecaca; }
+        .act-vals { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+        .act-val-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 12px; }
+        .act-val-row .label { font-size:11px; color:var(--text3); font-weight:600; }
+        .act-val-row .value { font-size:13px; font-family:var(--mono); color:var(--text); font-weight:600; }
+        .copy-btn { background:none; border:none; cursor:pointer; font-size:14px; padding:2px 6px; border-radius:4px; transition:background .2s; }
+        .copy-btn:hover { background:var(--surface2); }
+        .copied { color:var(--green); font-size:11px; font-weight:600; }
+        @media(max-width:768px) { .act-steps { grid-template-columns:1fr; } }
+
         /* FOOTER */
         footer { background:var(--dark); color:#a1a1aa; padding:48px 24px 32px; margin-top:60px; }
         .ft-inner { max-width:1080px; margin:0 auto; }
@@ -240,6 +266,55 @@
     </div>
     <div class="fm">
         <strong>Range:</strong> P = P_spot × exp(±z × σ × √(T/365))&nbsp;&nbsp;|&nbsp;&nbsp;<strong>FPT:</strong> E[τ] ≈ (barrier / σ_daily)²&nbsp;&nbsp;|&nbsp;&nbsp;z=1.96, σ=10.5%, T=30d
+    </div>
+
+    <!-- ACTION PANEL -->
+    <div style="margin-top:36px"></div>
+    <div class="lbl">⚡ Optimize Position</div>
+    <div class="act">
+        <div class="act-title">Concentrate your liquidity for 17× more efficiency</div>
+        <div class="act-sub">Your position is currently full-range. Follow these 3 steps to apply the GBM-optimized range.</div>
+        <div class="act-steps">
+            <div class="act-step">
+                <div class="act-num">1</div>
+                <h4>Remove Liquidity</h4>
+                <p>Remove 100% of liquidity from the current full-range position #2847265.</p>
+                <a class="act-btn act-btn-danger" href="https://app.uniswap.org/positions/v3/polygon/2847265" target="_blank">
+                    Remove on Uniswap ↗
+                </a>
+            </div>
+            <div class="act-step">
+                <div class="act-num">2</div>
+                <h4>Copy Optimal Range</h4>
+                <p>Set these as min/max price when creating the new position:</p>
+                <div class="act-vals">
+                    <div class="act-val-row">
+                        <div>
+                            <div class="label">Min Price (Lower)</div>
+                            <div class="value" id="copyLo">—</div>
+                        </div>
+                        <button class="copy-btn" onclick="copyVal('copyLo')" title="Copy">📋</button>
+                    </div>
+                    <div class="act-val-row">
+                        <div>
+                            <div class="label">Max Price (Upper)</div>
+                            <div class="value" id="copyHi">—</div>
+                        </div>
+                        <button class="copy-btn" onclick="copyVal('copyHi')" title="Copy">📋</button>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text3);">Values update live based on current price</div>
+            </div>
+            <div class="act-step">
+                <div class="act-num">3</div>
+                <h4>Create New Position</h4>
+                <p>Open Uniswap with efixDI/USDC pre-selected. Paste the range and deposit.</p>
+                <a class="act-btn act-btn-primary" id="newPosLink" href="#" target="_blank">
+                    New Position on Uniswap ↗
+                </a>
+                <div style="font-size:11px;color:var(--text3);margin-top:8px;">Fee: 0.05% · Gas: ~$0.02</div>
+            </div>
+        </div>
     </div>
 
     <div style="margin-top:36px"></div>
@@ -441,6 +516,28 @@
         $('tw').textContent = '~Day '+Math.round(fpt(C.vol, optHalf*.75));
         $('tc').textContent = '~Day '+Math.round(fpt(C.vol, optHalf*.90));
         $('te').textContent = '~Day '+Math.round(optFpt);
+
+        // Action panel — copy values & Uniswap deep link
+        $('copyLo').textContent = o.lo.toFixed(5);
+        $('copyHi').textContent = o.hi.toFixed(5);
+
+        // Uniswap V3 "New Position" deep link
+        // efixDI on Polygon: 0x04082b283818D9d0dd9Ee8742892eEe5CC396441
+        // USDC on Polygon: 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359
+        const efixDI = '0x04082b283818D9d0dd9Ee8742892eEe5CC396441';
+        const usdc = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359';
+        const uniLink = 'https://app.uniswap.org/add/'+efixDI+'/'+usdc+'/500?chain=polygon&minPrice='+o.lo.toFixed(8)+'&maxPrice='+o.hi.toFixed(8);
+        $('newPosLink').href = uniLink;
+
+        // Update action panel subtitle with live efficiency
+        const actSub = document.querySelector('.act-sub');
+        if (actSub) {
+            if (full) {
+                actSub.textContent = 'Your position is full-range (1x efficiency). Concentrating to the optimal range gives you '+o.eff.toFixed(0)+'x capital efficiency.';
+            } else {
+                actSub.textContent = 'Position is concentrated. Use these values to rebalance when needed.';
+            }
+        }
     }
 
     async function go() {
@@ -449,6 +546,24 @@
     }
     go(); setInterval(go, C.ms);
 })();
+
+// Copy to clipboard helper (outside IIFE for onclick access)
+function copyVal(id) {
+    const el = document.getElementById(id);
+    const val = el.textContent;
+    navigator.clipboard.writeText(val).then(() => {
+        const btn = el.parentElement.nextElementSibling || el.closest('.act-val-row').querySelector('.copy-btn');
+        const orig = btn.textContent;
+        btn.innerHTML = '<span class="copied">✓ Copied</span>';
+        setTimeout(() => { btn.textContent = orig || '📋'; }, 1500);
+    }).catch(() => {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = val; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+    });
+}
 </script>
 </body>
 </html>
