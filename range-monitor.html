@@ -423,49 +423,38 @@
     }
     const $=id=>document.getElementById(id);
 
-    // Fetch holder count — lightweight: check known addresses only
+    // Fetch holder count — independent RPC connections, won't affect main data
     async function fetchHolders() {
+        const BABI = ['function balanceOf(address) view returns (uint256)'];
+        let count = 0;
+        // Polygon holders
         try {
-            const pv = await gp(C.rpcs);
-            const token = new ethers.Contract(C.efixDI, ['function balanceOf(address) view returns (uint256)'], pv);
-            // Known addresses that have interacted with efixDI
-            const known = [
+            const p = new ethers.JsonRpcProvider('https://polygon-bor-rpc.publicnode.com');
+            const t = new ethers.Contract(C.efixDI, BABI, p);
+            const addrs = [
                 '0x7C54a68F11315EE3e3B4e4C7537a686dfaE47537', // Ernesto
                 '0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C', // VaultV2
                 '0x603265754fDdd7FdE459CC6e6722bd526C1258Fc', // OFT Adapter
                 '0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3', // PIX Bridge
-                C.nft, // Uniswap position manager (LP tokens)
-                '0x000000000000000000000000000000000000dEaD', // dead address
+                '0xC36442b4a4522E871399CD717aBDD847Ab11FE88', // Uniswap NFT
             ];
-            let holders = 0;
-            for (const addr of known) {
-                try {
-                    const bal = await token.balanceOf(addr);
-                    if (bal > 0n) holders++;
-                } catch { continue; }
-            }
-            // Also check Base
-            try {
-                const pvBase = await gp(C.rpcs_base);
-                const tokenBase = new ethers.Contract(C.efixDI_base, ['function balanceOf(address) view returns (uint256)'], pvBase);
-                const baseAddrs = [
-                    '0x7C54a68F11315EE3e3B4e4C7537a686dfaE47537',
-                    '0x400a8DE2bF8fc4A63000A7E77103eDAE897CB9a3', // MinterBurner
-                    '0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5', // Morpho Vault
-                    '0x000000000000000000000000000000000000dEaD',
-                ];
-                for (const addr of baseAddrs) {
-                    try {
-                        const bal = await tokenBase.balanceOf(addr);
-                        if (bal > 0n) holders++;
-                    } catch { continue; }
-                }
-            } catch(e) { console.log('[Holders] Base error:', e.message); }
-            $('holders').textContent = holders > 0 ? holders : '—';
-        } catch(e) {
-            console.log('[Holders] Error:', e.message);
-            $('holders').textContent = '—';
-        }
+            const bals = await Promise.allSettled(addrs.map(a => t.balanceOf(a)));
+            bals.forEach(r => { if (r.status === 'fulfilled' && r.value > 0n) count++; });
+        } catch(e) { console.log('[Holders] Polygon:', e.message); }
+        // Base holders
+        try {
+            const p2 = new ethers.JsonRpcProvider('https://base-rpc.publicnode.com');
+            const t2 = new ethers.Contract(C.efixDI_base, BABI, p2);
+            const addrs2 = [
+                '0x7C54a68F11315EE3e3B4e4C7537a686dfaE47537', // Ernesto
+                '0x400a8DE2bF8fc4A63000A7E77103eDAE897CB9a3', // MinterBurner
+                '0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5', // Morpho Vault
+                '0x3D8d67038e04AdD1EBB77cCa3c6A401e5b1EbB77', // OFT Base
+            ];
+            const bals2 = await Promise.allSettled(addrs2.map(a => t2.balanceOf(a)));
+            bals2.forEach(r => { if (r.status === 'fulfilled' && r.value > 0n) count++; });
+        } catch(e) { console.log('[Holders] Base:', e.message); }
+        $('holders').textContent = count > 0 ? count : '—';
     }
 
     async function fetchData() {
