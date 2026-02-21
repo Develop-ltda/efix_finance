@@ -409,7 +409,7 @@
     const NABI=['function positions(uint256) external view returns (uint96, address, address, address, uint24, int24, int24, uint128, uint256, uint256, uint128, uint128)'];
     const FABI=['function getPool(address,address,uint24) external view returns (address)'];
     const PABI=['function slot0() external view returns (uint160, int24, uint16, uint16, uint16, uint8, bool)'];
-    const TABI=['function balanceOf(address) view returns (uint256)'];
+
 
     function s2p(sqrtPX96) { const s=Number(sqrtPX96)/(2**96); return s*s*1e12; }
     function t2p(tick) { return Math.exp(tick*Math.log(1.0001))*1e12; }
@@ -423,25 +423,49 @@
     }
     const $=id=>document.getElementById(id);
 
-    // Fetch holder count via Polygonscan + Basescan APIs (free, no key needed for basic)
+    // Fetch holder count — lightweight: check known addresses only
     async function fetchHolders() {
-        let total = 0;
         try {
-            // Polygonscan: get token holder count from page
-            const resp = await fetch('https://api.polygonscan.com/api?module=token&action=tokeninfo&contractaddress='+C.efixDI);
-            const data = await resp.json();
-            if (data.result && data.result[0] && data.result[0].holdersCount) {
-                total += parseInt(data.result[0].holdersCount);
+            const pv = await gp(C.rpcs);
+            const token = new ethers.Contract(C.efixDI, ['function balanceOf(address) view returns (uint256)'], pv);
+            // Known addresses that have interacted with efixDI
+            const known = [
+                '0x7C54a68F11315EE3e3B4e4C7537a686dfaE47537', // Ernesto
+                '0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C', // VaultV2
+                '0x603265754fDdd7FdE459CC6e6722bd526C1258Fc', // OFT Adapter
+                '0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3', // PIX Bridge
+                C.nft, // Uniswap position manager (LP tokens)
+                '0x000000000000000000000000000000000000dEaD', // dead address
+            ];
+            let holders = 0;
+            for (const addr of known) {
+                try {
+                    const bal = await token.balanceOf(addr);
+                    if (bal > 0n) holders++;
+                } catch { continue; }
             }
-        } catch(e) { console.log('[Holders] Polygonscan error:', e.message); }
-        try {
-            const resp2 = await fetch('https://api.basescan.org/api?module=token&action=tokeninfo&contractaddress='+C.efixDI_base);
-            const data2 = await resp2.json();
-            if (data2.result && data2.result[0] && data2.result[0].holdersCount) {
-                total += parseInt(data2.result[0].holdersCount);
-            }
-        } catch(e) { console.log('[Holders] Basescan error:', e.message); }
-        $('holders').textContent = total > 0 ? total : '—';
+            // Also check Base
+            try {
+                const pvBase = await gp(C.rpcs_base);
+                const tokenBase = new ethers.Contract(C.efixDI_base, ['function balanceOf(address) view returns (uint256)'], pvBase);
+                const baseAddrs = [
+                    '0x7C54a68F11315EE3e3B4e4C7537a686dfaE47537',
+                    '0x400a8DE2bF8fc4A63000A7E77103eDAE897CB9a3', // MinterBurner
+                    '0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5', // Morpho Vault
+                    '0x000000000000000000000000000000000000dEaD',
+                ];
+                for (const addr of baseAddrs) {
+                    try {
+                        const bal = await tokenBase.balanceOf(addr);
+                        if (bal > 0n) holders++;
+                    } catch { continue; }
+                }
+            } catch(e) { console.log('[Holders] Base error:', e.message); }
+            $('holders').textContent = holders > 0 ? holders : '—';
+        } catch(e) {
+            console.log('[Holders] Error:', e.message);
+            $('holders').textContent = '—';
+        }
     }
 
     async function fetchData() {
@@ -463,7 +487,7 @@
 
         $('price').textContent='$'+d.cp.toFixed(5);
         $('fx').textContent='≈ R$'+(1/d.cp).toFixed(2)+'/USD';
-        $('navBlock').textContent='Mainnet · Block '+d.bn.toLocaleString();
+        const nb=$('navBlock'); if(nb) nb.textContent='Mainnet · Block '+d.bn.toLocaleString();
 
         const ue=$('util');
         if(full){ue.textContent='Full Range';ue.className='c-val sm c-cyan';$('dir').textContent='Concentrate for '+o.eff.toFixed(0)+'x efficiency';}
@@ -501,7 +525,7 @@
         $('curL').textContent='$'+d.cp.toFixed(5);
         $('blk').textContent='#'+d.bn.toLocaleString();
         $('upd').textContent=new Date().toLocaleTimeString('pt-BR');
-        $('live').textContent=d.ir?'In Range · Live on Polygon':'Out of Range';
+        // Update status (no separate live badge in this design)
 
         const ab=$('aBar'),at=$('aText'),ai=$('aIcon');
         if(!d.ir){ab.className='alert a-crit';ai.textContent='🚨';at.innerHTML='<strong>OUT OF RANGE</strong> — Rebalancing needed.';}
