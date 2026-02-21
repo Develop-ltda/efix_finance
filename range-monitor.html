@@ -221,7 +221,7 @@
     <div class="rv">
         <div class="rv-hd">
             <div class="rv-tt">Position in Range</div>
-            <div class="rv-tg" id="nftTag">NFT #2847265</div>
+            <div class="rv-tg" id="nftTag">NFT #2847354</div>
         </div>
         <div class="rv-bar">
             <div class="rv-z rv-zl"></div>
@@ -236,7 +236,7 @@
         </div>
         <div class="rv-info">
             <div>Pool: <em>efixDI/USDC</em></div>
-            <div>Fee: <em>0.05%</em></div>
+            <div>Fee: <em>0.01%</em></div>
             <div>Network: <em>Polygon</em></div>
             <div>Block: <em id="blk">#—</em></div>
             <div>Updated: <em id="upd">—</em></div>
@@ -270,16 +270,16 @@
 
     <!-- ACTION PANEL -->
     <div style="margin-top:36px"></div>
-    <div class="lbl">⚡ Optimize Position</div>
+    <div class="lbl">⚡ Rebalance Position</div>
     <div class="act">
-        <div class="act-title">Concentrate your liquidity for 17× more efficiency</div>
-        <div class="act-sub">Your position is currently full-range. Follow these 3 steps to apply the GBM-optimized range.</div>
+        <div class="act-title">Rebalance when the range is consumed</div>
+        <div class="act-sub">Position is concentrated. When utilization hits 90%+, follow these steps to rebalance.</div>
         <div class="act-steps">
             <div class="act-step">
                 <div class="act-num">1</div>
                 <h4>Remove Liquidity</h4>
-                <p>Remove 100% of liquidity from the current full-range position #2847265.</p>
-                <a class="act-btn act-btn-danger" href="https://app.uniswap.org/positions/v3/polygon/2847265" target="_blank">
+                <p>Remove 100% of liquidity from the current position #2847354.</p>
+                <a class="act-btn act-btn-danger" href="https://app.uniswap.org/positions/v3/polygon/2847354" target="_blank">
                     Remove on Uniswap ↗
                 </a>
             </div>
@@ -308,11 +308,11 @@
             <div class="act-step">
                 <div class="act-num">3</div>
                 <h4>Create New Position</h4>
-                <p>Open Uniswap with efixDI/USDC pre-selected. Paste the range and deposit.</p>
+                <p>Click below → "New Position" → Select efixDI + USDC → 0.01% fee → Paste the range values from Step 2.</p>
                 <a class="act-btn act-btn-primary" id="newPosLink" href="#" target="_blank">
                     New Position on Uniswap ↗
                 </a>
-                <div style="font-size:11px;color:var(--text3);margin-top:8px;">Fee: 0.05% · Gas: ~$0.02</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:8px;">efixDI: 0x04082...6441 · Fee: 0.01% · Gas: ~$0.02</div>
             </div>
         </div>
     </div>
@@ -347,7 +347,7 @@
     <div class="ft-inner">
         <div class="ft-grid">
             <div><div class="ft-brand"><img src="./logo_efix_400x400.jpg" alt="EFIX"><span style="color:#fff;font-weight:600;">EFIX Protocol</span></div><div class="ft-desc">Bridging Brazilian fixed-income into DeFi. CVM-regulated.</div></div>
-            <div class="ft-col"><h4>Protocol</h4><a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho Vault</a><a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token (Polygon)</a><a href="https://app.uniswap.org/positions/v3/polygon/2847265" target="_blank">Uniswap Position</a></div>
+            <div class="ft-col"><h4>Protocol</h4><a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho Vault</a><a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token (Polygon)</a><a href="https://app.uniswap.org/positions/v3/polygon/2847354" target="_blank">Uniswap Position</a></div>
             <div class="ft-col"><h4>Resources</h4><a href="./efixDI_Whitepaper_v1.pdf">Whitepaper</a><a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank">GitHub</a></div>
             <div class="ft-col"><h4>Contact</h4><a href="mailto:contato@efix.com.br">contato@efix.com.br</a><a>Rio de Janeiro, Brazil</a></div>
         </div>
@@ -359,7 +359,7 @@
 <script>
 (function(){
     const C = {
-        pid:2847265,
+        pid:2847354,
         nft:'0xC36442b4a4522E871399CD717aBDD847Ab11FE88',
         fac:'0x1F98431c8aD98523631AE4a59f267346ea31F984',
         rpcs:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://1rpc.io/matic','https://polygon.meowrpc.com'],
@@ -474,7 +474,7 @@
             $('loFx').textContent = 'tick '+d.tL;
             $('hi').textContent = 'MAX (full range)';
             $('hiFx').textContent = 'tick +'+d.tU;
-            $('nftTag').textContent = 'NFT #2847265 · FULL RANGE';
+            $('nftTag').textContent = 'NFT #2847354 · FULL RANGE';
         } else {
             const pL=t2p(d.tL), pU=t2p(d.tU);
             const logP = (Math.log(d.cp)-Math.log(pL))/(Math.log(pU)-Math.log(pL));
@@ -521,21 +521,22 @@
         $('copyLo').textContent = o.lo.toFixed(5);
         $('copyHi').textContent = o.hi.toFixed(5);
 
-        // Uniswap V3 "New Position" deep link
-        // efixDI on Polygon: 0x04082b283818D9d0dd9Ee8742892eEe5CC396441
-        // USDC on Polygon: 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359
-        const efixDI = '0x04082b283818D9d0dd9Ee8742892eEe5CC396441';
-        const usdc = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359';
-        const uniLink = 'https://app.uniswap.org/add/'+efixDI+'/'+usdc+'/500?chain=polygon&minPrice='+o.lo.toFixed(8)+'&maxPrice='+o.hi.toFixed(8);
-        $('newPosLink').href = uniLink;
+        // Uniswap "New Position" link — simple and reliable
+        // The /add/:token0/:token1/:fee format crashes on Uniswap's new frontend
+        // Instead, link to pool page where user clicks "New Position"
+        $('newPosLink').href = 'https://app.uniswap.org/pool?chain=polygon';
 
-        // Update action panel subtitle with live efficiency
+        // Update action panel subtitle with live state
         const actSub = document.querySelector('.act-sub');
         if (actSub) {
             if (full) {
-                actSub.textContent = 'Your position is full-range (1x efficiency). Concentrating to the optimal range gives you '+o.eff.toFixed(0)+'x capital efficiency.';
+                actSub.textContent = 'Position is full-range (1x efficiency). Concentrating gives '+o.eff.toFixed(0)+'x capital efficiency.';
             } else {
-                actSub.textContent = 'Position is concentrated. Use these values to rebalance when needed.';
+                const pL=t2p(d.tL), pU=t2p(d.tU);
+                const logU = Math.abs(Math.log(d.cp/pL) - Math.log(pU/pL)*0.5) / (Math.log(pU/pL)*0.5);
+                const u = Math.min(logU, 1);
+                if (u >= 0.75) actSub.textContent = 'Utilization at '+(u*100).toFixed(0)+'% — consider rebalancing soon.';
+                else actSub.textContent = 'Position is concentrated and healthy. Rebalance when utilization reaches 90%+.';
             }
         }
     }
