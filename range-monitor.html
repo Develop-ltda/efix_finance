@@ -5,149 +5,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Range Monitor — efixDI/USDC | EFIX Protocol</title>
     <meta name="description" content="Live Uniswap V3 liquidity range monitor for efixDI/USDC on Polygon.">
-    <meta property="og:title" content="efixDI Range Monitor — EFIX Protocol">
-    <meta property="og:description" content="Live Uniswap V3 position monitoring with GBM range optimization.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◈</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #09090b;
-            --surface: #18181b;
-            --surface2: #1f1f23;
-            --border: rgba(255,255,255,0.08);
-            --border2: rgba(255,255,255,0.14);
-            --text: #a1a1aa;
-            --text2: #71717a;
-            --text3: #3f3f46;
-            --white: #fafafa;
-            --green: #22c55e;
-            --green2: #4ade80;
-            --cyan: #06b6d4;
-            --yellow: #eab308;
-            --orange: #f97316;
-            --red: #ef4444;
-            --grad: linear-gradient(135deg, #22c55e, #06b6d4);
+            --bg: #fafafa;
+            --white: #ffffff;
+            --surface: #ffffff;
+            --surface2: #f4f4f5;
+            --border: #e4e4e7;
+            --border2: #d4d4d8;
+            --text: #18181b;
+            --text2: #52525b;
+            --text3: #a1a1aa;
+            --green: #16a34a;
+            --green2: #22c55e;
+            --green-bg: #f0fdf4;
+            --green-border: #bbf7d0;
+            --cyan: #0891b2;
+            --cyan-bg: #ecfeff;
+            --yellow: #ca8a04;
+            --yellow-bg: #fefce8;
+            --yellow-border: #fef08a;
+            --red: #dc2626;
+            --red-bg: #fef2f2;
+            --red-border: #fecaca;
+            --dark: #09090b;
             --mono: 'JetBrains Mono', monospace;
             --sans: 'Inter', -apple-system, sans-serif;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height:100vh; -webkit-font-smoothing: antialiased; }
+        body { font-family:var(--sans); background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; }
 
-        /* NAV */
-        nav { position:sticky; top:0; z-index:100; background:rgba(9,9,11,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); height:64px; display:flex; align-items:center; justify-content:space-between; padding:0 40px; }
+        /* NAV — dark bar like efix.finance */
+        nav {
+            position:sticky; top:0; z-index:100;
+            background:var(--dark); height:64px;
+            display:flex; align-items:center; justify-content:space-between; padding:0 40px;
+        }
         .nav-brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
         .nav-brand img { width:34px; height:34px; border-radius:8px; }
         .nav-links { display:flex; align-items:center; gap:28px; }
-        .nav-links a { color:var(--text2); text-decoration:none; font-size:14px; font-weight:500; transition:color .2s; }
-        .nav-links a:hover { color:var(--white); }
-        .nav-links a.active { color:var(--green2); }
-        .nav-cta { background:var(--grad); color:#000; padding:8px 20px; border-radius:8px; font-weight:600; font-size:14px; text-decoration:none; }
+        .nav-links a { color:#a1a1aa; text-decoration:none; font-size:14px; font-weight:500; transition:color .2s; }
+        .nav-links a:hover { color:#fff; }
+        .nav-links a.active { color:#4ade80; }
+        .nav-cta { background:linear-gradient(135deg,#22c55e,#06b6d4); color:#000; padding:8px 20px; border-radius:8px; font-weight:600; font-size:14px; text-decoration:none; }
 
-        /* LAYOUT */
-        .wrap { max-width:1080px; margin:0 auto; padding:48px 24px 80px; }
+        .wrap { max-width:1080px; margin:0 auto; padding:40px 24px 60px; }
 
         /* HERO */
-        .hero { text-align:center; margin-bottom:48px; }
-        .badge { display:inline-flex; align-items:center; gap:8px; background:rgba(34,197,94,0.07); border:1px solid rgba(34,197,94,0.18); border-radius:100px; padding:5px 16px; margin-bottom:20px; font-size:13px; color:var(--green2); font-weight:500; }
-        .dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:p 2s infinite; }
+        .hero { text-align:center; margin-bottom:40px; }
+        .badge {
+            display:inline-flex; align-items:center; gap:8px;
+            background:var(--green-bg); border:1px solid var(--green-border);
+            border-radius:100px; padding:5px 16px; margin-bottom:16px;
+            font-size:13px; color:var(--green); font-weight:600;
+        }
+        .dot { width:7px; height:7px; border-radius:50%; background:var(--green2); animation:p 2s infinite; }
         @keyframes p { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)} 50%{box-shadow:0 0 0 6px rgba(34,197,94,0)} }
-        .hero h1 { font-size:44px; font-weight:800; letter-spacing:-1.5px; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:10px; }
-        .hero p { color:var(--text2); font-size:16px; line-height:1.6; max-width:520px; margin:0 auto; }
+        .hero h1 { font-size:40px; font-weight:800; letter-spacing:-1.5px; color:var(--text); margin-bottom:8px; }
+        .hero h1 em { font-style:normal; background:linear-gradient(135deg,#22c55e,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .hero p { color:var(--text2); font-size:15px; line-height:1.6; }
 
         /* ALERT */
-        .alert { border-radius:12px; padding:14px 20px; margin-bottom:36px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; }
-        .a-ok { background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.15); color:var(--green2); }
-        .a-warn { background:rgba(234,179,8,.06); border:1px solid rgba(234,179,8,.15); color:var(--yellow); }
-        .a-crit { background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.15); color:var(--red); }
+        .alert { border-radius:12px; padding:14px 20px; margin-bottom:32px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; }
+        .a-ok { background:var(--green-bg); border:1px solid var(--green-border); color:var(--green); }
+        .a-warn { background:var(--yellow-bg); border:1px solid var(--yellow-border); color:var(--yellow); }
+        .a-crit { background:var(--red-bg); border:1px solid var(--red-border); color:var(--red); }
 
-        /* SECTION LABEL */
-        .label { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); font-weight:600; margin-bottom:14px; }
+        .lbl { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); font-weight:700; margin-bottom:14px; }
 
         /* GRID */
-        .g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:32px; }
-        .g2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:32px; }
+        .g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+        .g2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:28px; }
 
         /* CARD */
-        .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; transition:border-color .2s; }
-        .card:hover { border-color:var(--border2); }
-        .card-sm { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--text3); font-weight:600; margin-bottom:8px; }
-        .card-val { font-size:30px; font-weight:700; color:var(--white); font-family:var(--mono); letter-spacing:-.5px; line-height:1.2; }
-        .card-val.sm { font-size:24px; }
-        .card-sub { font-size:12px; color:var(--text3); margin-top:4px; font-family:var(--mono); }
-        .c-green { color:var(--green2) !important; }
+        .c { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; transition:box-shadow .2s; }
+        .c:hover { box-shadow:0 2px 8px rgba(0,0,0,.04); }
+        .c-lbl { font-size:11px; text-transform:uppercase; letter-spacing:.7px; color:var(--text3); font-weight:600; margin-bottom:6px; }
+        .c-val { font-size:28px; font-weight:700; color:var(--text); font-family:var(--mono); letter-spacing:-.5px; line-height:1.2; }
+        .c-val.sm { font-size:22px; }
+        .c-sub { font-size:11px; color:var(--text3); margin-top:3px; font-family:var(--mono); }
+        .c-green { color:var(--green) !important; }
         .c-cyan { color:var(--cyan) !important; }
         .c-yellow { color:var(--yellow) !important; }
         .c-red { color:var(--red) !important; }
-        .c-white { color:var(--white) !important; }
 
         /* RANGE VIS */
-        .rv { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:32px; }
-        .rv-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
-        .rv-title { font-size:15px; font-weight:600; color:var(--white); }
-        .rv-tag { font-size:11px; font-family:var(--mono); background:rgba(34,197,94,.08); color:var(--green); padding:4px 10px; border-radius:6px; border:1px solid rgba(34,197,94,.15); }
+        .rv { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:28px; }
+        .rv-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .rv-tt { font-size:15px; font-weight:700; color:var(--text); }
+        .rv-tg { font-size:11px; font-family:var(--mono); background:var(--green-bg); color:var(--green); padding:4px 10px; border-radius:6px; border:1px solid var(--green-border); font-weight:600; }
         .rv-bar { position:relative; height:10px; background:var(--surface2); border-radius:5px; margin:28px 0; }
-        .rv-zone { position:absolute; height:100%; }
-        .rv-zl { left:0; width:10%; background:rgba(234,179,8,.12); border-radius:5px 0 0 5px; }
-        .rv-zm { left:10%; width:80%; background:rgba(34,197,94,.10); }
-        .rv-zr { right:0; width:10%; background:rgba(234,179,8,.12); border-radius:0 5px 5px 0; }
-        .rv-cur { position:absolute; top:-7px; width:4px; height:24px; background:#fff; border-radius:2px; transition:left 1s cubic-bezier(.16,1,.3,1); box-shadow:0 0 12px rgba(255,255,255,.3); }
-        .rv-cur span { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); font-size:11px; font-family:var(--mono); color:#fff; white-space:nowrap; font-weight:600; background:var(--surface2); padding:3px 8px; border-radius:4px; }
+        .rv-z { position:absolute; height:100%; }
+        .rv-zl { left:0; width:10%; background:rgba(234,179,8,.1); border-radius:5px 0 0 5px; }
+        .rv-zc { left:10%; width:80%; background:rgba(34,197,94,.08); }
+        .rv-zr { right:0; width:10%; background:rgba(234,179,8,.1); border-radius:0 5px 5px 0; }
+        .rv-cur { position:absolute; top:-7px; width:4px; height:24px; background:var(--green); border-radius:2px; transition:left 1s cubic-bezier(.16,1,.3,1); box-shadow:0 0 8px rgba(34,197,94,.3); }
+        .rv-cur span { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); font-size:11px; font-family:var(--mono); color:var(--text); white-space:nowrap; font-weight:600; background:var(--surface2); padding:3px 8px; border-radius:4px; }
         .rv-ends { display:flex; justify-content:space-between; font-size:12px; font-family:var(--mono); color:var(--text2); }
         .rv-ends small { display:block; font-size:11px; color:var(--text3); margin-top:2px; }
-        .rv-info { display:flex; gap:24px; flex-wrap:wrap; padding:14px 18px; background:rgba(255,255,255,.02); border-radius:10px; margin-top:20px; font-size:12px; font-family:var(--mono); color:var(--text2); }
-        .rv-info em { color:var(--green); font-style:normal; }
+        .rv-info { display:flex; gap:20px; flex-wrap:wrap; padding:12px 16px; background:var(--surface2); border-radius:10px; margin-top:18px; font-size:12px; font-family:var(--mono); color:var(--text2); }
+        .rv-info em { color:var(--green); font-style:normal; font-weight:600; }
 
         /* PANEL */
-        .pan-title { font-size:14px; font-weight:600; color:var(--white); margin-bottom:16px; }
-        .pan-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
-        .pan-row:last-child { border-bottom:none; }
-        .pan-row .k { color:var(--text2); }
-        .pan-row .v { color:var(--white); font-weight:600; font-family:var(--mono); font-size:12px; }
+        .pan-tt { font-size:14px; font-weight:700; color:var(--text); margin-bottom:14px; }
+        .pan-r { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px; }
+        .pan-r:last-child { border-bottom:none; }
+        .pan-r .k { color:var(--text2); }
+        .pan-r .v { color:var(--text); font-weight:600; font-family:var(--mono); font-size:12px; }
 
         /* FORMULA */
-        .formula { background:rgba(255,255,255,.02); border-left:3px solid var(--green); border-radius:0 10px 10px 0; padding:20px 24px; margin-top:20px; font-family:var(--mono); font-size:13px; line-height:2; color:var(--text); }
-        .formula strong { color:var(--green2); }
-        .formula .dim { color:var(--text3); }
+        .fm { background:var(--surface2); border-left:3px solid var(--green); border-radius:0 10px 10px 0; padding:18px 22px; margin-top:18px; font-family:var(--mono); font-size:12px; line-height:2; color:var(--text2); }
+        .fm strong { color:var(--green); }
 
         /* TIMELINE */
-        .tl { position:relative; padding-left:28px; margin:24px 0; }
-        .tl::before { content:''; position:absolute; left:9px; top:0; height:100%; width:2px; background:linear-gradient(180deg, var(--green),var(--yellow),var(--red),var(--green)); }
-        .tl-i { position:relative; margin-bottom:22px; }
-        .tl-i::before { content:''; position:absolute; left:-23px; top:4px; width:10px; height:10px; border-radius:50%; }
-        .tl-i.g::before { background:var(--green); box-shadow:0 0 10px rgba(34,197,94,.4); }
-        .tl-i.y::before { background:var(--yellow); box-shadow:0 0 10px rgba(234,179,8,.4); }
-        .tl-i.o::before { background:var(--orange); box-shadow:0 0 10px rgba(249,115,22,.4); }
-        .tl-i.r::before { background:var(--red); box-shadow:0 0 10px rgba(239,68,68,.4); }
-        .tl-t { font-size:14px; font-weight:600; margin-bottom:3px; }
-        .tl-d { font-size:13px; color:var(--text2); }
-        .tl-tag { display:inline-block; font-size:11px; font-family:var(--mono); background:var(--surface2); color:var(--text3); padding:2px 8px; border-radius:4px; margin-left:6px; }
+        .tl { position:relative; padding-left:28px; margin:20px 0; }
+        .tl::before { content:''; position:absolute; left:9px; top:0; height:100%; width:2px; background:linear-gradient(180deg,var(--green2),var(--yellow),var(--red),var(--green2)); border-radius:1px; }
+        .tl-i { position:relative; margin-bottom:20px; }
+        .tl-i::before { content:''; position:absolute; left:-23px; top:5px; width:10px; height:10px; border-radius:50%; }
+        .tl-i.g::before { background:var(--green2); }
+        .tl-i.y::before { background:var(--yellow); }
+        .tl-i.o::before { background:var(--red); opacity:.7; }
+        .tl-i.r::before { background:var(--red); }
+        .tl-t { font-size:13px; font-weight:600; margin-bottom:2px; }
+        .tl-d { font-size:12px; color:var(--text3); }
+        .tl-tag { display:inline-block; font-size:10px; font-family:var(--mono); background:var(--surface2); color:var(--text3); padding:2px 7px; border-radius:3px; margin-left:5px; font-weight:600; }
 
         /* METHOD */
-        .meth { font-size:14px; line-height:1.85; color:var(--text2); max-width:780px; }
-        .meth code { background:rgba(34,197,94,.08); color:var(--green2); padding:1px 6px; border-radius:4px; font-family:var(--mono); font-size:12px; }
+        .meth { font-size:14px; line-height:1.85; color:var(--text2); }
+        .meth code { background:rgba(34,197,94,.08); color:var(--green); padding:1px 5px; border-radius:3px; font-family:var(--mono); font-size:12px; }
 
         /* FOOTER */
-        footer { border-top:1px solid var(--border); max-width:1080px; margin:0 auto; padding:40px 24px 28px; }
+        footer { background:var(--dark); color:#a1a1aa; padding:48px 24px 32px; margin-top:60px; }
+        .ft-inner { max-width:1080px; margin:0 auto; }
         .ft-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:40px; margin-bottom:28px; }
         .ft-brand { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
         .ft-brand img { width:30px; height:30px; border-radius:8px; }
-        .ft-desc { font-size:13px; color:var(--text2); line-height:1.6; }
-        .ft-col h4 { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:10px; font-weight:600; }
-        .ft-col a { display:block; font-size:13px; color:var(--text2); text-decoration:none; margin-bottom:7px; }
-        .ft-col a:hover { color:var(--white); }
-        .ft-bot { font-size:11px; color:var(--text3); text-align:center; padding-top:18px; border-top:1px solid var(--border); }
+        .ft-desc { font-size:13px; color:#71717a; line-height:1.6; }
+        .ft-col h4 { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#52525b; margin-bottom:10px; font-weight:600; }
+        .ft-col a { display:block; font-size:13px; color:#a1a1aa; text-decoration:none; margin-bottom:7px; }
+        .ft-col a:hover { color:#fff; }
+        .ft-bot { font-size:11px; color:#3f3f46; text-align:center; padding-top:18px; border-top:1px solid rgba(255,255,255,.06); }
 
         @media(max-width:768px) {
             nav { padding:0 20px; } .nav-links { display:none; }
-            .hero h1 { font-size:30px; }
+            .hero h1 { font-size:28px; }
             .g4 { grid-template-columns:repeat(2,1fr); }
             .g2 { grid-template-columns:1fr; }
             .ft-grid { grid-template-columns:1fr 1fr; }
         }
-        @media(max-width:480px) {
-            .g4 { grid-template-columns:1fr; }
-            .ft-grid { grid-template-columns:1fr; }
-        }
+        @media(max-width:480px) { .g4 { grid-template-columns:1fr; } .ft-grid { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
@@ -165,40 +173,39 @@
 </nav>
 
 <div class="wrap">
-
     <div class="hero">
         <div class="badge"><span class="dot"></span><span id="live">Connecting...</span></div>
-        <h1>Range Monitor</h1>
-        <p>Live Uniswap V3 efixDI/USDC position on Polygon. GBM-optimized range with on-chain data every 30s.</p>
+        <h1><em>Range Monitor</em></h1>
+        <p>Live Uniswap V3 efixDI/USDC position · Polygon Mainnet · Auto-refresh 30s</p>
     </div>
 
     <div class="alert a-ok" id="aBar">
         <span id="aIcon">⏳</span>
-        <span id="aText">Loading on-chain data from Polygon...</span>
+        <span id="aText">Loading on-chain data...</span>
     </div>
 
-    <div class="label">Current Position</div>
+    <div class="lbl">Current Position</div>
     <div class="g4">
-        <div class="card"><div class="card-sm">efixDI Price</div><div class="card-val c-white" id="price">—</div><div class="card-sub" id="fx">—</div></div>
-        <div class="card"><div class="card-sm">Range Utilization</div><div class="card-val c-green" id="util">—</div><div class="card-sub" id="dir">—</div></div>
-        <div class="card"><div class="card-sm">Est. Days to Exit</div><div class="card-val c-cyan" id="days">—</div><div class="card-sub">First Passage Time</div></div>
-        <div class="card"><div class="card-sm">Capital Efficiency</div><div class="card-val c-white" id="eff">—</div><div class="card-sub" id="effSub">vs full-range LP</div></div>
+        <div class="c"><div class="c-lbl">efixDI Price</div><div class="c-val" id="price">—</div><div class="c-sub" id="fx">—</div></div>
+        <div class="c"><div class="c-lbl">Range Utilization</div><div class="c-val c-green" id="util">—</div><div class="c-sub" id="dir">—</div></div>
+        <div class="c"><div class="c-lbl">Est. Days to Exit</div><div class="c-val c-cyan" id="days">—</div><div class="c-sub">First Passage Time</div></div>
+        <div class="c"><div class="c-lbl">Capital Efficiency</div><div class="c-val" id="eff">—</div><div class="c-sub" id="effS">vs full-range LP</div></div>
     </div>
 
     <div class="rv">
-        <div class="rv-head">
-            <div class="rv-title">Position in Range</div>
-            <div class="rv-tag" id="nftTag">NFT #2847265</div>
+        <div class="rv-hd">
+            <div class="rv-tt">Position in Range</div>
+            <div class="rv-tg" id="nftTag">NFT #2847265</div>
         </div>
-        <div class="rv-bar" id="rvBar">
-            <div class="rv-zone rv-zl"></div>
-            <div class="rv-zone rv-zm"></div>
-            <div class="rv-zone rv-zr"></div>
-            <div class="rv-cur" id="cur" style="left:50%"><span id="curLbl">—</span></div>
+        <div class="rv-bar">
+            <div class="rv-z rv-zl"></div>
+            <div class="rv-z rv-zc"></div>
+            <div class="rv-z rv-zr"></div>
+            <div class="rv-cur" id="cur" style="left:50%"><span id="curL">—</span></div>
         </div>
         <div class="rv-ends">
             <div><span id="lo">—</span><small id="loFx">—</small></div>
-            <div style="text-align:center;color:var(--text3)">◄ BRL weakens · Safe Zone · BRL strengthens ►</div>
+            <div style="text-align:center;color:var(--text3);font-size:11px;">◄ BRL weakens · Safe Zone · BRL strengthens ►</div>
             <div style="text-align:right"><span id="hi">—</span><small id="hiFx">—</small></div>
         </div>
         <div class="rv-info">
@@ -210,69 +217,67 @@
         </div>
     </div>
 
-    <div class="label">Liquidity Strategy</div>
+    <div class="lbl">Liquidity Strategy</div>
     <div class="g2">
-        <div class="card">
-            <div class="pan-title">◈ Active Strategy</div>
-            <div class="pan-row"><span class="k">Model</span><span class="v">GBM + First Passage</span></div>
-            <div class="pan-row"><span class="k">Confidence</span><span class="v">95%</span></div>
-            <div class="pan-row"><span class="k">Horizon</span><span class="v">30 days</span></div>
-            <div class="pan-row"><span class="k">Annualized Vol</span><span class="v">10.5%</span></div>
-            <div class="pan-row"><span class="k">Period Vol</span><span class="v" id="pvol">3.01%</span></div>
-            <div class="pan-row"><span class="k">Z-Score</span><span class="v">1.96</span></div>
+        <div class="c">
+            <div class="pan-tt">◈ Active Strategy</div>
+            <div class="pan-r"><span class="k">Model</span><span class="v">GBM + First Passage</span></div>
+            <div class="pan-r"><span class="k">Confidence</span><span class="v">95%</span></div>
+            <div class="pan-r"><span class="k">Horizon</span><span class="v">30 days</span></div>
+            <div class="pan-r"><span class="k">Annualized Vol</span><span class="v">10.5%</span></div>
+            <div class="pan-r"><span class="k">Period Vol</span><span class="v" id="pvol">3.01%</span></div>
+            <div class="pan-r"><span class="k">Z-Score</span><span class="v">1.96</span></div>
         </div>
-        <div class="card">
-            <div class="pan-title">🔄 Optimal Range (recalculated live)</div>
-            <div class="pan-row"><span class="k">Suggested Lower</span><span class="v" id="oL">—</span></div>
-            <div class="pan-row"><span class="k">Suggested Upper</span><span class="v" id="oU">—</span></div>
-            <div class="pan-row"><span class="k">FX Range</span><span class="v" id="oFx">—</span></div>
-            <div class="pan-row"><span class="k">Width</span><span class="v" id="oW">—</span></div>
-            <div class="pan-row"><span class="k">Efficiency (if applied)</span><span class="v" id="oE">—</span></div>
-            <div class="pan-row"><span class="k">Est. next rebalance</span><span class="v" id="oR">—</span></div>
+        <div class="c">
+            <div class="pan-tt">🔄 Optimal Range (live)</div>
+            <div class="pan-r"><span class="k">Suggested Lower</span><span class="v" id="oL">—</span></div>
+            <div class="pan-r"><span class="k">Suggested Upper</span><span class="v" id="oU">—</span></div>
+            <div class="pan-r"><span class="k">FX Range</span><span class="v" id="oFx">—</span></div>
+            <div class="pan-r"><span class="k">Width</span><span class="v" id="oW">—</span></div>
+            <div class="pan-r"><span class="k">Efficiency (if applied)</span><span class="v" id="oE">—</span></div>
+            <div class="pan-r"><span class="k">Est. next rebalance</span><span class="v" id="oR">—</span></div>
         </div>
     </div>
-    <div class="formula">
-        <strong>Range Formula:</strong><br>
-        P_lower = P_spot × exp(−z × σ × √(T/365))<br>
-        P_upper = P_spot × exp(+z × σ × √(T/365))<br><br>
-        <strong>First Passage Time:</strong>  E[τ] ≈ (barrier / σ_daily)²<br><br>
-        <span class="dim">z = 1.96 (95%), σ = 10.5% ann., T = 30d, Eff = √P / (√P_upper − √P_lower)</span>
+    <div class="fm">
+        <strong>Range:</strong> P = P_spot × exp(±z × σ × √(T/365))&nbsp;&nbsp;|&nbsp;&nbsp;<strong>FPT:</strong> E[τ] ≈ (barrier / σ_daily)²&nbsp;&nbsp;|&nbsp;&nbsp;z=1.96, σ=10.5%, T=30d
     </div>
 
-    <div style="margin-top:40px"></div>
-    <div class="label">Rebalancing Timeline</div>
+    <div style="margin-top:36px"></div>
+    <div class="lbl">Rebalancing Timeline</div>
     <div class="g4">
-        <div class="card"><div class="card-sm">Rebal / Month</div><div class="card-val sm c-cyan" id="rbM">—</div></div>
-        <div class="card"><div class="card-sm">Rebal / Year</div><div class="card-val sm c-cyan" id="rbY">—</div></div>
-        <div class="card"><div class="card-sm">Time per Rebal</div><div class="card-val sm">~5min</div></div>
-        <div class="card"><div class="card-sm">Cost (gas)</div><div class="card-val sm">~$0.02</div></div>
+        <div class="c"><div class="c-lbl">Rebal / Month</div><div class="c-val sm c-cyan" id="rbM">—</div></div>
+        <div class="c"><div class="c-lbl">Rebal / Year</div><div class="c-val sm c-cyan" id="rbY">—</div></div>
+        <div class="c"><div class="c-lbl">Time per Rebal</div><div class="c-val sm">~5min</div></div>
+        <div class="c"><div class="c-lbl">Cost (gas)</div><div class="c-val sm">~$0.02</div></div>
     </div>
     <div class="tl">
-        <div class="tl-i g"><div class="tl-t" style="color:var(--green2)">Position opened <span class="tl-tag">Day 0</span></div><div class="tl-d">Range set, monitor active. No action needed.</div></div>
-        <div class="tl-i y"><div class="tl-t" style="color:var(--yellow)">⚠ Warning 75% <span class="tl-tag" id="tw">~Day ?</span></div><div class="tl-d">Price consumed 75% of range. Monitor closely.</div></div>
-        <div class="tl-i o"><div class="tl-t" style="color:var(--orange)">🔶 Critical 90% <span class="tl-tag" id="tc">~Day ?</span></div><div class="tl-d">Prepare new position. Have tx ready.</div></div>
-        <div class="tl-i r"><div class="tl-t" style="color:var(--red)">🚨 Out of Range <span class="tl-tag" id="te">~Day ?</span></div><div class="tl-d">Rebalance NOW: remove liquidity → new position.</div></div>
-        <div class="tl-i g"><div class="tl-t" style="color:var(--green2)">✅ New position <span class="tl-tag">Reset</span></div><div class="tl-d">Cycle restarts with recalculated range.</div></div>
+        <div class="tl-i g"><div class="tl-t" style="color:var(--green)">Position opened <span class="tl-tag">Day 0</span></div><div class="tl-d">Range set, monitor active.</div></div>
+        <div class="tl-i y"><div class="tl-t" style="color:var(--yellow)">⚠ Warning 75% <span class="tl-tag" id="tw">~Day ?</span></div><div class="tl-d">Monitor closely.</div></div>
+        <div class="tl-i o"><div class="tl-t" style="color:var(--red);opacity:.7">🔶 Critical 90% <span class="tl-tag" id="tc">~Day ?</span></div><div class="tl-d">Prepare new position.</div></div>
+        <div class="tl-i r"><div class="tl-t" style="color:var(--red)">🚨 Out of Range <span class="tl-tag" id="te">~Day ?</span></div><div class="tl-d">Rebalance NOW.</div></div>
+        <div class="tl-i g"><div class="tl-t" style="color:var(--green)">✅ Reset <span class="tl-tag">New cycle</span></div><div class="tl-d">Recalculated range applied.</div></div>
     </div>
 
-    <div style="margin-top:40px"></div>
-    <div class="label">Methodology</div>
+    <div style="margin-top:36px"></div>
+    <div class="lbl">Methodology</div>
     <div class="meth">
-        <p>The range is calculated using <code>Geometric Brownian Motion</code> — the stochastic model behind
-        Black-Scholes — projecting price bounds at 95% confidence over 30 days using BRL/USD implied volatility
-        (6-month range R$5.18–5.59, σ ≈ 10.5% ann.). Rebalancing frequency uses <code>First Passage Time</code>
-        theory. All data read directly from Polygon via <code>UniswapV3Pool.slot0()</code> — zero backend.</p>
+        <p>Range calculated via <code>Geometric Brownian Motion</code> (Black-Scholes framework), projecting
+        price bounds at 95% confidence over 30 days using BRL/USD implied volatility (σ ≈ 10.5% ann.).
+        Rebalancing frequency via <code>First Passage Time</code>. All data read on-chain from Polygon
+        via <code>slot0()</code> — zero backend, zero API keys.</p>
     </div>
 </div>
 
 <footer>
-    <div class="ft-grid">
-        <div><div class="ft-brand"><img src="./logo_efix_400x400.jpg" alt="EFIX"><span style="color:var(--white);font-weight:600;">EFIX Protocol</span></div><div class="ft-desc">Bridging Brazilian fixed-income assets into decentralized finance. CVM-regulated.</div></div>
-        <div class="ft-col"><h4>Protocol</h4><a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho Vault</a><a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token (Polygon)</a><a href="https://app.uniswap.org/positions/v3/polygon/2847265" target="_blank">Uniswap Position</a></div>
-        <div class="ft-col"><h4>Resources</h4><a href="./efixDI_Whitepaper_v1.pdf">Whitepaper</a><a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank">GitHub</a><a href="/#how">Documentation</a></div>
-        <div class="ft-col"><h4>Contact</h4><a href="mailto:contato@efix.com.br">contato@efix.com.br</a><a>Rio de Janeiro, Brazil</a></div>
+    <div class="ft-inner">
+        <div class="ft-grid">
+            <div><div class="ft-brand"><img src="./logo_efix_400x400.jpg" alt="EFIX"><span style="color:#fff;font-weight:600;">EFIX Protocol</span></div><div class="ft-desc">Bridging Brazilian fixed-income into DeFi. CVM-regulated.</div></div>
+            <div class="ft-col"><h4>Protocol</h4><a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho Vault</a><a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token (Polygon)</a><a href="https://app.uniswap.org/positions/v3/polygon/2847265" target="_blank">Uniswap Position</a></div>
+            <div class="ft-col"><h4>Resources</h4><a href="./efixDI_Whitepaper_v1.pdf">Whitepaper</a><a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank">GitHub</a></div>
+            <div class="ft-col"><h4>Contact</h4><a href="mailto:contato@efix.com.br">contato@efix.com.br</a><a>Rio de Janeiro, Brazil</a></div>
+        </div>
+        <div class="ft-bot">© 2026 Efix Securitizadora S.A. · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025</div>
     </div>
-    <div class="ft-bot">© 2026 Efix Securitizadora S.A. · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025</div>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
@@ -284,48 +289,30 @@
         fac:'0x1F98431c8aD98523631AE4a59f267346ea31F984',
         rpcs:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://1rpc.io/matic','https://polygon.meowrpc.com'],
         ms:30000, z:1.96, vol:0.105, days:30,
-        // Full-range ticks for 0.05% fee tier (tick spacing 10)
-        MIN_TICK: -887270,
-        MAX_TICK: 887270,
     };
 
-    // CORRECT ABI order: sqrtPriceX96 (uint160) FIRST, then tick (int24)
-    const NABI=['function positions(uint256) view returns (uint96 nonce, address operator, address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)'];
-    const FABI=['function getPool(address,address,uint24) view returns (address)'];
-    const PABI=['function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)','function liquidity() view returns (uint128)'];
+    // MINIMAL ABIs — using tuples to avoid named-param issues
+    const NABI=['function positions(uint256 tokenId) external view returns (uint96, address, address, address, uint24, int24, int24, uint128, uint256, uint256, uint128, uint128)'];
+    const FABI=['function getPool(address, address, uint24) external view returns (address)'];
+    // CRITICAL: slot0 returns sqrtPriceX96 (uint160) FIRST, tick (int24) SECOND
+    const PABI=['function slot0() external view returns (uint160, int24, uint16, uint16, uint16, uint8, bool)','function liquidity() external view returns (uint128)'];
 
-    // Math
-    function s2p(sqrtPX96, d0=18, d1=6) {
+    function s2p(sqrtPX96) {
+        // sqrtPriceX96 is token1/token0 in Q96 format
+        // For efixDI(18 dec)/USDC(6 dec): price = (sqrtP/2^96)^2 * 10^12
         const s = Number(sqrtPX96) / (2**96);
-        return s * s * Math.pow(10, d0-d1);
+        return s * s * 1e12;
     }
-    function t2p(tick, d0=18, d1=6) {
-        // Use log to avoid overflow for extreme ticks
-        const logP = tick * Math.log(1.0001) + (d0-d1) * Math.LN10;
-        return Math.exp(logP);
+    function t2p(tick) {
+        // Safe for extreme ticks
+        return Math.exp(tick * Math.log(1.0001)) * 1e12;
     }
     function gbm(p,v,d,z) {
-        const pv=v*Math.sqrt(d/365), l=p*Math.exp(-z*pv), u=p*Math.exp(z*pv);
-        return {lo:l, hi:u, pv, eff: Math.sqrt(p)/(Math.sqrt(u)-Math.sqrt(l))};
+        const pv=v*Math.sqrt(d/365), lo=p*Math.exp(-z*pv), hi=p*Math.exp(z*pv);
+        return {lo, hi, pv, eff:Math.sqrt(p)/(Math.sqrt(hi)-Math.sqrt(lo))};
     }
-    function fpt(v,b) { const dv=v/Math.sqrt(365); return Math.pow(Math.max(b,0.0001)/dv, 2); }
-    function fmt(n) { return n < 0.0001 ? '~0' : n > 1e6 ? n.toExponential(1) : n < 1 ? '$'+n.toFixed(5) : '$'+n.toFixed(2); }
-    function fxFmt(p) { const r = 1/p; return r > 1e6 ? '—' : r < 0.01 ? '—' : '≈ R$'+r.toFixed(2)+'/USD'; }
-
-    // Is this a full/near-full range position?
-    function isFullRange(tL, tU) {
-        return tL <= C.MIN_TICK + 100 && tU >= C.MAX_TICK - 100;
-    }
-
-    // Log-scale utilization (works for any range width)
-    function logUtil(cp, pL, pU) {
-        if (cp <= 0 || pL <= 0 || pU <= pL) return 0;
-        const logCp = Math.log(cp), logL = Math.log(pL), logU = Math.log(pU);
-        const range = logU - logL;
-        if (range === 0) return 0;
-        const pos = (logCp - logL) / range; // 0 to 1
-        return Math.abs(pos - 0.5) * 2; // 0 = center, 1 = edge
-    }
+    function fpt(v,b) { return Math.pow(Math.max(b,0.0001)/(v/Math.sqrt(365)), 2); }
+    function isFullRange(tL,tU) { return tL < -800000 && tU > 800000; }
 
     async function gp() {
         for (const u of C.rpcs) try { const p=new ethers.JsonRpcProvider(u); await p.getBlockNumber(); return p; } catch{continue;}
@@ -336,125 +323,129 @@
     async function fetchData() {
         const pv=await gp(), bn=await pv.getBlockNumber();
         const nft=new ethers.Contract(C.nft,NABI,pv), pos=await nft.positions(C.pid);
-        const t0=pos.token0, t1=pos.token1, fee=Number(pos.fee);
-        const tL=Number(pos.tickLower), tU=Number(pos.tickUpper);
-        const fac=new ethers.Contract(C.fac,FABI,pv), pa=await fac.getPool(t0,t1,fee);
+
+        // Index-based access (bulletproof)
+        const token0=pos[2], token1=pos[3], fee=Number(pos[4]);
+        const tL=Number(pos[5]), tU=Number(pos[6]);
+
+        const fac=new ethers.Contract(C.fac,FABI,pv), pa=await fac.getPool(token0,token1,fee);
         const pool=new ethers.Contract(pa,PABI,pv);
         const [s0,pl]=await Promise.all([pool.slot0(),pool.liquidity()]);
-        const sqrtPX96=s0.sqrtPriceX96, ct=Number(s0.tick);
-        const cp=s2p(sqrtPX96), pL=t2p(tL), pU=t2p(tU);
-        return {cp,pL,pU,ct,tL,tU,ir:ct>=tL&&ct<=tU,bn,full:isFullRange(tL,tU)};
+
+        // s0[0] = sqrtPriceX96 (uint160), s0[1] = tick (int24)
+        const sqrtPX96 = s0[0];
+        const tick = Number(s0[1]);
+
+        console.log('[Range Monitor] sqrtPriceX96:', sqrtPX96.toString());
+        console.log('[Range Monitor] tick:', tick, '| tickLower:', tL, '| tickUpper:', tU);
+        console.log('[Range Monitor] inRange:', tick >= tL && tick <= tU);
+        console.log('[Range Monitor] isFullRange:', isFullRange(tL, tU));
+
+        const cp = s2p(sqrtPX96);
+        console.log('[Range Monitor] price:', cp);
+
+        return { cp, tL, tU, tick, ir: tick >= tL && tick <= tU, bn, full: isFullRange(tL, tU) };
     }
 
     function ui(d) {
-        const util = logUtil(d.cp, d.pL, d.pU);
-        const isF = d.full;
-
-        // Price
-        $('price').textContent = '$'+d.cp.toFixed(5);
-        $('fx').textContent = fxFmt(d.cp);
-
-        // Utilization
-        const ue=$('util');
-        if (isF) {
-            ue.textContent = 'Full Range';
-            ue.className = 'card-val sm c-cyan';
-            $('dir').textContent = 'Concentrated range recommended';
-        } else {
-            ue.textContent = (util*100).toFixed(1)+'%';
-            ue.className = 'card-val '+(util>.9?'c-red':util>.75?'c-yellow':'c-green');
-            $('dir').textContent = d.ct > (d.tL+d.tU)/2 ? '→ Upper (BRL↑)' : '← Lower (BRL↓)';
-        }
-
-        // Optimal range (always calculated from current price)
+        const full = d.full;
         const o = gbm(d.cp, C.vol, C.days, C.z);
         const optHalf = o.hi/d.cp - 1;
         const optFpt = fpt(C.vol, optHalf);
 
-        // Days to exit & efficiency
-        const de=$('days'), ee=$('eff');
-        if (isF) {
-            de.textContent = '∞'; de.className='card-val sm c-green';
-            ee.textContent = '1.0x'; $('effSub').textContent = 'Full range — no concentration';
+        // Price
+        $('price').textContent = '$'+d.cp.toFixed(5);
+        $('fx').textContent = '≈ R$'+(1/d.cp).toFixed(2)+'/USD';
+
+        // Utilization
+        const ue=$('util');
+        if (full) {
+            ue.textContent = 'Full Range';
+            ue.className = 'c-val sm c-cyan';
+            $('dir').textContent = 'Concentrate for '+o.eff.toFixed(0)+'x efficiency';
         } else {
-            const dp = (1-util) * Math.abs(Math.log(d.pU/d.pL)) / 2;
-            const dte = fpt(C.vol, dp);
+            // Log-scale utilization for concentrated positions
+            const pL = t2p(d.tL), pU = t2p(d.tU);
+            const logU = Math.abs(Math.log(d.cp/pL) - Math.log(pU/pL)*0.5) / (Math.log(pU/pL)*0.5);
+            const u = Math.min(logU, 1);
+            ue.textContent = (u*100).toFixed(1)+'%';
+            ue.className = 'c-val '+(u>.9?'c-red':u>.75?'c-yellow':'c-green');
+            $('dir').textContent = d.tick > (d.tL+d.tU)/2 ? '→ Upper' : '← Lower';
+        }
+
+        // Days / Efficiency
+        const de=$('days'), ee=$('eff');
+        if (full) {
+            de.textContent = '∞'; de.className='c-val sm c-green';
+            ee.textContent = '1.0x'; $('effS').textContent = 'Full range = no concentration';
+        } else {
+            const pL=t2p(d.tL), pU=t2p(d.tU);
+            const halfW = Math.abs(Math.log(pU/d.cp));
+            const dte = fpt(C.vol, Math.exp(halfW)-1);
             de.textContent = '~'+Math.round(dte)+'d';
-            de.className = 'card-val sm '+(dte<7?'c-red':dte<21?'c-yellow':'c-cyan');
-            const eff = Math.sqrt(d.cp)/(Math.sqrt(d.pU)-Math.sqrt(d.pL));
+            de.className = 'c-val sm '+(dte<7?'c-red':dte<21?'c-yellow':'c-cyan');
+            const eff = Math.sqrt(d.cp)/(Math.sqrt(pU)-Math.sqrt(pL));
             ee.textContent = eff.toFixed(1)+'x';
         }
 
-        // Rebal stats (based on optimal range)
-        const ryOpt = 365/optFpt, rmOpt = 30/optFpt;
-        $('rbM').textContent = isF ? '0' : (rmOpt<1?'<1':'~'+rmOpt.toFixed(1));
-        $('rbY').textContent = isF ? '0' : '~'+Math.round(ryOpt);
+        $('rbM').textContent = full ? '0' : (30/optFpt<1?'<1':'~'+(30/optFpt).toFixed(1));
+        $('rbY').textContent = full ? '0' : '~'+Math.round(365/optFpt);
 
-        // Range bar — use log scale for cursor position
-        let curPct;
-        if (isF) {
-            // For full range, show price position on log scale relative to meaningful bounds
-            // Use optimal range as visual reference
-            const logMid = Math.log(d.cp);
-            curPct = 50; // Center it since we're always "in range"
-        } else {
-            const logPos = (Math.log(d.cp)-Math.log(d.pL))/(Math.log(d.pU)-Math.log(d.pL));
-            curPct = Math.max(2, Math.min(98, logPos*100));
-        }
-        $('cur').style.left = curPct+'%';
-        $('curLbl').textContent = '$'+d.cp.toFixed(5);
-
-        // Range bounds display
-        if (isF) {
+        // Range bar
+        $('cur').style.left = '50%'; // Center for full-range
+        $('curL').textContent = '$'+d.cp.toFixed(5);
+        if (full) {
             $('lo').textContent = 'MIN (full range)';
             $('loFx').textContent = 'tick '+d.tL;
             $('hi').textContent = 'MAX (full range)';
             $('hiFx').textContent = 'tick +'+d.tU;
             $('nftTag').textContent = 'NFT #2847265 · FULL RANGE';
         } else {
-            $('lo').textContent = fmt(d.pL);
-            $('loFx').textContent = fxFmt(d.pL);
-            $('hi').textContent = fmt(d.pU);
-            $('hiFx').textContent = fxFmt(d.pU);
+            const pL=t2p(d.tL), pU=t2p(d.tU);
+            const logP = (Math.log(d.cp)-Math.log(pL))/(Math.log(pU)-Math.log(pL));
+            $('cur').style.left = Math.max(2,Math.min(98,logP*100))+'%';
+            $('lo').textContent = '$'+pL.toFixed(5);
+            $('loFx').textContent = '≈ R$'+(1/pL).toFixed(2)+'/USD';
+            $('hi').textContent = '$'+pU.toFixed(5);
+            $('hiFx').textContent = '≈ R$'+(1/pU).toFixed(2)+'/USD';
         }
 
         $('blk').textContent = '#'+d.bn.toLocaleString();
         $('upd').textContent = new Date().toLocaleTimeString('pt-BR');
-        $('live').textContent = d.ir ? 'In Range · Live on Polygon' : '⚠ Out of Range';
+        $('live').textContent = d.ir ? 'In Range · Live on Polygon' : 'Out of Range';
 
         // Alert
-        const ab=$('aBar'), at=$('aText'), ai=$('aIcon');
+        const ab=$('aBar'),at=$('aText'),ai=$('aIcon');
         if (!d.ir) {
-            ab.className='alert a-crit'; ai.textContent='🚨'; at.innerHTML='<strong>OUT OF RANGE</strong> — Rebalancing needed.';
-        } else if (isF) {
+            ab.className='alert a-crit'; ai.textContent='🚨';
+            at.innerHTML='<strong>OUT OF RANGE</strong> — Rebalancing needed.';
+        } else if (full) {
             ab.className='alert a-ok'; ai.textContent='📡';
-            at.innerHTML='Position is <strong>full-range</strong> — in range but not concentrated. Apply the optimal range below for '+o.eff.toFixed(0)+'x capital efficiency.';
-        } else if (util>=.9) {
-            ab.className='alert a-crit'; ai.textContent='🔶'; at.innerHTML='<strong>CRITICAL</strong> — '+(util*100).toFixed(0)+'% used. Prepare rebalancing.';
-        } else if (util>=.75) {
-            ab.className='alert a-warn'; ai.textContent='⚠'; at.innerHTML='<strong>WARNING</strong> — '+(util*100).toFixed(0)+'% consumed. Monitor closely.';
+            at.innerHTML='Position is <strong>full-range</strong> (always in range). Apply concentrated range below for <strong>'+o.eff.toFixed(0)+'x</strong> capital efficiency.';
         } else {
-            ab.className='alert a-ok'; ai.textContent='✅'; at.innerHTML='Position healthy — '+(util*100).toFixed(0)+'% of range used.';
+            const pL=t2p(d.tL), pU=t2p(d.tU);
+            const u = Math.abs(Math.log(d.cp/pL)-Math.log(pU/pL)*0.5)/(Math.log(pU/pL)*0.5);
+            if (u>=.9) { ab.className='alert a-crit'; ai.textContent='🔶'; at.innerHTML='<strong>CRITICAL</strong> — '+(u*100).toFixed(0)+'% used.'; }
+            else if (u>=.75) { ab.className='alert a-warn'; ai.textContent='⚠'; at.innerHTML='<strong>WARNING</strong> — '+(u*100).toFixed(0)+'% consumed.'; }
+            else { ab.className='alert a-ok'; ai.textContent='✅'; at.innerHTML='Healthy — '+(u*100).toFixed(0)+'% used.'; }
         }
 
-        // Optimal range panel
+        // Optimal
         $('oL').textContent = '$'+o.lo.toFixed(5);
         $('oU').textContent = '$'+o.hi.toFixed(5);
         $('oFx').textContent = 'R$'+(1/o.hi).toFixed(2)+'–'+(1/o.lo).toFixed(2);
-        $('oW').textContent = '±'+((o.hi/d.cp-1)*100).toFixed(1)+'%';
+        $('oW').textContent = '±'+(optHalf*100).toFixed(1)+'%';
         $('oE').textContent = o.eff.toFixed(1)+'x';
         $('pvol').textContent = (o.pv*100).toFixed(2)+'%';
         $('oR').textContent = '~'+Math.round(optFpt)+'d';
-
-        // Timeline tags
-        $('tw').textContent = '~Day '+Math.round(fpt(C.vol, optHalf*0.75));
-        $('tc').textContent = '~Day '+Math.round(fpt(C.vol, optHalf*0.90));
+        $('tw').textContent = '~Day '+Math.round(fpt(C.vol, optHalf*.75));
+        $('tc').textContent = '~Day '+Math.round(fpt(C.vol, optHalf*.90));
         $('te').textContent = '~Day '+Math.round(optFpt);
     }
 
     async function go() {
         try { ui(await fetchData()); }
-        catch(e) { console.error(e); $('live').textContent='RPC Error — retrying...'; }
+        catch(e) { console.error('[Range Monitor] Error:', e); $('live').textContent='RPC Error — retrying...'; }
     }
     go(); setInterval(go, C.ms);
 })();
