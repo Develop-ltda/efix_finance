@@ -440,22 +440,25 @@
 
             try {
                 const latest = await provider.getBlockNumber();
-                // Scan in chunks to avoid RPC limits (2M blocks per chunk)
-                const chunkSize = 2000000;
-                const startBlock = Math.max(latest - 10000000, 0); // ~3 months back
                 let allLogs = [];
-                for (let from = startBlock; from <= latest; from += chunkSize) {
-                    const to = Math.min(from + chunkSize - 1, latest);
-                    try {
-                        const logs = await provider.getLogs({
-                            address: contract,
-                            topics: [TRANSFER],
-                            fromBlock: from,
-                            toBlock: to
-                        });
-                        allLogs = allLogs.concat(logs);
-                    } catch(e) {
-                        console.log('[Holders] ' + label + ' chunk ' + from + '-' + to + ':', e.message);
+                // Try full range first (works for Alchemy/Infura/low-event tokens)
+                try {
+                    allLogs = await provider.getLogs({
+                        address: contract, topics: [TRANSFER], fromBlock: 0, toBlock: latest
+                    });
+                } catch(e) {
+                    // Fall back to chunks of 50k blocks (public RPCs)
+                    console.log('[Holders] ' + label + ' chunking (RPC limit)...');
+                    const chunkSize = 50000;
+                    const startBlock = Math.max(latest - 2000000, 0);
+                    for (let from = startBlock; from <= latest; from += chunkSize) {
+                        const to = Math.min(from + chunkSize - 1, latest);
+                        try {
+                            const logs = await provider.getLogs({
+                                address: contract, topics: [TRANSFER], fromBlock: from, toBlock: to
+                            });
+                            allLogs = allLogs.concat(logs);
+                        } catch(e2) { /* skip chunk */ }
                     }
                 }
                 console.log('[Holders] ' + label + ' Transfer events:', allLogs.length);
