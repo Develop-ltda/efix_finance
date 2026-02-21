@@ -423,35 +423,54 @@
     }
     const $=id=>document.getElementById(id);
 
-    // Fetch holder count via Polygonscan getLogs API (with API key)
+    // Fetch holder count via RPC getLogs (same provider used for position data)
+    // No Polygonscan API needed — ethers.js provider.getLogs() works directly
     async function fetchHolders() {
-        const PSCAN_KEY = 'TJPGZ8YRDH9WK5EFUV486ZJBC2AXMJIYHE';
-        const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+        const TRANSFER = ethers.id('Transfer(address,address,uint256)');
         let allHolders = new Set();
 
-        async function scanViaLogs(apiBase, contract, apiKey, label) {
+        async function scanChain(contract, rpcs, label) {
             const balances = {};
+            let provider = null;
+            for (const rpc of rpcs) {
+                try { provider = new ethers.JsonRpcProvider(rpc); await provider.getBlockNumber(); break; }
+                catch { provider = null; }
+            }
+            if (!provider) { console.log('[Holders] ' + label + ': no RPC'); return 0; }
+
             try {
-                const url = apiBase + '/api?module=logs&action=getLogs' +
-                    '&address=' + contract +
-                    '&topic0=' + TRANSFER +
-                    '&fromBlock=0&toBlock=99999999' +
-                    '&apikey=' + apiKey;
-                const resp = await fetch(url);
-                const data = await resp.json();
-                console.log('[Holders] ' + label + ':', data.status, data.message, 'logs:', Array.isArray(data.result) ? data.result.length : typeof data.result);
-                if (data.status === '1' && Array.isArray(data.result)) {
-                    for (const log of data.result) {
-                        if (!log.topics || log.topics.length < 3) continue;
-                        const from = '0x' + log.topics[1].slice(26).toLowerCase();
-                        const to = '0x' + log.topics[2].slice(26).toLowerCase();
-                        const val = parseInt(log.data, 16) / 1e18;
-                        const zero = '0x0000000000000000000000000000000000000000';
-                        if (from !== zero) balances[from] = (balances[from] || 0) - val;
-                        if (to !== zero) balances[to] = (balances[to] || 0) + val;
+                const latest = await provider.getBlockNumber();
+                // Scan in chunks to avoid RPC limits (2M blocks per chunk)
+                const chunkSize = 2000000;
+                const startBlock = Math.max(latest - 10000000, 0); // ~3 months back
+                let allLogs = [];
+                for (let from = startBlock; from <= latest; from += chunkSize) {
+                    const to = Math.min(from + chunkSize - 1, latest);
+                    try {
+                        const logs = await provider.getLogs({
+                            address: contract,
+                            topics: [TRANSFER],
+                            fromBlock: from,
+                            toBlock: to
+                        });
+                        allLogs = allLogs.concat(logs);
+                    } catch(e) {
+                        console.log('[Holders] ' + label + ' chunk ' + from + '-' + to + ':', e.message);
                     }
                 }
+                console.log('[Holders] ' + label + ' Transfer events:', allLogs.length);
+
+                const zero = '0x0000000000000000000000000000000000000000';
+                for (const log of allLogs) {
+                    if (!log.topics || log.topics.length < 3) continue;
+                    const from = '0x' + log.topics[1].slice(26).toLowerCase();
+                    const to = '0x' + log.topics[2].slice(26).toLowerCase();
+                    const val = Number(BigInt(log.data)) / 1e18;
+                    if (from !== zero) balances[from] = (balances[from] || 0) - val;
+                    if (to !== zero) balances[to] = (balances[to] || 0) + val;
+                }
             } catch(e) { console.log('[Holders] ' + label + ' error:', e.message); }
+
             let count = 0;
             for (const addr in balances) {
                 if (balances[addr] > 0.0001) { count++; allHolders.add(addr); }
@@ -460,28 +479,11 @@
             return count;
         }
 
-        const poly = await scanViaLogs('https://api.polygonscan.com', C.efixDI, PSCAN_KEY, 'Polygon');
-        await new Promise(r => setTimeout(r, 1500));
-        // Base: use RPC since we don't have Basescan API key
-        let baseCount = 0;
-        try {
-            let pv = null;
-            for (const rpc of C.rpcs_base) {
-                try { pv = new ethers.JsonRpcProvider(rpc); await pv.getBlockNumber(); break; }
-                catch { pv = null; }
-            }
-            if (pv) {
-                const t = new ethers.Contract(C.efixDI_base, ['function balanceOf(address) view returns (uint256)'], pv);
-                const addrs = ['0x7C54a68F11315EE3e3B4e4C7537a686dfaE47537','0x400a8DE2bF8fc4A63000A7E77103eDAE897CB9a3','0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5','0x3D8d67038e04AdD1EBB77cCa3c6A401e5b1EbB77','0x000000000000000000000000000000000000dEaD'];
-                const res = await Promise.allSettled(addrs.map(a => t.balanceOf(a)));
-                res.forEach((r, i) => { if (r.status === 'fulfilled' && r.value > 0n) { baseCount++; allHolders.add(addrs[i].toLowerCase()); } });
-            }
-        } catch(e) { console.log('[Holders] Base error:', e.message); }
-        console.log('[Holders] Base:', baseCount);
-
+        const poly = await scanChain(C.efixDI, C.rpcs, 'Polygon');
+        const base = await scanChain(C.efixDI_base, C.rpcs_base, 'Base');
         const total = allHolders.size;
         $('holders').textContent = total > 0 ? total : '—';
-        $('holders').title = 'Polygon: ' + poly + ' · Base: ' + baseCount;
+        $('holders').title = 'Polygon: ' + poly + ' · Base: ' + base;
         console.log('[Holders] Total unique:', total);
     }
 
