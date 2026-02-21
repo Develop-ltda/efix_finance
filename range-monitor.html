@@ -483,6 +483,10 @@
         }
 
         const poly = await scanChain(C.efixDI, C.rpcs, 'Polygon');
+        // Show Polygon results immediately
+        $('holders').textContent = allHolders.size > 0 ? allHolders.size : '—';
+        $('holders').title = 'Polygon: ' + poly + ' · Base: loading...';
+
         const base = await scanChain(C.efixDI_base, C.rpcs_base, 'Base');
         const total = allHolders.size;
         $('holders').textContent = total > 0 ? total : '—';
