@@ -11,253 +11,149 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0f;
-            --bg2: #111118;
-            --bg3: #16161f;
-            --surface: #1a1a24;
-            --surface2: #22222e;
-            --border: rgba(255,255,255,0.06);
-            --border2: rgba(255,255,255,0.12);
+            --bg: #09090b;
+            --surface: #18181b;
+            --surface2: #1f1f23;
+            --border: rgba(255,255,255,0.08);
+            --border2: rgba(255,255,255,0.14);
             --text: #a1a1aa;
             --text2: #71717a;
-            --text3: #52525b;
+            --text3: #3f3f46;
             --white: #fafafa;
             --green: #22c55e;
-            --green-light: #4ade80;
+            --green2: #4ade80;
             --cyan: #06b6d4;
-            --blue: #3b82f6;
             --yellow: #eab308;
             --orange: #f97316;
             --red: #ef4444;
-            --purple: #8b5cf6;
-            --gradient: linear-gradient(135deg, #22c55e, #06b6d4);
+            --grad: linear-gradient(135deg, #22c55e, #06b6d4);
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Inter', -apple-system, sans-serif;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+        body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height:100vh; -webkit-font-smoothing: antialiased; }
 
-        /* ── NAVBAR (matches efix.finance) ── */
-        .navbar {
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(10,10,15,0.8); backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 40px; height: 64px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .nav-logo { width: 36px; height: 36px; border-radius: 10px; }
-        .nav-links { display: flex; align-items: center; gap: 32px; }
-        .nav-links a {
-            color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500;
-            transition: color 0.2s;
-        }
-        .nav-links a:hover { color: var(--white); }
-        .nav-links a.active { color: var(--green-light); }
-        .nav-cta {
-            background: var(--gradient); color: #000; padding: 8px 20px;
-            border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none;
-            transition: opacity 0.2s;
-        }
-        .nav-cta:hover { opacity: 0.9; }
+        /* NAV */
+        nav { position:sticky; top:0; z-index:100; background:rgba(9,9,11,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); height:64px; display:flex; align-items:center; justify-content:space-between; padding:0 40px; }
+        .nav-brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
+        .nav-brand img { width:34px; height:34px; border-radius:8px; }
+        .nav-links { display:flex; align-items:center; gap:28px; }
+        .nav-links a { color:var(--text2); text-decoration:none; font-size:14px; font-weight:500; transition:color .2s; }
+        .nav-links a:hover { color:var(--white); }
+        .nav-links a.active { color:var(--green2); }
+        .nav-cta { background:var(--grad); color:#000; padding:8px 20px; border-radius:8px; font-weight:600; font-size:14px; text-decoration:none; }
 
-        /* ── MAIN CONTENT ── */
-        .main { max-width: 1100px; margin: 0 auto; padding: 48px 24px 60px; }
+        /* LAYOUT */
+        .wrap { max-width:1080px; margin:0 auto; padding:48px 24px 80px; }
 
-        /* Hero */
-        .hero { text-align: center; margin-bottom: 48px; }
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
-            border-radius: 100px; padding: 6px 16px; margin-bottom: 20px;
-            font-size: 13px; color: var(--green-light); font-weight: 500;
-        }
-        .hero-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-        @keyframes pulse {
-            0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-            50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
-        }
-        .hero h1 {
-            font-size: 42px; font-weight: 800; letter-spacing: -1.5px;
-            background: var(--gradient); -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent; background-clip: text;
-            margin-bottom: 12px;
-        }
-        .hero p { color: var(--text2); font-size: 16px; max-width: 560px; margin: 0 auto; }
+        /* HERO */
+        .hero { text-align:center; margin-bottom:48px; }
+        .badge { display:inline-flex; align-items:center; gap:8px; background:rgba(34,197,94,0.07); border:1px solid rgba(34,197,94,0.18); border-radius:100px; padding:5px 16px; margin-bottom:20px; font-size:13px; color:var(--green2); font-weight:500; }
+        .dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:p 2s infinite; }
+        @keyframes p { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)} 50%{box-shadow:0 0 0 6px rgba(34,197,94,0)} }
+        .hero h1 { font-size:44px; font-weight:800; letter-spacing:-1.5px; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:10px; }
+        .hero p { color:var(--text2); font-size:16px; line-height:1.6; max-width:520px; margin:0 auto; }
 
-        /* Alert */
-        .alert {
-            border-radius: 12px; padding: 16px 20px; margin-bottom: 32px;
-            display: flex; align-items: center; gap: 12px;
-            font-size: 14px; font-weight: 500;
-        }
-        .alert-ok { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15); color: var(--green-light); }
-        .alert-warn { background: rgba(234,179,8,0.06); border: 1px solid rgba(234,179,8,0.15); color: var(--yellow); }
-        .alert-crit { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); color: var(--red); }
-        .alert-icon { font-size: 18px; }
+        /* ALERT */
+        .alert { border-radius:12px; padding:14px 20px; margin-bottom:36px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; }
+        .a-ok { background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.15); color:var(--green2); }
+        .a-warn { background:rgba(234,179,8,.06); border:1px solid rgba(234,179,8,.15); color:var(--yellow); }
+        .a-crit { background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.15); color:var(--red); }
 
-        /* Section */
-        .section { margin-bottom: 40px; }
-        .section-header {
-            font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
-            color: var(--text3); font-weight: 600; margin-bottom: 16px;
-        }
+        /* SECTION LABEL */
+        .label { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); font-weight:600; margin-bottom:14px; }
 
-        /* Metric cards */
-        .metrics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 32px; }
-        .metric {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 20px;
-            transition: border-color 0.2s;
-        }
-        .metric:hover { border-color: var(--border2); }
-        .metric-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin-bottom: 8px; font-weight: 600; }
-        .metric-value { font-size: 28px; font-weight: 700; color: var(--white); font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
-        .metric-value.green { color: var(--green-light); }
-        .metric-value.yellow { color: var(--yellow); }
-        .metric-value.red { color: var(--red); }
-        .metric-value.cyan { color: var(--cyan); }
-        .metric-sub { font-size: 12px; color: var(--text3); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+        /* GRID */
+        .g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:32px; }
+        .g2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:32px; }
 
-        /* Range card */
-        .range-card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 16px; padding: 28px; margin-bottom: 32px;
-        }
-        .range-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .range-title { font-size: 15px; font-weight: 600; color: var(--white); }
-        .range-tag {
-            font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 500;
-            background: rgba(34,197,94,0.08); color: var(--green); padding: 4px 10px;
-            border-radius: 6px; border: 1px solid rgba(34,197,94,0.15);
-        }
-        .range-bar-wrap { position: relative; margin: 0 0 28px; padding: 20px 0; }
-        .range-bar {
-            height: 10px; background: var(--bg3); border-radius: 5px; position: relative; overflow: visible;
-        }
-        .range-zone { position: absolute; height: 100%; }
-        .rz-left { left:0; width:12.5%; background: rgba(234,179,8,0.12); border-radius: 5px 0 0 5px; }
-        .rz-mid { left:12.5%; width:75%; background: rgba(34,197,94,0.10); }
-        .rz-right { right:0; width:12.5%; background: rgba(234,179,8,0.12); border-radius: 0 5px 5px 0; }
-        .range-cursor {
-            position: absolute; top: -7px; width: 4px; height: 24px;
-            background: var(--white); border-radius: 2px;
-            transition: left 1s cubic-bezier(0.16,1,0.3,1);
-            box-shadow: 0 0 12px rgba(255,255,255,0.25);
-        }
-        .range-cursor-tag {
-            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-            margin-bottom: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace;
-            color: var(--white); white-space: nowrap; font-weight: 600;
-            background: var(--surface2); padding: 3px 8px; border-radius: 4px;
-        }
-        .range-ends { display: flex; justify-content: space-between; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text2); }
-        .range-ends small { display: block; color: var(--text3); font-size: 11px; margin-top: 2px; }
+        /* CARD */
+        .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; transition:border-color .2s; }
+        .card:hover { border-color:var(--border2); }
+        .card-sm { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--text3); font-weight:600; margin-bottom:8px; }
+        .card-val { font-size:30px; font-weight:700; color:var(--white); font-family:var(--mono); letter-spacing:-.5px; line-height:1.2; }
+        .card-val.sm { font-size:24px; }
+        .card-sub { font-size:12px; color:var(--text3); margin-top:4px; font-family:var(--mono); }
+        .c-green { color:var(--green2) !important; }
+        .c-cyan { color:var(--cyan) !important; }
+        .c-yellow { color:var(--yellow) !important; }
+        .c-red { color:var(--red) !important; }
+        .c-white { color:var(--white) !important; }
 
-        /* Contract info strip */
-        .info-strip {
-            display: flex; gap: 24px; flex-wrap: wrap;
-            padding: 14px 20px; background: var(--bg2); border-radius: 10px;
-            font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text2);
-        }
-        .info-strip span { color: var(--green); }
+        /* RANGE VIS */
+        .rv { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:32px; }
+        .rv-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+        .rv-title { font-size:15px; font-weight:600; color:var(--white); }
+        .rv-tag { font-size:11px; font-family:var(--mono); background:rgba(34,197,94,.08); color:var(--green); padding:4px 10px; border-radius:6px; border:1px solid rgba(34,197,94,.15); }
+        .rv-bar { position:relative; height:10px; background:var(--surface2); border-radius:5px; margin:28px 0; }
+        .rv-zone { position:absolute; height:100%; }
+        .rv-zl { left:0; width:10%; background:rgba(234,179,8,.12); border-radius:5px 0 0 5px; }
+        .rv-zm { left:10%; width:80%; background:rgba(34,197,94,.10); }
+        .rv-zr { right:0; width:10%; background:rgba(234,179,8,.12); border-radius:0 5px 5px 0; }
+        .rv-cur { position:absolute; top:-7px; width:4px; height:24px; background:#fff; border-radius:2px; transition:left 1s cubic-bezier(.16,1,.3,1); box-shadow:0 0 12px rgba(255,255,255,.3); }
+        .rv-cur span { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); font-size:11px; font-family:var(--mono); color:#fff; white-space:nowrap; font-weight:600; background:var(--surface2); padding:3px 8px; border-radius:4px; }
+        .rv-ends { display:flex; justify-content:space-between; font-size:12px; font-family:var(--mono); color:var(--text2); }
+        .rv-ends small { display:block; font-size:11px; color:var(--text3); margin-top:2px; }
+        .rv-info { display:flex; gap:24px; flex-wrap:wrap; padding:14px 18px; background:rgba(255,255,255,.02); border-radius:10px; margin-top:20px; font-size:12px; font-family:var(--mono); color:var(--text2); }
+        .rv-info em { color:var(--green); font-style:normal; }
 
-        /* Two-column panels */
-        .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
-        .panel {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 14px; padding: 24px;
-        }
-        .panel-title { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .panel-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .panel-row:last-child { border-bottom: none; }
-        .panel-row .k { color: var(--text2); }
-        .panel-row .v { color: var(--white); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+        /* PANEL */
+        .pan-title { font-size:14px; font-weight:600; color:var(--white); margin-bottom:16px; }
+        .pan-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+        .pan-row:last-child { border-bottom:none; }
+        .pan-row .k { color:var(--text2); }
+        .pan-row .v { color:var(--white); font-weight:600; font-family:var(--mono); font-size:12px; }
 
-        /* Formula */
-        .formula-box {
-            background: var(--bg2); border-left: 3px solid var(--green);
-            border-radius: 0 10px 10px 0; padding: 20px 24px; margin: 20px 0;
-            font-family: 'JetBrains Mono', monospace; font-size: 13px;
-            line-height: 2; color: var(--text);
-        }
-        .formula-box strong { color: var(--green-light); }
-        .formula-box .dim { color: var(--text3); }
+        /* FORMULA */
+        .formula { background:rgba(255,255,255,.02); border-left:3px solid var(--green); border-radius:0 10px 10px 0; padding:20px 24px; margin-top:20px; font-family:var(--mono); font-size:13px; line-height:2; color:var(--text); }
+        .formula strong { color:var(--green2); }
+        .formula .dim { color:var(--text3); }
 
-        /* Timeline */
-        .timeline-grid {
-            display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
-            margin-bottom: 28px;
-        }
-        .tl-card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 20px;
-        }
-        .tl-card .metric-value { font-size: 24px; }
+        /* TIMELINE */
+        .tl { position:relative; padding-left:28px; margin:24px 0; }
+        .tl::before { content:''; position:absolute; left:9px; top:0; height:100%; width:2px; background:linear-gradient(180deg, var(--green),var(--yellow),var(--red),var(--green)); }
+        .tl-i { position:relative; margin-bottom:22px; }
+        .tl-i::before { content:''; position:absolute; left:-23px; top:4px; width:10px; height:10px; border-radius:50%; }
+        .tl-i.g::before { background:var(--green); box-shadow:0 0 10px rgba(34,197,94,.4); }
+        .tl-i.y::before { background:var(--yellow); box-shadow:0 0 10px rgba(234,179,8,.4); }
+        .tl-i.o::before { background:var(--orange); box-shadow:0 0 10px rgba(249,115,22,.4); }
+        .tl-i.r::before { background:var(--red); box-shadow:0 0 10px rgba(239,68,68,.4); }
+        .tl-t { font-size:14px; font-weight:600; margin-bottom:3px; }
+        .tl-d { font-size:13px; color:var(--text2); }
+        .tl-tag { display:inline-block; font-size:11px; font-family:var(--mono); background:var(--surface2); color:var(--text3); padding:2px 8px; border-radius:4px; margin-left:6px; }
 
-        .timeline { position: relative; padding-left: 32px; margin: 28px 0; }
-        .timeline::before {
-            content:''; position: absolute; left: 11px; top:0; height:100%; width:2px;
-            background: linear-gradient(180deg, var(--green) 0%, var(--yellow) 40%, var(--red) 70%, var(--green) 100%);
-        }
-        .tl-item { position: relative; margin-bottom: 24px; }
-        .tl-item::before {
-            content:''; position: absolute; left: -26px; top:4px;
-            width:10px; height:10px; border-radius:50%;
-        }
-        .tl-item.g::before { background: var(--green); box-shadow: 0 0 12px rgba(34,197,94,0.4); }
-        .tl-item.y::before { background: var(--yellow); box-shadow: 0 0 12px rgba(234,179,8,0.4); }
-        .tl-item.o::before { background: var(--orange); box-shadow: 0 0 12px rgba(249,115,22,0.4); }
-        .tl-item.r::before { background: var(--red); box-shadow: 0 0 12px rgba(239,68,68,0.4); }
-        .tl-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-        .tl-desc { font-size: 13px; color: var(--text2); }
-        .tl-tag {
-            display: inline-block; font-size: 11px; font-family: 'JetBrains Mono', monospace;
-            background: var(--bg3); color: var(--text3); padding: 2px 8px;
-            border-radius: 4px; margin-left: 6px;
-        }
+        /* METHOD */
+        .meth { font-size:14px; line-height:1.85; color:var(--text2); max-width:780px; }
+        .meth code { background:rgba(34,197,94,.08); color:var(--green2); padding:1px 6px; border-radius:4px; font-family:var(--mono); font-size:12px; }
 
-        /* Methodology text */
-        .method-text { font-size: 14px; line-height: 1.85; color: var(--text2); max-width: 800px; }
-        .method-text code {
-            background: rgba(34,197,94,0.08); color: var(--green-light);
-            padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
-        }
+        /* FOOTER */
+        footer { border-top:1px solid var(--border); max-width:1080px; margin:0 auto; padding:40px 24px 28px; }
+        .ft-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:40px; margin-bottom:28px; }
+        .ft-brand { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+        .ft-brand img { width:30px; height:30px; border-radius:8px; }
+        .ft-desc { font-size:13px; color:var(--text2); line-height:1.6; }
+        .ft-col h4 { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:10px; font-weight:600; }
+        .ft-col a { display:block; font-size:13px; color:var(--text2); text-decoration:none; margin-bottom:7px; }
+        .ft-col a:hover { color:var(--white); }
+        .ft-bot { font-size:11px; color:var(--text3); text-align:center; padding-top:18px; border-top:1px solid var(--border); }
 
-        /* ── FOOTER (matches efix.finance) ── */
-        .footer {
-            border-top: 1px solid var(--border); margin-top: 60px; padding: 40px 24px 32px;
-            max-width: 1100px; margin-left: auto; margin-right: auto;
-        }
-        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 32px; }
-        .footer-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .footer-brand img { width: 32px; height: 32px; border-radius: 8px; }
-        .footer-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
-        .footer-col h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 12px; font-weight: 600; }
-        .footer-col a { display: block; font-size: 13px; color: var(--text2); text-decoration: none; margin-bottom: 8px; transition: color 0.2s; }
-        .footer-col a:hover { color: var(--white); }
-        .footer-bottom { font-size: 11px; color: var(--text3); text-align: center; padding-top: 20px; border-top: 1px solid var(--border); }
-
-        /* Responsive */
         @media(max-width:768px) {
-            .hero h1 { font-size: 28px; }
-            .metrics-grid, .timeline-grid { grid-template-columns: repeat(2,1fr); }
-            .panels { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr 1fr; }
-            .nav-links { display: none; }
-            .navbar { padding: 0 20px; }
+            nav { padding:0 20px; } .nav-links { display:none; }
+            .hero h1 { font-size:30px; }
+            .g4 { grid-template-columns:repeat(2,1fr); }
+            .g2 { grid-template-columns:1fr; }
+            .ft-grid { grid-template-columns:1fr 1fr; }
         }
         @media(max-width:480px) {
-            .metrics-grid, .timeline-grid { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr; }
+            .g4 { grid-template-columns:1fr; }
+            .ft-grid { grid-template-columns:1fr; }
         }
     </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar">
-    <a href="/" class="nav-brand">
-        <img src="./logo_efix_400x400.jpg" alt="EFIX" class="nav-logo">
-    </a>
+<nav>
+    <a href="/" class="nav-brand"><img src="./logo_efix_400x400.jpg" alt="EFIX"></a>
     <div class="nav-links">
         <a href="/#how">How It Works</a>
         <a href="/#yield">Yield</a>
@@ -268,343 +164,299 @@
     </div>
 </nav>
 
-<div class="main">
+<div class="wrap">
 
-    <!-- HERO -->
     <div class="hero">
-        <div class="hero-badge">
-            <span class="hero-dot"></span>
-            <span id="liveStatus">Connecting to Polygon RPC...</span>
-        </div>
+        <div class="badge"><span class="dot"></span><span id="live">Connecting...</span></div>
         <h1>Range Monitor</h1>
-        <p>Live Uniswap V3 position tracking for efixDI/USDC on Polygon with GBM-optimized range strategy.</p>
+        <p>Live Uniswap V3 efixDI/USDC position on Polygon. GBM-optimized range with on-chain data every 30s.</p>
     </div>
 
-    <!-- ALERT -->
-    <div class="alert alert-ok" id="alertBar">
-        <span class="alert-icon">⏳</span>
-        <span id="alertText">Loading on-chain data...</span>
+    <div class="alert a-ok" id="aBar">
+        <span id="aIcon">⏳</span>
+        <span id="aText">Loading on-chain data from Polygon...</span>
     </div>
 
-    <!-- POSITION METRICS -->
-    <div class="section">
-        <div class="section-header">Current Position</div>
-        <div class="metrics-grid">
-            <div class="metric">
-                <div class="metric-label">efixDI Price</div>
-                <div class="metric-value" id="currentPrice">—</div>
-                <div class="metric-sub" id="impliedFx">—</div>
-            </div>
-            <div class="metric">
-                <div class="metric-label">Range Utilization</div>
-                <div class="metric-value green" id="utilization">—</div>
-                <div class="metric-sub" id="direction">—</div>
-            </div>
-            <div class="metric">
-                <div class="metric-label">Est. Days to Exit</div>
-                <div class="metric-value cyan" id="estDays">—</div>
-                <div class="metric-sub">First Passage Time</div>
-            </div>
-            <div class="metric">
-                <div class="metric-label">Capital Efficiency</div>
-                <div class="metric-value" id="efficiency">—</div>
-                <div class="metric-sub">vs full-range LP</div>
-            </div>
-        </div>
+    <div class="label">Current Position</div>
+    <div class="g4">
+        <div class="card"><div class="card-sm">efixDI Price</div><div class="card-val c-white" id="price">—</div><div class="card-sub" id="fx">—</div></div>
+        <div class="card"><div class="card-sm">Range Utilization</div><div class="card-val c-green" id="util">—</div><div class="card-sub" id="dir">—</div></div>
+        <div class="card"><div class="card-sm">Est. Days to Exit</div><div class="card-val c-cyan" id="days">—</div><div class="card-sub">First Passage Time</div></div>
+        <div class="card"><div class="card-sm">Capital Efficiency</div><div class="card-val c-white" id="eff">—</div><div class="card-sub" id="effSub">vs full-range LP</div></div>
     </div>
 
-    <!-- RANGE VISUALIZER -->
-    <div class="range-card">
-        <div class="range-header">
-            <div class="range-title">Position in Range</div>
-            <div class="range-tag">NFT #2847265</div>
+    <div class="rv">
+        <div class="rv-head">
+            <div class="rv-title">Position in Range</div>
+            <div class="rv-tag" id="nftTag">NFT #2847265</div>
         </div>
-        <div class="range-bar-wrap">
-            <div class="range-bar">
-                <div class="range-zone rz-left"></div>
-                <div class="range-zone rz-mid"></div>
-                <div class="range-zone rz-right"></div>
-                <div class="range-cursor" id="rangeCursor" style="left:50%">
-                    <span class="range-cursor-tag" id="cursorLabel">$0.1953</span>
-                </div>
-            </div>
+        <div class="rv-bar" id="rvBar">
+            <div class="rv-zone rv-zl"></div>
+            <div class="rv-zone rv-zm"></div>
+            <div class="rv-zone rv-zr"></div>
+            <div class="rv-cur" id="cur" style="left:50%"><span id="curLbl">—</span></div>
         </div>
-        <div class="range-ends">
-            <div><span id="lowerPrice">$0.0000</span><small id="lowerFx">—</small></div>
-            <div style="text-align:center; color:var(--text3)">◄ BRL weakens · Safe Zone · BRL strengthens ►</div>
-            <div style="text-align:right;"><span id="upperPrice">$0.0000</span><small id="upperFx">—</small></div>
+        <div class="rv-ends">
+            <div><span id="lo">—</span><small id="loFx">—</small></div>
+            <div style="text-align:center;color:var(--text3)">◄ BRL weakens · Safe Zone · BRL strengthens ►</div>
+            <div style="text-align:right"><span id="hi">—</span><small id="hiFx">—</small></div>
         </div>
-        <div class="info-strip" style="margin-top:20px;">
-            <div>Pool: <span>efixDI/USDC</span></div>
-            <div>Fee: <span>0.05%</span></div>
-            <div>Network: <span>Polygon</span></div>
-            <div>Block: <span id="blockNumber">#—</span></div>
-            <div>Updated: <span id="lastUpdate">—</span></div>
+        <div class="rv-info">
+            <div>Pool: <em>efixDI/USDC</em></div>
+            <div>Fee: <em>0.05%</em></div>
+            <div>Network: <em>Polygon</em></div>
+            <div>Block: <em id="blk">#—</em></div>
+            <div>Updated: <em id="upd">—</em></div>
         </div>
     </div>
 
-    <!-- STRATEGY PANELS -->
-    <div class="section">
-        <div class="section-header">Liquidity Strategy</div>
-        <div class="panels">
-            <div class="panel">
-                <div class="panel-title">◈ Active Strategy</div>
-                <div class="panel-row"><span class="k">Model</span><span class="v">GBM + First Passage</span></div>
-                <div class="panel-row"><span class="k">Confidence</span><span class="v">95%</span></div>
-                <div class="panel-row"><span class="k">Horizon</span><span class="v">30 days</span></div>
-                <div class="panel-row"><span class="k">Annualized Vol</span><span class="v">10.5%</span></div>
-                <div class="panel-row"><span class="k">Period Vol</span><span class="v" id="volPeriod">3.01%</span></div>
-                <div class="panel-row"><span class="k">Z-Score</span><span class="v">1.96</span></div>
-            </div>
-            <div class="panel">
-                <div class="panel-title">🔄 Updated Optimal Range</div>
-                <div class="panel-row"><span class="k">Suggested Lower</span><span class="v" id="optLower">—</span></div>
-                <div class="panel-row"><span class="k">Suggested Upper</span><span class="v" id="optUpper">—</span></div>
-                <div class="panel-row"><span class="k">FX Range</span><span class="v" id="optFx">—</span></div>
-                <div class="panel-row"><span class="k">Width</span><span class="v" id="optWidth">—</span></div>
-                <div class="panel-row"><span class="k">Efficiency (new)</span><span class="v" id="optEff">—</span></div>
-                <div class="panel-row"><span class="k">Est. next rebal</span><span class="v" id="optRebal">—</span></div>
-            </div>
+    <div class="label">Liquidity Strategy</div>
+    <div class="g2">
+        <div class="card">
+            <div class="pan-title">◈ Active Strategy</div>
+            <div class="pan-row"><span class="k">Model</span><span class="v">GBM + First Passage</span></div>
+            <div class="pan-row"><span class="k">Confidence</span><span class="v">95%</span></div>
+            <div class="pan-row"><span class="k">Horizon</span><span class="v">30 days</span></div>
+            <div class="pan-row"><span class="k">Annualized Vol</span><span class="v">10.5%</span></div>
+            <div class="pan-row"><span class="k">Period Vol</span><span class="v" id="pvol">3.01%</span></div>
+            <div class="pan-row"><span class="k">Z-Score</span><span class="v">1.96</span></div>
         </div>
-        <div class="formula-box">
-            <strong>Range Formula:</strong><br>
-            P_lower = P_spot × exp(-z × σ × √(T/365))<br>
-            P_upper = P_spot × exp(+z × σ × √(T/365))<br><br>
-            <strong>First Passage Time:</strong><br>
-            E[τ] ≈ (barrier / σ_daily)²<br><br>
-            <span class="dim">z = 1.96 (95%), σ = 10.5% ann., T = 30 days, Efficiency = √P / (√P_upper - √P_lower)</span>
+        <div class="card">
+            <div class="pan-title">🔄 Optimal Range (recalculated live)</div>
+            <div class="pan-row"><span class="k">Suggested Lower</span><span class="v" id="oL">—</span></div>
+            <div class="pan-row"><span class="k">Suggested Upper</span><span class="v" id="oU">—</span></div>
+            <div class="pan-row"><span class="k">FX Range</span><span class="v" id="oFx">—</span></div>
+            <div class="pan-row"><span class="k">Width</span><span class="v" id="oW">—</span></div>
+            <div class="pan-row"><span class="k">Efficiency (if applied)</span><span class="v" id="oE">—</span></div>
+            <div class="pan-row"><span class="k">Est. next rebalance</span><span class="v" id="oR">—</span></div>
         </div>
     </div>
-
-    <!-- REBALANCING TIMELINE -->
-    <div class="section">
-        <div class="section-header">Rebalancing Timeline</div>
-        <div class="timeline-grid">
-            <div class="tl-card">
-                <div class="metric-label">Rebal / Month</div>
-                <div class="metric-value cyan" id="rebalMonth">—</div>
-            </div>
-            <div class="tl-card">
-                <div class="metric-label">Rebal / Year</div>
-                <div class="metric-value cyan" id="rebalYear">—</div>
-            </div>
-            <div class="tl-card">
-                <div class="metric-label">Time per Rebal</div>
-                <div class="metric-value">~5min</div>
-            </div>
-            <div class="tl-card">
-                <div class="metric-label">Cost (Polygon gas)</div>
-                <div class="metric-value">~$0.02</div>
-            </div>
-        </div>
-        <div class="timeline">
-            <div class="tl-item g">
-                <div class="tl-title" style="color:var(--green-light)">Position opened <span class="tl-tag">Day 0</span></div>
-                <div class="tl-desc">Range set, monitor active. No action needed.</div>
-            </div>
-            <div class="tl-item y">
-                <div class="tl-title" style="color:var(--yellow)">⚠️ Warning (75%) <span class="tl-tag" id="tagWarning">~Day ?</span></div>
-                <div class="tl-desc">Price consumed 75% of range. Monitor closely.</div>
-            </div>
-            <div class="tl-item o">
-                <div class="tl-title" style="color:var(--orange)">🔶 Critical (90%) <span class="tl-tag" id="tagCritical">~Day ?</span></div>
-                <div class="tl-desc">Prepare new position. Have the transaction ready.</div>
-            </div>
-            <div class="tl-item r">
-                <div class="tl-title" style="color:var(--red)">🚨 Out of Range (100%) <span class="tl-tag" id="tagExit">~Day ?</span></div>
-                <div class="tl-desc">Rebalance NOW: Remove liquidity → New position with updated range.</div>
-            </div>
-            <div class="tl-item g">
-                <div class="tl-title" style="color:var(--green-light)">✅ New position <span class="tl-tag">Reset</span></div>
-                <div class="tl-desc">Cycle restarts with GBM-recalculated range at current price.</div>
-            </div>
-        </div>
+    <div class="formula">
+        <strong>Range Formula:</strong><br>
+        P_lower = P_spot × exp(−z × σ × √(T/365))<br>
+        P_upper = P_spot × exp(+z × σ × √(T/365))<br><br>
+        <strong>First Passage Time:</strong>  E[τ] ≈ (barrier / σ_daily)²<br><br>
+        <span class="dim">z = 1.96 (95%), σ = 10.5% ann., T = 30d, Eff = √P / (√P_upper − √P_lower)</span>
     </div>
 
-    <!-- METHODOLOGY -->
-    <div class="section">
-        <div class="section-header">Methodology</div>
-        <div class="method-text">
-            <p>The range is calculated using <code>Geometric Brownian Motion</code> — the same stochastic model 
-            behind Black-Scholes option pricing. It models efixDI/USDC price as a function of BRL/USD exchange rate,
-            using implied volatility extracted from the 6-month historical range (R$5.18–5.59, vol ≈ 10.5% ann.).
-            The formula projects price bounds at 95% confidence over 30 days.</p>
-            <p style="margin-top:14px;">Rebalancing frequency is estimated via <code>First Passage Time</code> theory,
-            calculating the expected time for a Brownian process to hit a barrier. All data is read directly from
-            Polygon blockchain via <code>NonfungiblePositionManager</code> and <code>UniswapV3Pool.slot0()</code>
-            — no backend, no API keys. Auto-refresh every 30 seconds.</p>
-        </div>
+    <div style="margin-top:40px"></div>
+    <div class="label">Rebalancing Timeline</div>
+    <div class="g4">
+        <div class="card"><div class="card-sm">Rebal / Month</div><div class="card-val sm c-cyan" id="rbM">—</div></div>
+        <div class="card"><div class="card-sm">Rebal / Year</div><div class="card-val sm c-cyan" id="rbY">—</div></div>
+        <div class="card"><div class="card-sm">Time per Rebal</div><div class="card-val sm">~5min</div></div>
+        <div class="card"><div class="card-sm">Cost (gas)</div><div class="card-val sm">~$0.02</div></div>
+    </div>
+    <div class="tl">
+        <div class="tl-i g"><div class="tl-t" style="color:var(--green2)">Position opened <span class="tl-tag">Day 0</span></div><div class="tl-d">Range set, monitor active. No action needed.</div></div>
+        <div class="tl-i y"><div class="tl-t" style="color:var(--yellow)">⚠ Warning 75% <span class="tl-tag" id="tw">~Day ?</span></div><div class="tl-d">Price consumed 75% of range. Monitor closely.</div></div>
+        <div class="tl-i o"><div class="tl-t" style="color:var(--orange)">🔶 Critical 90% <span class="tl-tag" id="tc">~Day ?</span></div><div class="tl-d">Prepare new position. Have tx ready.</div></div>
+        <div class="tl-i r"><div class="tl-t" style="color:var(--red)">🚨 Out of Range <span class="tl-tag" id="te">~Day ?</span></div><div class="tl-d">Rebalance NOW: remove liquidity → new position.</div></div>
+        <div class="tl-i g"><div class="tl-t" style="color:var(--green2)">✅ New position <span class="tl-tag">Reset</span></div><div class="tl-d">Cycle restarts with recalculated range.</div></div>
     </div>
 
+    <div style="margin-top:40px"></div>
+    <div class="label">Methodology</div>
+    <div class="meth">
+        <p>The range is calculated using <code>Geometric Brownian Motion</code> — the stochastic model behind
+        Black-Scholes — projecting price bounds at 95% confidence over 30 days using BRL/USD implied volatility
+        (6-month range R$5.18–5.59, σ ≈ 10.5% ann.). Rebalancing frequency uses <code>First Passage Time</code>
+        theory. All data read directly from Polygon via <code>UniswapV3Pool.slot0()</code> — zero backend.</p>
+    </div>
 </div>
 
-<!-- FOOTER -->
-<footer class="footer">
-    <div class="footer-grid">
-        <div>
-            <div class="footer-brand">
-                <img src="./logo_efix_400x400.jpg" alt="EFIX">
-                <span style="color:var(--white); font-weight:600;">EFIX Protocol</span>
-            </div>
-            <div class="footer-desc">Bridging Brazilian fixed-income assets into decentralized finance. CVM-regulated. Built for composability.</div>
-        </div>
-        <div class="footer-col">
-            <h4>Protocol</h4>
-            <a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho Vault</a>
-            <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token (Polygon)</a>
-            <a href="https://basescan.org/address/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank">Token (Base)</a>
-            <a href="https://app.uniswap.org/positions/v3/polygon/2847265" target="_blank">Uniswap V3 Position</a>
-        </div>
-        <div class="footer-col">
-            <h4>Resources</h4>
-            <a href="./efixDI_Whitepaper_v1.pdf">Whitepaper</a>
-            <a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank">GitHub</a>
-            <a href="/#how">Documentation</a>
-        </div>
-        <div class="footer-col">
-            <h4>Contact</h4>
-            <a href="mailto:contato@efix.com.br">contato@efix.com.br</a>
-            <a>Rio de Janeiro, Brazil</a>
-        </div>
+<footer>
+    <div class="ft-grid">
+        <div><div class="ft-brand"><img src="./logo_efix_400x400.jpg" alt="EFIX"><span style="color:var(--white);font-weight:600;">EFIX Protocol</span></div><div class="ft-desc">Bridging Brazilian fixed-income assets into decentralized finance. CVM-regulated.</div></div>
+        <div class="ft-col"><h4>Protocol</h4><a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho Vault</a><a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token (Polygon)</a><a href="https://app.uniswap.org/positions/v3/polygon/2847265" target="_blank">Uniswap Position</a></div>
+        <div class="ft-col"><h4>Resources</h4><a href="./efixDI_Whitepaper_v1.pdf">Whitepaper</a><a href="https://github.com/Ernesto711/efix-pr-repo" target="_blank">GitHub</a><a href="/#how">Documentation</a></div>
+        <div class="ft-col"><h4>Contact</h4><a href="mailto:contato@efix.com.br">contato@efix.com.br</a><a>Rio de Janeiro, Brazil</a></div>
     </div>
-    <div class="footer-bottom">
-        © 2026 Efix Securitizadora S.A. · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025 · Polygon · Base · Morpho Blue · LayerZero
-    </div>
+    <div class="ft-bot">© 2026 Efix Securitizadora S.A. · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025</div>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
 <script>
 (function(){
     const C = {
-        pid: 2847265,
-        nft: '0xC36442b4a4522E871399CD717aBDD847Ab11FE88',
-        fac: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
-        rpcs: [
-            'https://polygon-bor-rpc.publicnode.com',
-            'https://polygon.drpc.org',
-            'https://1rpc.io/matic',
-            'https://polygon.meowrpc.com'
-        ],
-        ms: 30000, z: 1.96, vol: 0.105, days: 30,
+        pid:2847265,
+        nft:'0xC36442b4a4522E871399CD717aBDD847Ab11FE88',
+        fac:'0x1F98431c8aD98523631AE4a59f267346ea31F984',
+        rpcs:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://1rpc.io/matic','https://polygon.meowrpc.com'],
+        ms:30000, z:1.96, vol:0.105, days:30,
+        // Full-range ticks for 0.05% fee tier (tick spacing 10)
+        MIN_TICK: -887270,
+        MAX_TICK: 887270,
     };
 
-    // CORRECT ABI: slot0 returns (uint160 sqrtPriceX96, int24 tick, ...)
-    const NABI = ['function positions(uint256) view returns (uint96,address,address,address,uint24,int24,int24,uint128,uint256,uint256,uint128,uint128)'];
-    const FABI = ['function getPool(address,address,uint24) view returns (address)'];
-    const PABI = [
-        'function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)',
-        'function liquidity() view returns (uint128)'
-    ];
+    // CORRECT ABI order: sqrtPriceX96 (uint160) FIRST, then tick (int24)
+    const NABI=['function positions(uint256) view returns (uint96 nonce, address operator, address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)'];
+    const FABI=['function getPool(address,address,uint24) view returns (address)'];
+    const PABI=['function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)','function liquidity() view returns (uint128)'];
 
-    const t2p = (t, d0=18, d1=6) => Math.pow(1.0001, t) * Math.pow(10, d0 - d1);
-    const s2p = (s, d0=18, d1=6) => { const x = Number(s) / (2**96); return x * x * Math.pow(10, d0 - d1); };
-    const gbm = (p,v,d,z) => { const pv=v*Math.sqrt(d/365), l=p*Math.exp(-z*pv), u=p*Math.exp(z*pv); return {lower:l, upper:u, pVol:pv, eff:Math.sqrt(p)/(Math.sqrt(u)-Math.sqrt(l))}; };
-    const fpt = (v,b) => { const dv=v/Math.sqrt(365); return Math.pow(b/dv, 2); };
+    // Math
+    function s2p(sqrtPX96, d0=18, d1=6) {
+        const s = Number(sqrtPX96) / (2**96);
+        return s * s * Math.pow(10, d0-d1);
+    }
+    function t2p(tick, d0=18, d1=6) {
+        // Use log to avoid overflow for extreme ticks
+        const logP = tick * Math.log(1.0001) + (d0-d1) * Math.LN10;
+        return Math.exp(logP);
+    }
+    function gbm(p,v,d,z) {
+        const pv=v*Math.sqrt(d/365), l=p*Math.exp(-z*pv), u=p*Math.exp(z*pv);
+        return {lo:l, hi:u, pv, eff: Math.sqrt(p)/(Math.sqrt(u)-Math.sqrt(l))};
+    }
+    function fpt(v,b) { const dv=v/Math.sqrt(365); return Math.pow(Math.max(b,0.0001)/dv, 2); }
+    function fmt(n) { return n < 0.0001 ? '~0' : n > 1e6 ? n.toExponential(1) : n < 1 ? '$'+n.toFixed(5) : '$'+n.toFixed(2); }
+    function fxFmt(p) { const r = 1/p; return r > 1e6 ? '—' : r < 0.01 ? '—' : '≈ R$'+r.toFixed(2)+'/USD'; }
 
-    async function gp() {
-        for (const u of C.rpcs) {
-            try { const p = new ethers.JsonRpcProvider(u); await p.getBlockNumber(); return p; }
-            catch { continue; }
-        }
-        throw new Error('All RPCs failed');
+    // Is this a full/near-full range position?
+    function isFullRange(tL, tU) {
+        return tL <= C.MIN_TICK + 100 && tU >= C.MAX_TICK - 100;
     }
 
-    const $ = id => document.getElementById(id);
+    // Log-scale utilization (works for any range width)
+    function logUtil(cp, pL, pU) {
+        if (cp <= 0 || pL <= 0 || pU <= pL) return 0;
+        const logCp = Math.log(cp), logL = Math.log(pL), logU = Math.log(pU);
+        const range = logU - logL;
+        if (range === 0) return 0;
+        const pos = (logCp - logL) / range; // 0 to 1
+        return Math.abs(pos - 0.5) * 2; // 0 = center, 1 = edge
+    }
+
+    async function gp() {
+        for (const u of C.rpcs) try { const p=new ethers.JsonRpcProvider(u); await p.getBlockNumber(); return p; } catch{continue;}
+        throw new Error('RPCs failed');
+    }
+    const $=id=>document.getElementById(id);
 
     async function fetchData() {
-        const pv = await gp(), bn = await pv.getBlockNumber();
-        const nft = new ethers.Contract(C.nft, NABI, pv);
-        const pos = await nft.positions(C.pid);
-        const token0=pos[2], token1=pos[3], fee=Number(pos[4]);
-        const tickLower=Number(pos[5]), tickUpper=Number(pos[6]);
-
-        const fac = new ethers.Contract(C.fac, FABI, pv);
-        const poolAddr = await fac.getPool(token0, token1, fee);
-        const pool = new ethers.Contract(poolAddr, PABI, pv);
-        const [slot0, poolLiq] = await Promise.all([pool.slot0(), pool.liquidity()]);
-
-        // FIXED: slot0[0] = sqrtPriceX96 (uint160), slot0[1] = tick (int24)
-        const sqrtPriceX96 = slot0[0];
-        const currentTick = Number(slot0[1]);
-
-        const currentPrice = s2p(sqrtPriceX96);
-        const priceLower = t2p(tickLower);
-        const priceUpper = t2p(tickUpper);
-        const mid = (priceUpper + priceLower) / 2;
-        const halfW = (priceUpper - priceLower) / 2;
-
-        return {
-            cp: currentPrice, pL: priceLower, pU: priceUpper,
-            ct: currentTick, tL: tickLower, tU: tickUpper,
-            ut: (currentPrice - mid) / halfW,
-            ir: currentTick >= tickLower && currentTick <= tickUpper,
-            bn
-        };
+        const pv=await gp(), bn=await pv.getBlockNumber();
+        const nft=new ethers.Contract(C.nft,NABI,pv), pos=await nft.positions(C.pid);
+        const t0=pos.token0, t1=pos.token1, fee=Number(pos.fee);
+        const tL=Number(pos.tickLower), tU=Number(pos.tickUpper);
+        const fac=new ethers.Contract(C.fac,FABI,pv), pa=await fac.getPool(t0,t1,fee);
+        const pool=new ethers.Contract(pa,PABI,pv);
+        const [s0,pl]=await Promise.all([pool.slot0(),pool.liquidity()]);
+        const sqrtPX96=s0.sqrtPriceX96, ct=Number(s0.tick);
+        const cp=s2p(sqrtPX96), pL=t2p(tL), pU=t2p(tU);
+        return {cp,pL,pU,ct,tL,tU,ir:ct>=tL&&ct<=tU,bn,full:isFullRange(tL,tU)};
     }
 
     function ui(d) {
-        const au = Math.abs(d.ut), dir = d.ut > 0 ? '→ Upper (BRL↑)' : '← Lower (BRL↓)', rw = d.pU - d.pL;
+        const util = logUtil(d.cp, d.pL, d.pU);
+        const isF = d.full;
 
-        $('currentPrice').textContent = '$' + d.cp.toFixed(5);
-        $('impliedFx').textContent = '≈ R$' + (1/d.cp).toFixed(2) + '/USD';
+        // Price
+        $('price').textContent = '$'+d.cp.toFixed(5);
+        $('fx').textContent = fxFmt(d.cp);
 
-        const ue = $('utilization');
-        ue.textContent = (au * 100).toFixed(1) + '%';
-        ue.className = 'metric-value ' + (au > 0.9 ? 'red' : au > 0.75 ? 'yellow' : 'green');
-        $('direction').textContent = dir;
+        // Utilization
+        const ue=$('util');
+        if (isF) {
+            ue.textContent = 'Full Range';
+            ue.className = 'card-val sm c-cyan';
+            $('dir').textContent = 'Concentrated range recommended';
+        } else {
+            ue.textContent = (util*100).toFixed(1)+'%';
+            ue.className = 'card-val '+(util>.9?'c-red':util>.75?'c-yellow':'c-green');
+            $('dir').textContent = d.ct > (d.tL+d.tU)/2 ? '→ Upper (BRL↑)' : '← Lower (BRL↓)';
+        }
 
-        const dp = (1 - au) * (rw / d.cp) / 2;
-        const dte = fpt(C.vol, Math.max(dp, 0.001));
-        const eff = Math.sqrt(d.cp) / (Math.sqrt(d.pU) - Math.sqrt(d.pL));
-        const ry = 365 / dte, rm = 30 / dte;
+        // Optimal range (always calculated from current price)
+        const o = gbm(d.cp, C.vol, C.days, C.z);
+        const optHalf = o.hi/d.cp - 1;
+        const optFpt = fpt(C.vol, optHalf);
 
-        const de = $('estDays');
-        de.textContent = '~' + Math.round(dte) + 'd';
-        de.className = 'metric-value ' + (dte < 7 ? 'red' : dte < 21 ? 'yellow' : 'cyan');
-        $('efficiency').textContent = eff.toFixed(1) + 'x';
-        $('rebalMonth').textContent = rm < 1 ? '<1' : '~' + rm.toFixed(1);
-        $('rebalYear').textContent = '~' + Math.round(ry);
+        // Days to exit & efficiency
+        const de=$('days'), ee=$('eff');
+        if (isF) {
+            de.textContent = '∞'; de.className='card-val sm c-green';
+            ee.textContent = '1.0x'; $('effSub').textContent = 'Full range — no concentration';
+        } else {
+            const dp = (1-util) * Math.abs(Math.log(d.pU/d.pL)) / 2;
+            const dte = fpt(C.vol, dp);
+            de.textContent = '~'+Math.round(dte)+'d';
+            de.className = 'card-val sm '+(dte<7?'c-red':dte<21?'c-yellow':'c-cyan');
+            const eff = Math.sqrt(d.cp)/(Math.sqrt(d.pU)-Math.sqrt(d.pL));
+            ee.textContent = eff.toFixed(1)+'x';
+        }
 
-        // Range bar
-        const cp = Math.max(0, Math.min(100, ((d.cp - d.pL) / rw) * 100));
-        $('rangeCursor').style.left = cp + '%';
-        $('cursorLabel').textContent = '$' + d.cp.toFixed(5);
-        $('lowerPrice').textContent = '$' + d.pL.toFixed(5);
-        $('lowerFx').textContent = '≈ R$' + (1/d.pL).toFixed(2) + '/USD';
-        $('upperPrice').textContent = '$' + d.pU.toFixed(5);
-        $('upperFx').textContent = '≈ R$' + (1/d.pU).toFixed(2) + '/USD';
-        $('blockNumber').textContent = '#' + d.bn.toLocaleString();
-        $('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
-        $('liveStatus').textContent = d.ir ? 'In Range · Live on Polygon' : '⚠ Out of Range';
+        // Rebal stats (based on optimal range)
+        const ryOpt = 365/optFpt, rmOpt = 30/optFpt;
+        $('rbM').textContent = isF ? '0' : (rmOpt<1?'<1':'~'+rmOpt.toFixed(1));
+        $('rbY').textContent = isF ? '0' : '~'+Math.round(ryOpt);
+
+        // Range bar — use log scale for cursor position
+        let curPct;
+        if (isF) {
+            // For full range, show price position on log scale relative to meaningful bounds
+            // Use optimal range as visual reference
+            const logMid = Math.log(d.cp);
+            curPct = 50; // Center it since we're always "in range"
+        } else {
+            const logPos = (Math.log(d.cp)-Math.log(d.pL))/(Math.log(d.pU)-Math.log(d.pL));
+            curPct = Math.max(2, Math.min(98, logPos*100));
+        }
+        $('cur').style.left = curPct+'%';
+        $('curLbl').textContent = '$'+d.cp.toFixed(5);
+
+        // Range bounds display
+        if (isF) {
+            $('lo').textContent = 'MIN (full range)';
+            $('loFx').textContent = 'tick '+d.tL;
+            $('hi').textContent = 'MAX (full range)';
+            $('hiFx').textContent = 'tick +'+d.tU;
+            $('nftTag').textContent = 'NFT #2847265 · FULL RANGE';
+        } else {
+            $('lo').textContent = fmt(d.pL);
+            $('loFx').textContent = fxFmt(d.pL);
+            $('hi').textContent = fmt(d.pU);
+            $('hiFx').textContent = fxFmt(d.pU);
+        }
+
+        $('blk').textContent = '#'+d.bn.toLocaleString();
+        $('upd').textContent = new Date().toLocaleTimeString('pt-BR');
+        $('live').textContent = d.ir ? 'In Range · Live on Polygon' : '⚠ Out of Range';
 
         // Alert
-        const ab = $('alertBar'), at = $('alertText'), ai = ab.querySelector('.alert-icon');
-        if (!d.ir) { ab.className='alert alert-crit'; ai.textContent='🚨'; at.innerHTML='<strong>OUT OF RANGE</strong> — Rebalancing needed. Remove liquidity and create new position.'; }
-        else if (au >= 0.90) { ab.className='alert alert-crit'; ai.textContent='🔶'; at.innerHTML='<strong>CRITICAL ZONE</strong> — '+(au*100).toFixed(0)+'% of range used. Prepare rebalancing.'; }
-        else if (au >= 0.75) { ab.className='alert alert-warn'; ai.textContent='⚠️'; at.innerHTML='<strong>WARNING</strong> — '+(au*100).toFixed(0)+'% of range consumed.'; }
-        else { ab.className='alert alert-ok'; ai.textContent='✅'; at.innerHTML='Position healthy — '+(au*100).toFixed(0)+'% of range used. No action needed.'; }
+        const ab=$('aBar'), at=$('aText'), ai=$('aIcon');
+        if (!d.ir) {
+            ab.className='alert a-crit'; ai.textContent='🚨'; at.innerHTML='<strong>OUT OF RANGE</strong> — Rebalancing needed.';
+        } else if (isF) {
+            ab.className='alert a-ok'; ai.textContent='📡';
+            at.innerHTML='Position is <strong>full-range</strong> — in range but not concentrated. Apply the optimal range below for '+o.eff.toFixed(0)+'x capital efficiency.';
+        } else if (util>=.9) {
+            ab.className='alert a-crit'; ai.textContent='🔶'; at.innerHTML='<strong>CRITICAL</strong> — '+(util*100).toFixed(0)+'% used. Prepare rebalancing.';
+        } else if (util>=.75) {
+            ab.className='alert a-warn'; ai.textContent='⚠'; at.innerHTML='<strong>WARNING</strong> — '+(util*100).toFixed(0)+'% consumed. Monitor closely.';
+        } else {
+            ab.className='alert a-ok'; ai.textContent='✅'; at.innerHTML='Position healthy — '+(util*100).toFixed(0)+'% of range used.';
+        }
 
-        // Optimal range
-        const o = gbm(d.cp, C.vol, C.days, C.z);
-        $('optLower').textContent = '$' + o.lower.toFixed(5);
-        $('optUpper').textContent = '$' + o.upper.toFixed(5);
-        $('optFx').textContent = 'R$' + (1/o.upper).toFixed(2) + '–' + (1/o.lower).toFixed(2);
-        $('optWidth').textContent = '±' + ((o.upper/d.cp - 1)*100).toFixed(1) + '%';
-        $('optEff').textContent = o.eff.toFixed(1) + 'x';
-        $('volPeriod').textContent = (o.pVol * 100).toFixed(2) + '%';
-        const oh = o.upper / d.cp - 1, of_ = fpt(C.vol, oh);
-        $('optRebal').textContent = '~' + Math.round(of_) + 'd';
-        $('tagWarning').textContent = '~Day ' + Math.round(fpt(C.vol, oh*0.75));
-        $('tagCritical').textContent = '~Day ' + Math.round(fpt(C.vol, oh*0.90));
-        $('tagExit').textContent = '~Day ' + Math.round(of_);
+        // Optimal range panel
+        $('oL').textContent = '$'+o.lo.toFixed(5);
+        $('oU').textContent = '$'+o.hi.toFixed(5);
+        $('oFx').textContent = 'R$'+(1/o.hi).toFixed(2)+'–'+(1/o.lo).toFixed(2);
+        $('oW').textContent = '±'+((o.hi/d.cp-1)*100).toFixed(1)+'%';
+        $('oE').textContent = o.eff.toFixed(1)+'x';
+        $('pvol').textContent = (o.pv*100).toFixed(2)+'%';
+        $('oR').textContent = '~'+Math.round(optFpt)+'d';
+
+        // Timeline tags
+        $('tw').textContent = '~Day '+Math.round(fpt(C.vol, optHalf*0.75));
+        $('tc').textContent = '~Day '+Math.round(fpt(C.vol, optHalf*0.90));
+        $('te').textContent = '~Day '+Math.round(optFpt);
     }
 
     async function go() {
         try { ui(await fetchData()); }
-        catch(e) { console.error('Fetch error:', e); $('liveStatus').textContent = 'RPC Error — retrying...'; }
+        catch(e) { console.error(e); $('live').textContent='RPC Error — retrying...'; }
     }
-    go();
-    setInterval(go, C.ms);
+    go(); setInterval(go, C.ms);
 })();
 </script>
 </body>
