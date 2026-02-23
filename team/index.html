@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team — efixDI+ Protocol</title>
+    <meta name="description" content="Meet the team behind efixDI+ — bridging Brazilian fixed income and DeFi through tokenized DI fund shares.">
+    <link rel="icon" href="../app/logo_efix_400x400.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fb;
+            --bg-card: #ffffff;
+            --bg-item: #f4f5f7;
+            --border: #e2e4e9;
+            --border-hover: #d0d3d9;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-green: #16a34a;
+            --accent-amber: #d97706;
+            --accent-cyan: #0891b2;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
+
+        nav { position: fixed; top: 0; width: 100%; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+        .nav-inner { max-width: 1120px; margin: 0 auto; padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-primary); font-weight: 700; font-size: 1.05rem; }
+        .nav-logo img { width: 30px; height: 30px; border-radius: 8px; }
+        .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
+        .nav-cta { background: var(--text-primary); color: #fff !important; padding: 7px 18px; border-radius: 8px; font-weight: 600; transition: opacity 0.2s; }
+        .nav-cta:hover { opacity: 0.85; }
+
+        .hero { padding: 130px 2rem 50px; text-align: center; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 100px; padding: 5px 14px; font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500; }
+        .hero h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 12px; }
+        .hero h1 span { background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: var(--text-secondary); font-size: 1.05rem; max-width: 620px; margin: 0 auto; }
+
+        .section { max-width: 1120px; margin: 0 auto; padding: 50px 2rem; }
+        .section-header { margin-bottom: 32px; }
+        .section-header h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .section-header p { color: var(--text-secondary); font-size: 0.92rem; }
+
+        .member-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 36px 40px; box-shadow: var(--shadow-md); display: grid; grid-template-columns: 150px 1fr; gap: 36px; align-items: start; animation: fadeUp 0.5s ease forwards; opacity: 0; margin-bottom: 20px; }
+        .member-card:nth-child(1) { animation-delay: 0.05s; }
+        .member-card:nth-child(2) { animation-delay: 0.10s; }
+        .member-card:nth-child(3) { animation-delay: 0.15s; }
+
+        .member-avatar { width: 150px; height: 150px; border-radius: 16px; background: linear-gradient(135deg, #e0e7ff, #f0f4ff); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; color: var(--accent-blue); }
+        .member-avatar.green { background: linear-gradient(135deg, #dcfce7, #f0fdf4); color: var(--accent-green); }
+        .member-avatar.purple { background: linear-gradient(135deg, #ede9fe, #f5f3ff); color: var(--accent-purple); }
+
+        .member-info h3 { font-size: 1.35rem; font-weight: 700; margin-bottom: 1px; }
+        .member-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 14px; color: var(--accent-blue); }
+        .member-title.green { color: var(--accent-green); }
+        .member-title.purple { color: var(--accent-purple); }
+        .member-bio { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.7; margin-bottom: 16px; }
+
+        .member-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .member-link { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; text-decoration: none; border: 1px solid var(--border); color: var(--text-secondary); background: var(--bg-secondary); transition: all 0.2s; }
+        .member-link:hover { border-color: var(--border-hover); color: var(--text-primary); }
+        .member-link svg { width: 14px; height: 14px; }
+
+        .career-track { display: flex; gap: 6px; flex-wrap: wrap; }
+        .career-tag { padding: 3px 9px; border-radius: 6px; font-size: 0.73rem; font-weight: 600; background: var(--bg-item); color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px; }
+        .career-tag .arrow { color: var(--text-muted); font-size: 0.6rem; }
+        .career-tag.highlight-blue { background: rgba(37,99,235,0.08); color: var(--accent-blue); }
+        .career-tag.highlight-green { background: rgba(22,163,74,0.08); color: var(--accent-green); }
+        .career-tag.highlight-purple { background: rgba(124,58,237,0.08); color: var(--accent-purple); }
+
+        .credentials-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+        .credential-item { padding: 4px 9px; background: var(--bg-item); border-radius: 6px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 5px; color: var(--text-secondary); }
+        .cred-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .cred-dot.blue { background: var(--accent-blue); }
+        .cred-dot.green { background: var(--accent-green); }
+        .cred-dot.purple { background: var(--accent-purple); }
+        .cred-dot.amber { background: var(--accent-amber); }
+        .cred-dot.cyan { background: var(--accent-cyan); }
+
+        .entities-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .entity-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px; box-shadow: var(--shadow-sm); transition: all 0.2s; animation: fadeUp 0.5s ease forwards; opacity: 0; }
+        .entity-card:nth-child(1) { animation-delay: 0.05s; }
+        .entity-card:nth-child(2) { animation-delay: 0.10s; }
+        .entity-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-md); }
+        .entity-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .entity-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; }
+        .entity-icon.blue { background: rgba(37,99,235,0.08); color: var(--accent-blue); }
+        .entity-icon.green { background: rgba(22,163,74,0.08); color: var(--accent-green); }
+        .entity-header h3 { font-size: 1.05rem; font-weight: 650; }
+        .entity-type { font-size: 0.78rem; color: var(--text-muted); }
+        .entity-details { display: flex; flex-direction: column; gap: 8px; }
+        .entity-detail { display: flex; justify-content: space-between; padding: 6px 10px; background: var(--bg-item); border-radius: 6px; font-size: 0.82rem; }
+        .entity-detail .label { color: var(--text-muted); font-weight: 500; }
+        .entity-detail .value { color: var(--text-primary); font-weight: 500; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+
+        .partners-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+        .partner-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 22px 16px; text-align: center; box-shadow: var(--shadow-sm); transition: all 0.2s; animation: fadeUp 0.4s ease forwards; opacity: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .partner-logo { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+        .partner-logo img { width: 44px; height: 44px; border-radius: 10px; object-fit: contain; }
+        .partner-logo svg { width: 44px; height: 44px; }
+        .partner-card:nth-child(1){animation-delay:.04s} .partner-card:nth-child(2){animation-delay:.07s}
+        .partner-card:nth-child(3){animation-delay:.10s} .partner-card:nth-child(4){animation-delay:.13s}
+        .partner-card:nth-child(5){animation-delay:.16s} .partner-card:nth-child(6){animation-delay:.19s}
+        .partner-card:nth-child(7){animation-delay:.22s} .partner-card:nth-child(8){animation-delay:.25s}
+        .partner-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-md); }
+        .partner-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 3px; }
+        .partner-role { font-size: 0.75rem; color: var(--text-muted); }
+
+        footer { border-top: 1px solid var(--border); padding: 36px 2rem; text-align: center; background: var(--bg-secondary); }
+        .footer-inner { max-width: 1120px; margin: 0 auto; }
+        .footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 14px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--text-secondary); }
+        .footer-copy { color: var(--text-muted); font-size: 0.75rem; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.8rem; }
+            .member-card { grid-template-columns: 1fr; text-align: center; }
+            .member-avatar { margin: 0 auto; width: 120px; height: 120px; font-size: 2.5rem; }
+            .member-links, .career-track, .credentials-grid { justify-content: center; }
+            .entities-grid { grid-template-columns: 1fr; }
+            .partners-grid { grid-template-columns: repeat(2, 1fr); }
+            .nav-links { display: none; }
+        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-inner">
+        <a href="../" class="nav-logo"><img src="../app/logo_efix_400x400.jpg" alt="EFIX">efixDI+</a>
+        <ul class="nav-links">
+            <li><a href="../">Home</a></li>
+            <li><a href="../app/">App</a></li>
+            <li><a href="../protocol/">Protocol</a></li>
+            <li><a href="../listings/">Listings</a></li>
+            <li><a href="./" class="active">Team</a></li>
+            <li><a href="../app/" class="nav-cta">Launch App &rarr;</a></li>
+        </ul>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-badge">CVM Registered Securitizer &middot; Est. 2025</div>
+    <h1>Meet the <span>Team</span></h1>
+    <p>Capital markets veterans, world-class engineers, and data scientists building the infrastructure connecting Brazilian fixed income to DeFi composability.</p>
+</section>
+
+<!-- LEADERSHIP -->
+<section class="section">
+    <div class="section-header"><h2>Leadership</h2></div>
+
+    <!-- ERNESTO -->
+    <div class="member-card">
+        <div class="member-avatar">EO</div>
+        <div class="member-info">
+            <h3>Ernesto Luiz Otero Neto</h3>
+            <div class="member-title">Chief Executive Officer &mdash; EFIX Securitizadora &amp; HausBank</div>
+            <div class="member-bio">
+                Economist with 15+ years across capital markets, structured finance, and fintech. Started his career at Goldman Sachs, then moved to investment banking in Brazil before founding a development company that was successfully sold in 2021. Subsequently founded Lobie, managing R$13 billion in assets under management, before launching HausBank and EFIX Securitizadora to bridge regulated Brazilian fixed income with decentralized finance.
+            </div>
+            <div class="member-bio">
+                Designed and built the efixDI+ protocol end-to-end: from CVM regulatory architecture through smart contract deployment across Polygon and Base to DeFi integrations on Morpho Blue. Led the structuring of R$180MM+ in tokenized receivables with &lt;0.5% default rates.
+            </div>
+            <div class="member-links">
+                <a href="https://www.linkedin.com/in/ernesto-otero-96219569/" target="_blank" class="member-link">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>LinkedIn
+                </a>
+                <a href="https://github.com/Develop-ltda" target="_blank" class="member-link">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub
+                </a>
+                <a href="mailto:ernesto.otero@hausbank.com.br" class="member-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>Email
+                </a>
+            </div>
+            <div class="career-track">
+                <span class="career-tag">Goldman Sachs</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> IB Brasil</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Dev Co. (sold 2021)</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Lobie (R$13B AUM)</span>
+                <span class="career-tag highlight-blue"><span class="arrow">&rarr;</span> EFIX &amp; HausBank</span>
+            </div>
+            <div class="credentials-grid">
+                <div class="credential-item"><span class="cred-dot blue"></span> CVM Registered Securitizer</div>
+                <div class="credential-item"><span class="cred-dot green"></span> R$180MM+ Structured</div>
+                <div class="credential-item"><span class="cred-dot purple"></span> R$13B AUM (Lobie)</div>
+                <div class="credential-item"><span class="cred-dot amber"></span> Economist</div>
+                <div class="credential-item"><span class="cred-dot cyan"></span> Big Data &amp; Data Science</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JEFFERSON -->
+    <div class="member-card">
+        <div class="member-avatar green">JS</div>
+        <div class="member-info">
+            <h3>Jefferson Luiz Moises da Silveira</h3>
+            <div class="member-title green">Chief Technology Officer &mdash; HausBank</div>
+            <div class="member-bio">
+                Software engineering leader with deep experience at the world's top tech companies. Former Engineering Manager at Google (Sunnyvale, 2+ years in Software Management), Software Engineering Manager at Facebook (Menlo Park, 1 year 10 months), and Software Engineer at Snap Inc. where he designed scalable backend services on Google Cloud for the ads delivery infrastructure. Previously held senior roles at Wildlife Studios in Palo Alto.
+            </div>
+            <div class="member-bio">
+                Holds a PhD in Computer Science from Universidade Estadual de Campinas (Unicamp) with thesis research on combinatorial optimization algorithms, plus a Master's degree in Computer Science from the same institution. Leads HausBank's core engineering team, architecting the banking infrastructure, PIX payment integrations, and API systems powering efixDI+.
+            </div>
+            <div class="member-links">
+                <a href="https://www.linkedin.com/in/jefferson-silveira/" target="_blank" class="member-link">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>LinkedIn
+                </a>
+            </div>
+            <div class="career-track">
+                <span class="career-tag">PhD Unicamp</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Snap Inc.</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Facebook</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Wildlife Studios</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Google</span>
+                <span class="career-tag highlight-green"><span class="arrow">&rarr;</span> HausBank CTO</span>
+            </div>
+            <div class="credentials-grid">
+                <div class="credential-item"><span class="cred-dot green"></span> PhD Computer Science, Unicamp</div>
+                <div class="credential-item"><span class="cred-dot blue"></span> Ex-Google Engineering Manager</div>
+                <div class="credential-item"><span class="cred-dot purple"></span> Ex-Facebook SWE Manager</div>
+                <div class="credential-item"><span class="cred-dot amber"></span> Ex-Snap Software Engineer</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIAGO -->
+    <div class="member-card">
+        <div class="member-avatar purple">TD</div>
+        <div class="member-info">
+            <h3>Tiago Dantas, PhD</h3>
+            <div class="member-title purple">Co-Founder &mdash; HausBank &amp; Telemetrics</div>
+            <div class="member-bio">
+                Data science and fintech leader with 10+ years spanning machine learning, marketing analytics, and digital transformation. Co-Founder at HausBank and Telemetrics (Red Pointt), with experience as Partner at Tech and Data, Data Science Manager at Globosat/Middle Studios, and Head of Data Science / CDO. Created one of Brazil's first undergraduate programs in "Big Data and Data Science" — recognized as a pioneering initiative in the country's academic landscape.
+            </div>
+            <div class="member-bio">
+                Holds a PhD from Pontif&iacute;cia Universidade Cat&oacute;lica do Rio de Janeiro (PUC-Rio) and brings deep expertise in Python, R, SQL, predictive modeling, and marketing analytics to HausBank's data-driven operations and protocol intelligence layer.
+            </div>
+            <div class="member-links">
+                <a href="https://www.linkedin.com/in/tiagodantas/" target="_blank" class="member-link">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>LinkedIn
+                </a>
+            </div>
+            <div class="career-track">
+                <span class="career-tag">PhD PUC-Rio</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Big Data Professor</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Head of Data Science</span>
+                <span class="career-tag"><span class="arrow">&rarr;</span> Partner, Tech&amp;Data</span>
+                <span class="career-tag highlight-purple"><span class="arrow">&rarr;</span> HausBank Co-Founder</span>
+            </div>
+            <div class="credentials-grid">
+                <div class="credential-item"><span class="cred-dot purple"></span> PhD, PUC-Rio</div>
+                <div class="credential-item"><span class="cred-dot blue"></span> Python, R, SQL, Big Data</div>
+                <div class="credential-item"><span class="cred-dot green"></span> Created Big Data &amp; DS Degree</div>
+                <div class="credential-item"><span class="cred-dot amber"></span> ML &amp; Predictive Modeling</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- LEGAL ENTITIES -->
+<section class="section" style="padding-top: 0;">
+    <div class="section-header">
+        <h2>Legal Entities</h2>
+        <p>Regulated Brazilian corporate structure backing the efixDI+ protocol.</p>
+    </div>
+    <div class="entities-grid">
+        <div class="entity-card">
+            <div class="entity-header">
+                <div class="entity-icon blue">ES</div>
+                <div><h3>EFIX Securitizadora S.A.</h3><div class="entity-type">Closed Securitizer &mdash; Protocol Issuer</div></div>
+            </div>
+            <div class="entity-details">
+                <div class="entity-detail"><span class="label">CNPJ</span><span class="value">60.756.859/0001-57</span></div>
+                <div class="entity-detail"><span class="label">CVM Act</span><span class="value">23.635/2025</span></div>
+                <div class="entity-detail"><span class="label">Regulation</span><span class="value">CVM Res. 88/2022</span></div>
+                <div class="entity-detail"><span class="label">Products</span><span class="value">CRs, CRIs, CRAs</span></div>
+                <div class="entity-detail"><span class="label">Address</span><span class="value" style="font-family:Inter,sans-serif">Av. Rio Branco, 40 - 21&ordm;, Centro, RJ</span></div>
+            </div>
+        </div>
+        <div class="entity-card">
+            <div class="entity-header">
+                <div class="entity-icon green">HB</div>
+                <div><h3>HausBank</h3><div class="entity-type">Fintech &mdash; Payment Infrastructure</div></div>
+            </div>
+            <div class="entity-details">
+                <div class="entity-detail"><span class="label">Role</span><span class="value" style="font-family:Inter,sans-serif">PIX &amp; Banking APIs</span></div>
+                <div class="entity-detail"><span class="label">Features</span><span class="value" style="font-family:Inter,sans-serif">PIX In/Out, BRTH Token</span></div>
+                <div class="entity-detail"><span class="label">Integration</span><span class="value" style="font-family:Inter,sans-serif">OAuth2, REST APIs</span></div>
+                <div class="entity-detail"><span class="label">Status</span><span class="value" style="font-family:Inter,sans-serif;color:var(--accent-green)">Operational</span></div>
+                <div class="entity-detail"><span class="label">Website</span><span class="value"><a href="https://hausbank.com.br" target="_blank" style="color:var(--accent-blue);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:0.78rem">hausbank.com.br</a></span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PARTNERS -->
+<section class="section" style="padding-top: 0;">
+    <div class="section-header">
+        <h2>Partners &amp; Infrastructure</h2>
+        <p>Technology and service providers powering the efixDI+ protocol stack.</p>
+    </div>
+    <div class="partners-grid">
+        <div class="partner-card">
+            <div class="partner-logo"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="46" stroke="#2563eb" stroke-width="4"/><circle cx="50" cy="50" r="28" fill="#2563eb"/><circle cx="50" cy="50" r="12" fill="#fff"/></svg></div>
+            <div class="partner-name">Morpho Blue</div><div class="partner-role">Lending Protocol</div>
+        </div>
+        <div class="partner-card">
+            <div class="partner-logo"><svg viewBox="0 0 100 100" fill="none"><path d="M50 10L15 30v40l35 20 35-20V30L50 10z" fill="#fff" stroke="#111" stroke-width="3"/><path d="M50 10v40M50 50l35-20M50 50L15 30" stroke="#111" stroke-width="3"/><circle cx="50" cy="50" r="8" fill="#111"/></svg></div>
+            <div class="partner-name">LayerZero V2</div><div class="partner-role">Cross-Chain Bridge</div>
+        </div>
+        <div class="partner-card">
+            <div class="partner-logo"><svg viewBox="0 0 100 100"><path d="M50 5L62 38h35L67 58l12 33L50 71 21 91l12-33L4 38h35L50 5z" fill="none" stroke="#375BD2" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="50" r="10" fill="#375BD2"/></svg></div>
+            <div class="partner-name">Chainlink</div><div class="partner-role">BRL/USD Oracle</div>
+        </div>
+        <div class="partner-card">
+            <div class="partner-logo"><svg viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="8" fill="none" stroke="#4E5EE4" stroke-width="4"/><path d="M30 50h40M50 30v40" stroke="#4E5EE4" stroke-width="6" stroke-linecap="round"/></svg></div>
+            <div class="partner-name">OpenZeppelin</div><div class="partner-role">Security Audit</div>
+        </div>
+        <div class="partner-card">
+            <div class="partner-logo"><svg viewBox="0 0 100 100"><polygon points="50,8 92,50 50,92 8,50" fill="none" stroke="#8247E5" stroke-width="4"/><polygon points="50,28 72,50 50,72 28,50" fill="#8247E5"/></svg></div>
+            <div class="partner-name">Polygon PoS</div><div class="partner-role">L1 Network</div>
+        </div>
+        <div class="partner-card">
+            <div class="partner-logo"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="#0052FF"/><path d="M50 22c15.46 0 28 12.54 28 28s-12.54 28-28 28-28-12.54-28-28 12.54-28 28-28z" fill="#0052FF"/><path d="M40 40h20v20H40z" rx="4" fill="#fff"/></svg></div>
+            <div class="partner-name">Base (Coinbase)</div><div class="partner-role">L2 Network</div>
+        </div>
+        <div class="partner-card">
+            <div class="partner-logo"><svg viewBox="0 0 100 100"><rect x="12" y="12" width="76" height="76" rx="16" fill="#00C26F"/><text x="50" y="60" text-anchor="middle" fill="#fff" font-family="Inter,sans-serif" font-weight="700" font-size="30">G</text></svg></div>
+            <div class="partner-name">Genial IAAS</div><div class="partner-role">DI Fund Provider</div>
+        </div>
+        <div class="partner-card">
+            <div class="partner-logo"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#1a1a2e" stroke-width="4"/><path d="M30 60 Q40 30 50 50 Q60 70 70 40" stroke="#1a1a2e" stroke-width="5" fill="none" stroke-linecap="round"/></svg></div>
+            <div class="partner-name">DefiLlama</div><div class="partner-role">TVL Aggregator</div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="../">Home</a><a href="../app/">App</a><a href="../protocol/">Protocol</a>
+            <a href="../listings/">Listings</a><a href="https://github.com/Develop-ltda" target="_blank">GitHub</a>
+            <a href="https://x.com/efix_finance" target="_blank">X / Twitter</a><a href="mailto:contato@efix.com.br">Contact</a>
+        </div>
+        <div class="footer-copy">&copy; 2026 Efix Securitizadora S.A. &middot; CNPJ 60.756.859/0001-57 &middot; CVM Act 23.635/2025</div>
+    </div>
+</footer>
+
+</body>
+</html>
