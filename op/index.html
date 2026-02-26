@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cronograma OPs — efixDI+</title>
+  <meta name="description" content="Pipeline de ofertas públicas EFIX. Resolução CVM 88, Crowdfunding & Securitização." />
+  <link rel="icon" href="/logo_efix_400x400.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'IBM Plex Mono', 'SF Mono', monospace; background: #fafafa; color: #18181b; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+    @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    button { font-family: inherit; cursor: pointer; }
+    button:hover { opacity: 0.88; }
+    a { color: inherit; text-decoration: none; }
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+      .table-grid { font-size: 11px !important; grid-template-columns: 1.4fr 1fr 1fr 1.1fr 0.7fr !important; }
+      .table-hide { display: none !important; }
+      .gantt-label { width: 100px !important; font-size: 11px !important; }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr !important; }
+      .table-grid { grid-template-columns: 1fr 1fr 1fr !important; font-size: 10px !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    /* ─── DATA ─── */
+    const OFERTAS = [
+      { id:1, cliente:"Britto", tipo:"Equity Studios", valor:1000000, cadastro:"2026-01-01", inicioReserva:"2026-03-20", fimReserva:"2026-03-25", liquidacao:"2026-03-26", status:"Assinado", slot:true, responsavel:"Ernesto" },
+      { id:2, cliente:"Use Empreendimentos", tipo:"Dívida + Equity", valor:5500000, cadastro:"2026-05-01", inicioReserva:"2026-03-01", fimReserva:"2026-03-15", liquidacao:"2026-03-20", status:"Contrato enviado", slot:true, responsavel:"Ernesto" },
+      { id:3, cliente:"Fator", tipo:"Equity Studios", valor:10000000, cadastro:"2026-05-01", inicioReserva:"2026-03-01", fimReserva:"2026-03-15", liquidacao:"2026-03-25", status:"Em Análise", slot:true, responsavel:"Ernesto" },
+      { id:4, cliente:"Valente Empreendimentos", tipo:"Equity Studios", valor:1000000, cadastro:"2026-01-02", inicioReserva:"2026-03-20", fimReserva:"2026-03-25", liquidacao:"2026-04-05", status:"Pendente", slot:true, responsavel:"Ernesto" },
+    ];
+
+    const STATUS = {
+      "Assinado":        { c:"#16a34a", bg:"rgba(22,163,74,0.06)",  b:"rgba(22,163,74,0.18)" },
+      "Contrato enviado":{ c:"#2563eb", bg:"rgba(37,99,235,0.06)",  b:"rgba(37,99,235,0.18)" },
+      "Em Análise":      { c:"#d97706", bg:"rgba(217,119,6,0.06)",  b:"rgba(217,119,6,0.18)" },
+      "Pendente":        { c:"#71717a", bg:"rgba(113,113,122,0.06)",b:"rgba(113,113,122,0.18)" },
+    };
+
+    const fmt  = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+    const fmtD = d => { if(!d) return "—"; const [y,m,day]=d.split("-"); return `${day}/${m}`; };
+    const MN = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+    const WD = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const dim = (y,m) => new Date(y,m+1,0).getDate();
+    const fdm = (y,m) => new Date(y,m,1).getDay();
+
+    /* ─── COMPONENTS ─── */
+
+    function NavBar() {
+      return (
+        <nav style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 32px",borderBottom:"1px solid #e4e4e7",background:"#fff",position:"sticky",top:0,zIndex:100}}>
+          <div style={{display:"flex",alignItems:"center",gap:"28px"}}>
+            <a href="/" style={{fontWeight:700,fontSize:"17px",fontStyle:"italic",letterSpacing:"-0.5px",color:"#09090b",display:"flex",alignItems:"center",gap:"8px"}}>
+              <img src="/logo_efix_400x400.jpg" alt="" style={{width:"24px",height:"24px",borderRadius:"5px"}} onError={e=>{e.target.style.display="none"}}/>
+              efixDI+
+            </a>
+            <div style={{display:"flex",gap:"2px",fontSize:"13px",color:"#a1a1aa"}}>
+              <a href="/app/" style={{padding:"6px 12px",borderRadius:"6px",transition:"background 0.15s"}} onMouseEnter={e=>e.target.style.background="#f4f4f5"} onMouseLeave={e=>e.target.style.background="transparent"}>App</a>
+              <a href="/protocol/" style={{padding:"6px 12px",borderRadius:"6px",transition:"background 0.15s"}} onMouseEnter={e=>e.target.style.background="#f4f4f5"} onMouseLeave={e=>e.target.style.background="transparent"}>Protocol</a>
+              <a href="/range-monitor.html" style={{padding:"6px 12px",borderRadius:"6px",transition:"background 0.15s"}} onMouseEnter={e=>e.target.style.background="#f4f4f5"} onMouseLeave={e=>e.target.style.background="transparent"}>Range Monitor</a>
+              <a href="/listings/" style={{padding:"6px 12px",borderRadius:"6px",transition:"background 0.15s"}} onMouseEnter={e=>e.target.style.background="#f4f4f5"} onMouseLeave={e=>e.target.style.background="transparent"}>Listings</a>
+              <span style={{padding:"6px 12px",borderRadius:"6px",background:"#18181b",color:"#fafafa",fontWeight:600}}>OPs</span>
+            </div>
+          </div>
+          <div style={{fontSize:"11px",padding:"5px 14px",borderRadius:"20px",background:"#18181b",color:"#22c55e",display:"flex",alignItems:"center",gap:"6px",fontWeight:500}}>
+            <span style={{width:"6px",height:"6px",borderRadius:"50%",background:"#22c55e"}}/>
+            Mainnet · HausBank
+          </div>
+        </nav>
+      );
+    }
+
+    function StatsGrid({ofertas}) {
+      const totalV = ofertas.reduce((a,o)=>a+o.valor,0);
+      const n = ofertas.length;
+      return (
+        <div style={{marginBottom:"32px"}}>
+          <div style={{fontSize:"10.5px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#a1a1aa",marginBottom:"12px",fontWeight:500}}>POSITION OVERVIEW</div>
+          <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",border:"1px solid #e4e4e7",borderRadius:"12px",overflow:"hidden",background:"#fff"}}>
+            {[
+              {l:"VOLUME TOTAL", v:fmt(totalV), s:`${n} ofertas`},
+              {l:"TICKET MÉDIO", v:fmt(totalV/n), s:"por oferta"},
+              {l:"ASSINADOS",    v:String(ofertas.filter(o=>o.status==="Assinado").length), s:`de ${n} total`, a:"#16a34a"},
+              {l:"EM ANÁLISE",   v:String(ofertas.filter(o=>o.status==="Em Análise").length), s:"aguardando", a:"#d97706"},
+              {l:"SLOTS",        v:String(ofertas.filter(o=>o.slot).length), s:"disponíveis", a:"#7c3aed"},
+            ].map((s,i)=>(
+              <div key={i} style={{padding:"22px 24px",borderRight:i<4?"1px solid #e4e4e7":"none"}}>
+                <div style={{fontSize:"10px",letterSpacing:"1.8px",color:"#a1a1aa",marginBottom:"10px",fontWeight:500}}>{s.l}</div>
+                <div style={{fontSize:"28px",fontWeight:700,letterSpacing:"-1.2px",color:s.a||"#09090b",lineHeight:1}}>{s.v}</div>
+                <div style={{fontSize:"11px",color:"#a1a1aa",marginTop:"5px"}}>{s.s}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function PoolInfo() {
+      return (
+        <div style={{marginTop:"18px",padding:"12px 18px",background:"#f9fafb",borderRadius:"8px",border:"1px solid #f4f4f5",display:"flex",gap:"18px",fontSize:"11.5px",flexWrap:"wrap"}}>
+          <span><span style={{color:"#a1a1aa"}}>Pool: </span><span style={{color:"#16a34a",fontWeight:600}}>efixDI/USDC</span></span>
+          <span><span style={{color:"#a1a1aa"}}>Plataforma: </span><span style={{color:"#7c3aed",fontWeight:600}}>HausBank</span></span>
+          <span><span style={{color:"#a1a1aa"}}>Network: </span><span style={{color:"#16a34a",fontWeight:600}}>Polygon</span></span>
+          <span><span style={{color:"#a1a1aa"}}>Regime: </span><span style={{fontWeight:500}}>Res. CVM 88</span></span>
+          <span><span style={{color:"#a1a1aa"}}>Updated: </span><span style={{color:"#7c3aed",fontWeight:500}}>{new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span></span>
+        </div>
+      );
+    }
+
+    function DetailCard({o}) {
+      const st = STATUS[o.status]||STATUS.Pendente;
+      return (
+        <div style={{marginTop:"16px",border:"1px solid #e4e4e7",borderRadius:"12px",background:"#fff",padding:"28px",animation:"slideUp 0.25s ease"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"22px",flexWrap:"wrap",gap:"12px"}}>
+            <div>
+              <h2 style={{fontSize:"24px",fontWeight:700,fontStyle:"italic",letterSpacing:"-0.8px"}}>{o.cliente}</h2>
+              <div style={{color:"#a1a1aa",fontSize:"12px",marginTop:"4px"}}>{o.tipo}</div>
+            </div>
+            <span style={{padding:"6px 14px",borderRadius:"8px",background:st.bg,border:`1px solid ${st.b}`,color:st.c,fontSize:"12px",fontWeight:600}}>{o.status}</span>
+          </div>
+
+          {/* Position in Range bar */}
+          <div style={{marginBottom:"24px"}}>
+            <div style={{fontSize:"10px",letterSpacing:"2px",color:"#a1a1aa",textTransform:"uppercase",marginBottom:"12px",fontWeight:500}}>Position in Range</div>
+            <div style={{position:"relative",height:"40px",background:"#f4f4f5",borderRadius:"8px",overflow:"hidden"}}>
+              <div style={{position:"absolute",left:"8%",width:"44%",height:"100%",background:"linear-gradient(90deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04))",borderLeft:"3px solid #16a34a",display:"flex",alignItems:"center",paddingLeft:"12px",fontSize:"11px",color:"#16a34a",fontWeight:500}}>
+                Reserva {fmtD(o.inicioReserva)} → {fmtD(o.fimReserva)}
+              </div>
+              <div style={{position:"absolute",left:"68%",top:0,height:"100%",borderLeft:"2px dashed #7c3aed",display:"flex",alignItems:"center",paddingLeft:"10px",fontSize:"11px",color:"#7c3aed",fontWeight:500}}>
+                Liquidação {fmtD(o.liquidacao)}
+              </div>
+            </div>
+          </div>
+
+          {/* Info */}
+          <div style={{display:"flex",gap:"20px",flexWrap:"wrap",fontSize:"12px",padding:"14px 20px",background:"#f9fafb",borderRadius:"8px",border:"1px solid #f4f4f5"}}>
+            <span><span style={{color:"#a1a1aa"}}>Valor: </span><span style={{color:"#16a34a",fontWeight:600}}>{fmt(o.valor)}</span></span>
+            <span style={{color:"#e4e4e7"}}>·</span>
+            <span><span style={{color:"#a1a1aa"}}>Cadastro: </span><span style={{fontWeight:500}}>{fmtD(o.cadastro)}</span></span>
+            <span style={{color:"#e4e4e7"}}>·</span>
+            <span><span style={{color:"#a1a1aa"}}>Slot: </span><span style={{color:o.slot?"#16a34a":"#ef4444",fontWeight:500}}>{o.slot?"✓ Disponível":"Ocupado"}</span></span>
+            <span style={{color:"#e4e4e7"}}>·</span>
+            <span><span style={{color:"#a1a1aa"}}>Responsável: </span><span style={{color:"#16a34a",fontWeight:600}}>{o.responsavel}</span></span>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─── APP ─── */
+    function App() {
+      const [view, setView] = useState("table");
+      const [calM, setCalM] = useState(2);
+      const [calY]          = useState(2026);
+      const [sel, setSel]   = useState(null);
+      const [ok, setOk]     = useState(false);
+      useEffect(() => { setTimeout(()=>setOk(true), 60); }, []);
+
+      const days  = dim(calY, calM);
+      const first = fdm(calY, calM);
+
+      const EVT = { ri:{l:"Início Reserva",c:"#16a34a"}, rf:{l:"Fim Reserva",c:"#d97706"}, lq:{l:"Liquidação",c:"#7c3aed"} };
+
+      const calEv = useMemo(() => {
+        const ev = {};
+        OFERTAS.forEach(o => {
+          [["inicioReserva","ri"],["fimReserva","rf"],["liquidacao","lq"]].forEach(([k,t])=>{
+            if(!o[k]) return;
+            const d = new Date(o[k]);
+            if(d.getMonth()===calM && d.getFullYear()===calY){
+              const day=d.getDate();
+              if(!ev[day]) ev[day]=[];
+              ev[day].push({...o, evt:t});
+            }
+          });
+        });
+        return ev;
+      }, [calM, calY]);
+
+      const busy = useMemo(() => {
+        const s = new Set();
+        OFERTAS.forEach(o => {
+          const st = new Date(o.inicioReserva), en = new Date(o.liquidacao||o.fimReserva);
+          for(let d=new Date(st); d<=en; d.setDate(d.getDate()+1)){
+            if(d.getMonth()===calM && d.getFullYear()===calY) s.add(d.getDate());
+          }
+        });
+        return s;
+      }, [calM, calY]);
+
+      return (
+        <div style={{minHeight:"100vh",display:"flex",flexDirection:"column"}}>
+          <NavBar/>
+
+          <div style={{flex:1,maxWidth:"1300px",width:"100%",margin:"0 auto",padding:"36px 32px",opacity:ok?1:0,transform:ok?"translateY(0)":"translateY(14px)",transition:"all 0.7s cubic-bezier(0.16,1,0.3,1)"}}>
+
+            {/* Title */}
+            <div style={{textAlign:"center",marginBottom:"36px"}}>
+              <h1 style={{fontSize:"clamp(36px,5vw,56px)",fontWeight:700,fontStyle:"italic",letterSpacing:"-2.5px",lineHeight:1,color:"#09090b"}}>Cronograma OPs</h1>
+              <p style={{color:"#a1a1aa",fontSize:"14px",marginTop:"10px",fontFamily:"'Inter',sans-serif",fontWeight:400}}>
+                Pipeline de ofertas públicas · Res. CVM 88 · Crowdfunding &amp; Securitização
+              </p>
+            </div>
+
+            {/* Health Bar */}
+            <div style={{background:"rgba(22,163,74,0.05)",border:"1px solid rgba(22,163,74,0.14)",borderRadius:"10px",padding:"13px 22px",marginBottom:"28px",display:"flex",alignItems:"center",gap:"10px",fontSize:"13px",color:"#16a34a",fontWeight:500}}>
+              <span style={{fontSize:"15px"}}>✅</span>
+              Pipeline ativo — {OFERTAS.length} ofertas · {fmt(OFERTAS.reduce((a,o)=>a+o.valor,0))} em captação · {OFERTAS.filter(o=>o.status==="Assinado").length} assinada(s)
+            </div>
+
+            <StatsGrid ofertas={OFERTAS}/>
+
+            {/* View Switcher */}
+            <div style={{display:"flex",gap:"4px",marginBottom:"22px"}}>
+              {[{k:"table",l:"📋 Pipeline"},{k:"calendar",l:"📅 Calendário"}].map(v=>(
+                <button key={v.k} onClick={()=>setView(v.k)} style={{padding:"8px 20px",fontSize:"12.5px",border:"none",borderRadius:"8px",fontWeight:view===v.k?600:400,background:view===v.k?"#18181b":"#f4f4f5",color:view===v.k?"#fafafa":"#71717a",transition:"all 0.2s"}}>{v.l}</button>
+              ))}
+            </div>
+
+            {/* ═══ TABLE ═══ */}
+            {view==="table" && (
+              <div style={{animation:"fadeIn 0.3s ease"}}>
+                <div style={{border:"1px solid #e4e4e7",borderRadius:"12px",overflow:"hidden",background:"#fff"}}>
+                  {/* Header */}
+                  <div className="table-grid" style={{display:"grid",gridTemplateColumns:"1.6fr 1.1fr 1.1fr 1fr 1fr 1fr 1.2fr 0.7fr",padding:"14px 24px",background:"#f4f4f5",borderBottom:"1px solid #e4e4e7",fontSize:"10px",letterSpacing:"1.8px",textTransform:"uppercase",color:"#71717a",fontWeight:600,gap:"8px"}}>
+                    <span>Cliente</span><span className="table-hide">Tipo</span><span>Valor (R$)</span><span className="table-hide">Início</span><span className="table-hide">Fim</span><span>Liquidação</span><span>Status</span><span>Resp.</span>
+                  </div>
+                  {/* Rows */}
+                  {OFERTAS.map((o,i)=>{
+                    const st = STATUS[o.status]||STATUS.Pendente;
+                    return (
+                      <div key={o.id} onClick={()=>setSel(sel===o.id?null:o.id)}
+                        className="table-grid"
+                        style={{display:"grid",gridTemplateColumns:"1.6fr 1.1fr 1.1fr 1fr 1fr 1fr 1.2fr 0.7fr",padding:"18px 24px",borderBottom:i<OFERTAS.length-1?"1px solid #f4f4f5":"none",cursor:"pointer",fontSize:"13px",gap:"8px",alignItems:"center",transition:"background 0.12s",background:sel===o.id?"rgba(124,58,237,0.03)":"transparent"}}
+                        onMouseEnter={e=>{if(sel!==o.id) e.currentTarget.style.background="#fafafa"}}
+                        onMouseLeave={e=>{if(sel!==o.id) e.currentTarget.style.background="transparent"}}>
+                        <span style={{fontWeight:600,color:"#09090b",letterSpacing:"-0.3px"}}>{o.cliente}</span>
+                        <span className="table-hide" style={{color:"#52525b"}}>{o.tipo}</span>
+                        <span style={{fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{o.valor.toLocaleString("pt-BR")}</span>
+                        <span className="table-hide" style={{color:"#52525b",fontVariantNumeric:"tabular-nums"}}>{fmtD(o.inicioReserva)}</span>
+                        <span className="table-hide" style={{color:"#52525b",fontVariantNumeric:"tabular-nums"}}>{fmtD(o.fimReserva)}</span>
+                        <span style={{color:"#52525b",fontVariantNumeric:"tabular-nums"}}>{fmtD(o.liquidacao)}</span>
+                        <span><span style={{fontSize:"11px",padding:"4px 10px",borderRadius:"6px",background:st.bg,border:`1px solid ${st.b}`,color:st.c,fontWeight:500,whiteSpace:"nowrap"}}>{o.status}</span></span>
+                        <span style={{fontSize:"11px",padding:"4px 10px",borderRadius:"6px",background:"#16a34a",color:"#fff",fontWeight:600,textAlign:"center"}}>{o.responsavel}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {sel && (()=>{ const o=OFERTAS.find(x=>x.id===sel); return o ? <DetailCard o={o}/> : null; })()}
+              </div>
+            )}
+
+            {/* ═══ CALENDAR ═══ */}
+            {view==="calendar" && (
+              <div style={{animation:"fadeIn 0.3s ease"}}>
+                {/* Header */}
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"18px",flexWrap:"wrap",gap:"12px"}}>
+                  <div style={{fontSize:"10.5px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#a1a1aa",fontWeight:500}}>SLOTS DISPONÍVEIS</div>
+                  <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
+                    <button onClick={()=>setCalM(p=>Math.max(0,p-1))} style={{width:"34px",height:"34px",borderRadius:"8px",border:"1px solid #e4e4e7",background:"#fff",fontSize:"16px",color:"#71717a",display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+                    <span style={{fontSize:"17px",fontWeight:700,fontStyle:"italic",letterSpacing:"-0.5px",minWidth:"130px",textAlign:"center"}}>{MN[calM]} {calY}</span>
+                    <button onClick={()=>setCalM(p=>Math.min(11,p+1))} style={{width:"34px",height:"34px",borderRadius:"8px",border:"1px solid #e4e4e7",background:"#fff",fontSize:"16px",color:"#71717a",display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+                  </div>
+                  <div style={{display:"flex",gap:"14px",fontSize:"10px",flexWrap:"wrap"}}>
+                    {Object.entries(EVT).map(([k,v])=>(<span key={k} style={{display:"flex",alignItems:"center",gap:"4px",color:"#71717a"}}><span style={{width:"8px",height:"8px",borderRadius:"2px",background:v.c}}/>{v.l}</span>))}
+                    <span style={{display:"flex",alignItems:"center",gap:"4px",color:"#71717a"}}><span style={{width:"8px",height:"8px",borderRadius:"2px",background:"#dcfce7",border:"1px solid #bbf7d0"}}/>Slot livre</span>
+                  </div>
+                </div>
+
+                {/* Grid */}
+                <div style={{border:"1px solid #e4e4e7",borderRadius:"12px",overflow:"hidden",background:"#fff"}}>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",borderBottom:"1px solid #e4e4e7",background:"#f4f4f5"}}>
+                    {WD.map(d=>(<div key={d} style={{padding:"10px",textAlign:"center",fontSize:"10px",letterSpacing:"1.5px",color:"#a1a1aa",textTransform:"uppercase",fontWeight:600}}>{d}</div>))}
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
+                    {Array.from({length:first}).map((_,i)=>(<div key={`e${i}`} style={{minHeight:"88px",borderBottom:"1px solid #f4f4f5",borderRight:"1px solid #f4f4f5",background:"#fafafa"}}/>))}
+                    {Array.from({length:days}).map((_,i)=>{
+                      const day=i+1, ev=calEv[day]||[], we=(first+i)%7===0||(first+i)%7===6, free=!busy.has(day)&&!we;
+                      return (
+                        <div key={day} style={{minHeight:"88px",borderBottom:"1px solid #f4f4f5",borderRight:"1px solid #f4f4f5",padding:"6px 7px",background:free?"rgba(220,252,231,0.25)":we?"#fafafa":"#fff"}}>
+                          <div style={{fontSize:"12px",fontWeight:ev.length?700:400,color:we?"#d4d4d8":"#09090b",marginBottom:"4px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                            {day}
+                            {free && <span style={{fontSize:"7.5px",background:"#dcfce7",color:"#16a34a",padding:"1px 5px",borderRadius:"3px",fontWeight:700,letterSpacing:"0.5px"}}>LIVRE</span>}
+                          </div>
+                          <div style={{display:"flex",flexDirection:"column",gap:"2px"}}>
+                            {ev.map((e,j)=>{const et=EVT[e.evt]; return (<div key={j} style={{fontSize:"9px",padding:"2px 5px",borderRadius:"3px",background:`${et.c}12`,borderLeft:`2px solid ${et.c}`,color:et.c,fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{e.cliente.split(" ")[0]}</div>);})}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Gantt */}
+                <div style={{marginTop:"22px",border:"1px solid #e4e4e7",borderRadius:"12px",background:"#fff",padding:"26px"}}>
+                  <div style={{fontSize:"10.5px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#a1a1aa",marginBottom:"18px",fontWeight:500}}>OCUPAÇÃO DE SLOTS · {MN[calM]} {calY}</div>
+                  {OFERTAS.map(o=>{
+                    const s=new Date(o.inicioReserva),e=new Date(o.liquidacao||o.fimReserva);
+                    const ms=new Date(calY,calM,1),me=new Date(calY,calM+1,0);
+                    if(e<ms||s>me) return null;
+                    const eS=Math.max(s.getDate(),1),eE=Math.min(e.getDate(),days);
+                    const lp=((eS-1)/days)*100,wp=((eE-eS+1)/days)*100;
+                    const st=STATUS[o.status]||STATUS.Pendente;
+                    return (
+                      <div key={o.id} style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"10px"}}>
+                        <div className="gantt-label" style={{width:"150px",fontSize:"12px",fontWeight:600,color:"#09090b",flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.cliente}</div>
+                        <div style={{flex:1,height:"30px",background:"#f4f4f5",borderRadius:"6px",position:"relative",overflow:"hidden"}}>
+                          <div style={{position:"absolute",left:`${lp}%`,width:`${wp}%`,height:"100%",background:`linear-gradient(90deg,${st.c}25,${st.c}10)`,borderLeft:`3px solid ${st.c}`,borderRadius:"4px",display:"flex",alignItems:"center",paddingLeft:"10px",fontSize:"10px",color:st.c,fontWeight:500}}>{fmtD(o.inicioReserva)} → {fmtD(o.liquidacao)}</div>
+                        </div>
+                        <span style={{fontSize:"10px",padding:"3px 9px",borderRadius:"5px",background:st.bg,border:`1px solid ${st.b}`,color:st.c,fontWeight:500,whiteSpace:"nowrap",flexShrink:0}}>{o.status}</span>
+                      </div>
+                    );
+                  })}
+                  <PoolInfo/>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <footer style={{borderTop:"1px solid #e4e4e7",padding:"24px 32px",textAlign:"center",fontSize:"11px",color:"#a1a1aa",background:"#fff",marginTop:"auto"}}>
+            <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"8px",marginBottom:"6px"}}>
+              <img src="/logo_efix_400x400.jpg" alt="EFIX" style={{width:"20px",height:"20px",borderRadius:"4px"}} onError={e=>{e.target.style.display="none"}}/>
+              <span style={{fontWeight:600,color:"#52525b"}}>efixDI+</span>
+            </div>
+            © 2026 Efix Securitizadora S.A. · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025<br/>
+            <span style={{color:"#d4d4d8"}}>Polygon · Base · Morpho Blue · LayerZero</span>
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>
