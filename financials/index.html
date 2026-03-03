@@ -134,6 +134,7 @@ tr:hover{background:rgba(0,0,0,.015)}
   <button onclick="go('negociacoes',this)">Negociações</button>
   <button onclick="go('charts',this)">Gráficos</button>
   <button onclick="go('insights',this)">Insights</button>
+  <button onclick="go('fireblocks',this)">🔥 Fireblocks</button>
 </div>
 
 <!-- DRE -->
@@ -185,6 +186,24 @@ tr:hover{background:rgba(0,0,0,.015)}
 <div class="sec-label">Strategic Insights</div>
 <div id="insightsBox"></div>
 <div class="grid2"><div class="card full"><h3>Projeção 6 Meses</h3><div class="ch"><canvas id="c8"></canvas></div></div></div>
+</div>
+
+<!-- FIREBLOCKS -->
+<div id="p-fireblocks" class="hide">
+<div class="sec-label">Fireblocks Reconciliation</div>
+<div id="fbUpload" style="border:2px dashed var(--border);border-radius:12px;padding:48px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:32px" ondragover="event.preventDefault();this.style.borderColor='#7c3aed';this.style.background='rgba(124,58,237,.03)'" ondragleave="this.style.borderColor='var(--border)';this.style.background='transparent'" ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='transparent';handleFBFile(event.dataTransfer.files[0])">
+  <div style="font-size:32px;margin-bottom:12px">🔥</div>
+  <div style="font-weight:600;margin-bottom:8px">Drop Fireblocks CSV here</div>
+  <div style="color:var(--muted);font-size:13px">transactions_report_*.csv from Fireblocks Console</div>
+  <input type="file" id="fbFileInput" accept=".csv" style="display:none" onchange="handleFBFile(this.files[0])">
+  <button onclick="document.getElementById('fbFileInput').click()" style="margin-top:16px;padding:8px 20px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:inherit;font-size:13px">or click to browse</button>
+</div>
+<div id="fbResults" style="display:none">
+  <div id="fbSummary"></div>
+  <div id="fbMonthly" style="margin-top:32px"></div>
+  <div id="fbReconcile" style="margin-top:32px"></div>
+  <div id="fbTxTable" style="margin-top:32px"></div>
+</div>
 </div>
 
 </div>
@@ -411,6 +430,160 @@ function render(D){
   let sO=lS,sB=lS,sP=lS,dO=[],dB=[],dP=[];
   pM.forEach(()=>{sO+=avgR*1.4-avgB;sB+=avgR-avgB;sP+=avgR*.6-avgB;dO.push(sO);dB.push(sB);dP.push(sP)});
   mc('c8',{type:'line',data:{labels:pM,datasets:[{label:'Otimista +40%',data:dO,borderColor:CL.pag,borderDash:[6,4],tension:.3,fill:false,borderWidth:2,pointRadius:4,pointBackgroundColor:CL.pag},{label:'Base',data:dB,borderColor:CL.blue,tension:.3,fill:false,borderWidth:2,pointRadius:4,pointBackgroundColor:CL.blue},{label:'Pessimista -40%',data:dP,borderColor:CL.red,borderDash:[6,4],tension:.3,fill:false,borderWidth:2,pointRadius:4,pointBackgroundColor:CL.red}]},options:BO});
+}
+
+// ============================================================
+// FIREBLOCKS CSV PARSER & RECONCILIATION
+// ============================================================
+const STABLECOINS = new Set(['USDC','USDT']);
+const GAS_TOKENS = new Set(['POL','MATIC','ETH','TRX','BNB','SOL']);
+const SPAM_PATTERNS = ['t.me/','Claim','Link:','Swap your','⭐','✅'];
+const MAX_UINT = 1e30; // approvals have absurd amounts
+
+function classifyFBTx(r){
+  const usd = parseFloat(r['USD Amount'])||0;
+  const amt = parseFloat(r['Amount'])||0;
+  const asset = r['Asset Symbol']||'';
+  const dest = r['Destination']||'';
+  const status = r['Status']||'';
+  
+  if(status!=='COMPLETED') return 'ignored';
+  if(SPAM_PATTERNS.some(p=>asset.includes(p)||dest.includes(p))) return 'spam';
+  if(amt>MAX_UINT || (dest==='Uniswap' && usd<50)) return 'approval';
+  if(GAS_TOKENS.has(asset) && usd<5) return 'gas';
+  if(usd<1) return 'dust';
+  if(!STABLECOINS.has(asset)) return 'other';
+  if(usd<10) return 'micro';
+  return 'real';
+}
+
+function parseFBDate(s){
+  // "02 Mar 2026 15:08:10 GMT"
+  const months={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+  const p=s.split(' ');
+  return {day:p[0],month:months[p[1]]||'01',year:p[2],label:p[1]+'/'+p[2].slice(2),iso:p[2]+'-'+(months[p[1]]||'01')+'-'+p[0]};
+}
+
+function handleFBFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const lines = e.target.result.split('\n');
+    const headers = lines[0].split(',');
+    const rows = [];
+    for(let i=1;i<lines.length;i++){
+      if(!lines[i].trim()) continue;
+      // Handle CSV with commas in quoted fields
+      const vals=[];let cur='',inQ=false;
+      for(let c=0;c<lines[i].length;c++){
+        const ch=lines[i][c];
+        if(ch==='"'){inQ=!inQ}
+        else if(ch===','&&!inQ){vals.push(cur);cur=''}
+        else{cur+=ch}
+      }
+      vals.push(cur);
+      const obj={};
+      headers.forEach((h,j)=>obj[h.trim()]=vals[j]||'');
+      obj._class=classifyFBTx(obj);
+      obj._usd=parseFloat(obj['USD Amount'])||0;
+      obj._fee=parseFloat(obj['Network Fee'])||0;
+      obj._amt=parseFloat(obj['Amount'])||0;
+      obj._date=parseFBDate(obj['Date']||'01 Jan 2025 00:00:00 GMT');
+      if(obj['Destination Type']==='Vault') obj._dir='in';
+      else obj._dir='out';
+      rows.push(obj);
+    }
+    renderFB(rows);
+  };
+  reader.readAsText(file);
+}
+
+function renderFB(rows){
+  const real=rows.filter(r=>r._class==='real');
+  const inflows=real.filter(r=>r._dir==='in');
+  const outflows=real.filter(r=>r._dir==='out');
+  const gas=rows.filter(r=>['gas','dust'].includes(r._class));
+  const spam=rows.filter(r=>['spam','approval'].includes(r._class));
+  
+  const sumUSD=arr=>arr.reduce((s,r)=>s+r._usd,0);
+  const sumFee=arr=>arr.reduce((s,r)=>s+r._fee,0);
+  
+  document.getElementById('fbUpload').style.display='none';
+  document.getElementById('fbResults').style.display='block';
+  
+  // SUMMARY
+  document.getElementById('fbSummary').innerHTML=`
+    <div class="grid3">
+      <div class="card"><div class="card-label">Total Inflows</div><div class="card-val green">${ff(sumUSD(inflows))}</div><div class="sub">${inflows.length} txs — Client deposits</div></div>
+      <div class="card"><div class="card-label">Total Outflows (Off-Ramp)</div><div class="card-val" style="color:#7c3aed">${ff(sumUSD(outflows))}</div><div class="sub">${outflows.length} txs — Transfero/Basic</div></div>
+      <div class="card"><div class="card-label">Net / Gas Fees</div><div class="card-val">${ff(sumUSD(inflows)-sumUSD(outflows))}</div><div class="sub">Gas: $${sumFee(real).toFixed(2)} · ${gas.length+spam.length} filtered (dust/gas/spam)</div></div>
+    </div>`;
+  
+  // MONTHLY BREAKDOWN
+  const byMonth={};
+  real.forEach(r=>{
+    const k=r._date.label;
+    if(!byMonth[k])byMonth[k]={label:k,sort:r._date.iso,in_usd:0,out_usd:0,in_n:0,out_n:0,fees:0};
+    if(r._dir==='in'){byMonth[k].in_usd+=r._usd;byMonth[k].in_n++}
+    else{byMonth[k].out_usd+=r._usd;byMonth[k].out_n++}
+    byMonth[k].fees+=r._fee;
+  });
+  const months=Object.values(byMonth).sort((a,b)=>a.sort.localeCompare(b.sort));
+  
+  let mHTML=`<div class="sec-label">Monthly Flow (Fireblocks)</div><div class="tbl-wrap"><table><thead><tr><th>Month</th><th>Inflows (USD)</th><th>#</th><th>Outflows (USD)</th><th>#</th><th>Net</th><th>Gas Fees</th></tr></thead><tbody>`;
+  months.forEach(m=>{
+    const net=m.in_usd-m.out_usd;
+    mHTML+=`<tr><td><strong>${m.label}</strong></td><td class="green">${ff(m.in_usd)}</td><td>${m.in_n}</td><td style="color:#7c3aed">${ff(m.out_usd)}</td><td>${m.out_n}</td><td class="${net>=0?'green':'red'}">${ff(net)}</td><td style="color:var(--muted)">$${m.fees.toFixed(2)}</td></tr>`;
+  });
+  const tIn=sumUSD(inflows),tOut=sumUSD(outflows),tNet=tIn-tOut;
+  mHTML+=`<tr style="font-weight:700;border-top:2px solid var(--border)"><td>TOTAL</td><td class="green">${ff(tIn)}</td><td>${inflows.length}</td><td style="color:#7c3aed">${ff(tOut)}</td><td>${outflows.length}</td><td class="${tNet>=0?'green':'red'}">${ff(tNet)}</td><td style="color:var(--muted)">$${sumFee(real).toFixed(2)}</td></tr>`;
+  mHTML+=`</tbody></table></div>`;
+  document.getElementById('fbMonthly').innerHTML=mHTML;
+  
+  // RECONCILIATION vs PLANILHA
+  if(DATA && DATA.negociacoes && DATA.negociacoes.by_month){
+    const planilha=DATA.negociacoes.by_month;
+    const planMap={};planilha.forEach(p=>planMap[p.label]={usd:p.usd,deals:p.deals,volume:p.volume});
+    
+    // Map FB month labels to dashboard labels
+    const fbMap={'Jun/25':'Jun/25','Jul/25':'Jul/25','Aug/25':'Ago/25','Sep/25':'Set/25','Oct/25':'Out/25','Nov/25':'Nov/25','Dec/25':'Dez/25','Jan/26':'Jan/26','Feb/26':'Fev/26','Mar/26':'Mar/26'};
+    
+    let rHTML=`<div class="sec-label">Reconciliation: Fireblocks × Planilha Remessas</div><div class="tbl-wrap"><table><thead><tr><th>Month</th><th>FB Inflows (USD)</th><th>FB Outflows (USD)</th><th>Planilha USD</th><th>Diff (Out vs Plan)</th><th>Status</th></tr></thead><tbody>`;
+    months.forEach(m=>{
+      const dashLabel=fbMap[m.label]||m.label;
+      const pl=planMap[dashLabel]||{usd:0,deals:0};
+      const diff=m.out_usd-pl.usd;
+      const pct=pl.usd>0?Math.abs(diff/pl.usd*100):0;
+      const status=pct<5?'✓ OK':pct<15?'⚠ Timing':'❌ Check';
+      rHTML+=`<tr><td><strong>${m.label}</strong></td><td class="green">${fd(m.in_usd)}</td><td style="color:#7c3aed">${fd(m.out_usd)}</td><td>${fd(pl.usd)}</td><td class="${Math.abs(diff)<500?'green':'red'}">${fd(diff)}</td><td>${status}</td></tr>`;
+    });
+    rHTML+=`</tbody></table></div><div class="sub" style="margin-top:8px;color:var(--muted)">Planilha = USD from Remessas sheet · FB Outflows = actual on-chain off-ramp · Diff = timing/FX between transfer creation and execution</div>`;
+    document.getElementById('fbReconcile').innerHTML=rHTML;
+  }
+  
+  // TRANSACTION TABLE (outflows only, most recent first)
+  const sorted=[...outflows].sort((a,b)=>b._date.iso.localeCompare(a._date.iso));
+  let tHTML=`<div class="sec-label">Off-Ramp Transactions (${outflows.length})</div><div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>USD</th><th>Asset</th><th>Destination</th><th>Note</th><th>Gas</th><th>TxHash</th></tr></thead><tbody>`;
+  sorted.forEach(r=>{
+    const hash=r['TxHash']||'';
+    const shortHash=hash?hash.slice(0,8)+'…':'';
+    const scanUrl=hash?`https://polygonscan.com/tx/${hash}`:'';
+    tHTML+=`<tr><td style="white-space:nowrap">${r._date.iso}</td><td>${r._amt.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td><strong>${fd(r._usd)}</strong></td><td>${r['Asset Symbol']}</td><td>${(r['Destination']||'').slice(0,25)}</td><td style="color:var(--muted);font-size:11px">${(r['Note']||'').slice(0,35)}</td><td style="color:var(--muted);font-size:11px">$${r._fee.toFixed(4)}</td><td style="font-size:11px">${scanUrl?`<a href="${scanUrl}" target="_blank" style="color:#7c3aed">${shortHash}</a>`:'-'}</td></tr>`;
+  });
+  tHTML+=`</tbody></table></div>`;
+  
+  // Also show inflows
+  const sortedIn=[...inflows].sort((a,b)=>b._date.iso.localeCompare(a._date.iso));
+  tHTML+=`<div class="sec-label" style="margin-top:32px">Client Deposits (${inflows.length})</div><div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>USD</th><th>Asset</th><th>Source</th><th>Gas</th><th>TxHash</th></tr></thead><tbody>`;
+  sortedIn.forEach(r=>{
+    const hash=r['TxHash']||'';
+    const shortHash=hash?hash.slice(0,8)+'…':'';
+    const scanUrl=hash?`https://polygonscan.com/tx/${hash}`:'';
+    tHTML+=`<tr><td style="white-space:nowrap">${r._date.iso}</td><td>${r._amt.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td><strong>${fd(r._usd)}</strong></td><td>${r['Asset Symbol']}</td><td>${(r['Source Address']||'').slice(0,12)}…</td><td style="color:var(--muted);font-size:11px">$${r._fee.toFixed(4)}</td><td style="font-size:11px">${scanUrl?`<a href="${scanUrl}" target="_blank" style="color:#7c3aed">${shortHash}</a>`:'-'}</td></tr>`;
+  });
+  tHTML+=`</tbody></table></div>`;
+  
+  document.getElementById('fbTxTable').innerHTML=tHTML;
 }
 
 init();
