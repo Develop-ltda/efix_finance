@@ -175,7 +175,7 @@ tr:hover{background:rgba(0,0,0,.015)}
 <div class="card rem-card"><h3><span class="tag tag-rem">Remessas</span> Volume Negociado / mês</h3><div class="ch"><canvas id="cNegVol"></canvas></div></div>
 <div class="card rem-card"><h3><span class="tag tag-rem">Remessas</span> Taxa 3% / mês</h3><div class="ch"><canvas id="cNegTaxa"></canvas></div></div>
 </div>
-<div class="card" style="margin-bottom:32px"><h3><span class="tag tag-rem">Remessas</span> &mdash; Deals 2026</h3><div class="tbl-wrap"><table class="tbl-deals"><thead><tr><th style="text-align:left">Descrição</th><th style="text-align:left">Cliente</th><th>Pgto Inc.</th><th>Taxa 3%</th><th>USD</th><th>🔥 FB</th><th>On-Chain</th><th>Spread R$ Est.</th><th>Resultado</th><th>St.</th></tr></thead><tbody id="dealsB"></tbody></table></div></div>
+<div class="card" style="margin-bottom:32px"><h3><span class="tag tag-rem">Remessas</span> &mdash; Deals 2026</h3><div class="tbl-wrap"><table class="tbl-deals"><thead><tr><th style="text-align:left">Descrição</th><th style="text-align:left">Cliente</th><th>Pgto Inc.</th><th>Taxa 3%</th><th>IOF</th><th>Val. Neg.</th><th>USD</th><th>Cotação</th><th>🔥 FB</th><th>On-Chain</th><th>Resultado</th><th>St.</th></tr></thead><tbody id="dealsB"></tbody></table></div></div>
 </div>
 
 <!-- GRÁFICOS -->
@@ -260,30 +260,33 @@ const FALLBACK = {
     {label:'Fev/26',royalties:{sawala_corretor:11858.30,sawala_imobiliaria:1884.40,bsj_corretor:20050.39,bsj_imobiliaria:0,remessas:23768.19,pagadoria:33793.09,total:57561.28},banco:{entradas:57501.73,saidas:-48698.61,aportes:0}}
   ],
   negociacoes:{
-    totals:{pgto_incorporador:1506334.36,taxa_3pct:37852.36,valor_negociado:1551427.52,total_usd:298532.40,deals_count:16,clientes_unicos:13},
+    totals:{pgto_incorporador:1506334.36,taxa_3pct:37852.36,valor_negociado:1549872.87,total_usd:298532.40,deals_count:20,clientes_unicos:14},
     deals:[
-      {mes:'01 Janeiro',data:'2026-01-16',descricao:'Arte Wave - Bloco 1 - 214',cliente:'Pedro Miguel Cardoso da Palma',pgto_incorporador:79349,taxa_3pct:2458.23,valor_negociado:82125.46,moeda:'EUR',valor_usd:15527.92,repasse:2458.23,status:'Sim'},
-      {mes:'01 Janeiro',data:'2026-01-13',descricao:'Arte Wave - Bloco 2 - 514',cliente:'Clemens Zuch',pgto_incorporador:10000,taxa_3pct:309.28,valor_negociado:10348.46,moeda:'EUR',valor_usd:1971.47,repasse:309.28,status:'Sim'},
-      {mes:'01 Janeiro',data:'2026-01-16',descricao:'Be in Rio - Praia Copacabana 1002',cliente:'Claudia Silva',pgto_incorporador:126800,taxa_3pct:3921.65,valor_negociado:131218.39,moeda:'EUR',valor_usd:24352.34,repasse:2856.78,status:'Sim'},
-      {mes:'01 Janeiro',data:'2026-01-21',descricao:'Be in Rio - Praia Copacabana 505',cliente:'Carlos Rodrigues',pgto_incorporador:12464.10,taxa_3pct:385.49,valor_negociado:12898.42,moeda:'EUR',valor_usd:2430.32,repasse:257.92,status:'Sim'},
-      {mes:'01 Janeiro',data:'2026-01-22',descricao:'Be in Rio - Praia Copacabana 208',cliente:'Edmond Van Wijngaarden',pgto_incorporador:76000,taxa_3pct:2350.52,valor_negociado:78648.25,moeda:'EUR',valor_usd:14950.11,repasse:2262.11,status:'Sim'},
-      {mes:'01 Janeiro',data:'2026-01-29',descricao:'Be in Rio - Praia Copacabana 1305',cliente:'Taylor Bennett Richter',pgto_incorporador:20000,taxa_3pct:618.56,valor_negociado:20696.91,moeda:'USD',valor_usd:3859,repasse:199.92,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-04',descricao:'Brise Studios Design 1211',cliente:'Andrzej Marian Witkowski',pgto_incorporador:40000,taxa_3pct:1237.11,valor_negociado:41393.81,moeda:'EUR',valor_usd:7940.96,repasse:1158.97,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-05',descricao:'MARE Ipanema - 103',cliente:'Gustavo Feio / Alexandre Duarte',pgto_incorporador:170988.80,taxa_3pct:3489.57,valor_negociado:175141.39,moeda:'USD',valor_usd:33533.53,repasse:3489.57,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-09',descricao:'Alma Ipanema - 1202',cliente:'Nima Razaghi Kashani',pgto_incorporador:290000,taxa_3pct:5918.37,valor_negociado:297042.86,moeda:'USD',valor_usd:57123.63,repasse:3981.89,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-09',descricao:'Arte Wave - Bloco 2 - 514',cliente:'Clemens Zuch',pgto_incorporador:4241.68,taxa_3pct:131.19,valor_negociado:4389.49,moeda:'EUR',valor_usd:889.67,repasse:131.19,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-11',descricao:'Canto RIO - 1009',cliente:'Rodrigo Velasco',pgto_incorporador:129080,taxa_3pct:3992.16,valor_negociado:133577.83,moeda:'USD',valor_usd:25888,repasse:3992.16,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-11',descricao:'Be in Rio - Praia Copacabana 510',cliente:'Francisco Hernandez Reboll',pgto_incorporador:10000,taxa_3pct:309.28,valor_negociado:10348.46,moeda:'EUR',valor_usd:1999.63,repasse:281.91,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-11',descricao:'MARE Ipanema - 103 (2)',cliente:'Gustavo Feio / Alexandre Duarte',pgto_incorporador:35165,taxa_3pct:717.65,valor_negociado:36019,moeda:'USD',valor_usd:6790,repasse:0,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-18',descricao:'MARE Ipanema - 103 (3)',cliente:'Gustavo Feio / Alexandre Duarte',pgto_incorporador:0,taxa_3pct:0,valor_negociado:972.42,moeda:'USD',valor_usd:231.25,repasse:224.51,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-13',descricao:'Arte Wave - Bloco 1 - 1029',cliente:'Sonia Santos Pardo',pgto_incorporador:4203.34,taxa_3pct:0,valor_negociado:4333.34,moeda:'USD',valor_usd:843.06,repasse:-13.36,status:'Sem Repasse'},
-      {mes:'02 Fevereiro',data:'2026-02-18',descricao:'AR Ipanema - Bloco 1 - 901',cliente:'Isabel Maria Ribeiro Moises',pgto_incorporador:70957.73,taxa_3pct:2203.20,valor_negociado:73719.07,moeda:'EUR',valor_usd:14129.28,repasse:1615.87,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-25',descricao:'Be in Rio - Praia Copacabana 505 (2)',cliente:'Carlos Rodrigues',pgto_incorporador:12464.10,taxa_3pct:385.49,valor_negociado:12898.42,moeda:'EUR',valor_usd:2460.13,repasse:0,status:'Sim'},
-      {mes:'02 Fevereiro',data:'2026-02-26',descricao:'Grand Thai - Sawasdee 1403',cliente:'Krishna Siqueira / Khalid Alsaudk',pgto_incorporador:14211.07,taxa_3pct:439.52,valor_negociado:14706.26,moeda:'USD',valor_usd:2906.38,repasse:0,status:'Sim'}
+      {mes:'01 Janeiro',data:'2026-01-16',descricao:'Arte Wave - Bloco 1 - 214',cliente:'Pedro Miguel Cardoso da Palma',pgto_incorporador:79349,taxa_3pct:2458.23,iof:318.23,valor_negociado:82125.46,cotacao:5.3446,valor_final:82990.52,moeda:'EUR',valor_usd:15527.92,repasse:2458.23,status:'Sim'},
+      {mes:'01 Janeiro',data:'2026-01-13',descricao:'Arte Wave - Bloco 2 - 514',cliente:'Clemens Zuch',pgto_incorporador:10000,taxa_3pct:309.28,iof:39.17,valor_negociado:10348.46,cotacao:5.3446,valor_final:10536.72,moeda:'EUR',valor_usd:1971.47,repasse:309.28,status:'Sim'},
+      {mes:'01 Janeiro',data:'2026-01-16',descricao:'Be in Rio - Praia Copacabana 1002',cliente:'Claudia Silva',pgto_incorporador:126800,taxa_3pct:3921.65,iof:496.74,valor_negociado:131218.39,cotacao:5.3446,valor_final:130153.52,moeda:'EUR',valor_usd:24352.34,repasse:2856.78,status:'Sim'},
+      {mes:'01 Janeiro',data:'2026-01-21',descricao:'Be in Rio - Praia Copacabana 505',cliente:'Carlos Rodrigues',pgto_incorporador:12464.10,taxa_3pct:385.49,iof:48.83,valor_negociado:12898.42,cotacao:5.2548,valor_final:12770.85,moeda:'EUR',valor_usd:2430.32,repasse:257.92,status:'Sim'},
+      {mes:'01 Janeiro',data:'2026-01-22',descricao:'Be in Rio - Praia Copacabana 208',cliente:'Edmond Van Wijngaarden',pgto_incorporador:76000,taxa_3pct:2350.52,iof:297.73,valor_negociado:78648.25,cotacao:5.2548,valor_final:78559.84,moeda:'EUR',valor_usd:14950.11,repasse:2262.11,status:'Sim'},
+      {mes:'01 Janeiro',data:'2026-01-29',descricao:'Be in Rio - Praia Copacabana 1305',cliente:'Taylor Bennett Richter',pgto_incorporador:20000,taxa_3pct:618.56,iof:78.35,valor_negociado:20696.91,cotacao:5.2548,valor_final:20278.27,moeda:'USD',valor_usd:3859,repasse:199.92,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-04',descricao:'Brise Studios Design 1211',cliente:'Andrzej Marian Witkowski',pgto_incorporador:40000,taxa_3pct:1237.11,iof:156.70,valor_negociado:41393.81,cotacao:5.2029,valor_final:41315.67,moeda:'EUR',valor_usd:7940.96,repasse:1158.97,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-05',descricao:'MARE Ipanema - 103',cliente:'Gustavo Feio / Alexandre Duarte',pgto_incorporador:170988.80,taxa_3pct:3489.57,iof:663.02,valor_negociado:175141.39,cotacao:5.2285,valor_final:175330.06,moeda:'USD',valor_usd:33533.53,repasse:3489.57,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-09',descricao:'Alma Ipanema - 1202',cliente:'Nima Razaghi Kashani',pgto_incorporador:290000,taxa_3pct:5918.37,iof:1124.49,valor_negociado:297042.86,cotacao:5.1661,valor_final:295106.38,moeda:'USD',valor_usd:57123.63,repasse:3981.89,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-09',descricao:'Arte Wave - Bloco 2 - 514',cliente:'Clemens Zuch',pgto_incorporador:4241.68,taxa_3pct:131.19,iof:16.62,valor_negociado:4389.49,cotacao:5.1696,valor_final:4599.21,moeda:'EUR',valor_usd:889.67,repasse:131.19,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-11',descricao:'Canto RIO - 1009',cliente:'Rodrigo Velasco',pgto_incorporador:129080,taxa_3pct:3992.16,iof:505.67,valor_negociado:133577.83,cotacao:5.1615,valor_final:133620.91,moeda:'USD',valor_usd:25888,repasse:3992.16,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-11',descricao:'Be in Rio - Praia Copacabana 510',cliente:'Francisco Hernandez Reboll',pgto_incorporador:10000,taxa_3pct:309.28,iof:39.18,valor_negociado:10348.46,cotacao:5.1615,valor_final:10321.09,moeda:'EUR',valor_usd:1999.63,repasse:281.91,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-11',descricao:'MARE Ipanema - 103 (2)',cliente:'Gustavo Feio / Alexandre Duarte',pgto_incorporador:35165,taxa_3pct:717.65,iof:136.35,valor_negociado:36019,cotacao:5.1615,valor_final:35046.58,moeda:'USD',valor_usd:6790,repasse:0,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-18',descricao:'MARE Ipanema - 103 (3)',cliente:'Gustavo Feio / Alexandre Duarte',pgto_incorporador:0,taxa_3pct:0,iof:0,valor_negociado:972.42,cotacao:5.1759,valor_final:1196.93,moeda:'USD',valor_usd:231.25,repasse:224.51,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-13',descricao:'Arte Wave - Bloco 1 - 1029',cliente:'Sonia Santos Pardo',pgto_incorporador:4203.34,taxa_3pct:0,iof:130.00,valor_negociado:4333.34,cotacao:5.1242,valor_final:4319.98,moeda:'USD',valor_usd:843.06,repasse:-13.36,status:'Sem Repasse'},
+      {mes:'02 Fevereiro',data:'2026-02-18',descricao:'AR Ipanema - Bloco 1 - 901',cliente:'Isabel Maria Ribeiro Moises',pgto_incorporador:70957.73,taxa_3pct:2203.20,iof:279.07,valor_negociado:73719.07,cotacao:5.1759,valor_final:73131.74,moeda:'EUR',valor_usd:14129.28,repasse:1615.87,status:'Sim'},
+      {mes:'02 Fevereiro',data:'2026-02-25',descricao:'Be in Rio - Praia Copacabana 505 (2)',cliente:'Carlos Rodrigues',pgto_incorporador:12464.10,taxa_3pct:385.49,iof:48.83,valor_negociado:12898.42,cotacao:0,valor_final:0,moeda:'EUR',valor_usd:2460.13,repasse:0,status:'Aguardando Cotação'},
+      {mes:'02 Fevereiro',data:'2026-02-26',descricao:'Grand Thai - Sawasdee 1403',cliente:'Krishna Siqueira / Khalid Alsaudk',pgto_incorporador:14211.07,taxa_3pct:439.52,iof:55.67,valor_negociado:14706.26,cotacao:0,valor_final:0,moeda:'USD',valor_usd:2906.38,repasse:0,status:'Aguardando Cotação'},
+      {mes:'02 Fevereiro',data:'2026-02-27',descricao:'Alma Ipanema - 1202 (2)',cliente:'Nima Razaghi Kashani',pgto_incorporador:323109.54,taxa_3pct:6594.37,iof:0,valor_negociado:329703.91,cotacao:5.126,valor_final:333971.04,moeda:'USD',valor_usd:65148.91,repasse:9578.17,status:'Sim'},
+      {mes:'03 Março',data:'2026-03-02',descricao:'Be in Rio - Praia Copacabana 510 (2)',cliente:'Francisco Hernandez Reboll',pgto_incorporador:77300,taxa_3pct:2390.72,iof:0,valor_negociado:79690.72,cotacao:5.158,valor_final:80225.45,moeda:'EUR',valor_usd:15556.81,repasse:2636.83,status:'Sim'}
     ],
     by_month:[
       {label:'Jan/26',volume:335935.89,taxa:10043.73,repasse:8344.24,usd:63091.16,deals:6},
-      {label:'Fev/26',volume:776937.67,taxa:17998.53,repasse:14862.71,usd:219884.43,deals:12}
+      {label:'Fev/26',volume:1106637.58,taxa:24592.90,repasse:24440.88,usd:285033.34,deals:13},
+      {label:'Mar/26',volume:79690.72,taxa:2390.72,repasse:2636.83,usd:15556.81,deals:1}
     ]
   }
 };
@@ -419,11 +422,18 @@ function render(D){
 
   // Deals table — reset FB match flags before matching
   if(FB_INFLOWS) FB_INFLOWS.forEach(f=>f._matched=false);
-  const fxMap=buildFXMap();
+  // Build BTG date→BRL map for realizado comparison
+  const btgByDate={};
+  if(BTG_DATA){
+    BTG_DATA.filter(b=>b._isTransfero&&b._val>0).forEach(b=>{
+      const d=b._iso; if(!btgByDate[d])btgByDate[d]=0; btgByDate[d]+=b._val;
+    });
+  }
+  // Group deals by FB outflow date to compare batches vs BTG
   const db=document.getElementById('dealsB');db.innerHTML='';
   const hasFB = !!FB_INFLOWS;
   const hasBTG = !!BTG_DATA;
-  let totalSpread=0, spreadCount=0;
+  let totalIOF=0;
   (neg.deals||[]).forEach(d=>{
     const isSim=d.status==='Sim';
     const fb=matchFBDeal(d);
@@ -433,30 +443,21 @@ function render(D){
     const txCell = !hasFB ? '' :
       fb ? '<a href="'+(fb.txhash.startsWith('0x')?'https://polygonscan.com/tx/'+fb.txhash:'https://tronscan.org/#/transaction/'+fb.txhash)+'" target="_blank" style="color:#7c3aed">'+fb.txhash.slice(0,8)+'…</a>' :
       '<span class="fb-miss">⚠</span>';
-    // Spread = (FB_USD × FX_rate_on_that_date) - Pgto Incorporador
-    let spreadCell='<span style="color:var(--muted)">—</span>';
-    if(fb && hasBTG){
-      const fx=fxMap[fb.date]||0;
-      if(fx>0){
-        const brlEst=fb.usd*fx;
-        const spread=brlEst-(d.pgto_incorporador||0);
-        totalSpread+=spread; spreadCount++;
-        spreadCell='<span style="color:'+(spread>=0?'#16a34a':'var(--red)')+';font-weight:600">'+ff(spread)+'</span>';
-      }
-    } else if(fb && !hasBTG){
-      spreadCell='<span style="color:var(--muted);font-size:9px">BTG CSV</span>';
-    }
     const rowClass = (hasFB && !fb) ? 'tr-rem fb-miss-row' : 'tr-rem';
     const cli = d.cliente.length>22 ? d.cliente.slice(0,20)+'…' : d.cliente;
     const desc = d.descricao.length>28 ? d.descricao.slice(0,26)+'…' : d.descricao;
-    db.insertAdjacentHTML('beforeend','<tr class="'+rowClass+'"><td style="text-align:left;font-weight:600">'+desc+'</td><td style="text-align:left">'+cli+'</td><td class="mono c-rem">'+ff(d.pgto_incorporador)+'</td><td class="mono c-rem" style="font-weight:600">'+ff(d.taxa_3pct)+'</td><td class="mono">'+fd(d.valor_usd)+'</td><td class="mono">'+fbCell+'</td><td>'+txCell+'</td><td class="mono">'+spreadCell+'</td><td class="mono c-rem">'+ff(d.repasse)+'</td><td><span class="deal-status '+(isSim?'sim':'nao')+'">'+(d.status||'-')+'</span></td></tr>')});
+    const cotCell = d.cotacao>0 ? d.cotacao.toFixed(4) : '<span style="color:var(--muted)">—</span>';
+    const vnCell = (d.valor_negociado||0)>0 ? ff(d.valor_negociado) : '<span style="color:var(--muted)">—</span>';
+    const iofCell = (d.iof||0)>0 ? ff(d.iof) : '<span style="color:var(--muted)">—</span>';
+    totalIOF+=(d.iof||0);
+    db.insertAdjacentHTML('beforeend','<tr class="'+rowClass+'"><td style="text-align:left;font-weight:600">'+desc+'</td><td style="text-align:left">'+cli+'</td><td class="mono c-rem">'+ff(d.pgto_incorporador)+'</td><td class="mono c-rem" style="font-weight:600">'+ff(d.taxa_3pct)+'</td><td class="mono c-rem">'+iofCell+'</td><td class="mono c-rem">'+vnCell+'</td><td class="mono">'+fd(d.valor_usd)+'</td><td class="mono">'+cotCell+'</td><td class="mono">'+fbCell+'</td><td>'+txCell+'</td><td class="mono c-rem">'+ff(d.repasse)+'</td><td><span class="deal-status '+(isSim?'sim':'nao')+'">'+(d.status||'-')+'</span></td></tr>')});
   // Deals total row
   const fbTotal=FB_INFLOWS?FB_INFLOWS.filter(f=>f._matched).reduce((s,f)=>s+f.usd,0):0;
   const fbMatched=FB_INFLOWS?FB_INFLOWS.filter(f=>f._matched).length:0;
   const dealCount=(neg.deals||[]).length;
   const repTotal=(neg.deals||[]).reduce((s,d)=>s+(d.repasse||0),0);
-  const spreadTotalCell=totalSpread>0?'<span style="color:#16a34a;font-weight:700">'+ff(totalSpread)+'</span> <span style="font-size:9px;color:var(--muted)">('+spreadCount+')</span>':'';
-  db.insertAdjacentHTML('beforeend','<tr class="tr-total"><td style="text-align:left" colspan="2">Total ('+dealCount+' deals)</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.pgto_incorporador||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.taxa_3pct||0)+'</td><td class="mono" style="font-weight:700">'+fd(nt.total_usd||0)+'</td><td class="mono" style="font-weight:700;color:#16a34a">'+(fbTotal>0?fd(fbTotal)+' <span style="font-size:9px;color:var(--muted)">('+fbMatched+'/'+dealCount+')</span>':'')+'</td><td></td><td class="mono">'+spreadTotalCell+'</td><td class="mono c-rem" style="font-weight:700">'+ff(repTotal)+'</td><td></td></tr>');
+  const totalVN=(neg.deals||[]).reduce((s,d)=>s+(d.valor_negociado||0),0);
+  db.insertAdjacentHTML('beforeend','<tr class="tr-total"><td style="text-align:left" colspan="2">Total ('+dealCount+' deals)</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.pgto_incorporador||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.taxa_3pct||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(totalIOF)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(totalVN)+'</td><td class="mono" style="font-weight:700">'+fd(nt.total_usd||0)+'</td><td></td><td class="mono" style="font-weight:700;color:#16a34a">'+(fbTotal>0?fd(fbTotal)+' <span style="font-size:9px;color:var(--muted)">('+fbMatched+'/'+dealCount+')</span>':'')+'</td><td></td><td class="mono c-rem" style="font-weight:700">'+ff(repTotal)+'</td><td></td></tr>');
 
   // ===== CHARTS =====
   mc('cProd',{type:'bar',data:{labels,datasets:[{label:'Pag: Sawala',data:saw,backgroundColor:'rgba(22,163,74,.5)',borderRadius:3,barPercentage:.65},{label:'Pag: BSJ',data:bsj,backgroundColor:'rgba(22,163,74,.25)',borderRadius:3,barPercentage:.65},{label:'Remessas',data:rem,backgroundColor:'rgba(124,58,237,.4)',borderRadius:3,barPercentage:.65}]},options:STK});
