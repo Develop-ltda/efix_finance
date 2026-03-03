@@ -171,7 +171,7 @@ tr:hover{background:rgba(0,0,0,.015)}
 <div class="card rem-card"><h3><span class="tag tag-rem">Remessas</span> Volume Negociado / mês</h3><div class="ch"><canvas id="cNegVol"></canvas></div></div>
 <div class="card rem-card"><h3><span class="tag tag-rem">Remessas</span> Taxa 3% / mês</h3><div class="ch"><canvas id="cNegTaxa"></canvas></div></div>
 </div>
-<div class="card" style="margin-bottom:32px"><h3><span class="tag tag-rem">Remessas</span> &mdash; Deals 2026</h3><div class="tbl-wrap"><table><thead><tr><th style="text-align:left">Descrição</th><th style="text-align:left">Cliente</th><th>Pgto Incorp.</th><th>Taxa 3%</th><th>USD Plan.</th><th>🔥 Fireblocks</th><th>🔥 On-Chain</th><th>Status</th></tr></thead><tbody id="dealsB"></tbody></table></div></div>
+<div class="card" style="margin-bottom:32px"><h3><span class="tag tag-rem">Remessas</span> &mdash; Deals 2026</h3><div class="tbl-wrap"><table><thead><tr><th style="text-align:left">Descrição</th><th style="text-align:left">Cliente</th><th>Pgto Incorp.</th><th>Taxa 3%</th><th>USD Plan.</th><th>🔥 Fireblocks</th><th>🔥 On-Chain</th><th>Repasse/Resultado R$</th><th>Status</th></tr></thead><tbody id="dealsB"></tbody></table></div></div>
 </div>
 
 <!-- GRÁFICOS -->
@@ -411,12 +411,13 @@ function render(D){
       fb ? '<a href="'+(fb.txhash.startsWith('0x')?'https://polygonscan.com/tx/'+fb.txhash:'https://tronscan.org/#/transaction/'+fb.txhash)+'" target="_blank" style="color:#7c3aed;font-size:11px">'+fb.txhash.slice(0,10)+'…</a>' :
       '<span class="fb-miss">⚠</span>';
     const rowClass = (hasFB && !fb) ? 'tr-rem fb-miss-row' : 'tr-rem';
-    db.insertAdjacentHTML('beforeend','<tr class="'+rowClass+'"><td style="text-align:left;font-weight:600;font-size:12px">'+d.descricao+'</td><td style="text-align:left;font-size:11px">'+d.cliente+'</td><td class="mono c-rem">'+ff(d.pgto_incorporador)+'</td><td class="mono c-rem" style="font-weight:600">'+ff(d.taxa_3pct)+'</td><td class="mono">'+fd(d.valor_usd)+'</td><td class="mono">'+fbCell+'</td><td>'+txCell+'</td><td><span class="deal-status '+(isSim?'sim':'nao')+'">'+(d.status||'-')+'</span></td></tr>')});
+    db.insertAdjacentHTML('beforeend','<tr class="'+rowClass+'"><td style="text-align:left;font-weight:600;font-size:12px">'+d.descricao+'</td><td style="text-align:left;font-size:11px">'+d.cliente+'</td><td class="mono c-rem">'+ff(d.pgto_incorporador)+'</td><td class="mono c-rem" style="font-weight:600">'+ff(d.taxa_3pct)+'</td><td class="mono">'+fd(d.valor_usd)+'</td><td class="mono">'+fbCell+'</td><td>'+txCell+'</td><td class="mono c-rem">'+ff(d.repasse)+'</td><td><span class="deal-status '+(isSim?'sim':'nao')+'">'+(d.status||'-')+'</span></td></tr>')});
   // Deals total row
   const fbTotal=FB_INFLOWS?FB_INFLOWS.filter(f=>f._matched).reduce((s,f)=>s+f.usd,0):0;
   const fbMatched=FB_INFLOWS?FB_INFLOWS.filter(f=>f._matched).length:0;
   const dealCount=(neg.deals||[]).length;
-  db.insertAdjacentHTML('beforeend','<tr class="tr-total"><td style="text-align:left" colspan="2">Total ('+dealCount+' deals)</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.pgto_incorporador||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.taxa_3pct||0)+'</td><td class="mono" style="font-weight:700">'+fd(nt.total_usd||0)+'</td><td class="mono" style="font-weight:700;color:#16a34a">'+(fbTotal>0?fd(fbTotal)+' <span style="font-size:10px;color:var(--muted)">('+fbMatched+'/'+dealCount+')</span>':'')+'</td><td></td><td></td></tr>');
+  const repTotal=(neg.deals||[]).reduce((s,d)=>s+(d.repasse||0),0);
+  db.insertAdjacentHTML('beforeend','<tr class="tr-total"><td style="text-align:left" colspan="2">Total ('+dealCount+' deals)</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.pgto_incorporador||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.taxa_3pct||0)+'</td><td class="mono" style="font-weight:700">'+fd(nt.total_usd||0)+'</td><td class="mono" style="font-weight:700;color:#16a34a">'+(fbTotal>0?fd(fbTotal)+' <span style="font-size:10px;color:var(--muted)">('+fbMatched+'/'+dealCount+')</span>':'')+'</td><td></td><td class="mono c-rem" style="font-weight:700">'+ff(repTotal)+'</td><td></td></tr>');
 
   // ===== CHARTS =====
   mc('cProd',{type:'bar',data:{labels,datasets:[{label:'Pag: Sawala',data:saw,backgroundColor:'rgba(22,163,74,.5)',borderRadius:3,barPercentage:.65},{label:'Pag: BSJ',data:bsj,backgroundColor:'rgba(22,163,74,.25)',borderRadius:3,barPercentage:.65},{label:'Remessas',data:rem,backgroundColor:'rgba(124,58,237,.4)',borderRadius:3,barPercentage:.65}]},options:STK});
