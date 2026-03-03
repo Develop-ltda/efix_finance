@@ -197,7 +197,7 @@ tr:hover{background:rgba(0,0,0,.015)}
 //   2) Bancário:   11Rjpm1xWMBN8VXHVLp2BucQPYUMSj03VmjcqyfwsJY8
 //   3) Remessas:   1Fuu-bJMGVDYibwwDxJUkM-pCxWmbmkz-rNZQKt83g_A
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbzEFxFA5YMOy6QD2yF7n_JDN5zqbdXgdaSUT94uoVp0X7Wzw0UB3OfhU7ooY62lb9U6MQ/exec'; // Ex: 'https://script.google.com/macros/s/AKfycb.../exec'
+const API_URL = 'https://script.google.com/macros/s/AKfycbyRzodfOuy0kuEzhyAk-lwIFJRAl0HbE1-DYfDS9QpLUwZWtEuwnn7q2DOQxKGrPo-yhA/exec';
 
 // ============================================================
 // FALLBACK (último snapshot manual — Mar/2026)
@@ -249,18 +249,8 @@ const FALLBACK = {
 let DATA=null;const charts={};
 
 async function init(){
-  if(API_URL){try{setStatus('loading','Buscando dados das planilhas...');const r=await fetch(API_URL);DATA=await r.json();if(DATA.error)throw new Error(DATA.error);
-    // API v2 returns bridge data per month — transform to dashboard format
-    if(DATA.version===2 && !DATA.negociacoes){
-      const deals=[];const bmMap={};let tPgto=0,tTaxa=0,tNeg=0,tUSD=0,tRep=0;const cSet=new Set();
-      DATA.months.forEach(m=>{if(!m.bridge||m.bridge.deals<1)return;const dl=m.bridge.deals_list||[];
-        dl.forEach(d=>{deals.push({mes:m.label,descricao:d.descricao,cliente:d.cliente,pgto_incorporador:d.volume,taxa_3pct:d.taxa,valor_negociado:d.volume+d.taxa,moeda:d.moeda,valor_usd:d.usd,repasse:d.taxa,status:d.status||'Sim'});if(d.cliente)cSet.add(d.cliente)});
-        tPgto+=m.bridge.volume_brl;tTaxa+=m.bridge.taxa_3pct;tNeg+=m.bridge.valor_negociado;tUSD+=m.bridge.total_usd;
-        if(!bmMap[m.label])bmMap[m.label]={label:m.label,volume:0,taxa:0,repasse:0,usd:0,deals:0};
-        bmMap[m.label].volume+=m.bridge.volume_brl;bmMap[m.label].taxa+=m.bridge.taxa_3pct;bmMap[m.label].usd+=m.bridge.total_usd;bmMap[m.label].deals+=m.bridge.deals;
-      });
-      DATA.negociacoes={totals:{pgto_incorporador:tPgto,taxa_3pct:tTaxa,valor_negociado:tNeg,total_usd:tUSD,deals_count:deals.length,clientes_unicos:cSet.size,repasse_realizado:tTaxa},deals:deals,by_month:Object.values(bmMap)};
-    }
+  if(API_URL){try{setStatus('loading','Buscando dados das planilhas...');const r=await fetch(API_URL+'?t='+Date.now());DATA=await r.json();if(DATA.error)throw new Error(DATA.error);
+    if(!DATA.negociacoes)DATA.negociacoes={totals:{},deals:[],by_month:[]};
     setStatus('live','Dados ao vivo &middot; '+new Date(DATA.updated).toLocaleString('pt-BR'))}catch(e){console.warn('Fetch failed:',e);DATA=FALLBACK;setStatus('offline','Offline (snapshot) &middot; Configure API_URL')}}else{DATA=FALLBACK;setStatus('offline','Offline (snapshot) &middot; Configure API_URL para dados ao vivo')}
   render(DATA);
 }
