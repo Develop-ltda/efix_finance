@@ -142,6 +142,7 @@ tr:hover{background:rgba(0,0,0,.015)}
   <button onclick="go('charts',this)">Gráficos</button>
   <button onclick="go('insights',this)">Insights</button>
   <button onclick="go('fireblocks',this)">🔥 Fireblocks</button>
+  <button onclick="go('btg',this)">🏦 BTG</button>
 </div>
 
 <!-- DRE -->
@@ -174,7 +175,7 @@ tr:hover{background:rgba(0,0,0,.015)}
 <div class="card rem-card"><h3><span class="tag tag-rem">Remessas</span> Volume Negociado / mês</h3><div class="ch"><canvas id="cNegVol"></canvas></div></div>
 <div class="card rem-card"><h3><span class="tag tag-rem">Remessas</span> Taxa 3% / mês</h3><div class="ch"><canvas id="cNegTaxa"></canvas></div></div>
 </div>
-<div class="card" style="margin-bottom:32px"><h3><span class="tag tag-rem">Remessas</span> &mdash; Deals 2026</h3><div class="tbl-wrap"><table class="tbl-deals"><thead><tr><th style="text-align:left">Descrição</th><th style="text-align:left">Cliente</th><th>Pgto Inc.</th><th>Taxa 3%</th><th>USD</th><th>🔥 FB</th><th>On-Chain</th><th>Resultado</th><th>St.</th></tr></thead><tbody id="dealsB"></tbody></table></div></div>
+<div class="card" style="margin-bottom:32px"><h3><span class="tag tag-rem">Remessas</span> &mdash; Deals 2026</h3><div class="tbl-wrap"><table class="tbl-deals"><thead><tr><th style="text-align:left">Descrição</th><th style="text-align:left">Cliente</th><th>Pgto Inc.</th><th>Taxa 3%</th><th>USD</th><th>🔥 FB</th><th>On-Chain</th><th>Spread R$ Est.</th><th>Resultado</th><th>St.</th></tr></thead><tbody id="dealsB"></tbody></table></div></div>
 </div>
 
 <!-- GRÁFICOS -->
@@ -213,8 +214,24 @@ tr:hover{background:rgba(0,0,0,.015)}
 </div>
 </div>
 
+<!-- BTG -->
+<div id="p-btg" class="hide">
+<div class="sec-label">BTG Pactual — Conciliação Off-Ramp</div>
+<div id="btgUpload" style="border:2px dashed var(--border);border-radius:12px;padding:48px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:32px" ondragover="event.preventDefault();this.style.borderColor='#0d6efd';this.style.background='rgba(13,110,253,.03)'" ondragleave="this.style.borderColor='var(--border)';this.style.background='transparent'" ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='transparent';handleBTGFile(event.dataTransfer.files[0])">
+  <div style="font-size:32px;margin-bottom:12px">🏦</div>
+  <div style="font-weight:600;margin-bottom:8px">Drop BTG extrato CSV here</div>
+  <div style="color:var(--muted);font-size:13px">50_*.csv from BTG Digital</div>
+  <input type="file" id="btgFileInput" accept=".csv" style="display:none" onchange="handleBTGFile(this.files[0])">
+  <button onclick="document.getElementById('btgFileInput').click()" style="margin-top:16px;padding:8px 20px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:inherit;font-size:13px">or click to browse</button>
+</div>
+<div id="btgResults" style="display:none">
+  <div id="btgSummary"></div>
+  <div id="btgMatch" style="margin-top:32px"></div>
+  <div id="btgMonthly" style="margin-top:32px"></div>
+</div>
 </div>
 
+</div>
 <script>
 // ============================================================
 // CONFIG: Cole a URL do Google Apps Script deployed
@@ -402,8 +419,11 @@ function render(D){
 
   // Deals table — reset FB match flags before matching
   if(FB_INFLOWS) FB_INFLOWS.forEach(f=>f._matched=false);
+  const fxMap=buildFXMap();
   const db=document.getElementById('dealsB');db.innerHTML='';
   const hasFB = !!FB_INFLOWS;
+  const hasBTG = !!BTG_DATA;
+  let totalSpread=0, spreadCount=0;
   (neg.deals||[]).forEach(d=>{
     const isSim=d.status==='Sim';
     const fb=matchFBDeal(d);
@@ -413,16 +433,30 @@ function render(D){
     const txCell = !hasFB ? '' :
       fb ? '<a href="'+(fb.txhash.startsWith('0x')?'https://polygonscan.com/tx/'+fb.txhash:'https://tronscan.org/#/transaction/'+fb.txhash)+'" target="_blank" style="color:#7c3aed">'+fb.txhash.slice(0,8)+'…</a>' :
       '<span class="fb-miss">⚠</span>';
+    // Spread = (FB_USD × FX_rate_on_that_date) - Pgto Incorporador
+    let spreadCell='<span style="color:var(--muted)">—</span>';
+    if(fb && hasBTG){
+      const fx=fxMap[fb.date]||0;
+      if(fx>0){
+        const brlEst=fb.usd*fx;
+        const spread=brlEst-(d.pgto_incorporador||0);
+        totalSpread+=spread; spreadCount++;
+        spreadCell='<span style="color:'+(spread>=0?'#16a34a':'var(--red)')+';font-weight:600">'+ff(spread)+'</span>';
+      }
+    } else if(fb && !hasBTG){
+      spreadCell='<span style="color:var(--muted);font-size:9px">BTG CSV</span>';
+    }
     const rowClass = (hasFB && !fb) ? 'tr-rem fb-miss-row' : 'tr-rem';
     const cli = d.cliente.length>22 ? d.cliente.slice(0,20)+'…' : d.cliente;
     const desc = d.descricao.length>28 ? d.descricao.slice(0,26)+'…' : d.descricao;
-    db.insertAdjacentHTML('beforeend','<tr class="'+rowClass+'"><td style="text-align:left;font-weight:600">'+desc+'</td><td style="text-align:left">'+cli+'</td><td class="mono c-rem">'+ff(d.pgto_incorporador)+'</td><td class="mono c-rem" style="font-weight:600">'+ff(d.taxa_3pct)+'</td><td class="mono">'+fd(d.valor_usd)+'</td><td class="mono">'+fbCell+'</td><td>'+txCell+'</td><td class="mono c-rem">'+ff(d.repasse)+'</td><td><span class="deal-status '+(isSim?'sim':'nao')+'">'+(d.status||'-')+'</span></td></tr>')});
+    db.insertAdjacentHTML('beforeend','<tr class="'+rowClass+'"><td style="text-align:left;font-weight:600">'+desc+'</td><td style="text-align:left">'+cli+'</td><td class="mono c-rem">'+ff(d.pgto_incorporador)+'</td><td class="mono c-rem" style="font-weight:600">'+ff(d.taxa_3pct)+'</td><td class="mono">'+fd(d.valor_usd)+'</td><td class="mono">'+fbCell+'</td><td>'+txCell+'</td><td class="mono">'+spreadCell+'</td><td class="mono c-rem">'+ff(d.repasse)+'</td><td><span class="deal-status '+(isSim?'sim':'nao')+'">'+(d.status||'-')+'</span></td></tr>')});
   // Deals total row
   const fbTotal=FB_INFLOWS?FB_INFLOWS.filter(f=>f._matched).reduce((s,f)=>s+f.usd,0):0;
   const fbMatched=FB_INFLOWS?FB_INFLOWS.filter(f=>f._matched).length:0;
   const dealCount=(neg.deals||[]).length;
   const repTotal=(neg.deals||[]).reduce((s,d)=>s+(d.repasse||0),0);
-  db.insertAdjacentHTML('beforeend','<tr class="tr-total"><td style="text-align:left" colspan="2">Total ('+dealCount+' deals)</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.pgto_incorporador||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.taxa_3pct||0)+'</td><td class="mono" style="font-weight:700">'+fd(nt.total_usd||0)+'</td><td class="mono" style="font-weight:700;color:#16a34a">'+(fbTotal>0?fd(fbTotal)+' <span style="font-size:10px;color:var(--muted)">('+fbMatched+'/'+dealCount+')</span>':'')+'</td><td></td><td class="mono c-rem" style="font-weight:700">'+ff(repTotal)+'</td><td></td></tr>');
+  const spreadTotalCell=totalSpread>0?'<span style="color:#16a34a;font-weight:700">'+ff(totalSpread)+'</span> <span style="font-size:9px;color:var(--muted)">('+spreadCount+')</span>':'';
+  db.insertAdjacentHTML('beforeend','<tr class="tr-total"><td style="text-align:left" colspan="2">Total ('+dealCount+' deals)</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.pgto_incorporador||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.taxa_3pct||0)+'</td><td class="mono" style="font-weight:700">'+fd(nt.total_usd||0)+'</td><td class="mono" style="font-weight:700;color:#16a34a">'+(fbTotal>0?fd(fbTotal)+' <span style="font-size:9px;color:var(--muted)">('+fbMatched+'/'+dealCount+')</span>':'')+'</td><td></td><td class="mono">'+spreadTotalCell+'</td><td class="mono c-rem" style="font-weight:700">'+ff(repTotal)+'</td><td></td></tr>');
 
   // ===== CHARTS =====
   mc('cProd',{type:'bar',data:{labels,datasets:[{label:'Pag: Sawala',data:saw,backgroundColor:'rgba(22,163,74,.5)',borderRadius:3,barPercentage:.65},{label:'Pag: BSJ',data:bsj,backgroundColor:'rgba(22,163,74,.25)',borderRadius:3,barPercentage:.65},{label:'Remessas',data:rem,backgroundColor:'rgba(124,58,237,.4)',borderRadius:3,barPercentage:.65}]},options:STK});
@@ -464,6 +498,34 @@ const STABLECOINS = new Set(['USDC','USDT']);
 const GAS_TOKENS = new Set(['POL','MATIC','ETH','TRX','BNB','SOL']);
 const SPAM_PATTERNS = ['t.me/','Claim','Link:','Swap your','⭐','✅'];
 const MAX_UINT = 1e30; // approvals have absurd amounts
+
+// Build FX rate map from FB outflows → BTG Transfero inflows (by date)
+function buildFXMap(){
+  if(!FB_INFLOWS || !BTG_DATA) return {};
+  const fbOut=FB_INFLOWS.filter(f=>f._dir==='out'&&f._class==='real');
+  const btgIn=BTG_DATA.filter(b=>b._isTransfero&&b._val>0);
+  // Group FB outflows by date
+  const fbByDate={};
+  fbOut.forEach(f=>{const d=f._date.iso;if(!fbByDate[d])fbByDate[d]=0;fbByDate[d]+=f.usd});
+  // Group BTG inflows by date
+  const btgByDate={};
+  btgIn.forEach(b=>{const d=b._iso;if(!btgByDate[d])btgByDate[d]=0;btgByDate[d]+=b._val});
+  // Match same date or +1 day → FX rate
+  const fxMap={};
+  const usedBTG=new Set();
+  Object.keys(fbByDate).sort().forEach(d=>{
+    const usd=fbByDate[d];
+    let brl=btgByDate[d]||0;
+    let used=d;
+    if(!brl){
+      const next=new Date(d);next.setDate(next.getDate()+1);
+      const nd=next.toISOString().slice(0,10);
+      if(btgByDate[nd]&&!usedBTG.has(nd)){brl=btgByDate[nd];used=nd}
+    }
+    if(brl>0&&usd>0){fxMap[d]=brl/usd;usedBTG.add(used)}
+  });
+  return fxMap;
+}
 
 // Match a deal from the planilha to a Fireblocks inflow
 function matchFBDeal(deal){
@@ -663,6 +725,160 @@ function renderFB(rows){
   tHTML+=`</tbody></table></div>`;
   
   document.getElementById('fbTxTable').innerHTML=tHTML;
+}
+
+// ============================================================
+// BTG CSV PARSER & RECONCILIATION
+// ============================================================
+let BTG_DATA=null;
+
+function parseBRL(s){return parseFloat(s.trim().replace(/\./g,'').replace(',','.'))||0}
+
+function handleBTGFile(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const lines=e.target.result.split('\n');
+    // Parse CSV with quoted fields
+    function parseCSVLine(line){
+      const vals=[];let cur='',inQ=false;
+      for(let c=0;c<line.length;c++){
+        const ch=line[c];
+        if(ch==='"'){inQ=!inQ}
+        else if(ch===','&&!inQ){vals.push(cur.trim());cur=''}
+        else{cur+=ch}
+      }
+      vals.push(cur.trim());
+      return vals;
+    }
+    const headers=parseCSVLine(lines[0]);
+    const rows=[];
+    for(let i=1;i<lines.length;i++){
+      if(!lines[i].trim()) continue;
+      const vals=parseCSVLine(lines[i]);
+      const obj={};headers.forEach((h,j)=>obj[h]=vals[j]||'');
+      // Parse date DD/MM/YYYY → YYYY-MM-DD
+      const dp=(obj.Data||'').split('/');
+      obj._iso=dp.length===3?dp[2]+'-'+dp[1]+'-'+dp[0]:'';
+      obj._val=parseBRL(obj.Valor||'0');
+      obj._saldo=parseBRL(obj.Saldo||'0');
+      obj._isTransfero=/TRANSFERO/i.test(obj.Descricao);
+      obj._isHaus=/Haus Servicos/i.test(obj.Descricao);
+      rows.push(obj);
+    }
+    BTG_DATA=rows;
+    renderBTG(rows);
+    if(DATA) render(DATA); // re-render deals table with spread
+  };
+  reader.readAsText(file);
+}
+
+function renderBTG(rows){
+  const tIn=rows.filter(r=>r._isTransfero && r._val>0);
+  const tOut=rows.filter(r=>r._isTransfero && r._val<0);
+  const hausOut=rows.filter(r=>r._isHaus && r._val<0);
+  const otherIn=rows.filter(r=>!r._isTransfero && r._val>0);
+  const otherOut=rows.filter(r=>!r._isTransfero && !r._isHaus && r._val<0);
+  
+  const sumV=arr=>arr.reduce((s,r)=>s+r._val,0);
+  const totalIn=sumV(tIn);
+  const totalHaus=sumV(hausOut);
+  const totalOtherIn=sumV(otherIn);
+  const totalOtherOut=sumV(otherOut);
+  
+  document.getElementById('btgUpload').style.display='none';
+  document.getElementById('btgResults').style.display='block';
+  
+  // Summary
+  document.getElementById('btgSummary').innerHTML=`
+    <div class="grid3">
+      <div class="card"><div class="card-label">Transfero → BTG (BRL)</div><div class="card-val green">${ff(totalIn)}</div><div class="sub">${tIn.length} Pix recebidos da Transfero</div></div>
+      <div class="card"><div class="card-label">Repasses p/ Haus</div><div class="card-val" style="color:var(--red)">${ff(totalHaus)}</div><div class="sub">${hausOut.length} Pix enviados</div></div>
+      <div class="card"><div class="card-label">Outros (In/Out)</div><div class="card-val">${ff(totalOtherIn+totalOtherOut)}</div><div class="sub">In: ${ff(totalOtherIn)} · Out: ${ff(totalOtherOut)}</div></div>
+    </div>`;
+  
+  // Match FB outflows → BTG inflows
+  let matchHTML='';
+  if(FB_INFLOWS){
+    const fbOut=FB_INFLOWS.filter(f=>f._dir==='out'&&f._class==='real');
+    // Group FB by date
+    const fbByDate={};
+    fbOut.forEach(f=>{
+      const d=f._date.iso;
+      if(!fbByDate[d])fbByDate[d]={usd:0,txs:[]};
+      fbByDate[d].usd+=f.usd;
+      fbByDate[d].txs.push(f);
+    });
+    // Group BTG Transfero by date
+    const btgByDate={};
+    tIn.forEach(b=>{
+      const d=b._iso;
+      if(!btgByDate[d])btgByDate[d]={brl:0,txs:[]};
+      btgByDate[d].brl+=b._val;
+      btgByDate[d].txs.push(b);
+    });
+    // Match: same date or +1 day
+    const allDates=[...new Set([...Object.keys(fbByDate),...Object.keys(btgByDate)])].sort();
+    const matched=[];
+    const usedBTG=new Set();
+    
+    allDates.forEach(d=>{
+      const fb=fbByDate[d];
+      if(!fb) return;
+      // Look for BTG on same date or +1 day
+      const next=new Date(d);next.setDate(next.getDate()+1);
+      const nextISO=next.toISOString().slice(0,10);
+      let btg=btgByDate[d];
+      let btgDate=d;
+      if(!btg && btgByDate[nextISO]&&!usedBTG.has(nextISO)){btg=btgByDate[nextISO];btgDate=nextISO}
+      if(btg){usedBTG.add(btgDate)}
+      matched.push({date:d,usd:fb.usd,brl:btg?btg.brl:0,fx:btg&&fb.usd>0?btg.brl/fb.usd:0,fbN:fb.txs.length,btgN:btg?btg.txs.length:0,btgDate:btgDate});
+    });
+    // Also add unmatched BTG dates
+    Object.keys(btgByDate).forEach(d=>{
+      if(!usedBTG.has(d)){matched.push({date:d,usd:0,brl:btgByDate[d].brl,fx:0,fbN:0,btgN:btgByDate[d].txs.length,btgDate:d})}
+    });
+    matched.sort((a,b)=>b.date.localeCompare(a.date));
+    
+    const tUSD=matched.reduce((s,m)=>s+m.usd,0);
+    const tBRL=matched.reduce((s,m)=>s+m.brl,0);
+    const avgFX=tUSD>0?tBRL/tUSD:0;
+    
+    matchHTML=`<div class="sec-label">Pipeline: Fireblocks USD → Transfero → BTG BRL</div>
+    <div style="margin-bottom:16px;padding:12px 16px;background:var(--surface);border-radius:8px;font-size:12px;color:var(--muted)">
+      <strong style="color:var(--text)">Câmbio médio ponderado: ${avgFX.toFixed(4)}</strong> · Total USD: ${fd(tUSD)} → Total BRL: ${ff(tBRL)}
+    </div>
+    <div class="tbl-wrap"><table class="tbl-deals"><thead><tr><th>Data FB</th><th>USD Off-Ramp</th><th>BRL BTG</th><th>Câmbio</th><th>#FB</th><th>#BTG</th><th>Status</th></tr></thead><tbody>`;
+    matched.forEach(m=>{
+      const hasUSD=m.usd>0,hasBRL=m.brl>0;
+      const status=hasUSD&&hasBRL?'✓ OK':hasUSD?'<span class="fb-miss">⏳ Pending</span>':'<span style="color:#0d6efd">+ Extra</span>';
+      matchHTML+=`<tr${!hasBRL&&hasUSD?' class="fb-miss-row"':''}><td>${m.date}</td><td class="mono">${hasUSD?fd(m.usd):''}</td><td class="mono green">${hasBRL?ff(m.brl):''}</td><td class="mono">${m.fx>0?m.fx.toFixed(4):''}</td><td class="mono">${m.fbN||''}</td><td class="mono">${m.btgN||''}</td><td>${status}</td></tr>`;
+    });
+    const netFX=tUSD>0?tBRL/tUSD:0;
+    matchHTML+=`<tr style="font-weight:700;border-top:2px solid var(--border)"><td>TOTAL</td><td class="mono">${fd(tUSD)}</td><td class="mono green">${ff(tBRL)}</td><td class="mono">${netFX.toFixed(4)}</td><td></td><td></td><td></td></tr>`;
+    matchHTML+=`</tbody></table></div>`;
+  } else {
+    matchHTML=`<div style="padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:8px">
+      <strong>🔥 Carregue o CSV Fireblocks primeiro</strong> na aba Fireblocks para ver a conciliação completa USD → BRL
+    </div>`;
+  }
+  document.getElementById('btgMatch').innerHTML=matchHTML;
+  
+  // Monthly summary
+  const byMonth={};
+  tIn.forEach(r=>{
+    const m=r._iso.slice(0,7);
+    if(!byMonth[m])byMonth[m]={brl:0,n:0};
+    byMonth[m].brl+=r._val;byMonth[m].n++;
+  });
+  let mHTML=`<div class="sec-label">Transfero Inflows por Mês</div><div class="tbl-wrap"><table class="tbl-deals"><thead><tr><th>Mês</th><th>BRL Recebido</th><th>#Pix</th></tr></thead><tbody>`;
+  Object.keys(byMonth).sort().forEach(m=>{
+    const v=byMonth[m];
+    mHTML+=`<tr><td><strong>${m}</strong></td><td class="mono green">${ff(v.brl)}</td><td class="mono">${v.n}</td></tr>`;
+  });
+  mHTML+=`<tr style="font-weight:700;border-top:2px solid var(--border)"><td>TOTAL</td><td class="mono green">${ff(totalIn)}</td><td class="mono">${tIn.length}</td></tr>`;
+  mHTML+=`</tbody></table></div>`;
+  document.getElementById('btgMonthly').innerHTML=mHTML;
 }
 
 init();
