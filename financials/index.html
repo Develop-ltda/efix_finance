@@ -57,6 +57,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .ch{position:relative;height:300px}.full{grid-column:1/-1}
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl-deals{font-size:11px}
+.tbl-deals th{padding:6px 4px;font-size:10px;white-space:nowrap}
+.tbl-deals td{padding:5px 4px;white-space:nowrap}
 th,td{padding:11px 14px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
 th{font-weight:600;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;background:var(--surface);position:sticky;top:0;z-index:2}
 th:first-child,td:first-child{text-align:left;font-weight:500}
@@ -91,7 +94,7 @@ tr:hover{background:rgba(0,0,0,.015)}
 .status-dot.offline{background:var(--amber)}
 .status-dot.loading{background:var(--blue);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.deal-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px}
+.deal-status{font-size:9px;font-weight:600;padding:2px 6px;border-radius:100px;white-space:nowrap}
 .deal-status.sim{background:var(--pag-light);color:var(--pag)}
 .deal-status.nao{background:var(--red-bg);color:var(--red)}
 .fb-ok{color:#16a34a;font-weight:600}
@@ -171,7 +174,7 @@ tr:hover{background:rgba(0,0,0,.015)}
 <div class="card rem-card"><h3><span class="tag tag-rem">Remessas</span> Volume Negociado / mês</h3><div class="ch"><canvas id="cNegVol"></canvas></div></div>
 <div class="card rem-card"><h3><span class="tag tag-rem">Remessas</span> Taxa 3% / mês</h3><div class="ch"><canvas id="cNegTaxa"></canvas></div></div>
 </div>
-<div class="card" style="margin-bottom:32px"><h3><span class="tag tag-rem">Remessas</span> &mdash; Deals 2026</h3><div class="tbl-wrap"><table><thead><tr><th style="text-align:left">Descrição</th><th style="text-align:left">Cliente</th><th>Pgto Incorp.</th><th>Taxa 3%</th><th>USD Plan.</th><th>🔥 Fireblocks</th><th>🔥 On-Chain</th><th>Repasse/Resultado R$</th><th>Status</th></tr></thead><tbody id="dealsB"></tbody></table></div></div>
+<div class="card" style="margin-bottom:32px"><h3><span class="tag tag-rem">Remessas</span> &mdash; Deals 2026</h3><div class="tbl-wrap"><table class="tbl-deals"><thead><tr><th style="text-align:left">Descrição</th><th style="text-align:left">Cliente</th><th>Pgto Inc.</th><th>Taxa 3%</th><th>USD</th><th>🔥 FB</th><th>On-Chain</th><th>Resultado</th><th>St.</th></tr></thead><tbody id="dealsB"></tbody></table></div></div>
 </div>
 
 <!-- GRÁFICOS -->
@@ -404,14 +407,16 @@ function render(D){
   (neg.deals||[]).forEach(d=>{
     const isSim=d.status==='Sim';
     const fb=matchFBDeal(d);
-    const fbCell = !hasFB ? '<span style="color:var(--muted);font-size:11px">Upload CSV</span>' :
+    const fbCell = !hasFB ? '<span style="color:var(--muted)">—</span>' :
       fb ? '<span class="fb-ok">'+fd(fb.usd)+'</span>' :
-      '<span class="fb-miss">⚠ NOT FOUND</span>';
+      '<span class="fb-miss">⚠ N/A</span>';
     const txCell = !hasFB ? '' :
-      fb ? '<a href="'+(fb.txhash.startsWith('0x')?'https://polygonscan.com/tx/'+fb.txhash:'https://tronscan.org/#/transaction/'+fb.txhash)+'" target="_blank" style="color:#7c3aed;font-size:11px">'+fb.txhash.slice(0,10)+'…</a>' :
+      fb ? '<a href="'+(fb.txhash.startsWith('0x')?'https://polygonscan.com/tx/'+fb.txhash:'https://tronscan.org/#/transaction/'+fb.txhash)+'" target="_blank" style="color:#7c3aed">'+fb.txhash.slice(0,8)+'…</a>' :
       '<span class="fb-miss">⚠</span>';
     const rowClass = (hasFB && !fb) ? 'tr-rem fb-miss-row' : 'tr-rem';
-    db.insertAdjacentHTML('beforeend','<tr class="'+rowClass+'"><td style="text-align:left;font-weight:600;font-size:12px">'+d.descricao+'</td><td style="text-align:left;font-size:11px">'+d.cliente+'</td><td class="mono c-rem">'+ff(d.pgto_incorporador)+'</td><td class="mono c-rem" style="font-weight:600">'+ff(d.taxa_3pct)+'</td><td class="mono">'+fd(d.valor_usd)+'</td><td class="mono">'+fbCell+'</td><td>'+txCell+'</td><td class="mono c-rem">'+ff(d.repasse)+'</td><td><span class="deal-status '+(isSim?'sim':'nao')+'">'+(d.status||'-')+'</span></td></tr>')});
+    const cli = d.cliente.length>22 ? d.cliente.slice(0,20)+'…' : d.cliente;
+    const desc = d.descricao.length>28 ? d.descricao.slice(0,26)+'…' : d.descricao;
+    db.insertAdjacentHTML('beforeend','<tr class="'+rowClass+'"><td style="text-align:left;font-weight:600">'+desc+'</td><td style="text-align:left">'+cli+'</td><td class="mono c-rem">'+ff(d.pgto_incorporador)+'</td><td class="mono c-rem" style="font-weight:600">'+ff(d.taxa_3pct)+'</td><td class="mono">'+fd(d.valor_usd)+'</td><td class="mono">'+fbCell+'</td><td>'+txCell+'</td><td class="mono c-rem">'+ff(d.repasse)+'</td><td><span class="deal-status '+(isSim?'sim':'nao')+'">'+(d.status||'-')+'</span></td></tr>')});
   // Deals total row
   const fbTotal=FB_INFLOWS?FB_INFLOWS.filter(f=>f._matched).reduce((s,f)=>s+f.usd,0):0;
   const fbMatched=FB_INFLOWS?FB_INFLOWS.filter(f=>f._matched).length:0;
