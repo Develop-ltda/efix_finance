@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1Y391HW7NT');</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EFIX Card — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --black:#000; --white:#fff; --gray-100:#f5f5f5; --gray-200:#e5e5e5; --gray-400:#999; --gray-600:#666; --green:#22c55e; --red:#ef4444; --blue:#3b82f6; --orange:#f59e0b; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Syne',sans-serif; background:var(--white); color:var(--black); }
+    .container { max-width:1100px; margin:0 auto; padding:24px 16px; }
+    .header { display:flex; align-items:center; justify-content:space-between; padding:12px 0 24px; border-bottom:1px solid var(--gray-200); margin-bottom:24px; }
+    .logo { font-weight:800; font-size:18px; } .logo span { color:var(--gray-400); font-weight:400; }
+    #authScreen { max-width:400px; margin:80px auto; text-align:center; }
+    #authScreen input { width:100%; padding:14px 16px; border:1px solid var(--gray-200); font-family:'Syne',sans-serif; font-size:15px; margin:16px 0; outline:none; }
+    #authScreen input:focus { border-color:var(--black); }
+    .btn { padding:14px 24px; font-family:'Syne',sans-serif; font-weight:700; font-size:14px; cursor:pointer; border:none; transition:all 0.2s; }
+    .btn-primary { background:var(--black); color:var(--white); }
+    .btn-primary:hover { background:#222; }
+    .btn-outline { background:transparent; border:1px solid var(--black); color:var(--black); }
+    .btn-sm { padding:8px 14px; font-size:12px; }
+    .nav-tabs { display:flex; border-bottom:2px solid var(--gray-200); margin-bottom:24px; }
+    .nav-tab { padding:12px 24px; font-family:'Space Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:1px; cursor:pointer; color:var(--gray-400); border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s; }
+    .nav-tab:hover { color:var(--black); }
+    .nav-tab.active { color:var(--black); border-bottom-color:var(--black); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--gray-200); border:1px solid var(--gray-200); margin-bottom:24px; }
+    .stats-5 { grid-template-columns:repeat(5,1fr); }
+    .stat { background:var(--white); padding:20px; }
+    .stat-label { font-family:'Space Mono',monospace; font-size:10px; color:var(--gray-400); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+    .stat-value { font-weight:800; font-size:28px; letter-spacing:-1px; }
+    .stat-value.green { color:var(--green); }
+    .stat-value.red { color:var(--red); }
+    .stat-value.sm { font-size:18px; }
+    .stat-sub { font-family:'Space Mono',monospace; font-size:10px; color:var(--gray-400); margin-top:2px; }
+    .section { margin-bottom:32px; }
+    .section-title { font-weight:800; font-size:20px; letter-spacing:-0.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+    .dot-green { background:var(--green); } .dot-orange { background:var(--orange); } .dot-blue { background:var(--blue); }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { font-family:'Space Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--gray-400); text-align:left; padding:12px 8px; border-bottom:1px solid var(--gray-200); }
+    td { padding:10px 8px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
+    tr:hover td { background:var(--gray-100); }
+    .mono { font-family:'Space Mono',monospace; font-size:11px; }
+    .badge-active { display:inline-block; padding:2px 8px; background:#dcfce7; color:#166534; font-size:11px; font-weight:600; border-radius:2px; }
+    .badge-pending { display:inline-block; padding:2px 8px; background:#fef9c3; color:#854d0e; font-size:11px; font-weight:600; border-radius:2px; }
+    .badge-none { display:inline-block; padding:2px 8px; background:var(--gray-100); color:var(--gray-400); font-size:11px; border-radius:2px; }
+    .actions { display:flex; gap:8px; margin-bottom:16px; align-items:center; }
+    .actions input { padding:10px 14px; border:1px solid var(--gray-200); font-family:'Syne',sans-serif; font-size:13px; flex:1; max-width:300px; outline:none; }
+    .pipeline { display:flex; align-items:center; gap:0; margin:24px 0; overflow-x:auto; }
+    .pipe-step { flex:1; min-width:130px; text-align:center; padding:16px 8px; background:var(--gray-100); border:1px solid var(--gray-200); }
+    .pipe-step.done { background:#dcfce7; border-color:#86efac; }
+    .pipe-arrow { width:32px; text-align:center; font-size:18px; color:var(--gray-400); flex-shrink:0; }
+    .pipe-label { font-family:'Space Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--gray-600); }
+    .pipe-value { font-weight:700; font-size:14px; margin-top:4px; }
+    .info-box { padding:20px; background:var(--gray-100); border:1px solid var(--gray-200); font-family:'Space Mono',monospace; font-size:12px; line-height:1.8; }
+    .hidden { display:none; }
+    @media (max-width:768px) { .stats,.stats-5 { grid-template-columns:repeat(2,1fr); } .pipeline { flex-wrap:wrap; } }
+  </style>
+</head>
+<body>
+
+<div id="authScreen">
+  <div class="logo" style="font-size:24px; margin-bottom:8px;">EFIX <span>Admin</span></div>
+  <p style="color:var(--gray-600); font-size:14px;">Enter admin token.</p>
+  <input type="password" id="tokenInput" placeholder="Admin token" autofocus>
+  <div style="color:var(--red); font-size:13px; display:none;" id="authError">Invalid token</div>
+  <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="authenticate()">Login</button>
+</div>
+
+<div id="dashboard" class="hidden">
+  <div class="container">
+    <div class="header">
+      <div class="logo">EFIX <span>Admin</span></div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="mono" style="color:var(--green);">PRODUCTION</span>
+        <button class="btn btn-outline btn-sm" onclick="refreshAll()">Refresh</button>
+        <button class="btn btn-outline btn-sm" onclick="logoutAdmin()">Logout</button>
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <div class="nav-tab active" data-tab="tabOverview">Overview</div>
+      <div class="nav-tab" data-tab="tabProtocol">Protocol</div>
+      <div class="nav-tab" data-tab="tabUsers">Users</div>
+      <div class="nav-tab" data-tab="tabAnalytics">Analytics</div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="tabOverview" class="tab-content active">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Users</div><div class="stat-value" id="ovUsers">—</div></div>
+        <div class="stat"><div class="stat-label">Cards Issued</div><div class="stat-value" id="ovCards">—</div></div>
+        <div class="stat"><div class="stat-label">Morpho Collateral</div><div class="stat-value sm" id="ovColl">—</div><div class="stat-sub">efixDI on Base</div></div>
+        <div class="stat"><div class="stat-label">USDC Borrowed</div><div class="stat-value sm" id="ovDebt">—</div><div class="stat-sub">Card credit line</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title"><span class="dot dot-green"></span>Protocol Pipeline</div>
+        <div class="pipeline">
+          <div class="pipe-step done"><div class="pipe-label">Polygon efixDI</div><div class="pipe-value" id="ppPoly">—</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step done"><div class="pipe-label">LZ V2 Bridge</div><div class="pipe-value">Polygon → Base</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step done"><div class="pipe-label">Morpho Collateral</div><div class="pipe-value" id="ppColl">—</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step done"><div class="pipe-label">USDC Borrowed</div><div class="pipe-value" id="ppBorrow">—</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step" id="ppCardStep"><div class="pipe-label">Card Funded</div><div class="pipe-value" id="ppCard">—</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Recent Activity</div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Type</th><th>Amount</th><th>Description</th><th>Date</th></tr></thead>
+          <tbody id="recentTxBody"><tr><td colspan="4" class="mono" style="text-align:center;color:var(--gray-400);">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROTOCOL -->
+    <div id="tabProtocol" class="tab-content">
+      <div class="section">
+        <div class="section-title"><span class="dot dot-green"></span>On-Chain State (Live)</div>
+        <div class="stats stats-5">
+          <div class="stat"><div class="stat-label">Polygon efixDI</div><div class="stat-value sm" id="prPoly">—</div><div class="stat-sub">Operator wallet</div></div>
+          <div class="stat"><div class="stat-label">Base efixDI</div><div class="stat-value sm" id="prBase">—</div><div class="stat-sub">Available</div></div>
+          <div class="stat"><div class="stat-label">Base USDC</div><div class="stat-value sm" id="prUSDC">—</div><div class="stat-sub">Available</div></div>
+          <div class="stat"><div class="stat-label">Morpho Collateral</div><div class="stat-value sm green" id="prColl">—</div><div class="stat-sub">efixDI locked</div></div>
+          <div class="stat"><div class="stat-label">Morpho Debt</div><div class="stat-value sm red" id="prDebt">—</div><div class="stat-sub">USDC borrowed</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Risk Parameters</div>
+        <div class="stats">
+          <div class="stat"><div class="stat-label">Current LTV</div><div class="stat-value sm" id="prLTV">—</div></div>
+          <div class="stat"><div class="stat-label">Liquidation LTV</div><div class="stat-value sm">77%</div></div>
+          <div class="stat"><div class="stat-label">Health Factor</div><div class="stat-value sm green" id="prHF">—</div></div>
+          <div class="stat"><div class="stat-label">Borrow Rate</div><div class="stat-value sm">~5% APY</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Contracts</div>
+        <div class="table-wrap"><table><thead><tr><th>Contract</th><th>Chain</th><th>Address</th></tr></thead><tbody>
+          <tr><td>efixDI Token</td><td>Polygon</td><td class="mono">0x04082b283818D9d0dd9Ee8742892eEe5CC396441</td></tr>
+          <tr><td>OFT Adapter (LZ V2)</td><td>Polygon</td><td class="mono">0x603265754fDdd7FdE459CC6e6722bd526C1258Fc</td></tr>
+          <tr><td>efixDI Token</td><td>Base</td><td class="mono">0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608</td></tr>
+          <tr><td>Morpho Blue</td><td>Base</td><td class="mono">0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb</td></tr>
+          <tr><td>Morpho Vault V2</td><td>Base</td><td class="mono">0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5</td></tr>
+          <tr><td>Oracle (V1)</td><td>Base</td><td class="mono">0xF4e20ff5a1a3B6251b2c460c6b221a52bED85aA9</td></tr>
+          <tr><td>Operator</td><td>Both</td><td class="mono">0x9eFc11e4d285b5a749faFBC2613836Dcda899e12</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="section">
+        <div class="section-title">Morpho Market</div>
+        <div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>
+          <tr><td>Market ID</td><td class="mono" style="font-size:10px;">0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a</td></tr>
+          <tr><td>Loan Token</td><td>USDC (Base)</td></tr>
+          <tr><td>Collateral</td><td>efixDI (Base)</td></tr>
+          <tr><td>LLTV</td><td>77%</td></tr>
+          <tr><td>Target LTV</td><td>50%</td></tr>
+          <tr><td>IRM</td><td class="mono">0x46415998764C29aB2a25CbeA6254146D50D22687</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="tabUsers" class="tab-content">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Total Users</div><div class="stat-value" id="usTotal">—</div></div>
+        <div class="stat"><div class="stat-label">Cards Issued</div><div class="stat-value" id="usCards">—</div></div>
+        <div class="stat"><div class="stat-label">Top-ups</div><div class="stat-value" id="usTopups">—</div></div>
+        <div class="stat"><div class="stat-label">Volume</div><div class="stat-value sm" id="usVolume">—</div></div>
+      </div>
+      <div class="actions">
+        <input type="text" id="searchInput" placeholder="Search by email..." oninput="filterUsers()">
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Email</th><th>Name</th><th>Card</th><th>KYC</th><th>Funding Address</th><th>Txs</th><th>Created</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="tabAnalytics" class="tab-content">
+      <div class="section">
+        <div class="section-title"><span class="dot dot-blue"></span>Page Analytics</div>
+        <div class="stats stats-5">
+          <div class="stat"><div class="stat-label">Views (24h)</div><div class="stat-value" id="anViews">—</div></div>
+          <div class="stat"><div class="stat-label">Unique Visitors</div><div class="stat-value" id="anUnique">—</div></div>
+          <div class="stat"><div class="stat-label">Card App Views</div><div class="stat-value" id="anCardApp">—</div></div>
+          <div class="stat"><div class="stat-label">Registrations</div><div class="stat-value" id="anRegs">—</div></div>
+          <div class="stat"><div class="stat-label">Conversion</div><div class="stat-value sm" id="anConv">—</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">User Funnel</div>
+        <div class="pipeline">
+          <div class="pipe-step"><div class="pipe-label">Homepage</div><div class="pipe-value" id="fnHome">—</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step"><div class="pipe-label">Card Page</div><div class="pipe-value" id="fnCard">—</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step"><div class="pipe-label">App Login</div><div class="pipe-value" id="fnApp">—</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step"><div class="pipe-label">Registered</div><div class="pipe-value" id="fnReg">—</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step"><div class="pipe-label">Card Issued</div><div class="pipe-value" id="fnIssued">—</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title"><span class="dot dot-orange"></span>Setup Analytics</div>
+        <div class="info-box">
+          <strong>Recommended: Plausible Analytics (privacy-first, no cookies)</strong><br><br>
+          1. Sign up at <a href="https://plausible.io" target="_blank" style="color:var(--blue);">plausible.io</a> (free trial, then $9/mo)<br>
+          2. Add to every page &lt;head&gt;:<br>
+          <code style="background:#fff; padding:4px 8px; display:inline-block; margin:4px 0;">&lt;script defer data-domain="efix.finance" src="https://plausible.io/js/script.js"&gt;&lt;/script&gt;</code><br><br>
+          <strong>Alternative: Self-hosted pixel (free)</strong><br>
+          Add /analytics/hit endpoint to bridge proxy. Log pageviews to Postgres. Zero external dependencies.<br><br>
+          <strong>Alternative: Cloudflare Web Analytics (free)</strong><br>
+          If DNS is proxied through Cloudflare, enable in one click. No code changes needed.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PROXY = 'https://efix-bridge-proxy-production.up.railway.app';
+const ALCHEMY = '5QrXWREEtmi4gITNoJsJf';
+const POLY_RPC = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY}`;
+const BASE_RPC = `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY}`;
+const OP = '0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
+const ADDRS = {
+  polyEfix: '0x04082b283818D9d0dd9Ee8742892eEe5CC396441',
+  baseEfix: '0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608',
+  baseUSDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  morpho: '0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb',
+  marketId: '0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a',
+};
+
+let adminToken = '', allUsers = [], chain = {};
+
+// Auth
+async function authenticate() {
+  adminToken = document.getElementById('tokenInput').value.trim();
+  if (!adminToken) return;
+  try {
+    const r = await fetch(`${PROXY}/admin/stats`, {headers:{'Authorization':`Bearer ${adminToken}`}});
+    if (r.status === 401) { document.getElementById('authError').style.display = 'block'; return; }
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    refreshAll();
+  } catch (e) { document.getElementById('authError').textContent = e.message; document.getElementById('authError').style.display = 'block'; }
+}
+document.getElementById('tokenInput').addEventListener('keydown', e => { if (e.key==='Enter') authenticate(); });
+function logoutAdmin() { adminToken=''; document.getElementById('authScreen').classList.remove('hidden'); document.getElementById('dashboard').classList.add('hidden'); }
+
+// Tabs
+document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.nav-tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById(t.dataset.tab).classList.add('active');
+}));
+
+// RPC
+async function rpc(url, to, data) {
+  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_call',params:[{to,data},'latest']})});
+  return (await r.json()).result;
+}
+function balOf(addr) { return '0x70a08231' + addr.slice(2).padStart(64,'0'); }
+
+// Chain data
+async function loadChain() {
+  try {
+    const [pe, be, bu] = await Promise.all([
+      rpc(POLY_RPC, ADDRS.polyEfix, balOf(OP)),
+      rpc(BASE_RPC, ADDRS.baseEfix, balOf(OP)),
+      rpc(BASE_RPC, ADDRS.baseUSDC, balOf(OP)),
+    ]);
+    chain.polyEfix = (parseInt(pe,16)/1e18).toFixed(2);
+    chain.baseEfix = (parseInt(be,16)/1e18).toFixed(2);
+    chain.baseUSDC = (parseInt(bu,16)/1e6).toFixed(2);
+    // Morpho position
+    const pd = '0x93c52062' + ADDRS.marketId.slice(2) + OP.slice(2).padStart(64,'0');
+    const pr = await rpc(BASE_RPC, ADDRS.morpho, pd);
+    if (pr && pr !== '0x') {
+      const h = pr.slice(2);
+      chain.coll = (parseInt(h.slice(128,192),16)/1e18).toFixed(2);
+      chain.bShares = parseInt(h.slice(64,128),16);
+      chain.debt = chain.bShares > 0 ? (chain.bShares/1e12).toFixed(2) : '0.00';
+    } else { chain.coll='0.00'; chain.debt='0.00'; }
+    const cv = parseFloat(chain.coll)*0.199, dv = parseFloat(chain.debt);
+    chain.ltv = dv > 0 ? ((dv/cv)*100).toFixed(1)+'%' : '0%';
+    chain.hf = dv > 0 ? ((cv*0.77)/dv).toFixed(2) : '∞';
+  } catch(e) { console.error('Chain error:', e); }
+}
+
+// Render
+function render(stats) {
+  // Overview
+  document.getElementById('ovUsers').textContent = stats.total_users ?? '—';
+  document.getElementById('ovCards').textContent = stats.cards_issued ?? '—';
+  document.getElementById('ovColl').textContent = chain.coll ? `${chain.coll}` : '—';
+  document.getElementById('ovDebt').textContent = chain.debt ? `$${chain.debt}` : '—';
+  document.getElementById('ppPoly').textContent = `${chain.polyEfix||'—'} efixDI`;
+  document.getElementById('ppColl').textContent = `${chain.coll||'—'} efixDI`;
+  document.getElementById('ppBorrow').textContent = `$${chain.debt||'—'}`;
+  document.getElementById('ppCard').textContent = stats.cards_issued > 0 ? `${stats.cards_issued} cards` : 'Pending';
+  if (parseFloat(chain.debt) > 0) document.getElementById('ppCardStep').classList.add('done');
+  // Protocol
+  document.getElementById('prPoly').textContent = chain.polyEfix||'—';
+  document.getElementById('prBase').textContent = chain.baseEfix||'—';
+  document.getElementById('prUSDC').textContent = `$${chain.baseUSDC||'—'}`;
+  document.getElementById('prColl').textContent = `${chain.coll||'—'} efixDI`;
+  document.getElementById('prDebt').textContent = `$${chain.debt||'—'}`;
+  document.getElementById('prLTV').textContent = chain.ltv||'—';
+  document.getElementById('prHF').textContent = chain.hf||'—';
+  // Users
+  document.getElementById('usTotal').textContent = stats.total_users ?? '—';
+  document.getElementById('usCards').textContent = stats.cards_issued ?? '—';
+  document.getElementById('usTopups').textContent = stats.total_topups ?? '—';
+  document.getElementById('usVolume').textContent = stats.total_funded ? `$${stats.total_funded.toFixed(2)}` : '$0';
+  // Analytics funnel
+  document.getElementById('fnReg').textContent = stats.total_users || '—';
+  document.getElementById('fnIssued').textContent = stats.cards_issued || '—';
+  document.getElementById('anRegs').textContent = stats.total_users || '—';
+  if (stats.total_users > 0) document.getElementById('anConv').textContent = ((stats.cards_issued/stats.total_users)*100).toFixed(0)+'%';
+}
+
+function renderUsers(users) {
+  document.getElementById('usersBody').innerHTML = users.map(u => {
+    const cb = u.card_last4 ? `<span class="badge-active">···${u.card_last4}</span>` : '<span class="badge-none">—</span>';
+    const kb = u.kyc_status==='approved' ? '<span class="badge-active">OK</span>' : `<span class="badge-pending">${u.kyc_status||'pending'}</span>`;
+    const fa = u.card_funding_address ? `<span class="mono" title="${u.card_funding_address}">${u.card_funding_address.slice(0,6)}…${u.card_funding_address.slice(-4)}</span>` : '—';
+    return `<tr><td class="mono">${u.id}</td><td>${u.email}</td><td>${u.first_name||''} ${u.last_name||''}</td><td>${cb}</td><td>${kb}</td><td>${fa}</td><td class="mono">${u.tx_count||0}</td><td class="mono">${new Date(u.created_at).toLocaleDateString('pt-BR')}</td></tr>`;
+  }).join('');
+}
+
+async function loadTx() {
+  try {
+    const users = await (await fetch(`${PROXY}/admin/users`, {headers:{'Authorization':`Bearer ${adminToken}`}})).json();
+    const txs = [];
+    for (const u of (users.users||[]).slice(0,10)) {
+      try { const d = await (await fetch(`${PROXY}/users/tx?email=${encodeURIComponent(u.email)}`)).json(); if(d.transactions) txs.push(...d.transactions.map(t=>({...t,email:u.email}))); } catch{}
+    }
+    txs.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    const tb = document.getElementById('recentTxBody');
+    if (!txs.length) { tb.innerHTML='<tr><td colspan="4" class="mono" style="text-align:center;color:var(--gray-400);">No transactions.</td></tr>'; return; }
+    tb.innerHTML = txs.slice(0,20).map(t => {
+      const cr = ['top_up','deposit','card_funding'].includes(t.type);
+      const d = new Date(t.created_at);
+      return `<tr><td><span class="badge-${cr?'active':'pending'}">${t.type}</span></td><td class="mono" style="color:${cr?'var(--green)':'var(--red)'}">${cr?'+':'-'}$${parseFloat(t.amount||0).toFixed(2)}</td><td>${t.description||'—'}</td><td class="mono">${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td></tr>`;
+    }).join('');
+  } catch(e) { console.error('Tx error:',e); }
+}
+
+async function refreshAll() {
+  const [stats, users] = await Promise.all([
+    (await fetch(`${PROXY}/admin/stats`, {headers:{'Authorization':`Bearer ${adminToken}`}})).json(),
+    (await fetch(`${PROXY}/admin/users`, {headers:{'Authorization':`Bearer ${adminToken}`}})).json(),
+    loadChain(),
+  ]);
+  render(stats);
+  allUsers = users.users || [];
+  renderUsers(allUsers);
+  loadTx();
+}
+
+function filterUsers() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  renderUsers(allUsers.filter(u => u.email?.toLowerCase().includes(q) || u.first_name?.toLowerCase().includes(q)));
+}
+
+async function exportCSV() {
+  const r = await fetch(`${PROXY}/admin/users?format=csv&token=${adminToken}`);
+  const b = await r.blob(); const u = URL.createObjectURL(b);
+  const a = document.createElement('a'); a.href=u; a.download=`efix-users-${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(u);
+}
+</script>
+</body>
+</html>
+

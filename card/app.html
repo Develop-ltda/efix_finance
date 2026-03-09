@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1Y391HW7NT');</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EFIX Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #000; --white: #fff; --gray-100: #f5f5f5; --gray-200: #e5e5e5;
+      --gray-400: #999; --gray-600: #666; --gray-800: #222;
+      --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Syne', sans-serif; background: var(--white); color: var(--black); min-height: 100vh; }
+
+    /* Layout */
+    .container { max-width: 440px; margin: 0 auto; padding: 24px 16px; min-height: 100vh; display: flex; flex-direction: column; }
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 24px; border-bottom: 1px solid var(--gray-200); margin-bottom: 24px; }
+    .logo { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+    .logo span { color: var(--gray-400); font-weight: 400; }
+    .badge { font-family: 'Space Mono', monospace; font-size: 10px; padding: 3px 8px; border: 1px solid var(--green); color: var(--green); border-radius: 3px; text-transform: uppercase; letter-spacing: 1px; }
+    .badge.pending { border-color: #f59e0b; color: #f59e0b; }
+
+    /* Screens */
+    .screen { display: none; flex: 1; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gray-600); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .form-group input, .form-group select { width: 100%; padding: 14px 16px; border: 1px solid var(--gray-200); font-family: 'Syne', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s; background: var(--white); }
+    .form-group input:focus { border-color: var(--black); }
+    .form-group input::placeholder { color: var(--gray-400); }
+
+    /* Buttons */
+    .btn { width: 100%; padding: 16px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; border: none; transition: all 0.2s; letter-spacing: -0.3px; }
+    .btn-primary { background: var(--black); color: var(--white); }
+    .btn-primary:hover { background: var(--gray-800); }
+    .btn-primary:disabled { background: var(--gray-400); cursor: not-allowed; }
+    .btn-outline { background: transparent; border: 1px solid var(--black); color: var(--black); }
+    .btn-outline:hover { background: var(--gray-100); }
+    .btn-danger { background: var(--red); color: var(--white); }
+    .btn-sm { padding: 10px 16px; font-size: 13px; width: auto; }
+    .btn + .btn { margin-top: 8px; }
+
+    /* Card visual */
+    .card-visual { background: var(--black); color: var(--white); padding: 28px 24px; border-radius: 12px; margin-bottom: 24px; position: relative; overflow: hidden; aspect-ratio: 1.586; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-visual::before { content: ''; position: absolute; top: -50%; right: -30%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%); }
+    .card-brand { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--gray-400); text-transform: uppercase; }
+    .card-number { font-family: 'Space Mono', monospace; font-size: 20px; letter-spacing: 3px; margin: auto 0; }
+    .card-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+    .card-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .card-value { font-family: 'Space Mono', monospace; font-size: 13px; }
+    .card-logo { font-weight: 800; font-size: 16px; }
+
+    /* Stats */
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--gray-200); border: 1px solid var(--gray-200); margin-bottom: 16px; }
+    .stat-item { background: var(--white); padding: 16px; }
+    .stat-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .stat-value { font-weight: 700; font-size: 20px; letter-spacing: -0.5px; }
+
+    /* Steps */
+    .step { padding: 20px; border: 1px solid var(--gray-200); margin-bottom: 12px; display: flex; align-items: center; gap: 16px; }
+    .step-number { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; border: 1px solid var(--gray-200); flex-shrink: 0; }
+    .step-number.done { background: var(--green); color: var(--white); border-color: var(--green); }
+    .step-number.active { background: var(--black); color: var(--white); border-color: var(--black); }
+    .step-content { flex: 1; }
+    .step-title { font-weight: 700; font-size: 14px; }
+    .step-desc { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+
+    /* Funding */
+    .funding-address { font-family: 'Space Mono', monospace; font-size: 11px; word-break: break-all; padding: 12px; background: var(--gray-100); border: 1px solid var(--gray-200); margin: 8px 0; cursor: pointer; }
+    .funding-address:hover { background: var(--gray-200); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 24px; background: var(--black); color: var(--white); font-size: 13px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+
+    /* Spinner */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 1px solid var(--gray-200); margin-bottom: 16px; }
+    .tab { flex: 1; text-align: center; padding: 12px; font-family: 'Space Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; color: var(--gray-400); border-bottom: 2px solid transparent; }
+    .tab.active { color: var(--black); border-bottom-color: var(--black); }
+
+    /* Activity */
+    .tx-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--gray-100); }
+    .tx-label { font-size: 13px; font-weight: 600; }
+    .tx-date { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--gray-400); }
+    .tx-amount { font-family: 'Space Mono', monospace; font-weight: 700; }
+    .tx-amount.positive { color: var(--green); }
+    .tx-amount.negative { color: var(--red); }
+
+    /* Logout */
+    .logout-link { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gray-400); cursor: pointer; text-decoration: underline; margin-top: auto; padding: 16px 0; text-align: center; }
+
+    /* Error */
+    .error-msg { color: var(--red); font-size: 13px; margin: 8px 0; display: none; }
+    .info-msg { color: var(--blue); font-size: 13px; margin: 8px 0; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">EFIX <span>Card</span></div>
+    <div id="modeBadge" class="badge">Live</div>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="screenLogin" class="screen active">
+    <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px;">Crédito a 5%.</h2>
+    <p style="color: var(--gray-600); margin-bottom: 32px; font-size: 15px;">Entre com seu email para acessar ou criar sua conta.</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div id="loginError" class="error-msg"></div>
+    <button class="btn btn-primary" id="btnLogin" onclick="handleLogin()">Entrar</button>
+  </div>
+
+  <!-- REGISTRATION SCREEN -->
+  <div id="screenRegister" class="screen">
+    <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Criar conta</h2>
+    <p style="color: var(--gray-600); margin-bottom: 24px; font-size: 14px;">Preencha seus dados para emissão do cartão Visa.</p>
+    <div class="form-group">
+      <label>Nome</label>
+      <input type="text" id="regFirstName" placeholder="Nome">
+    </div>
+    <div class="form-group">
+      <label>Sobrenome</label>
+      <input type="text" id="regLastName" placeholder="Sobrenome">
+    </div>
+    <div class="form-group">
+      <label>Telefone</label>
+      <input type="tel" id="regPhone" placeholder="+55 21 99999-0000">
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" id="regStreet" placeholder="Rua, número">
+    </div>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+      <div class="form-group">
+        <label>Cidade</label>
+        <input type="text" id="regCity" placeholder="Rio de Janeiro">
+      </div>
+      <div class="form-group">
+        <label>CEP</label>
+        <input type="text" id="regPostalCode" placeholder="22041080" maxlength="8">
+      </div>
+    </div>
+    <div id="regError" class="error-msg"></div>
+    <button class="btn btn-primary" id="btnRegister" onclick="handleRegister()">Criar conta</button>
+    <button class="btn btn-outline" onclick="showScreen('screenLogin')">Voltar</button>
+  </div>
+
+  <!-- ONBOARDING SCREEN (TOS + KYC) -->
+  <div id="screenOnboarding" class="screen">
+    <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Verificação</h2>
+    <p style="color: var(--gray-600); margin-bottom: 24px; font-size: 14px;">Complete estas etapas para ativar seu cartão.</p>
+
+    <div class="step" id="stepTos">
+      <div class="step-number" id="stepTosNum">1</div>
+      <div class="step-content">
+        <div class="step-title">Termos de Serviço</div>
+        <div class="step-desc">Aceite os termos do emissor</div>
+      </div>
+      <button class="btn btn-sm btn-primary" id="btnTos" onclick="openTos()">Abrir</button>
+    </div>
+
+    <div class="step" id="stepKyc">
+      <div class="step-number" id="stepKycNum">2</div>
+      <div class="step-content">
+        <div class="step-title">Verificação de identidade</div>
+        <div class="step-desc">Documento + selfie via Persona</div>
+      </div>
+      <button class="btn btn-sm btn-primary" id="btnKyc" onclick="openKyc()">Verificar</button>
+    </div>
+
+    <div class="step" id="stepCard">
+      <div class="step-number" id="stepCardNum">3</div>
+      <div class="step-content">
+        <div class="step-title">Emitir cartão</div>
+        <div class="step-desc">Visa virtual — pronto para uso</div>
+      </div>
+      <button class="btn btn-sm btn-primary" id="btnIssueCard" onclick="issueCard()" disabled>Emitir</button>
+    </div>
+
+    <div style="margin-top: 16px;">
+      <button class="btn btn-outline" onclick="refreshStatus()"><span id="refreshSpinner" style="display:none;" class="spinner"></span>Atualizar status</button>
+    </div>
+    <div class="logout-link" onclick="logout()">Sair</div>
+  </div>
+
+  <!-- CARD SCREEN -->
+  <div id="screenCard" class="screen">
+    <div class="card-visual">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-brand">EFIX Card</div>
+        <div class="card-logo">VISA</div>
+      </div>
+      <div class="card-number" id="cardNumber">•••• •••• •••• ····</div>
+      <div class="card-bottom">
+        <div>
+          <div class="card-label">Nome</div>
+          <div class="card-value" id="cardName">—</div>
+        </div>
+        <div>
+          <div class="card-label">Validade</div>
+          <div class="card-value" id="cardExpiry">--/--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-item">
+        <div class="stat-label">Saldo disponível</div>
+        <div class="stat-value" id="cardBalance">$0.00</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Status</div>
+        <div class="stat-value" id="cardStatusDisplay" style="color: var(--green);">Ativo</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this, 'tabFunding')">Depositar</div>
+      <div class="tab" onclick="switchTab(this, 'tabActivity')">Atividade</div>
+    </div>
+
+    <!-- Funding tab -->
+    <div id="tabFunding">
+      <div class="info-msg" style="background: #f0fdf4; border-color: #86efac;">
+        Deposite <strong>efixDI</strong> e receba crédito em USDC no cartão. Seu colateral rende <strong>~15% CDI</strong> enquanto você gasta a <strong>~5% a.a.</strong>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <div class="form-group">
+          <label>Quantidade de efixDI</label>
+          <input type="number" id="depositAmount" placeholder="1000" style="font-family: 'Space Mono', monospace;">
+        </div>
+        <div style="display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gray-400); margin-bottom: 12px;">
+          <span>LTV: 75% | Health Factor: 1.33</span>
+          <span id="creditEstimate">Crédito estimado: $0</span>
+        </div>
+        <button class="btn btn-primary" onclick="depositEfixDI()">Depositar efixDI</button>
+      </div>
+
+      <div style="border-top: 1px solid var(--gray-200); padding-top: 16px; margin-top: 16px;">
+        <div class="stat-label">Ou envie USDC diretamente (Base)</div>
+        <div class="funding-address" id="fundingAddress" onclick="copyFunding()">—</div>
+        <p style="font-size: 11px; color: var(--gray-400); font-family: 'Space Mono', monospace;">Clique para copiar. Somente USDC na rede Base.</p>
+        <button class="btn btn-outline" style="margin-top: 8px;" onclick="reconcileDeposit()">Acabei de depositar</button>
+      </div>
+    </div>
+
+    <!-- Activity tab -->
+    <div id="tabActivity" style="display:none;">
+      <div id="txList"><p style="color: var(--gray-400); font-size: 13px; text-align:center; padding: 24px;">Nenhuma transação ainda.</p></div>
+    </div>
+
+    <div style="margin-top: 24px; display: flex; gap: 8px;">
+      <button class="btn btn-outline btn-sm" onclick="toggleFreeze()" id="btnFreeze">Congelar cartão</button>
+      <button class="btn btn-outline btn-sm" onclick="showCardDetails()" id="btnDetails">Ver dados</button>
+    </div>
+
+    <!-- Demo-only: sandbox simulate buttons -->
+    <div id="demoButtons" style="display:none; margin-top: 16px; padding: 16px; border: 1px dashed #f59e0b; background: #fefce8;">
+      <div style="font-family: 'Space Mono', monospace; font-size: 10px; color: #854d0e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Demo Only</div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-outline btn-sm" onclick="simulateTopUp()" style="border-color: #22c55e; color: #22c55e;">Simular depósito $1000</button>
+        <button class="btn btn-outline btn-sm" onclick="simulatePurchase()" style="border-color: #ef4444; color: #ef4444;">Simular compra $100</button>
+      </div>
+    </div>
+
+    <div class="logout-link" onclick="logout()">Sair</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════════
+
+const PROXY_URL = 'https://efix-bridge-proxy-production.up.railway.app';
+const ALCHEMY_KEY = '5QrXWREEtmi4gITNoJsJf';
+
+// Demo mode: ?demo=true in URL uses sandbox Bridge (cards work)
+const IS_DEMO = new URLSearchParams(window.location.search).get('demo') === 'true';
+
+// State
+let currentUser = null;
+let currentBridgeCustomer = null;
+let tosLink = null;
+let kycLink = null;
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (loading) {
+    btn.dataset.text = btn.textContent;
+    btn.innerHTML = '<span class="spinner"></span>Aguarde...';
+    btn.disabled = true;
+  } else {
+    btn.textContent = btn.dataset.text || 'OK';
+    btn.disabled = false;
+  }
+}
+
+async function api(path, opts = {}) {
+  const url = path.startsWith('http') ? path : `${PROXY_URL}${path}`;
+  const modeHeader = IS_DEMO ? { 'X-Bridge-Mode': 'sandbox' } : {};
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...modeHeader, ...opts.headers },
+    ...opts,
+  });
+  return res.json();
+}
+
+function copyFunding() {
+  const addr = document.getElementById('fundingAddress').textContent;
+  if (addr && addr !== '—') {
+    navigator.clipboard.writeText(addr);
+    toast('Endereço copiado');
+  }
+}
+
+function switchTab(tabEl, contentId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.getElementById('tabFunding').style.display = contentId === 'tabFunding' ? 'block' : 'none';
+  document.getElementById('tabActivity').style.display = contentId === 'tabActivity' ? 'block' : 'none';
+  if (contentId === 'tabActivity') loadTransactions();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════════════
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    showError('loginError', 'Digite um email válido');
+    return;
+  }
+
+  setLoading('btnLogin', true);
+
+  try {
+    const data = await api(`/users/lookup?email=${encodeURIComponent(email)}`);
+
+    if (data.found) {
+      currentUser = data.user;
+      await routeUser();
+    } else {
+      // New user — show registration
+      document.getElementById('regFirstName').value = '';
+      document.getElementById('regLastName').value = '';
+      showScreen('screenRegister');
+    }
+  } catch (err) {
+    showError('loginError', 'Erro de conexão: ' + err.message);
+  } finally {
+    setLoading('btnLogin', false);
+    document.getElementById('btnLogin').textContent = 'Entrar';
+  }
+}
+
+// Route user based on their status
+async function routeUser() {
+  if (!currentUser) return showScreen('screenLogin');
+
+  // Has card → card screen
+  if (currentUser.card_last4 && currentUser.card_funding_address) {
+    renderCard();
+    showScreen('screenCard');
+    return;
+  }
+
+  // Demo mode: skip TOS/KYC, issue card directly
+  if (IS_DEMO && currentUser.bridge_customer_id) {
+    await autoIssueCardDemo();
+    return;
+  }
+
+  // Has Bridge customer → onboarding
+  if (currentUser.bridge_customer_id) {
+    await loadOnboardingStatus();
+    showScreen('screenOnboarding');
+    return;
+  }
+
+  // No Bridge customer → registration
+  showScreen('screenRegister');
+}
+
+// Demo: auto-issue card (sandbox skips TOS/KYC)
+async function autoIssueCardDemo() {
+  showScreen('screenOnboarding');
+  // Mark all steps done visually
+  ['stepTosNum', 'stepKycNum', 'stepCardNum'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.add('done'); el.textContent = '✓';
+  });
+  document.getElementById('btnTos').textContent = 'Sandbox'; document.getElementById('btnTos').disabled = true;
+  document.getElementById('btnKyc').textContent = 'Sandbox'; document.getElementById('btnKyc').disabled = true;
+  document.getElementById('btnIssueCard').textContent = 'Emitindo...'; document.getElementById('btnIssueCard').disabled = true;
+
+  try {
+    // First ensure sandbox cards are enabled
+    await api('/bridge/cards/enable', {
+      method: 'POST',
+      headers: { 'Idempotency-Key': `enable-${Date.now()}` },
+      body: JSON.stringify({ funding_strategy: 'top_up' }),
+    });
+  } catch (e) { /* already enabled, ignore */ }
+
+  try {
+    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}/card_accounts`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': `card-demo-${currentUser.bridge_customer_id}-${Date.now()}` },
+      body: JSON.stringify({ currency: 'usdc', chain: 'base' }),
+    });
+
+    if (data.id || data.card_id) {
+      await api('/users/link-card', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: currentUser.email,
+          card_account_id: data.id || data.card_id,
+          card_last4: data.last_4 || data.last4,
+          card_funding_address: data.funding_address || data.source_deposit_instructions?.deposit_address,
+          card_status: 'active',
+        }),
+      });
+
+      const lookup = await api(`/users/lookup?email=${encodeURIComponent(currentUser.email)}`);
+      currentUser = lookup.user;
+      toast('Cartão emitido! (Demo)');
+      renderCard();
+      showScreen('screenCard');
+    } else {
+      toast('Erro: ' + (data.message || JSON.stringify(data)));
+      document.getElementById('btnIssueCard').textContent = 'Emitir'; document.getElementById('btnIssueCard').disabled = false;
+    }
+  } catch (err) {
+    toast('Erro: ' + err.message);
+    document.getElementById('btnIssueCard').textContent = 'Emitir'; document.getElementById('btnIssueCard').disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REGISTRATION
+// ═══════════════════════════════════════════════════════════════
+
+async function handleRegister() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const first_name = document.getElementById('regFirstName').value.trim();
+  const last_name = document.getElementById('regLastName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+
+  if (!first_name || !last_name) {
+    showError('regError', 'Nome e sobrenome são obrigatórios');
+    return;
+  }
+
+  setLoading('btnRegister', true);
+
+  try {
+    const body = {
+      email,
+      first_name,
+      last_name,
+      phone,
+      address: {
+        street: document.getElementById('regStreet').value.trim(),
+        city: document.getElementById('regCity').value.trim(),
+        country: 'BRA',
+        postal_code: document.getElementById('regPostalCode').value.trim().replace(/\D/g, ''),
+        subdivision: 'RJ',
+      }
+    };
+
+    const data = await api('/users/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+
+    if (data.error) {
+      showError('regError', data.detail?.message || data.error);
+      return;
+    }
+
+    currentUser = data.user;
+    tosLink = data.tos_link;
+    kycLink = data.kyc_link;
+
+    toast('Conta criada com sucesso');
+    await loadOnboardingStatus();
+    showScreen('screenOnboarding');
+  } catch (err) {
+    showError('regError', 'Erro: ' + err.message);
+  } finally {
+    setLoading('btnRegister', false);
+    document.getElementById('btnRegister').textContent = 'Criar conta';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ONBOARDING (TOS + KYC + CARD ISSUANCE)
+// ═══════════════════════════════════════════════════════════════
+
+async function loadOnboardingStatus() {
+  if (!currentUser?.bridge_customer_id) return;
+
+  try {
+    const bridge = await api(`/bridge/customers/${currentUser.bridge_customer_id}`);
+    currentBridgeCustomer = bridge;
+
+    const tosOk = bridge.tos_status === 'approved';
+    const kycOk = bridge.kyc_status === 'approved';
+
+    // Step 1: TOS
+    const tosNum = document.getElementById('stepTosNum');
+    const btnTos = document.getElementById('btnTos');
+    if (tosOk) {
+      tosNum.classList.add('done'); tosNum.textContent = '✓';
+      btnTos.textContent = 'Concluído'; btnTos.disabled = true;
+    } else {
+      tosNum.classList.add('active');
+      btnTos.disabled = false;
+    }
+
+    // Step 2: KYC
+    const kycNum = document.getElementById('stepKycNum');
+    const btnKyc = document.getElementById('btnKyc');
+    if (kycOk) {
+      kycNum.classList.add('done'); kycNum.textContent = '✓';
+      btnKyc.textContent = 'Verificado'; btnKyc.disabled = true;
+    } else if (tosOk) {
+      kycNum.classList.add('active');
+      btnKyc.disabled = false;
+    } else {
+      btnKyc.disabled = true;
+    }
+
+    // Step 3: Issue card
+    const cardNum = document.getElementById('stepCardNum');
+    const btnIssue = document.getElementById('btnIssueCard');
+    if (tosOk && kycOk) {
+      cardNum.classList.add('active');
+      btnIssue.disabled = false;
+    }
+
+    // Update pending badge
+    if (bridge.kyc_status === 'pending' || bridge.kyc_status === 'manual_review') {
+      document.getElementById('modeBadge').textContent = 'Em análise';
+      document.getElementById('modeBadge').classList.add('pending');
+    }
+  } catch (err) {
+    console.error('Onboarding status error:', err);
+  }
+}
+
+async function openTos() {
+  if (tosLink) {
+    window.open(tosLink, '_blank');
+    return;
+  }
+  // Production Bridge: TOS link is on the customer object
+  try {
+    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}`);
+    if (data.tos_link) {
+      tosLink = data.tos_link;
+      window.open(tosLink, '_blank');
+    } else {
+      toast('TOS link não disponível');
+    }
+  } catch (err) {
+    toast('Erro: ' + err.message);
+  }
+}
+
+async function openKyc() {
+  if (kycLink) {
+    window.open(kycLink, '_blank');
+    return;
+  }
+  // Production Bridge: KYC link is on the customer object
+  try {
+    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}`);
+    if (data.kyc_link) {
+      kycLink = data.kyc_link;
+      window.open(kycLink, '_blank');
+    } else {
+      toast('Complete o TOS primeiro');
+    }
+  } catch (err) {
+    toast('Erro: ' + err.message);
+  }
+}
+
+async function refreshStatus() {
+  document.getElementById('refreshSpinner').style.display = 'inline-block';
+  await loadOnboardingStatus();
+  document.getElementById('refreshSpinner').style.display = 'none';
+  toast('Status atualizado');
+
+  // Check if ready for card screen
+  if (currentUser?.card_last4 && currentUser?.card_funding_address) {
+    renderCard();
+    showScreen('screenCard');
+  }
+}
+
+async function issueCard() {
+  setLoading('btnIssueCard', true);
+  try {
+    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}/card_accounts`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': `card-${currentUser.bridge_customer_id}-${Date.now()}` },
+      body: JSON.stringify({ currency: 'usdc', chain: 'base' }),
+    });
+
+    if (data.id || data.card_id) {
+      // Save card to our DB
+      await api('/users/link-card', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: currentUser.email,
+          card_account_id: data.id || data.card_id,
+          card_last4: data.last_4 || data.last4,
+          card_funding_address: data.funding_address || data.source_deposit_instructions?.deposit_address,
+          card_status: 'active',
+        }),
+      });
+
+      // Refresh user
+      const lookup = await api(`/users/lookup?email=${encodeURIComponent(currentUser.email)}`);
+      currentUser = lookup.user;
+
+      toast('Cartão emitido com sucesso!');
+      renderCard();
+      showScreen('screenCard');
+    } else {
+      toast('Erro na emissão: ' + (data.message || JSON.stringify(data)));
+    }
+  } catch (err) {
+    toast('Erro: ' + err.message);
+  } finally {
+    setLoading('btnIssueCard', false);
+    document.getElementById('btnIssueCard').textContent = 'Emitir';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CARD SCREEN
+// ═══════════════════════════════════════════════════════════════
+
+function renderCard() {
+  if (!currentUser) return;
+  const last4 = currentUser.card_last4 || '····';
+  document.getElementById('cardNumber').textContent = `•••• •••• •••• ${last4}`;
+  document.getElementById('cardName').textContent =
+    `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim().toUpperCase() || '—';
+  document.getElementById('cardExpiry').textContent = '--/--'; // fetched from Bridge on "Ver dados"
+  document.getElementById('fundingAddress').textContent = currentUser.card_funding_address || '—';
+  document.getElementById('modeBadge').textContent = IS_DEMO ? 'Demo' : 'Ativo';
+  if (!IS_DEMO) document.getElementById('modeBadge').classList.remove('pending');
+  // Show demo simulate buttons in demo mode
+  if (IS_DEMO) document.getElementById('demoButtons').style.display = 'block';
+  loadBalance();
+}
+
+async function loadBalance() {
+  if (!currentUser?.card_funding_address) return;
+
+  // Demo mode: read balance from Bridge sandbox card account
+  if (IS_DEMO && currentUser.card_account_id) {
+    try {
+      const data = await api(`/bridge/customers/5f33ae06-5dae-4344-98f7-172f88c12842/card_accounts/${currentUser.card_account_id}`);
+      if (data.balances) {
+        const raw = data.balances.available || data.balances.available_balance || '0';
+        const avail = parseFloat(raw) || 0;
+        document.getElementById('cardBalance').textContent = `$${avail.toFixed(2)}`;
+        return;
+      }
+    } catch (e) { console.warn('Bridge balance failed:', e); }
+  }
+
+  // Production: check USDC balance on Base via Alchemy
+  try {
+    const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1, method: 'eth_call',
+        params: [{
+          to: USDC_BASE,
+          data: '0x70a08231' + currentUser.card_funding_address.slice(2).padStart(64, '0')
+        }, 'latest']
+      }),
+    });
+    const data = await res.json();
+    const bal = parseInt(data.result, 16) / 1e6;
+    document.getElementById('cardBalance').textContent = `$${bal.toFixed(2)}`;
+  } catch (err) {
+    console.warn('Balance check failed:', err);
+  }
+}
+
+// efixDI deposit — protocol manages collateralization
+async function depositEfixDI() {
+  const amount = document.getElementById('depositAmount').value;
+  if (!amount || parseFloat(amount) <= 0) { toast('Informe uma quantidade'); return; }
+
+  // In production: this would trigger a smart contract call
+  // For now: log the intent and show instructions
+  toast(`Depósito de ${amount} efixDI registrado`);
+
+  // Log transaction
+  await api('/users/tx', {
+    method: 'POST',
+    body: JSON.stringify({
+      email: currentUser.email,
+      type: 'deposit',
+      amount: parseFloat(amount),
+      asset: 'efixDI',
+      description: `Depósito de ${amount} efixDI para colateralização`,
+    }),
+  });
+
+  // In demo mode, simulate the USDC credit (75% LTV, ~0.199 USDC/efixDI)
+  if (IS_DEMO) {
+    const usdcCredit = (parseFloat(amount) * 0.199 * 0.75).toFixed(2);
+    toast(`Crédito de $${usdcCredit} USDC disponível (demo)`);
+    setTimeout(loadBalance, 1000);
+  }
+}
+
+// Reconciliation — user confirms deposit, we check and update
+async function reconcileDeposit() {
+  toast('Verificando depósito...');
+  setTimeout(async () => {
+    await loadBalance();
+    toast('Saldo atualizado');
+  }, 1500);
+}
+
+// Credit estimate on input change
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('depositAmount');
+  if (input) {
+    input.addEventListener('input', () => {
+      const amt = parseFloat(input.value) || 0;
+      const credit = (amt * 0.199 * 0.75).toFixed(2);
+      const el = document.getElementById('creditEstimate');
+      if (el) el.textContent = `Crédito estimado: $${credit}`;
+    });
+  }
+});
+
+async function showCardDetails() {
+  if (!currentUser?.bridge_customer_id || !currentUser?.card_account_id) {
+    toast('Card account not found');
+    return;
+  }
+  try {
+    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}/card_accounts/${currentUser.card_account_id}`);
+    if (data.card_number) {
+      document.getElementById('cardNumber').textContent = data.card_number.replace(/(.{4})/g, '$1 ').trim();
+    }
+    if (data.expiration_month && data.expiration_year) {
+      document.getElementById('cardExpiry').textContent = `${String(data.expiration_month).padStart(2,'0')}/${String(data.expiration_year).slice(-2)}`;
+    }
+    if (data.cvv) toast(`CVV: ${data.cvv}`);
+    else toast('Dados do cartão atualizados');
+  } catch (err) {
+    toast('Erro: ' + err.message);
+  }
+}
+
+async function toggleFreeze() {
+  toast('Funcionalidade em breve');
+  // TODO: Bridge freeze/unfreeze endpoint
+}
+
+// Demo-only: Sandbox simulate functions
+async function simulateTopUp() {
+  if (!IS_DEMO || !currentUser?.card_account_id) return toast('Somente no modo demo');
+  try {
+    await api(`/bridge/customers/5f33ae06-5dae-4344-98f7-172f88c12842/card_accounts/${currentUser.card_account_id}/simulate_balance_top_up`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': `sim-topup-${Date.now()}` },
+      body: JSON.stringify({ amount: '1000.0' }),
+    });
+    toast('Depósito de $1000 simulado');
+    api('/users/tx', { method: 'POST', body: JSON.stringify({ email: currentUser.email, type: 'top_up', amount: 1000, asset: 'USDC', description: 'Simulated top-up (demo)' }) });
+    setTimeout(loadBalance, 1500);
+  } catch (err) { toast('Erro: ' + err.message); }
+}
+
+async function simulatePurchase() {
+  if (!IS_DEMO || !currentUser?.card_account_id) return toast('Somente no modo demo');
+  try {
+    await api(`/bridge/customers/5f33ae06-5dae-4344-98f7-172f88c12842/card_accounts/${currentUser.card_account_id}/simulate_authorization`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': `sim-auth-${Date.now()}` },
+      body: JSON.stringify({ amount: '100.0', merchant_name: 'EFIX Demo Store' }),
+    });
+    toast('Compra de $100 simulada');
+    api('/users/tx', { method: 'POST', body: JSON.stringify({ email: currentUser.email, type: 'purchase', amount: 100, asset: 'USDC', description: 'Simulated purchase (demo)' }) });
+    setTimeout(loadBalance, 1500);
+  } catch (err) { toast('Erro: ' + err.message); }
+}
+
+async function loadTransactions() {
+  if (!currentUser?.email) return;
+  try {
+    const data = await api(`/users/tx?email=${encodeURIComponent(currentUser.email)}`);
+    const list = document.getElementById('txList');
+    if (!data.transactions || data.transactions.length === 0) {
+      list.innerHTML = '<p style="color:var(--gray-400);font-size:13px;text-align:center;padding:24px;">Nenhuma transação ainda.</p>';
+      return;
+    }
+    list.innerHTML = data.transactions.map(tx => {
+      const isCredit = ['top_up', 'deposit', 'fund'].includes(tx.type);
+      const sign = isCredit ? '+' : '-';
+      const cls = isCredit ? 'positive' : 'negative';
+      const d = new Date(tx.created_at);
+      return `<div class="tx-item">
+        <div><div class="tx-label">${tx.description || tx.type}</div>
+        <div class="tx-date">${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div></div>
+        <div class="tx-amount ${cls}">${sign}$${parseFloat(tx.amount || 0).toFixed(2)}</div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    console.warn('Load tx failed:', err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOGOUT
+// ═══════════════════════════════════════════════════════════════
+
+function logout() {
+  currentUser = null;
+  currentBridgeCustomer = null;
+  tosLink = null;
+  kycLink = null;
+  document.getElementById('loginEmail').value = '';
+  showScreen('screenLogin');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT — check for redirect back from KYC/TOS
+// ═══════════════════════════════════════════════════════════════
+
+(function init() {
+  // Set badge based on mode
+  const badge = document.getElementById('modeBadge');
+  if (IS_DEMO) {
+    badge.textContent = 'Demo';
+    badge.classList.add('pending');
+    document.querySelector('h2').textContent = 'Crédito a 5%. (Demo)';
+  }
+
+  // If URL has email param (from redirect), auto-login
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get('email');
+  if (email) {
+    document.getElementById('loginEmail').value = email;
+    handleLogin();
+  }
+})();
+</script>
+</body>
+</html>
+
