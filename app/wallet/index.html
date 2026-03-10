@@ -63,6 +63,10 @@
         .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--gray-600);border-top-color:var(--white);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px}
         @keyframes spin{to{transform:rotate(360deg)}}
         #alchemy-signer-iframe-container{position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden}
+        .prog-step{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--gray-600);font-family:var(--font-mono)}
+        .prog-step .prog-icon{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-700);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+        .prog-step.done{color:var(--green)}.prog-step.done .prog-icon{border-color:var(--green);background:var(--green);color:var(--black)}
+        .prog-step.active{color:var(--white)}.prog-step.active .prog-icon{border-color:var(--white)}
     </style>
 </head>
 <body>
@@ -125,11 +129,28 @@
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">
                     <h3>Depositar via PIX</h3>
-                    <div class="amount-input-wrap">
-                        <input type="number" id="depositAmount" placeholder="0,00" min="10" step="0.01">
-                        <span class="currency">BRL</span>
+                    <div id="deposit-form">
+                        <div class="amount-input-wrap">
+                            <input type="number" id="depositAmount" placeholder="0,00" min="10" step="0.01">
+                            <span class="currency">BRL</span>
+                        </div>
+                        <button class="btn btn-primary" id="btnDeposit" onclick="handleDeposit()">Gerar QR Code PIX</button>
                     </div>
-                    <button class="btn btn-primary" onclick="handleDeposit()">Gerar QR Code PIX</button>
+                    <div id="deposit-qr" style="display:none;">
+                        <div style="background:var(--white);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px;">
+                            <p style="color:var(--black);font-size:14px;font-weight:600;margin-bottom:12px;">Escaneie com seu app bancário</p>
+                            <img id="qrImage" src="" alt="QR Code PIX" style="width:200px;height:200px;border-radius:8px;">
+                            <p style="color:var(--gray-600);font-size:11px;font-family:var(--font-mono);margin-top:12px;word-break:break-all;max-height:60px;overflow:hidden;cursor:pointer;" id="pixCodeText" onclick="copyPixCode()">...</p>
+                            <button class="btn btn-secondary" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;width:auto;padding:8px 20px;font-size:13px;" onclick="copyPixCode()">Copiar código PIX</button>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;" id="depositSteps">
+                            <div class="prog-step done" id="ds-1"><span class="prog-icon">✓</span> QR Code gerado</div>
+                            <div class="prog-step" id="ds-2"><span class="prog-icon">2</span> Aguardando pagamento PIX...</div>
+                            <div class="prog-step" id="ds-3"><span class="prog-icon">3</span> Mintando tokens efixDI</div>
+                            <div class="prog-step" id="ds-4"><span class="prog-icon">4</span> Tokens creditados!</div>
+                        </div>
+                        <button class="btn btn-secondary" style="margin-top:16px;" onclick="resetDeposit()">Cancelar</button>
+                    </div>
                 </div>
             </div>
             <div class="tab-panel" id="panel-withdraw">
@@ -254,10 +275,108 @@
             } catch(e) { console.error('Balance error:', e); }
         }
 
+        let currentDepositRef = null;
+        let pollTimer = null;
+
         async function handleDeposit() {
             const amount = parseFloat(document.getElementById('depositAmount').value);
             if (!amount || amount < 10) { alert('Mínimo R$ 10,00'); return; }
-            alert('Deposit endpoint /deposit/qr not yet implemented on backend.\nAmount: R$ ' + amount.toFixed(2) + '\nWallet: ' + userAddress);
+
+            const btn = document.getElementById('btnDeposit');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Gerando QR Code...';
+
+            try {
+                const res = await fetch(BACKEND_URL + '/deposit/qr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, address: userAddress })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Backend error');
+
+                currentDepositRef = data.reference;
+
+                // Show QR
+                document.getElementById('deposit-form').style.display = 'none';
+                document.getElementById('deposit-qr').style.display = 'block';
+
+                if (data.qrCode) {
+                    document.getElementById('qrImage').src = data.qrCode;
+                }
+                if (data.pixCode) {
+                    document.getElementById('pixCodeText').textContent = data.pixCode;
+                    document.getElementById('pixCodeText').dataset.code = data.pixCode;
+                }
+
+                // Start polling for payment confirmation
+                startPolling(data.reference);
+
+            } catch (e) {
+                alert('Erro: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Gerar QR Code PIX';
+            }
+        }
+
+        function startPolling(reference) {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(async () => {
+                try {
+                    const res = await fetch(BACKEND_URL + '/deposit/status/' + reference);
+                    const data = await res.json();
+
+                    if (data.status === 'minting' || data.status === 'processing') {
+                        setStep(2, true); setStep(3, 'active');
+                    } else if (data.status === 'minted' || data.status === 'confirmed') {
+                        setStep(2, true); setStep(3, true); setStep(4, true);
+                        clearInterval(pollTimer); pollTimer = null;
+                        // Refresh balance
+                        setTimeout(() => refreshBalance(userAddress), 2000);
+                    } else if (data.status === 'failed') {
+                        clearInterval(pollTimer); pollTimer = null;
+                        alert('Erro no processamento: ' + (data.error || 'tente novamente'));
+                    }
+                } catch(e) { /* keep polling */ }
+            }, 5000); // poll every 5 seconds
+        }
+
+        function setStep(n, state) {
+            const el = document.getElementById('ds-' + n);
+            if (!el) return;
+            el.classList.remove('done', 'active');
+            if (state === true) el.classList.add('done');
+            else if (state === 'active') el.classList.add('active');
+            if (state === true) {
+                el.querySelector('.prog-icon').textContent = '✓';
+            }
+        }
+
+        function resetDeposit() {
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            document.getElementById('deposit-form').style.display = 'block';
+            document.getElementById('deposit-qr').style.display = 'none';
+            ['ds-1','ds-2','ds-3','ds-4'].forEach((id, i) => {
+                const el = document.getElementById(id);
+                el.classList.remove('done','active');
+                el.querySelector('.prog-icon').textContent = String(i+1);
+            });
+            document.getElementById('ds-1').classList.add('done');
+            document.getElementById('ds-1').querySelector('.prog-icon').textContent = '✓';
+            currentDepositRef = null;
+        }
+
+        function copyPixCode() {
+            const code = document.getElementById('pixCodeText').dataset.code;
+            if (code) {
+                navigator.clipboard.writeText(code);
+                const el = document.getElementById('pixCodeText');
+                const orig = el.textContent;
+                el.textContent = 'Copiado!';
+                setTimeout(() => el.textContent = orig, 1500);
+            }
         }
 
         async function handleWithdraw() {
