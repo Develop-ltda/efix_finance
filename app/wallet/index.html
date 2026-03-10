@@ -404,6 +404,16 @@
                 document.getElementById('balanceDisplay').textContent = 'R$ ' + brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
                 // Update card spending power
                 if (brl > 0) updateSpendingPower(brl);
+
+                // Fetch locked collateral info
+                try {
+                    const balRes = await fetch(BACKEND_URL + '/wallet/balance/' + (address || userAddress));
+                    const balData = await balRes.json();
+                    if (balData.locked && parseFloat(balData.locked) > 0) {
+                        document.getElementById('collateralAmount').textContent = balData.locked;
+                        updateSpendingPower(parseFloat(balData.locked));
+                    }
+                } catch(e) {}
             } catch(e) { console.error('Balance error:', e); }
         }
 
@@ -637,24 +647,17 @@
             const bal = parseFloat(document.getElementById('tokenBalance').textContent);
             if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
 
-            if (!confirm('Depositar ' + amount.toFixed(2) + ' efixDI como colateral?\n\nOs tokens serão transferidos para o protocolo e usados como garantia para crédito USDC.')) return;
+            if (!confirm('Depositar ' + amount.toFixed(2) + ' efixDI como colateral?\n\nOs tokens serão bloqueados como garantia para crédito USDC.\nVocê não poderá sacar a parte bloqueada.')) return;
 
             const btn = document.getElementById('btnCollateralize');
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span>Transferindo tokens...';
+            btn.innerHTML = '<span class="spinner"></span>Registrando colateral...';
 
             try {
-                // Step 1: Transfer efixDI from user wallet to operator (on-chain)
-                const txResult = await EfixWallet.collateralize(amount);
-                console.log("[Collateral] Transfer confirmed:", txResult.hash);
-
-                btn.innerHTML = '<span class="spinner"></span>Registrando colateral...';
-
-                // Step 2: Register collateral on backend with tx hash
                 const res = await fetch(BACKEND_URL + '/deposit/collateralize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address: userAddress, amount: amount, txHash: txResult.hash })
+                    body: JSON.stringify({ address: userAddress, amount: amount })
                 });
 
                 const data = await res.json();
@@ -665,19 +668,13 @@
                     document.getElementById('cardStatus').textContent = 'ACTIVE';
                     document.getElementById('cardStatus').style.background = 'rgba(34,197,94,0.2)';
                     document.getElementById('cardStatus').style.color = '#22c55e';
-                    alert('Colateral depositado! ' + data.collateral + ' efixDI\nCrédito USDC: $' + data.usdcCredit + '\nTX: ' + txResult.hash.slice(0, 14) + '...');
+                    alert('Colateral bloqueado: ' + data.collateral + ' efixDI\nCrédito USDC: $' + data.usdcCredit + '\nLTV: ' + data.ltv + '\n\nSeu saldo disponível para saque foi reduzido.');
                     loadHistory(userAddress);
-                    refreshBalance(userAddress);
                 } else {
-                    alert(data.error || 'Erro ao registrar colateral');
+                    alert(data.error || 'Erro desconhecido');
                 }
             } catch (e) {
-                console.error("[Collateral] Error:", e);
-                if (e.message && e.message.includes('user rejected')) {
-                    alert('Transação cancelada pelo usuário.');
-                } else {
-                    alert('Erro na transferência: ' + e.message);
-                }
+                alert('Erro: ' + e.message);
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Depositar Colateral';
