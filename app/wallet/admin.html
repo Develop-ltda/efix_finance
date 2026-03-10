@@ -47,6 +47,8 @@
   #app{display:none}
   .dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px}
   .dot.green{background:var(--green)}
+  .iframe-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--black)}
+  .iframe-wrap iframe{width:100%;height:calc(100vh - 220px);border:none;background:var(--black)}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -77,6 +79,8 @@
     <button class="tab-btn" onclick="switchTab('withdrawals',this)">Saques</button>
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
     <button class="tab-btn" onclick="switchTab('protocol',this)">Protocolo</button>
+    <button class="tab-btn" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('range',this)">Range</button>
   </div>
   <div class="tab-content active" id="tab-mint">
     <div class="card">
@@ -110,6 +114,24 @@
     <div class="card"><h2>Protocol State</h2><div id="protocolState">Loading...</div></div>
     <div class="card"><h2>Operator Wallets</h2><div id="operatorInfo">Loading...</div></div>
   </div>
+  <div class="tab-content" id="tab-dashboard">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="margin:0">Protocol Dashboard</h2>
+      <a href="https://efix.finance/protocol/" target="_blank" style="font-size:11px;color:var(--gray-500);text-decoration:none;">Open in new tab ↗</a>
+    </div>
+    <div class="iframe-wrap">
+      <iframe src="https://efix.finance/protocol/" id="dashboardFrame" loading="lazy"></iframe>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-range">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="margin:0">Range Monitor</h2>
+      <a href="https://efix.finance/range-monitor/" target="_blank" style="font-size:11px;color:var(--gray-500);text-decoration:none;">Open in new tab ↗</a>
+    </div>
+    <div class="iframe-wrap">
+      <iframe src="https://efix.finance/range-monitor/" id="rangeFrame" loading="lazy"></iframe>
+    </div>
+  </div>
 </div>
 <script>
 const B='https://efixdi-backend-production.up.railway.app',PR='https://polygon-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf',BR='https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf',EP='0x04082b283818D9d0dd9Ee8742892eEe5CC396441',EB='0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608',OP='0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
@@ -131,7 +153,9 @@ async function loadWithdrawals(){const el=document.getElementById('withdrawalsLi
 async function processW(id){if(!confirm('Process PIX #'+id+'?'))return;try{const r=await fetch(B+'/api/wallet/withdrawals/process',{method:'POST',headers:hdr(),body:JSON.stringify({id})});const d=await r.json();if(d.success){toast('PIX sent!');loadWithdrawals()}else alert(d.error||JSON.stringify(d))}catch(e){alert(e.message)}}
 async function loadCollateral(){const el=document.getElementById('collateralList'),sm=document.getElementById('collateralSummary');el.innerHTML='<div class="empty">Loading...</div>';try{const r=await fetch(B+'/api/wallet/collateral',{headers:{'X-Admin-Key':K}});const d=await r.json();if(!d.collateral||!d.collateral.length){el.innerHTML='<div class="empty">No collateral</div>';sm.innerHTML='';return}let te=0,tu=0,lk=0,pk=0;d.collateral.forEach(c=>{te+=parseFloat(c.amount_efix);tu+=parseFloat(c.usdc_credit);if(c.status==='locked')lk+=parseFloat(c.amount_efix);else pk+=parseFloat(c.amount_efix)});sm.innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">'+te.toFixed(0)+'</div><div style="font-size:10px;color:var(--gray-500)">Total efixDI</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">$'+tu.toFixed(2)+'</div><div style="font-size:10px;color:var(--gray-500)">USDC Credit</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">'+lk.toFixed(0)+'</div><div style="font-size:10px;color:var(--gray-500)">Locked</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--yellow)">'+pk.toFixed(0)+'</div><div style="font-size:10px;color:var(--gray-500)">Pending</div></div></div>';let h='<table class="tbl"><thead><tr><th>Address</th><th>Amount</th><th>USDC</th><th>Status</th><th>Date</th></tr></thead><tbody>';d.collateral.forEach(c=>{h+='<tr><td class="addr">'+sa(c.address)+'</td><td>'+c.amount_efix+' efixDI</td><td>$'+c.usdc_credit+'</td><td><span class="badge '+c.status+'">'+c.status+'</span></td><td style="font-size:11px;color:var(--gray-500)">'+fd(c.created_at)+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
 async function loadProtocol(){const el=document.getElementById('protocolState'),op=document.getElementById('operatorInfo');try{const s=await(await fetch(B+'/api/status?key='+K)).json();if(s.protocol){const p=s.protocol;el.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">TVL (BRL)</td><td>R$ '+parseFloat(p.tvl_brl).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">TVL (USD)</td><td>$'+p.tvl_usd+'</td></tr><tr><td style="color:var(--gray-500)">efixDI Supply</td><td>'+parseFloat(p.efix_total_supply).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">BRL/USD</td><td>'+p.brl_usd_rate+'</td></tr><tr><td style="color:var(--gray-500)">Vault</td><td>'+(p.vault_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Bridge</td><td>'+(p.bridge_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Block</td><td>'+p.current_block+'</td></tr></table>'}if(s.operator){op.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+parseFloat(s.operator.matic).toFixed(4)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+s.operator.usdc+'</td></tr></table>'}}catch(e){el.textContent='Error: '+e.message}}
-function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active')}
+function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');
+// Widen container for iframe tabs
+const c=document.querySelector('.container');if(n==='dashboard'||n==='range')c.style.maxWidth='100%';else c.style.maxWidth='1100px';}
 if(location.hash){document.getElementById('adminKey').value=location.hash.slice(1);login()}
 </script>
 </body>
