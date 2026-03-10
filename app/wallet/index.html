@@ -637,15 +637,24 @@
             const bal = parseFloat(document.getElementById('tokenBalance').textContent);
             if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
 
+            if (!confirm('Depositar ' + amount.toFixed(2) + ' efixDI como colateral?\n\nOs tokens serão transferidos para o protocolo e usados como garantia para crédito USDC.')) return;
+
             const btn = document.getElementById('btnCollateralize');
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span>Depositando colateral...';
+            btn.innerHTML = '<span class="spinner"></span>Transferindo tokens...';
 
             try {
+                // Step 1: Transfer efixDI from user wallet to operator (on-chain)
+                const txResult = await EfixWallet.collateralize(amount);
+                console.log("[Collateral] Transfer confirmed:", txResult.hash);
+
+                btn.innerHTML = '<span class="spinner"></span>Registrando colateral...';
+
+                // Step 2: Register collateral on backend with tx hash
                 const res = await fetch(BACKEND_URL + '/deposit/collateralize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address: userAddress, amount: amount })
+                    body: JSON.stringify({ address: userAddress, amount: amount, txHash: txResult.hash })
                 });
 
                 const data = await res.json();
@@ -653,16 +662,22 @@
                 if (data.success) {
                     document.getElementById('collateralAmount').textContent = data.collateral;
                     updateSpendingPower(parseFloat(data.collateral));
-                    document.getElementById('cardStatus').textContent = 'PENDING';
-                    document.getElementById('cardStatus').style.background = 'rgba(234,179,8,0.2)';
-                    document.getElementById('cardStatus').style.color = '#eab308';
-                    alert('Colateral registrado: ' + data.collateral + ' efixDI\nCrédito USDC: $' + data.usdcCredit + '\nLTV: ' + data.ltv + '\n\nVocê será notificado quando o USDC for creditado.');
+                    document.getElementById('cardStatus').textContent = 'ACTIVE';
+                    document.getElementById('cardStatus').style.background = 'rgba(34,197,94,0.2)';
+                    document.getElementById('cardStatus').style.color = '#22c55e';
+                    alert('Colateral depositado! ' + data.collateral + ' efixDI\nCrédito USDC: $' + data.usdcCredit + '\nTX: ' + txResult.hash.slice(0, 14) + '...');
                     loadHistory(userAddress);
+                    refreshBalance(userAddress);
                 } else {
-                    alert(data.error || 'Erro desconhecido');
+                    alert(data.error || 'Erro ao registrar colateral');
                 }
             } catch (e) {
-                alert('Erro: ' + e.message);
+                console.error("[Collateral] Error:", e);
+                if (e.message && e.message.includes('user rejected')) {
+                    alert('Transação cancelada pelo usuário.');
+                } else {
+                    alert('Erro na transferência: ' + e.message);
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Depositar Colateral';
