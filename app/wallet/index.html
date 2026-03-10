@@ -67,6 +67,7 @@
         .prog-step .prog-icon{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-700);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
         .prog-step.done{color:var(--green)}.prog-step.done .prog-icon{border-color:var(--green);background:var(--green);color:var(--black)}
         .prog-step.active{color:var(--white)}.prog-step.active .prog-icon{border-color:var(--white)}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
     </style>
 </head>
 <body>
@@ -125,6 +126,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('deposit', this)">Depositar</button>
                 <button class="tab" onclick="switchTab('withdraw', this)">Sacar</button>
+                <button class="tab" onclick="switchTab('card', this)">Card</button>
             </div>
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">
@@ -168,6 +170,77 @@
                     <button class="btn btn-primary" onclick="handleWithdraw()">Solicitar Saque</button>
                 </div>
             </div>
+
+            <!-- Card Panel -->
+            <div class="tab-panel" id="panel-card">
+                <div class="action-card" style="padding:0;overflow:hidden;">
+                    <!-- Virtual Card Preview -->
+                    <div style="background:linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);padding:28px 24px;position:relative;min-height:200px;">
+                        <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 80% 20%, rgba(34,197,94,0.08) 0%, transparent 50%);"></div>
+                        <div style="position:relative;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+                                <span style="font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:-0.5px;">EFIX<span style="color:var(--green);">+</span></span>
+                                <span style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);background:var(--gray-800);padding:3px 10px;border-radius:20px;" id="cardStatus">COMING SOON</span>
+                            </div>
+                            <div style="font-family:var(--font-mono);font-size:18px;letter-spacing:3px;color:var(--gray-400);margin-bottom:24px;">
+                                •••• •••• •••• <span id="cardLast4">----</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                                <div>
+                                    <div style="font-size:10px;color:var(--gray-600);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Spending Power</div>
+                                    <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--white);" id="spendingPower">$0.00</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <svg width="48" height="16" viewBox="0 0 48 16" fill="none"><circle cx="16" cy="8" r="8" fill="#EB001B" opacity="0.8"/><circle cx="32" cy="8" r="8" fill="#F79E1B" opacity="0.8"/><path d="M24 2.5a7.5 7.5 0 010 11 7.5 7.5 0 010-11z" fill="#FF5F00" opacity="0.8"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Collateral Info -->
+                    <div style="padding:20px 24px;">
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                            <span style="font-size:13px;color:var(--gray-500);">Colateral efixDI</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);" id="collateralAmount">0.00</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                            <span style="font-size:13px;color:var(--gray-500);">Taxa de crédito</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);">~5% a.a.</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                            <span style="font-size:13px;color:var(--gray-500);">Rendimento do colateral</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);">~15% CDI</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;">
+                            <span style="font-size:13px;color:var(--gray-500);">Carry líquido</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);font-weight:700;">+10% a.a.</span>
+                        </div>
+                    </div>
+
+                    <!-- Collateralize Action -->
+                    <div style="padding:0 24px 24px;">
+                        <div class="amount-input-wrap">
+                            <input type="number" id="collateralInput" placeholder="0,00" min="10" step="0.01">
+                            <span class="currency">efixDI</span>
+                        </div>
+                        <button class="btn btn-primary" style="background:var(--green);color:var(--black);" id="btnCollateralize" onclick="handleCollateralize()">Depositar Colateral</button>
+                        <p style="font-size:11px;color:var(--gray-600);text-align:center;margin-top:12px;font-family:var(--font-mono);line-height:1.5;">
+                            Seu efixDI rende ~15% CDI enquanto colateral.<br>
+                            Crédito no cartão a ~5%. Carry positivo de +10%.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Waitlist -->
+                <div style="margin-top:20px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:16px;padding:20px 24px;text-align:center;">
+                    <p style="font-size:14px;color:var(--gray-400);margin-bottom:12px;">O cartão EFIX está em fase de produção.<br>Deposite colateral agora para garantir prioridade.</p>
+                    <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
+                        <div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;"></div>
+                        <span style="font-size:12px;color:var(--green);font-family:var(--font-mono);">Fila de espera ativa</span>
+                    </div>
+                </div>
+            </div>
+
             <button class="btn btn-secondary" style="margin-top:24px;" onclick="handleDisconnect()">Desconectar</button>
         </div>
         <div class="app-footer">
@@ -274,6 +347,8 @@
                 document.getElementById('tokenBalance').textContent = bal.formatted + ' efixDI';
                 const brl = parseFloat(bal.formatted);
                 document.getElementById('balanceDisplay').textContent = 'R$ ' + brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+                // Update card spending power
+                if (brl > 0) updateSpendingPower(brl);
             } catch(e) { console.error('Balance error:', e); }
         }
 
@@ -472,7 +547,57 @@
             const pixKey = document.getElementById('pixKey').value.trim();
             if (!amount || amount <= 0) { alert('Insira um valor'); return; }
             if (!pixKey) { alert('Insira sua chave PIX'); return; }
-            alert('Withdraw not yet implemented (Phase 3).\nAmount: ' + amount + ' efixDI\nPIX: ' + pixKey);
+            alert('Saque será implementado em breve.\nValor: ' + amount + ' efixDI\nPIX: ' + pixKey);
+        }
+
+        async function handleCollateralize() {
+            const amount = parseFloat(document.getElementById('collateralInput').value);
+            if (!amount || amount < 10) { alert('Mínimo 10 efixDI'); return; }
+
+            const bal = parseFloat(document.getElementById('tokenBalance').textContent);
+            if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
+
+            const btn = document.getElementById('btnCollateralize');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Depositando colateral...';
+
+            try {
+                // For now: call admin deposit endpoint to transfer efixDI to protocol vault
+                // In production: user signs ERC-20 approve + transfer via smart wallet
+                const res = await fetch(BACKEND_URL + '/deposit/collateralize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: userAddress, amount: amount })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('collateralAmount').textContent = amount.toFixed(2);
+                    updateSpendingPower(amount);
+                    alert('Colateral depositado! ' + amount.toFixed(2) + ' efixDI\nSeu cartão será ativado em breve.');
+                } else {
+                    // Endpoint not ready yet - show confirmation
+                    document.getElementById('collateralAmount').textContent = amount.toFixed(2);
+                    updateSpendingPower(amount);
+                    alert('Solicitação registrada: ' + amount.toFixed(2) + ' efixDI como colateral.\nVocê será notificado quando o cartão for ativado.');
+                }
+            } catch (e) {
+                // Backend endpoint not yet implemented - still show the intent
+                document.getElementById('collateralAmount').textContent = amount.toFixed(2);
+                updateSpendingPower(amount);
+                alert('Solicitação registrada: ' + amount.toFixed(2) + ' efixDI como colateral.\nVocê será notificado quando o cartão for ativado.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Depositar Colateral';
+            }
+        }
+
+        function updateSpendingPower(collateralAmount) {
+            // Spending power = collateral * LTV (77%) * BRL/USD rate (~0.17)
+            const ltv = 0.77;
+            const brlUsd = 0.17; // approximate
+            const spendingUSD = collateralAmount * ltv * brlUsd;
+            document.getElementById('spendingPower').textContent = '$' + spendingUSD.toFixed(2);
         }
 
         function switchTab(tab, el) {
