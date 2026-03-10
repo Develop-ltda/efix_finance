@@ -342,24 +342,13 @@
                     setStep(2, true); setStep(3, true); setStep(4, true);
                     btn.style.display = 'none';
                     setDepositMsg('Depósito confirmado!');
-                    refreshBalance(userAddress);
-                    setTimeout(() => refreshBalance(userAddress), 3000);
-                    setTimeout(() => refreshBalance(userAddress), 8000);
+                    waitForBalanceChange();
                     
                 } else if (data.status === 'minting') {
                     setStep(2, true); setStep(3, 'active');
                     setDepositMsg('Mintando tokens... aguarde ~15 segundos');
-                    // Start polling AND auto-refresh balance after delay
-                    startStatusPoll();
-                    // Force balance refresh after 10s and 20s regardless of poll
-                    setTimeout(() => refreshBalance(userAddress), 10000);
-                    setTimeout(() => {
-                        refreshBalance(userAddress);
-                        setStep(3, true); setStep(4, true);
-                        document.getElementById('btnIPaid').style.display = 'none';
-                        setDepositMsg('Tokens creditados!');
-                        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-                    }, 20000);
+                    // Poll balance until it changes
+                    waitForBalanceChange();
                     
                 } else if (data.status === 'not_found') {
                     setDepositMsg('Pagamento não encontrado ainda. Aguarde 30s e tente novamente.');
@@ -376,6 +365,45 @@
                 btn.disabled = false;
                 btn.textContent = 'Já paguei o PIX';
             }
+        }
+
+        let balancePollTimer = null;
+
+        function waitForBalanceChange() {
+            // Get current balance to compare
+            const currentBal = document.getElementById('tokenBalance').textContent;
+            let attempts = 0;
+            const maxAttempts = 20; // 20 * 3s = 60 seconds max
+
+            if (balancePollTimer) clearInterval(balancePollTimer);
+            balancePollTimer = setInterval(async () => {
+                attempts++;
+                try {
+                    const bal = await EfixWallet.getBalance(userAddress);
+                    const newBalText = bal.formatted + ' efixDI';
+
+                    if (newBalText !== currentBal) {
+                        // Balance changed! Mint completed.
+                        clearInterval(balancePollTimer); balancePollTimer = null;
+                        document.getElementById('tokenBalance').textContent = newBalText;
+                        const brl = parseFloat(bal.formatted);
+                        document.getElementById('balanceDisplay').textContent =
+                            'R$ ' + brl.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+                        setStep(3, true); setStep(4, true);
+                        document.getElementById('btnIPaid').style.display = 'none';
+                        setDepositMsg('Tokens creditados!');
+                        return;
+                    }
+                } catch(e) { /* keep polling */ }
+
+                if (attempts >= maxAttempts) {
+                    clearInterval(balancePollTimer); balancePollTimer = null;
+                    setStep(3, true); setStep(4, true);
+                    setDepositMsg('Verifique seu saldo — pode levar mais alguns segundos.');
+                    refreshBalance(userAddress);
+                }
+            }, 3000);
         }
 
         function startStatusPoll() {
@@ -411,6 +439,7 @@
 
         function resetDeposit() {
             if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            if (balancePollTimer) { clearInterval(balancePollTimer); balancePollTimer = null; }
             document.getElementById('deposit-form').style.display = 'block';
             document.getElementById('deposit-qr').style.display = 'none';
             document.getElementById('btnIPaid').style.display = '';
