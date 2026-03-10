@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>efixDI+ Admin</title>
+<style>
+  :root{--black:#000;--white:#fff;--green:#22c55e;--red:#ef4444;--gray-800:#1f1f1f;--gray-700:#333;--gray-600:#666;--gray-500:#888;--gray-400:#aaa;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--black);color:var(--white);font-family:var(--font-mono);padding:20px;max-width:900px;margin:0 auto}
+  h1{font-family:var(--font-display);font-size:24px;margin-bottom:8px}
+  h2{font-size:16px;color:var(--green);margin:24px 0 12px;text-transform:uppercase;letter-spacing:1px}
+  .login{max-width:400px;margin:100px auto;text-align:center}
+  input,select{background:var(--gray-800);border:1px solid var(--gray-700);color:var(--white);padding:10px 14px;border-radius:8px;font-family:var(--font-mono);font-size:13px;width:100%}
+  button{background:var(--green);color:var(--black);border:none;padding:10px 20px;border-radius:8px;font-family:var(--font-mono);font-size:13px;font-weight:700;cursor:pointer;width:100%}
+  button:hover{opacity:0.9}
+  button.danger{background:var(--red);color:var(--white)}
+  button.secondary{background:var(--gray-700);color:var(--white)}
+  .card{background:var(--gray-800);border:1px solid var(--gray-700);border-radius:12px;padding:16px;margin-bottom:12px}
+  .row{display:flex;justify-content:space-between;padding:6px 0;font-size:12px;border-bottom:1px solid var(--gray-700)}
+  .row:last-child{border:none}
+  .row .label{color:var(--gray-500)}
+  .row .value{color:var(--white);text-align:right;max-width:60%;word-break:break-all}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+  .badge.pending{background:rgba(234,179,8,0.2);color:#eab308}
+  .badge.confirmed,.badge.completed,.badge.locked,.badge.minted{background:rgba(34,197,94,0.2);color:#22c55e}
+  .badge.failed{background:rgba(239,68,68,0.2);color:#ef4444}
+  .badge.minting{background:rgba(59,130,246,0.2);color:#3b82f6}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .stat{background:var(--gray-800);border:1px solid var(--gray-700);border-radius:12px;padding:16px;text-align:center}
+  .stat .num{font-size:24px;font-weight:700;color:var(--green)}
+  .stat .lbl{font-size:11px;color:var(--gray-500);margin-top:4px}
+  .form-group{margin-bottom:12px}
+  .form-group label{display:block;font-size:11px;color:var(--gray-500);margin-bottom:4px;text-transform:uppercase}
+  .actions{display:flex;gap:8px;margin-top:8px}
+  .actions button{width:auto;padding:6px 14px;font-size:11px}
+  #app{display:none}
+  .tab-bar{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--gray-700);padding-bottom:8px}
+  .tab-btn{background:none;border:none;color:var(--gray-500);font-family:var(--font-mono);font-size:13px;padding:8px 16px;cursor:pointer;border-radius:8px 8px 0 0;width:auto}
+  .tab-btn.active{color:var(--white);background:var(--gray-800)}
+  .tab-content{display:none}.tab-content.active{display:block}
+  .toast{position:fixed;top:20px;right:20px;background:var(--green);color:var(--black);padding:12px 20px;border-radius:8px;font-size:13px;font-weight:700;z-index:999;display:none}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login">
+  <h1>efixDI<span style="color:var(--green)">+</span> Admin</h1>
+  <p style="color:var(--gray-500);font-size:13px;margin-bottom:24px;">Protocol Operations Panel</p>
+  <div class="form-group">
+    <input type="password" id="adminKey" placeholder="Admin API Key" autocomplete="off">
+  </div>
+  <button onclick="login()">Entrar</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h1>efixDI<span style="color:var(--green)">+</span> Admin</h1>
+    <span style="font-size:11px;color:var(--gray-500)" id="healthStatus">...</span>
+  </div>
+
+  <div class="stats" id="statsBar">
+    <div class="stat"><div class="num" id="statTVL">-</div><div class="lbl">TVL (efixDI)</div></div>
+    <div class="stat"><div class="num" id="statMatic">-</div><div class="lbl">POL Balance</div></div>
+    <div class="stat"><div class="num" id="statBlock">-</div><div class="lbl">Block</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('mint',this)">Mint</button>
+    <button class="tab-btn" onclick="switchTab('deposits',this)">Depósitos</button>
+    <button class="tab-btn" onclick="switchTab('withdrawals',this)">Saques</button>
+    <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
+  </div>
+
+  <!-- MINT TAB -->
+  <div class="tab-content active" id="tab-mint">
+    <div class="card">
+      <h2 style="margin-top:0">Mint efixDI to User</h2>
+      <div class="form-group">
+        <label>Wallet Address (0x...)</label>
+        <input type="text" id="mintAddress" placeholder="0xFf0DE57F...">
+      </div>
+      <div class="form-group">
+        <label>Amount (BRL)</label>
+        <input type="number" id="mintAmount" placeholder="20" min="1">
+      </div>
+      <div class="form-group">
+        <label>Reference / EndToEndId</label>
+        <input type="text" id="mintRef" placeholder="FRIEND-20BRL">
+      </div>
+      <button onclick="doMint()">Mint efixDI</button>
+      <div id="mintResult" style="margin-top:12px;font-size:12px;color:var(--gray-400);"></div>
+    </div>
+  </div>
+
+  <!-- DEPOSITS TAB -->
+  <div class="tab-content" id="tab-deposits">
+    <div class="card">
+      <h2 style="margin-top:0">Wallet Deposits</h2>
+      <div id="depositsList">Loading...</div>
+    </div>
+  </div>
+
+  <!-- WITHDRAWALS TAB -->
+  <div class="tab-content" id="tab-withdrawals">
+    <div class="card">
+      <h2 style="margin-top:0">Withdrawal Requests</h2>
+      <div id="withdrawalsList">Loading...</div>
+      <button class="secondary" style="margin-top:12px;" onclick="loadWithdrawals()">Refresh</button>
+    </div>
+  </div>
+
+  <!-- COLLATERAL TAB -->
+  <div class="tab-content" id="tab-collateral">
+    <div class="card">
+      <h2 style="margin-top:0">Collateral Positions</h2>
+      <div id="collateralList">Loading...</div>
+      <button class="secondary" style="margin-top:12px;" onclick="loadCollateral()">Refresh</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BACKEND = 'https://efixdi-backend-production.up.railway.app';
+let API_KEY = '';
+
+function toast(msg, ms=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', ms);
+}
+
+function headers() { return { 'X-Admin-Key': API_KEY, 'Content-Type': 'application/json' }; }
+
+async function login() {
+  API_KEY = document.getElementById('adminKey').value.trim();
+  if (!API_KEY) { alert('Enter admin key'); return; }
+  try {
+    const res = await fetch(BACKEND + '/api/deposits', { headers: { 'X-Admin-Key': API_KEY } });
+    if (!res.ok) throw new Error('Unauthorized');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadAll();
+  } catch(e) { alert('Invalid admin key'); }
+}
+
+async function loadAll() {
+  loadHealth();
+  loadDeposits();
+  loadWithdrawals();
+  loadCollateral();
+}
+
+async function loadHealth() {
+  try {
+    const res = await fetch(BACKEND + '/health');
+    const data = await res.json();
+    document.getElementById('healthStatus').textContent = 'Block: ' + data.block + ' | Up: ' + data.uptime + 's';
+    document.getElementById('statBlock').textContent = data.block;
+
+    const status = await fetch(BACKEND + '/api/status?key=' + API_KEY);
+    const s = await status.json();
+    if (s.protocol) {
+      document.getElementById('statTVL').textContent = parseFloat(s.protocol.efix_total_supply).toFixed(0);
+    }
+    if (s.operator) {
+      document.getElementById('statMatic').textContent = parseFloat(s.operator.matic).toFixed(2);
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function doMint() {
+  const address = document.getElementById('mintAddress').value.trim();
+  const amount = document.getElementById('mintAmount').value.trim();
+  const ref = document.getElementById('mintRef').value.trim() || 'ADMIN-' + Date.now();
+
+  if (!address || !amount) { alert('Address and amount required'); return; }
+
+  document.getElementById('mintResult').textContent = 'Minting...';
+  try {
+    const res = await fetch(BACKEND + '/api/admin/deposit', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ userAddress: address, amount: amount, pixKey: 'admin-mint', endToEndId: ref })
+    });
+    const data = await res.json();
+    if (data.status === 'queued') {
+      document.getElementById('mintResult').innerHTML = '<span style="color:var(--green)">✓ Queued! Minting ' + amount + ' efixDI to ' + address.slice(0,10) + '...</span>';
+      toast('Mint queued!');
+    } else {
+      document.getElementById('mintResult').innerHTML = '<span style="color:var(--red)">Error: ' + JSON.stringify(data) + '</span>';
+    }
+  } catch(e) {
+    document.getElementById('mintResult').innerHTML = '<span style="color:var(--red)">' + e.message + '</span>';
+  }
+}
+
+async function loadDeposits() {
+  try {
+    const res = await fetch(BACKEND + '/api/deposits', { headers: { 'X-Admin-Key': API_KEY } });
+    const data = await res.json();
+    const el = document.getElementById('depositsList');
+    if (!data.processed || Object.keys(data.processed).length === 0) {
+      el.innerHTML = '<div style="color:var(--gray-500);font-size:12px;">No deposits today</div>';
+      return;
+    }
+    let html = '';
+    const entries = Object.entries(data.processed || {}).slice(-20).reverse();
+    entries.forEach(([id, d]) => {
+      html += '<div class="row"><span class="label">' + id.slice(0,20) + '...</span><span class="value">' + (d.amount||'?') + ' BRL <span class="badge ' + (d.status||'') + '">' + (d.status||'?') + '</span></span></div>';
+    });
+    el.innerHTML = html;
+  } catch(e) { document.getElementById('depositsList').textContent = 'Error: ' + e.message; }
+}
+
+async function loadWithdrawals() {
+  try {
+    const res = await fetch(BACKEND + '/api/wallet/withdrawals', { headers: { 'X-Admin-Key': API_KEY } });
+    const data = await res.json();
+    const el = document.getElementById('withdrawalsList');
+    if (!data.withdrawals || data.withdrawals.length === 0) {
+      el.innerHTML = '<div style="color:var(--gray-500);font-size:12px;">No withdrawals</div>';
+      return;
+    }
+    let html = '';
+    data.withdrawals.forEach(w => {
+      const date = new Date(w.created_at).toLocaleString('pt-BR');
+      html += '<div class="card" style="padding:12px;margin-bottom:8px;">' +
+        '<div class="row"><span class="label">ID</span><span class="value">' + w.id + '</span></div>' +
+        '<div class="row"><span class="label">Address</span><span class="value">' + w.address.slice(0,10) + '...' + w.address.slice(-4) + '</span></div>' +
+        '<div class="row"><span class="label">Amount</span><span class="value">' + w.amount + ' efixDI</span></div>' +
+        '<div class="row"><span class="label">PIX Key</span><span class="value">' + w.pix_key + '</span></div>' +
+        '<div class="row"><span class="label">Date</span><span class="value">' + date + '</span></div>' +
+        '<div class="row"><span class="label">Status</span><span class="value"><span class="badge ' + w.status + '">' + w.status + '</span></span></div>';
+      if (w.status === 'pending') {
+        html += '<div class="actions"><button onclick="processWithdrawal(' + w.id + ')">Send PIX</button><button class="danger" onclick="rejectWithdrawal(' + w.id + ')">Reject</button></div>';
+      }
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) { document.getElementById('withdrawalsList').textContent = 'Error: ' + e.message; }
+}
+
+async function processWithdrawal(id) {
+  if (!confirm('Send PIX for withdrawal #' + id + '?')) return;
+  try {
+    const res = await fetch(BACKEND + '/api/wallet/withdrawals/process', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ id: id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast('PIX sent! Withdrawal #' + id + ' completed');
+      loadWithdrawals();
+    } else {
+      alert('Error: ' + (data.error || JSON.stringify(data)));
+    }
+  } catch(e) { alert(e.message); }
+}
+
+async function rejectWithdrawal(id) {
+  alert('Reject not implemented yet — update status manually in DB');
+}
+
+async function loadCollateral() {
+  try {
+    const res = await fetch(BACKEND + '/api/wallet/collateral', { headers: { 'X-Admin-Key': API_KEY } });
+    const data = await res.json();
+    const el = document.getElementById('collateralList');
+    if (!data.collateral || data.collateral.length === 0) {
+      el.innerHTML = '<div style="color:var(--gray-500);font-size:12px;">No collateral</div>';
+      return;
+    }
+    let html = '';
+    let totalEfix = 0, totalUsdc = 0;
+    data.collateral.forEach(c => {
+      totalEfix += parseFloat(c.amount_efix);
+      totalUsdc += parseFloat(c.usdc_credit);
+      const date = new Date(c.created_at).toLocaleString('pt-BR');
+      html += '<div class="row">' +
+        '<span class="label">' + c.address.slice(0,8) + '...' + c.address.slice(-4) + ' · ' + date.split(',')[0] + '</span>' +
+        '<span class="value">' + c.amount_efix + ' efixDI → $' + c.usdc_credit + ' <span class="badge ' + c.status + '">' + c.status + '</span></span>' +
+      '</div>';
+    });
+    html = '<div class="row" style="border-bottom:2px solid var(--green);margin-bottom:8px;padding-bottom:8px;"><span class="label" style="color:var(--green);font-weight:700;">TOTAL</span><span class="value" style="color:var(--green);font-weight:700;">' + totalEfix.toFixed(2) + ' efixDI → $' + totalUsdc.toFixed(2) + '</span></div>' + html;
+    el.innerHTML = html;
+  } catch(e) { document.getElementById('collateralList').textContent = 'Error: ' + e.message; }
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Auto-login if key in URL hash
+if (window.location.hash) {
+  document.getElementById('adminKey').value = window.location.hash.slice(1);
+  login();
+}
+</script>
+</body>
+</html>
