@@ -7,379 +7,66 @@
     <link rel="icon" href="/assets/efixDI-token-32x32.svg" type="image/svg+xml">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
-
-        :root {
-            --black: #0a0a0a;
-            --white: #fafafa;
-            --gray-100: #f5f5f5;
-            --gray-200: #e5e5e5;
-            --gray-300: #d4d4d4;
-            --gray-400: #a3a3a3;
-            --gray-500: #737373;
-            --gray-600: #525252;
-            --gray-700: #404040;
-            --gray-800: #262626;
-            --gray-900: #171717;
-            --green: #22c55e;
-            --green-dim: #16a34a;
-            --red: #ef4444;
-            --font-display: 'Syne', sans-serif;
-            --font-mono: 'Space Mono', monospace;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: var(--font-display);
-            background: var(--black);
-            color: var(--white);
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ═══ HEADER ═══ */
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--gray-800);
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-        .logo img { height: 28px; width: 28px; }
-        .logo span { font-weight: 700; font-size: 18px; color: var(--white); letter-spacing: -0.5px; }
-        .logo .plus { color: var(--green); font-weight: 800; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: var(--gray-400); text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s; }
-        .nav-links a:hover { color: var(--white); }
-        .user-pill {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            background: var(--gray-900);
-            border: 1px solid var(--gray-700);
-            border-radius: 100px;
-            padding: 6px 14px 6px 10px;
-            font-size: 12px;
-            color: var(--gray-300);
-            font-family: var(--font-mono);
-        }
-        .user-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
-        .user-pill.active { display: flex; }
-
-        /* ═══ MAIN LAYOUT ═══ */
-        main {
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 40px 20px 80px;
-        }
-
-        /* ═══ AUTH SCREEN ═══ */
-        #auth-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-            text-align: center;
-        }
-        #auth-screen h1 {
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -1px;
-            margin-bottom: 8px;
-        }
-        #auth-screen .subtitle {
-            color: var(--gray-400);
-            font-size: 15px;
-            margin-bottom: 40px;
-            line-height: 1.5;
-        }
-        .auth-box {
-            width: 100%;
-            max-width: 380px;
-        }
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .input-group input {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--gray-900);
-            border: 1px solid var(--gray-700);
-            border-radius: 12px;
-            color: var(--white);
-            font-family: var(--font-mono);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .input-group input:focus { border-color: var(--gray-400); }
-        .input-group input::placeholder { color: var(--gray-600); }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-family: var(--font-display);
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: -0.3px;
-        }
-        .btn-primary {
-            background: var(--white);
-            color: var(--black);
-        }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .btn-secondary {
-            background: transparent;
-            color: var(--gray-400);
-            border: 1px solid var(--gray-700);
-        }
-        .btn-secondary:hover { border-color: var(--gray-400); color: var(--white); }
-
-        .auth-step { display: none; }
-        .auth-step.active { display: block; }
-
-        .status-msg {
-            margin-top: 16px;
-            font-size: 13px;
-            color: var(--gray-500);
-            font-family: var(--font-mono);
-            min-height: 20px;
-        }
-        .status-msg.error { color: var(--red); }
-        .status-msg.success { color: var(--green); }
-
-        /* ═══ APP SCREEN ═══ */
-        #app-screen { display: none; }
-
-        .balance-card {
-            background: var(--gray-900);
-            border: 1px solid var(--gray-800);
-            border-radius: 20px;
-            padding: 32px 28px;
-            margin-bottom: 24px;
-            text-align: center;
-        }
-        .balance-label {
-            font-size: 12px;
-            color: var(--gray-500);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .balance-value {
-            font-family: var(--font-mono);
-            font-size: 42px;
-            font-weight: 700;
-            letter-spacing: -2px;
-            margin-bottom: 4px;
-        }
-        .balance-sub {
-            font-size: 13px;
-            color: var(--gray-500);
-            font-family: var(--font-mono);
-        }
-        .apy-badge {
-            display: inline-block;
-            margin-top: 16px;
-            padding: 6px 14px;
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            border-radius: 100px;
-            color: var(--green);
-            font-size: 13px;
-            font-weight: 700;
-            font-family: var(--font-mono);
-        }
-
-        .address-bar {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 32px;
-            padding: 10px 16px;
-            background: var(--gray-900);
-            border: 1px solid var(--gray-800);
-            border-radius: 12px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-            color: var(--gray-500);
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-        .address-bar:hover { border-color: var(--gray-600); }
-        .address-bar .chain-dot { width: 8px; height: 8px; border-radius: 50%; background: #7b3fe4; }
-
-        /* ═══ ACTION TABS ═══ */
-        .tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 20px;
-            background: var(--gray-900);
-            border-radius: 12px;
-            padding: 4px;
-        }
-        .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--gray-500);
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            background: transparent;
-            font-family: var(--font-display);
-        }
-        .tab.active { background: var(--gray-800); color: var(--white); }
-
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-
-        .action-card {
-            background: var(--gray-900);
-            border: 1px solid var(--gray-800);
-            border-radius: 16px;
-            padding: 24px;
-        }
-        .action-card h3 {
-            font-size: 14px;
-            color: var(--gray-400);
-            font-weight: 600;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .amount-input-wrap {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .amount-input-wrap input {
-            flex: 1;
-            padding: 14px 16px;
-            background: var(--gray-800);
-            border: 1px solid var(--gray-700);
-            border-radius: 12px;
-            color: var(--white);
-            font-family: var(--font-mono);
-            font-size: 20px;
-            font-weight: 700;
-            outline: none;
-        }
-        .amount-input-wrap input:focus { border-color: var(--gray-500); }
-        .amount-input-wrap .currency {
-            font-size: 14px;
-            color: var(--gray-500);
-            font-weight: 700;
-        }
-
-        /* ═══ PIX QR ═══ */
-        .pix-qr-area {
-            display: none;
-            text-align: center;
-            padding: 24px;
-            background: var(--white);
-            border-radius: 16px;
-            margin-top: 16px;
-        }
-        .pix-qr-area canvas { margin: 0 auto; }
-        .pix-qr-area .pix-code {
-            margin-top: 12px;
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: var(--gray-600);
-            word-break: break-all;
-        }
-
-        /* ═══ PROGRESS ═══ */
-        .progress-steps {
-            display: none;
-            margin-top: 20px;
-        }
-        .progress-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 0;
-            font-size: 13px;
-            color: var(--gray-500);
-        }
-        .progress-step .icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 2px solid var(--gray-700);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-        .progress-step.done .icon { border-color: var(--green); background: var(--green); color: var(--black); }
-        .progress-step.active { color: var(--white); }
-        .progress-step.active .icon { border-color: var(--white); }
-
-        /* ═══ FOOTER ═══ */
-        .app-footer {
-            margin-top: 48px;
-            text-align: center;
-            font-size: 11px;
-            color: var(--gray-600);
-            font-family: var(--font-mono);
-        }
-        .app-footer a { color: var(--gray-500); text-decoration: none; }
-        .app-footer a:hover { color: var(--white); }
-
-        /* ═══ LOADING SPINNER ═══ */
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--gray-600);
-            border-top-color: var(--white);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Hidden iframe container for Alchemy Signer */
-        #alchemy-signer-iframe-container {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            width: 0;
-            height: 0;
-            overflow: hidden;
-        }
+        :root{--black:#0a0a0a;--white:#fafafa;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--gray-700:#404040;--gray-800:#262626;--gray-900:#171717;--green:#22c55e;--red:#ef4444;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:var(--font-display);background:var(--black);color:var(--white);min-height:100vh;-webkit-font-smoothing:antialiased}
+        header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--gray-800)}
+        .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+        .logo img{height:28px;width:28px}
+        .logo span{font-weight:700;font-size:18px;color:var(--white);letter-spacing:-0.5px}
+        .logo .plus{color:var(--green);font-weight:800}
+        .nav-links{display:flex;gap:20px;align-items:center}
+        .nav-links a{color:var(--gray-400);text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;transition:color .2s}
+        .nav-links a:hover{color:var(--white)}
+        .user-pill{display:none;align-items:center;gap:8px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:100px;padding:6px 14px 6px 10px;font-size:12px;color:var(--gray-300);font-family:var(--font-mono)}
+        .user-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+        .user-pill.active{display:flex}
+        main{max-width:480px;margin:0 auto;padding:40px 20px 80px}
+        #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center}
+        #auth-screen h1{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+        #auth-screen .subtitle{color:var(--gray-400);font-size:15px;margin-bottom:40px;line-height:1.5}
+        .auth-box{width:100%;max-width:380px}
+        .input-group{display:flex;flex-direction:column;gap:12px}
+        .input-group input{width:100%;padding:14px 16px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:12px;color:var(--white);font-family:var(--font-mono);font-size:14px;outline:none;transition:border-color .2s}
+        .input-group input:focus{border-color:var(--gray-400)}
+        .input-group input::placeholder{color:var(--gray-600)}
+        .btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:var(--font-display);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:-0.3px}
+        .btn-primary{background:var(--white);color:var(--black)}
+        .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+        .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+        .btn-secondary{background:transparent;color:var(--gray-400);border:1px solid var(--gray-700)}
+        .btn-secondary:hover{border-color:var(--gray-400);color:var(--white)}
+        .auth-step{display:none}.auth-step.active{display:block}
+        .status-msg{margin-top:16px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);min-height:20px}
+        .status-msg.error{color:var(--red)}.status-msg.success{color:var(--green)}
+        #app-screen{display:none}
+        .balance-card{background:var(--gray-900);border:1px solid var(--gray-800);border-radius:20px;padding:32px 28px;margin-bottom:24px;text-align:center}
+        .balance-label{font-size:12px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px}
+        .balance-value{font-family:var(--font-mono);font-size:42px;font-weight:700;letter-spacing:-2px;margin-bottom:4px}
+        .balance-sub{font-size:13px;color:var(--gray-500);font-family:var(--font-mono)}
+        .apy-badge{display:inline-block;margin-top:16px;padding:6px 14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:100px;color:var(--green);font-size:13px;font-weight:700;font-family:var(--font-mono)}
+        .address-bar{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:32px;padding:10px 16px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:12px;font-family:var(--font-mono);font-size:12px;color:var(--gray-500);cursor:pointer;transition:border-color .2s}
+        .address-bar:hover{border-color:var(--gray-600)}
+        .address-bar .chain-dot{width:8px;height:8px;border-radius:50%;background:#7b3fe4}
+        .tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--gray-900);border-radius:12px;padding:4px}
+        .tab{flex:1;padding:10px;text-align:center;border-radius:10px;font-size:14px;font-weight:600;color:var(--gray-500);cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:var(--font-display)}
+        .tab.active{background:var(--gray-800);color:var(--white)}
+        .tab-panel{display:none}.tab-panel.active{display:block}
+        .action-card{background:var(--gray-900);border:1px solid var(--gray-800);border-radius:16px;padding:24px}
+        .action-card h3{font-size:14px;color:var(--gray-400);font-weight:600;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
+        .amount-input-wrap{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+        .amount-input-wrap input{flex:1;padding:14px 16px;background:var(--gray-800);border:1px solid var(--gray-700);border-radius:12px;color:var(--white);font-family:var(--font-mono);font-size:20px;font-weight:700;outline:none}
+        .amount-input-wrap input:focus{border-color:var(--gray-500)}
+        .amount-input-wrap .currency{font-size:14px;color:var(--gray-500);font-weight:700}
+        .app-footer{margin-top:48px;text-align:center;font-size:11px;color:var(--gray-600);font-family:var(--font-mono)}
+        .app-footer a{color:var(--gray-500);text-decoration:none}.app-footer a:hover{color:var(--white)}
+        .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--gray-600);border-top-color:var(--white);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        #alchemy-signer-iframe-container{position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden}
     </style>
 </head>
 <body>
-
-    <!-- Alchemy Signer iframe container (hidden) -->
     <div id="alchemy-signer-iframe-container"></div>
-
-    <!-- HEADER -->
     <header>
         <a href="/" class="logo">
             <img src="/logo_efix_400x400.jpg" alt="EFIX">
@@ -388,19 +75,14 @@
         <div class="nav-links">
             <a href="/">Protocol</a>
             <a href="/card/">Card</a>
-            <div class="user-pill" id="userPill">
-                <span class="dot"></span>
-                <span id="userPillAddr">0x...</span>
-            </div>
+            <div class="user-pill" id="userPill"><span class="dot"></span><span id="userPillAddr">0x...</span></div>
         </div>
     </header>
-
     <main>
-        <!-- ═══ AUTH SCREEN ═══ -->
+        <!-- AUTH SCREEN -->
         <div id="auth-screen">
             <h1>Renda Fixa Tokenizada</h1>
             <p class="subtitle">Deposite BRL via PIX. Receba rendimento CDI de até 25% a.a.<br>Sem MetaMask. Sem taxas de gas. Só email.</p>
-
             <div class="auth-box">
                 <!-- Step 1: Email -->
                 <div class="auth-step active" id="step-email">
@@ -409,46 +91,37 @@
                         <button class="btn btn-primary" id="btnSendOTP" onclick="handleSendOTP()">Entrar com Email</button>
                     </div>
                 </div>
-
-                <!-- Step 2: OTP -->
+                <!-- Step 2: OTP Code -->
                 <div class="auth-step" id="step-otp">
                     <div class="input-group">
-                        <p style="font-size:14px; color:var(--gray-400); margin-bottom:8px;">Verifique seu email e insira o código:</p>
-                        <input type="text" id="otpInput" placeholder="Código de verificação" autocomplete="one-time-code" style="text-align:center; font-size:20px; letter-spacing:4px;">
-                        <button class="btn btn-primary" id="btnVerifyOTP" onclick="handleVerifyOTP()">Verificar</button>
+                        <p style="font-size:14px;color:var(--gray-400);margin-bottom:8px;">Verifique seu email e insira o código de 6 dígitos:</p>
+                        <input type="text" id="otpInput" placeholder="000000" autocomplete="one-time-code" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px;">
+                        <button class="btn btn-primary" id="btnVerifyOTP" onclick="handleVerifyOTP()">Verificar Código</button>
                         <button class="btn btn-secondary" onclick="resetAuth()">Voltar</button>
                     </div>
                 </div>
-
                 <div class="status-msg" id="authStatus"></div>
             </div>
         </div>
 
-        <!-- ═══ APP SCREEN (shown after login) ═══ -->
+        <!-- APP SCREEN -->
         <div id="app-screen">
-            <!-- Address bar -->
             <div class="address-bar" id="addressBar" onclick="copyAddress()">
                 <span class="chain-dot"></span>
-                <span id="displayAddr">Polygon</span>
+                <span>Polygon</span>
                 <span style="color:var(--gray-700);">|</span>
                 <span id="shortAddr">0x...</span>
             </div>
-
-            <!-- Balance Card -->
             <div class="balance-card">
                 <div class="balance-label">Seu Saldo</div>
                 <div class="balance-value" id="balanceDisplay">R$ 0,00</div>
                 <div class="balance-sub" id="tokenBalance">0.00 efixDI</div>
                 <div class="apy-badge">~22% APY</div>
             </div>
-
-            <!-- Action Tabs -->
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('deposit')">Depositar</button>
-                <button class="tab" onclick="switchTab('withdraw')">Sacar</button>
+                <button class="tab active" onclick="switchTab('deposit', this)">Depositar</button>
+                <button class="tab" onclick="switchTab('withdraw', this)">Sacar</button>
             </div>
-
-            <!-- Deposit Panel -->
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">
                     <h3>Depositar via PIX</h3>
@@ -456,24 +129,9 @@
                         <input type="number" id="depositAmount" placeholder="0,00" min="10" step="0.01">
                         <span class="currency">BRL</span>
                     </div>
-                    <button class="btn btn-primary" id="btnDeposit" onclick="handleDeposit()">Gerar QR Code PIX</button>
-
-                    <div class="pix-qr-area" id="pixQrArea">
-                        <p style="color:var(--black); font-size:14px; font-weight:600; margin-bottom:12px;">Escaneie com seu app bancário</p>
-                        <div id="qrCanvas" style="width:200px;height:200px;margin:0 auto;background:var(--gray-200);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);font-size:12px;">QR Code</div>
-                        <div class="pix-code" id="pixCode"></div>
-                    </div>
-
-                    <div class="progress-steps" id="depositProgress">
-                        <div class="progress-step" id="dp-1"><span class="icon">1</span> QR Code gerado</div>
-                        <div class="progress-step" id="dp-2"><span class="icon">2</span> Pagamento PIX confirmado</div>
-                        <div class="progress-step" id="dp-3"><span class="icon">3</span> Mintando tokens efixDI</div>
-                        <div class="progress-step" id="dp-4"><span class="icon">4</span> Tokens creditados!</div>
-                    </div>
+                    <button class="btn btn-primary" onclick="handleDeposit()">Gerar QR Code PIX</button>
                 </div>
             </div>
-
-            <!-- Withdraw Panel -->
             <div class="tab-panel" id="panel-withdraw">
                 <div class="action-card">
                     <h3>Sacar via PIX</h3>
@@ -487,61 +145,43 @@
                     <button class="btn btn-primary" onclick="handleWithdraw()">Solicitar Saque</button>
                 </div>
             </div>
-
-            <!-- Disconnect -->
             <button class="btn btn-secondary" style="margin-top:24px;" onclick="handleDisconnect()">Desconectar</button>
         </div>
-
         <div class="app-footer">
             <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token</a> ·
             <a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank">Vault</a> ·
             <a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho</a>
-            <br><br>
-            © 2026 Efix Securitizadora S.A. · CVM Act 23.635/2025
+            <br><br>© 2026 Efix Securitizadora S.A. · CVM Act 23.635/2025
         </div>
     </main>
-
-    <!-- Alchemy Wallet SDK Bundle -->
     <script src="efix-wallet-bundle.js"></script>
-
     <script>
-        // ═══════════════════════════════════════════════════════════
-        // APP LOGIC
-        // ═══════════════════════════════════════════════════════════
-
         const BACKEND_URL = 'https://efixdi-backend-production.up.railway.app';
         let userAddress = null;
+        let userEmail = '';
 
         // ═══ INIT ═══
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 EfixWallet.init();
-                // Check for existing session
                 const addr = await EfixWallet.checkSession();
-                if (addr) {
-                    userAddress = addr;
-                    showApp(addr);
-                }
-            } catch (e) {
-                console.log('No session:', e.message);
-            }
+                if (addr) { userAddress = addr; showApp(addr); }
+            } catch(e) { console.log('Init:', e.message); }
 
-            // Enter key handlers
-            document.getElementById('emailInput').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') handleSendOTP();
-            });
-            document.getElementById('otpInput').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') handleVerifyOTP();
-            });
+            document.getElementById('emailInput').addEventListener('keydown', e => { if(e.key==='Enter') handleSendOTP(); });
+            document.getElementById('otpInput').addEventListener('keydown', e => { if(e.key==='Enter') handleVerifyOTP(); });
+
+            // Callback if auth completes via background promise (magic link fallback)
+            window._efixAuthCallback = (addr) => {
+                if (!userAddress) { userAddress = addr; showApp(addr); }
+            };
         });
 
-        // ═══ AUTH FLOW ═══
+        // ═══ STEP 1: Send OTP ═══
         async function handleSendOTP() {
             const email = document.getElementById('emailInput').value.trim();
-            if (!email || !email.includes('@')) {
-                setStatus('Email inválido', 'error');
-                return;
-            }
+            if (!email || !email.includes('@')) { setStatus('Email inválido','error'); return; }
+            userEmail = email;
 
             const btn = document.getElementById('btnSendOTP');
             btn.disabled = true;
@@ -549,13 +189,13 @@
             setStatus('');
 
             try {
-                await EfixWallet.loginWithEmail(email);
-                // Show OTP step
+                await EfixWallet.sendOTP(email);
+                // Show OTP step immediately
                 document.getElementById('step-email').classList.remove('active');
                 document.getElementById('step-otp').classList.add('active');
                 setStatus('Código enviado para ' + email, 'success');
                 document.getElementById('otpInput').focus();
-            } catch (e) {
+            } catch(e) {
                 setStatus('Erro: ' + e.message, 'error');
             } finally {
                 btn.disabled = false;
@@ -563,59 +203,45 @@
             }
         }
 
+        // ═══ STEP 2: Verify OTP ═══
         async function handleVerifyOTP() {
-            const bundle = document.getElementById('otpInput').value.trim();
-            if (!bundle) {
-                setStatus('Insira o código', 'error');
-                return;
-            }
+            const code = document.getElementById('otpInput').value.trim();
+            if (!code || code.length < 6) { setStatus('Insira o código de 6 dígitos','error'); return; }
 
             const btn = document.getElementById('btnVerifyOTP');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span>Verificando...';
+            setStatus('');
 
             try {
-                const addr = await EfixWallet.completeAuth(bundle);
+                const addr = await EfixWallet.verifyOTP(code);
                 userAddress = addr;
                 setStatus('');
                 showApp(addr);
-
-                // Register in backend (fire and forget)
-                fetch(BACKEND_URL + '/users/create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: document.getElementById('emailInput').value.trim(),
-                        address: addr
-                    })
-                }).catch(() => {});
-
-            } catch (e) {
-                setStatus('Código inválido: ' + e.message, 'error');
+            } catch(e) {
+                setStatus('Erro: ' + e.message, 'error');
+                console.error('OTP verify error:', e);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Verificar';
+                btn.textContent = 'Verificar Código';
             }
         }
 
         function resetAuth() {
             document.getElementById('step-otp').classList.remove('active');
             document.getElementById('step-email').classList.add('active');
+            document.getElementById('otpInput').value = '';
             setStatus('');
         }
 
-        // ═══ APP DISPLAY ═══
+        // ═══ APP ═══
         async function showApp(address) {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-
-            // Address display
-            const short = address.slice(0, 6) + '...' + address.slice(-4);
+            const short = address.slice(0,6) + '...' + address.slice(-4);
             document.getElementById('shortAddr').textContent = short;
             document.getElementById('userPillAddr').textContent = short;
             document.getElementById('userPill').classList.add('active');
-
-            // Fetch balance
             await refreshBalance(address);
         }
 
@@ -623,89 +249,32 @@
             try {
                 const bal = await EfixWallet.getBalance(address || userAddress);
                 document.getElementById('tokenBalance').textContent = bal.formatted + ' efixDI';
-
-                // Convert to BRL estimate (1 efixDI ≈ R$ 1.00 at NAV)
                 const brl = parseFloat(bal.formatted);
-                document.getElementById('balanceDisplay').textContent =
-                    'R$ ' + brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            } catch (e) {
-                console.error('Balance error:', e);
-            }
+                document.getElementById('balanceDisplay').textContent = 'R$ ' + brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+            } catch(e) { console.error('Balance error:', e); }
         }
 
-        // ═══ DEPOSIT ═══
         async function handleDeposit() {
             const amount = parseFloat(document.getElementById('depositAmount').value);
-            if (!amount || amount < 10) {
-                alert('Mínimo R$ 10,00');
-                return;
-            }
-
-            const btn = document.getElementById('btnDeposit');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span>Gerando QR Code...';
-
-            try {
-                const res = await fetch(BACKEND_URL + '/deposit/qr', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount, address: userAddress })
-                });
-
-                if (!res.ok) throw new Error('Backend error');
-                const data = await res.json();
-
-                // Show QR area
-                document.getElementById('pixQrArea').style.display = 'block';
-                document.getElementById('depositProgress').style.display = 'block';
-                document.getElementById('dp-1').classList.add('done');
-                document.getElementById('dp-1').querySelector('.icon').textContent = '✓';
-
-                if (data.qrCode) {
-                    document.getElementById('qrCanvas').innerHTML =
-                        '<img src="data:image/png;base64,' + data.qrCode + '" style="width:180px;height:180px;">';
-                }
-                if (data.pixCode) {
-                    document.getElementById('pixCode').textContent = data.pixCode;
-                }
-
-                // Poll for confirmation
-                pollDeposit(data.reference || data.id);
-
-            } catch (e) {
-                alert('Erro ao gerar QR: ' + e.message + '\n\nEndpoint /deposit/qr ainda não implementado no backend.');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Gerar QR Code PIX';
-            }
+            if (!amount || amount < 10) { alert('Mínimo R$ 10,00'); return; }
+            alert('Deposit endpoint /deposit/qr not yet implemented on backend.\nAmount: R$ ' + amount.toFixed(2) + '\nWallet: ' + userAddress);
         }
 
-        async function pollDeposit(reference) {
-            // Poll backend for PIX confirmation
-            // This will be implemented when the backend endpoint is ready
-            console.log('[Deposit] Polling for reference:', reference);
-        }
-
-        // ═══ WITHDRAW ═══
         async function handleWithdraw() {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const pixKey = document.getElementById('pixKey').value.trim();
-
             if (!amount || amount <= 0) { alert('Insira um valor'); return; }
             if (!pixKey) { alert('Insira sua chave PIX'); return; }
-
-            alert('Saque será implementado na Phase 3.\n\nValor: R$ ' + amount.toFixed(2) + '\nPIX: ' + pixKey);
+            alert('Withdraw not yet implemented (Phase 3).\nAmount: ' + amount + ' efixDI\nPIX: ' + pixKey);
         }
 
-        // ═══ TABS ═══
-        function switchTab(tab) {
+        function switchTab(tab, el) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            event.target.classList.add('active');
+            el.classList.add('active');
             document.getElementById('panel-' + tab).classList.add('active');
         }
 
-        // ═══ UTILS ═══
         function setStatus(msg, type) {
             const el = document.getElementById('authStatus');
             el.textContent = msg;
@@ -716,9 +285,9 @@
             if (userAddress) {
                 navigator.clipboard.writeText(userAddress);
                 const el = document.getElementById('shortAddr');
-                const orig = el.textContent;
+                const o = el.textContent;
                 el.textContent = 'Copiado!';
-                setTimeout(() => el.textContent = orig, 1500);
+                setTimeout(() => el.textContent = o, 1500);
             }
         }
 
