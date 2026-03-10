@@ -341,14 +341,25 @@
                 if (data.status === 'confirmed' || data.status === 'minted') {
                     setStep(2, true); setStep(3, true); setStep(4, true);
                     btn.style.display = 'none';
-                    setDepositMsg('Depósito confirmado! TX: ' + (data.txHash || '').slice(0, 14) + '...');
-                    setTimeout(() => refreshBalance(userAddress), 2000);
+                    setDepositMsg('Depósito confirmado!');
+                    refreshBalance(userAddress);
+                    setTimeout(() => refreshBalance(userAddress), 3000);
+                    setTimeout(() => refreshBalance(userAddress), 8000);
                     
                 } else if (data.status === 'minting') {
                     setStep(2, true); setStep(3, 'active');
                     setDepositMsg('Mintando tokens... aguarde ~15 segundos');
-                    // Auto-poll until confirmed
+                    // Start polling AND auto-refresh balance after delay
                     startStatusPoll();
+                    // Force balance refresh after 10s and 20s regardless of poll
+                    setTimeout(() => refreshBalance(userAddress), 10000);
+                    setTimeout(() => {
+                        refreshBalance(userAddress);
+                        setStep(3, true); setStep(4, true);
+                        document.getElementById('btnIPaid').style.display = 'none';
+                        setDepositMsg('Tokens creditados!');
+                        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+                    }, 20000);
                     
                 } else if (data.status === 'not_found') {
                     setDepositMsg('Pagamento não encontrado ainda. Aguarde 30s e tente novamente.');
