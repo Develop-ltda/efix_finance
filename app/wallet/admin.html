@@ -79,8 +79,9 @@
     <button class="tab-btn" onclick="switchTab('withdrawals',this)">Saques</button>
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
     <button class="tab-btn" onclick="switchTab('protocol',this)">Protocolo</button>
-    <button class="tab-btn" onclick="switchTab('dashboard',this)">Dashboard</button>
-    <button class="tab-btn" onclick="switchTab('range',this)">Range</button>
+    <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
+    <button class="tab-btn" onclick="switchTab('dashboard',this)">📊</button>
+    <button class="tab-btn" onclick="switchTab('range',this)">🎯</button>
   </div>
   <div class="tab-content active" id="tab-mint">
     <div class="card">
@@ -111,26 +112,65 @@
     </div>
   </div>
   <div class="tab-content" id="tab-protocol">
-    <div class="card"><h2>Protocol State</h2><div id="protocolState">Loading...</div></div>
-    <div class="card"><h2>Operator Wallets</h2><div id="operatorInfo">Loading...</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <h2>Protocol State (Polygon)</h2>
+        <div id="protocolState">Loading...</div>
+      </div>
+      <div class="card">
+        <h2>Morpho Position (Base)</h2>
+        <div id="morphoState">Loading...</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <h2>Operator (Polygon)</h2>
+        <div id="operatorInfo">Loading...</div>
+      </div>
+      <div class="card">
+        <h2>Operator (Base)</h2>
+        <div id="operatorBase">Loading...</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>External Dashboards</h2>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <a href="https://efix.finance/protocol/" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">📊</div><div style="font-size:11px;color:var(--white);">Protocol Dashboard</div><div style="font-size:10px;color:var(--gray-500)">APY · Stress Tests</div></a>
+        <a href="https://efix.finance/range-monitor/" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🎯</div><div style="font-size:11px;color:var(--white);">Range Monitor</div><div style="font-size:10px;color:var(--gray-500)">Uniswap V3 · GBM</div></a>
+        <a href="https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🏦</div><div style="font-size:11px;color:var(--white);">Morpho Market</div><div style="font-size:10px;color:var(--gray-500)">efixDI/USDC</div></a>
+        <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🌉</div><div style="font-size:11px;color:var(--white);">LayerZero Bridge</div><div style="font-size:10px;color:var(--gray-500)">OFT Adapter</div></a>
+      </div>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-bridge">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <h2>Bridge efixDI → Base</h2>
+        <p style="font-size:11px;color:var(--gray-500);margin-bottom:16px;">Transfer efixDI from operator on Polygon to Base via LayerZero V2 OFT. Tokens will arrive on Base in ~2-5 minutes.</p>
+        <div class="form-group">
+          <label>Amount (efixDI)</label>
+          <input type="number" id="bridgeAmount" placeholder="50" min="1">
+        </div>
+        <button onclick="doBridge()">Bridge to Base</button>
+        <div id="bridgeResult" style="margin-top:12px;min-height:20px;font-size:12px;"></div>
+      </div>
+      <div class="card">
+        <h2>Live Balances</h2>
+        <div id="bridgeBalances">Loading...</div>
+        <button class="sm secondary" style="margin-top:12px;" onclick="loadBridgeBalances()">Refresh</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Morpho Position</h2>
+      <div id="morphoPosition">Loading...</div>
+      <button class="sm secondary" style="margin-top:12px;" onclick="loadMorpho()">Refresh</button>
+    </div>
   </div>
   <div class="tab-content" id="tab-dashboard">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <h2 style="margin:0">Protocol Dashboard</h2>
-      <a href="https://efix.finance/protocol/" target="_blank" style="font-size:11px;color:var(--gray-500);text-decoration:none;">Open in new tab ↗</a>
-    </div>
-    <div class="iframe-wrap">
-      <iframe src="https://efix.finance/protocol/" id="dashboardFrame" loading="lazy"></iframe>
-    </div>
+    <div class="iframe-wrap"><iframe src="https://efix.finance/protocol/" loading="lazy"></iframe></div>
   </div>
   <div class="tab-content" id="tab-range">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <h2 style="margin:0">Range Monitor</h2>
-      <a href="https://efix.finance/range-monitor/" target="_blank" style="font-size:11px;color:var(--gray-500);text-decoration:none;">Open in new tab ↗</a>
-    </div>
-    <div class="iframe-wrap">
-      <iframe src="https://efix.finance/range-monitor/" id="rangeFrame" loading="lazy"></iframe>
-    </div>
+    <div class="iframe-wrap"><iframe src="https://efix.finance/range-monitor/" loading="lazy"></iframe></div>
   </div>
 </div>
 <script>
@@ -143,7 +183,7 @@ function fd(d){return d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:
 async function rpc(u,to,d){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to,data:d},'latest'],id:1})});const j=await r.json();return BigInt(j.result||'0x0')}
 async function ethBal(u,a){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_getBalance',params:[a,'latest'],id:1})});const j=await r.json();return Number(BigInt(j.result||'0x0'))/1e18}
 async function login(){K=document.getElementById('adminKey').value.trim();if(!K)return;try{const r=await fetch(B+'/api/deposits',{headers:{'X-Admin-Key':K}});if(!r.ok)throw 0;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';loadAll()}catch(e){alert('Invalid key')}}
-async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadProtocol()}
+async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadProtocol();loadBridgeBalances()}
 async function loadStats(){try{const[ps,bs,mb]=await Promise.all([rpc(PR,EP,'0x18160ddd'),rpc(BR,EB,'0x18160ddd'),ethBal(PR,OP)]);const pn=Number(ps)/1e18,bn=Number(bs)/1e18;document.getElementById('statPolygon').textContent=pn.toFixed(0);document.getElementById('statBase').textContent=bn.toFixed(0);document.getElementById('statTVL').textContent=pn.toFixed(0);document.getElementById('statMatic').textContent=mb.toFixed(1);const h=await(await fetch(B+'/health')).json();document.getElementById('healthMeta').textContent='Block '+h.block+' · Up '+Math.round(h.uptime/60)+'m';const c=await(await fetch(B+'/api/wallet/collateral',{headers:{'X-Admin-Key':K}})).json();let lk=0,addrs=new Set();(c.collateral||[]).forEach(x=>{if(x.status==='locked')lk+=parseFloat(x.amount_efix);addrs.add(x.address)});document.getElementById('statCollateral').textContent=lk.toFixed(0);
 // Count unique deposit addresses
 try{const dp=await(await fetch(B+'/api/wallet/pending',{headers:{'X-Admin-Key':K}})).json();(dp.deposits||[]).forEach(d=>{if(d.address)addrs.add(d.address)});document.getElementById('statUsers').textContent=addrs.size||'-'}catch(e){document.getElementById('statUsers').textContent=addrs.size||'-'}}catch(e){console.error(e)}}
@@ -152,7 +192,30 @@ async function loadDeposits(){const el=document.getElementById('depositsList');e
 async function loadWithdrawals(){const el=document.getElementById('withdrawalsList');el.innerHTML='<div class="empty">Loading...</div>';try{const r=await fetch(B+'/api/wallet/withdrawals',{headers:{'X-Admin-Key':K}});const d=await r.json();if(!d.withdrawals||!d.withdrawals.length){el.innerHTML='<div class="empty">No withdrawals</div>';return}let h='<table class="tbl"><thead><tr><th>#</th><th>Address</th><th>Amount</th><th>PIX Key</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>';d.withdrawals.forEach(w=>{let act=w.status==='pending'?'<button class="sm" onclick="processW('+w.id+')">Send PIX</button>':'';h+='<tr><td>'+w.id+'</td><td class="addr">'+sa(w.address)+'</td><td>'+w.amount+'</td><td style="font-size:11px">'+w.pix_key+'</td><td><span class="badge '+w.status+'">'+w.status+'</span></td><td style="font-size:11px;color:var(--gray-500)">'+fd(w.created_at)+'</td><td>'+act+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
 async function processW(id){if(!confirm('Process PIX #'+id+'?'))return;try{const r=await fetch(B+'/api/wallet/withdrawals/process',{method:'POST',headers:hdr(),body:JSON.stringify({id})});const d=await r.json();if(d.success){toast('PIX sent!');loadWithdrawals()}else alert(d.error||JSON.stringify(d))}catch(e){alert(e.message)}}
 async function loadCollateral(){const el=document.getElementById('collateralList'),sm=document.getElementById('collateralSummary');el.innerHTML='<div class="empty">Loading...</div>';try{const r=await fetch(B+'/api/wallet/collateral',{headers:{'X-Admin-Key':K}});const d=await r.json();if(!d.collateral||!d.collateral.length){el.innerHTML='<div class="empty">No collateral</div>';sm.innerHTML='';return}let te=0,tu=0,lk=0,pk=0;d.collateral.forEach(c=>{te+=parseFloat(c.amount_efix);tu+=parseFloat(c.usdc_credit);if(c.status==='locked')lk+=parseFloat(c.amount_efix);else pk+=parseFloat(c.amount_efix)});sm.innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">'+te.toFixed(0)+'</div><div style="font-size:10px;color:var(--gray-500)">Total efixDI</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">$'+tu.toFixed(2)+'</div><div style="font-size:10px;color:var(--gray-500)">USDC Credit</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">'+lk.toFixed(0)+'</div><div style="font-size:10px;color:var(--gray-500)">Locked</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--yellow)">'+pk.toFixed(0)+'</div><div style="font-size:10px;color:var(--gray-500)">Pending</div></div></div>';let h='<table class="tbl"><thead><tr><th>Address</th><th>Amount</th><th>USDC</th><th>Status</th><th>Date</th></tr></thead><tbody>';d.collateral.forEach(c=>{h+='<tr><td class="addr">'+sa(c.address)+'</td><td>'+c.amount_efix+' efixDI</td><td>$'+c.usdc_credit+'</td><td><span class="badge '+c.status+'">'+c.status+'</span></td><td style="font-size:11px;color:var(--gray-500)">'+fd(c.created_at)+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
-async function loadProtocol(){const el=document.getElementById('protocolState'),op=document.getElementById('operatorInfo');try{const s=await(await fetch(B+'/api/status?key='+K)).json();if(s.protocol){const p=s.protocol;el.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">TVL (BRL)</td><td>R$ '+parseFloat(p.tvl_brl).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">TVL (USD)</td><td>$'+p.tvl_usd+'</td></tr><tr><td style="color:var(--gray-500)">efixDI Supply</td><td>'+parseFloat(p.efix_total_supply).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">BRL/USD</td><td>'+p.brl_usd_rate+'</td></tr><tr><td style="color:var(--gray-500)">Vault</td><td>'+(p.vault_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Bridge</td><td>'+(p.bridge_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Block</td><td>'+p.current_block+'</td></tr></table>'}if(s.operator){op.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+parseFloat(s.operator.matic).toFixed(4)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+s.operator.usdc+'</td></tr></table>'}}catch(e){el.textContent='Error: '+e.message}}
+async function loadProtocol(){const el=document.getElementById('protocolState'),op=document.getElementById('operatorInfo');try{const s=await(await fetch(B+'/api/status?key='+K)).json();if(s.protocol){const p=s.protocol;el.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">TVL (BRL)</td><td>R$ '+parseFloat(p.tvl_brl).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">TVL (USD)</td><td>$'+p.tvl_usd+'</td></tr><tr><td style="color:var(--gray-500)">efixDI Supply</td><td>'+parseFloat(p.efix_total_supply).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">BRL/USD</td><td>'+p.brl_usd_rate+'</td></tr><tr><td style="color:var(--gray-500)">Vault</td><td>'+(p.vault_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Bridge</td><td>'+(p.bridge_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Block</td><td>'+p.current_block+'</td></tr></table>'}if(s.operator){op.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+parseFloat(s.operator.matic).toFixed(4)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+s.operator.usdc+'</td></tr></table>'}}catch(e){el.textContent='Error: '+e.message}
+// Load Morpho position
+loadMorpho();loadBridgeBalances();
+// Base operator info
+try{const mr=await fetch(B+'/api/admin/morpho',{headers:{'X-Admin-Key':K}});const md=await mr.json();const ob=document.getElementById('operatorBase');if(ob&&md.base){ob.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+md.base.efixDI+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+md.base.usdc+'</td></tr></table>'}}catch(e){}}
+
+async function loadMorpho(){
+const el1=document.getElementById('morphoState');const el2=document.getElementById('morphoPosition');
+try{const r=await fetch(B+'/api/admin/morpho',{headers:{'X-Admin-Key':K}});const d=await r.json();if(d.error){const msg='<div style="color:var(--red);font-size:12px">'+d.error+'</div>';if(el1)el1.innerHTML=msg;if(el2)el2.innerHTML=msg;return}
+const html='<table class="tbl"><tr><td style="color:var(--gray-500)">Collateral</td><td style="color:var(--green);font-weight:700">'+d.morpho.collateral+'</td></tr><tr><td style="color:var(--gray-500)">Borrowed</td><td style="color:var(--red)">'+d.morpho.borrowed+'</td></tr><tr><td style="color:var(--gray-500)">LTV</td><td>'+d.morpho.ltv+'</td></tr><tr><td style="color:var(--gray-500)">Market Supply</td><td>'+d.market.totalSupply+'</td></tr><tr><td style="color:var(--gray-500)">Market Borrow</td><td>'+d.market.totalBorrow+'</td></tr></table>';
+if(el1)el1.innerHTML=html;if(el2)el2.innerHTML=html}catch(e){const msg='Error: '+e.message;if(el1)el1.textContent=msg;if(el2)el2.textContent=msg}}
+
+async function loadBridgeBalances(){
+const el=document.getElementById('bridgeBalances');if(!el)return;
+try{const r=await fetch(B+'/api/admin/morpho',{headers:{'X-Admin-Key':K}});const d=await r.json();if(d.error){el.innerHTML='<div style="color:var(--red);font-size:12px">'+d.error+'</div>';return}
+// Also get Polygon balances
+const[polyEfix,polyMatic]=await Promise.all([getBalance(PR,EP,OP),ethBal(PR,OP)]);const polyNum=Number(polyEfix)/1e18;
+el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr><tr><td colspan="2" style="color:var(--blue);font-weight:700;font-size:11px;padding-top:12px">BASE</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+d.base.efixDI+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+d.base.usdc+'</td></tr></table>'}catch(e){el.textContent='Error: '+e.message}}
+
+async function doBridge(){
+const amount=document.getElementById('bridgeAmount').value.trim();if(!amount||Number(amount)<=0){alert('Enter amount');return}
+if(!confirm('Bridge '+amount+' efixDI from Polygon to Base?'))return;
+const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">Bridging... (approve + quote + send)</span>';
+try{const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify({amount})});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base<br>TX: <a href="https://polygonscan.com/tx/'+d.txHash+'" target="_blank" style="color:var(--green)">'+d.txHash.slice(0,14)+'...</a><br>Fee: '+d.fee+'<br>'+d.message+'</span>';toast('Bridge sent!');setTimeout(()=>loadBridgeBalances(),10000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
 function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');
 // Widen container for iframe tabs
 const c=document.querySelector('.container');if(n==='dashboard'||n==='range')c.style.maxWidth='100%';else c.style.maxWidth='1100px';}
