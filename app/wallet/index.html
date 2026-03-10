@@ -659,7 +659,7 @@
                     alert('Colateral registrado: ' + data.collateral + ' efixDI\nCrédito USDC: $' + data.usdcCredit + '\nLTV: ' + data.ltv + '\n\nVocê será notificado quando o USDC for creditado.');
                     loadHistory(userAddress);
                 } else {
-                    alert('Erro: ' + (data.error || 'tente novamente'));
+                    alert(data.error || 'Erro desconhecido');
                 }
             } catch (e) {
                 alert('Erro: ' + e.message);
