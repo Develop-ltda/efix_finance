@@ -205,15 +205,19 @@
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
                             <span style="font-size:13px;color:var(--gray-500);">Taxa de crédito</span>
-                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);">~5% a.a.</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--red);">-5% a.a.</span>
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
                             <span style="font-size:13px;color:var(--gray-500);">Rendimento do colateral</span>
-                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);">~15% CDI</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);">+15% CDI</span>
                         </div>
-                        <div style="display:flex;justify-content:space-between;padding:10px 0;">
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
                             <span style="font-size:13px;color:var(--gray-500);">Carry líquido</span>
                             <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);font-weight:700;">+10% a.a.</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;">
+                            <span style="font-size:13px;color:var(--gray-500);">LTV</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);">50%</span>
                         </div>
                     </div>
 
@@ -562,30 +566,26 @@
             btn.innerHTML = '<span class="spinner"></span>Depositando colateral...';
 
             try {
-                // For now: call admin deposit endpoint to transfer efixDI to protocol vault
-                // In production: user signs ERC-20 approve + transfer via smart wallet
                 const res = await fetch(BACKEND_URL + '/deposit/collateralize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ address: userAddress, amount: amount })
                 });
 
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById('collateralAmount').textContent = amount.toFixed(2);
-                    updateSpendingPower(amount);
-                    alert('Colateral depositado! ' + amount.toFixed(2) + ' efixDI\nSeu cartão será ativado em breve.');
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('collateralAmount').textContent = data.collateral;
+                    updateSpendingPower(parseFloat(data.collateral));
+                    document.getElementById('cardStatus').textContent = 'PENDING';
+                    document.getElementById('cardStatus').style.background = 'rgba(234,179,8,0.2)';
+                    document.getElementById('cardStatus').style.color = '#eab308';
+                    alert('Colateral registrado: ' + data.collateral + ' efixDI\nCrédito USDC: $' + data.usdcCredit + '\nLTV: ' + data.ltv + '\n\nVocê será notificado quando o USDC for creditado.');
                 } else {
-                    // Endpoint not ready yet - show confirmation
-                    document.getElementById('collateralAmount').textContent = amount.toFixed(2);
-                    updateSpendingPower(amount);
-                    alert('Solicitação registrada: ' + amount.toFixed(2) + ' efixDI como colateral.\nVocê será notificado quando o cartão for ativado.');
+                    alert('Erro: ' + (data.error || 'tente novamente'));
                 }
             } catch (e) {
-                // Backend endpoint not yet implemented - still show the intent
-                document.getElementById('collateralAmount').textContent = amount.toFixed(2);
-                updateSpendingPower(amount);
-                alert('Solicitação registrada: ' + amount.toFixed(2) + ' efixDI como colateral.\nVocê será notificado quando o cartão for ativado.');
+                alert('Erro: ' + e.message);
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Depositar Colateral';
@@ -593,9 +593,9 @@
         }
 
         function updateSpendingPower(collateralAmount) {
-            // Spending power = collateral * LTV (77%) * BRL/USD rate (~0.17)
-            const ltv = 0.77;
-            const brlUsd = 0.17; // approximate
+            // Spending power = collateral * LTV (50%) * BRL/USD rate (~0.17)
+            const ltv = 0.50;
+            const brlUsd = 0.17;
             const spendingUSD = collateralAmount * ltv * brlUsd;
             document.getElementById('spendingPower').textContent = '$' + spendingUSD.toFixed(2);
         }
