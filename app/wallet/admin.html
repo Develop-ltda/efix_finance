@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>efixDI+ Admin</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>efixDI+ Admin v4</title>
 <style>
   :root{--black:#0a0a0a;--white:#fff;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--card:#111;--border:#1f1f1f;--gray-600:#666;--gray-500:#888;--gray-400:#aaa;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
   *{margin:0;padding:0;box-sizing:border-box}
@@ -145,7 +147,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       <div class="card">
         <h2>Bridge efixDI → Base</h2>
-        <p style="font-size:11px;color:var(--gray-500);margin-bottom:16px;">Transfer efixDI from operator on Polygon to Base via LayerZero V2 OFT. Tokens will arrive on Base in ~2-5 minutes.</p>
+        <p style="font-size:11px;color:var(--gray-500);margin-bottom:16px;">Transfer efixDI from operator on Polygon to Base via LayerZero V2 OFT. Tokens arrive on Base in ~2-5 minutes.</p>
         <div class="form-group">
           <label>Amount (efixDI)</label>
           <input type="number" id="bridgeAmount" placeholder="50" min="1">
@@ -159,10 +161,20 @@
         <button class="sm secondary" style="margin-top:12px;" onclick="loadBridgeBalances()">Refresh</button>
       </div>
     </div>
-    <div class="card">
-      <h2>Morpho Position</h2>
-      <div id="morphoPosition">Loading...</div>
-      <button class="sm secondary" style="margin-top:12px;" onclick="loadMorpho()">Refresh</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <h2>Morpho Position</h2>
+        <div id="morphoPosition">Loading...</div>
+        <button class="sm secondary" style="margin-top:12px;" onclick="loadMorpho()">Refresh</button>
+      </div>
+      <div class="card">
+        <h2>Bridge History</h2>
+        <div id="bridgeHistory">Loading...</div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="sm secondary" onclick="loadBridgeHistory()">Refresh</button>
+          <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LayerZero Scan ↗</button></a>
+        </div>
+      </div>
     </div>
   </div>
   <div class="tab-content" id="tab-dashboard">
@@ -179,7 +191,7 @@ function fd(d){return d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:
 async function rpc(u,to,d){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to,data:d},'latest'],id:1})});const j=await r.json();return BigInt(j.result||'0x0')}
 async function ethBal(u,a){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_getBalance',params:[a,'latest'],id:1})});const j=await r.json();return Number(BigInt(j.result||'0x0'))/1e18}
 async function login(){K=document.getElementById('adminKey').value.trim();if(!K)return;try{const r=await fetch(B+'/api/deposits',{headers:{'X-Admin-Key':K}});if(!r.ok)throw 0;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';loadAll()}catch(e){alert('Invalid key')}}
-async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadProtocol();loadBridgeBalances()}
+async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadProtocol();loadBridgeBalances();loadBridgeHistory()}
 async function loadStats(){try{const[ps,bs,mb]=await Promise.all([rpc(PR,EP,'0x18160ddd'),rpc(BR,EB,'0x18160ddd'),ethBal(PR,OP)]);const pn=Number(ps)/1e18,bn=Number(bs)/1e18;document.getElementById('statPolygon').textContent=pn.toFixed(0);document.getElementById('statBase').textContent=bn.toFixed(0);document.getElementById('statTVL').textContent=pn.toFixed(0);document.getElementById('statMatic').textContent=mb.toFixed(1);const h=await(await fetch(B+'/health')).json();document.getElementById('healthMeta').textContent='Block '+h.block+' · Up '+Math.round(h.uptime/60)+'m';const c=await(await fetch(B+'/api/wallet/collateral',{headers:{'X-Admin-Key':K}})).json();let lk=0,addrs=new Set();(c.collateral||[]).forEach(x=>{if(x.status==='locked')lk+=parseFloat(x.amount_efix);addrs.add(x.address)});document.getElementById('statCollateral').textContent=lk.toFixed(0);
 // Count unique deposit addresses
 try{const dp=await(await fetch(B+'/api/wallet/pending',{headers:{'X-Admin-Key':K}})).json();(dp.deposits||[]).forEach(d=>{if(d.address)addrs.add(d.address)});document.getElementById('statUsers').textContent=addrs.size||'-'}catch(e){document.getElementById('statUsers').textContent=addrs.size||'-'}}catch(e){console.error(e)}}
@@ -202,10 +214,56 @@ if(el1)el1.innerHTML=html;if(el2)el2.innerHTML=html}catch(e){const msg='Error: '
 
 async function loadBridgeBalances(){
 const el=document.getElementById('bridgeBalances');if(!el)return;
-try{const r=await fetch(B+'/api/admin/morpho',{headers:{'X-Admin-Key':K}});const d=await r.json();if(d.error){el.innerHTML='<div style="color:var(--red);font-size:12px">'+d.error+'</div>';return}
-// Also get Polygon balances
-const[polyEfix,polyMatic]=await Promise.all([getBalance(PR,EP,OP),ethBal(PR,OP)]);const polyNum=Number(polyEfix)/1e18;
-el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr><tr><td colspan="2" style="color:var(--blue);font-weight:700;font-size:11px;padding-top:12px">BASE</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+d.base.efixDI+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+d.base.usdc+'</td></tr></table>'}catch(e){el.textContent='Error: '+e.message}}
+try{
+// Get Polygon balances directly via RPC (always works)
+const padOP=OP.toLowerCase().replace('0x','').padStart(64,'0');
+const[polyEfix,polyMatic]=await Promise.all([rpc(PR,EP,'0x70a08231'+padOP),ethBal(PR,OP)]);
+const polyNum=Number(polyEfix)/1e18;
+
+let baseHtml='<tr><td colspan="2" style="color:var(--blue);font-weight:700;font-size:11px;padding-top:12px">BASE</td></tr>';
+// Try Base balances via Morpho endpoint
+try{const r=await fetch(B+'/api/admin/morpho',{headers:{'X-Admin-Key':K}});const d=await r.json();
+if(d.base){baseHtml+='<tr><td style="color:var(--gray-500)">efixDI</td><td>'+d.base.efixDI+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+d.base.usdc+'</td></tr>'}
+else{baseHtml+='<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">Backend deploying...</td></tr>'}}
+catch(e){
+// Fallback: read Base balances directly via RPC
+try{const padOP2=OP.toLowerCase().replace('0x','').padStart(64,'0');
+const baseEfix=await rpc(BR,EB,'0x70a08231'+padOP2);const baseNum=Number(baseEfix)/1e18;
+const usdcBase=await rpc(BR,'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','0x70a08231'+padOP2);const usdcNum=Number(usdcBase)/1e6;
+baseHtml+='<tr><td style="color:var(--gray-500)">efixDI</td><td>'+baseNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+usdcNum.toFixed(2)+'</td></tr>'}
+catch(e2){baseHtml+='<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">RPC error</td></tr>'}}
+
+el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr>'+baseHtml+'</table>'
+}catch(e){el.textContent='Error: '+e.message}}
+
+async function loadBridgeHistory(){
+const el=document.getElementById('bridgeHistory');if(!el)return;
+el.innerHTML='<div style="font-size:11px;color:var(--gray-500)">Loading from LayerZero Scan...</div>';
+try{
+// Fetch from LayerZero Scan API
+const r=await fetch('https://scan.layerzero-api.com/v1/messages/oft?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
+if(!r.ok)throw new Error('LZ Scan API error');
+const d=await r.json();
+const msgs=d.data||d.messages||[];
+if(!msgs.length){
+// Fallback: show manual link
+el.innerHTML='<div style="font-size:11px;color:var(--gray-500)">No messages found via API.<br><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green)">View on LayerZero Scan ↗</a></div>';
+return}
+let html='<table class="tbl"><thead><tr><th>Status</th><th>From→To</th><th>Amount</th><th>Date</th><th></th></tr></thead><tbody>';
+msgs.forEach(m=>{
+const st=m.status||m.pathway?.status||'unknown';
+const stColor=st==='DELIVERED'?'var(--green)':st==='INFLIGHT'?'var(--yellow)':'var(--gray-500)';
+const srcChain=m.srcChainKey||m.pathway?.srcChainKey||'polygon';
+const dstChain=m.dstChainKey||m.pathway?.dstChainKey||'base';
+const date=m.created?fd(m.created):'-';
+const hash=m.srcTxHash||m.pathway?.sender?.hash||'';
+const shortHash=hash?hash.slice(0,10)+'...':'';
+const link=hash?'<a href="https://layerzeroscan.com/tx/'+hash+'" target="_blank" style="color:var(--green);font-size:11px">View ↗</a>':'';
+html+='<tr><td><span style="color:'+stColor+';font-size:11px;font-weight:700">'+st+'</span></td><td style="font-size:11px">'+srcChain+'→'+dstChain+'</td><td style="font-size:11px">efixDI</td><td style="font-size:11px;color:var(--gray-500)">'+date+'</td><td>'+link+'</td></tr>'});
+html+='</tbody></table>';
+el.innerHTML=html}catch(e){
+// If API fails, show direct link
+el.innerHTML='<table class="tbl"><tbody><tr><td style="font-size:11px">View bridge history on LayerZero Scan:</td></tr><tr><td><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green)">OFT Adapter ↗</a> · <a href="https://layerzeroscan.com/address/0x9eFc11e4d285b5a749faFBC2613836Dcda899e12" target="_blank" style="color:var(--green)">Operator ↗</a></td></tr></tbody></table>'}}
 
 async function doBridge(){
 const amount=document.getElementById('bridgeAmount').value.trim();if(!amount||Number(amount)<=0){alert('Enter amount');return}
