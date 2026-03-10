@@ -143,13 +143,15 @@
                             <p style="color:var(--gray-600);font-size:11px;font-family:var(--font-mono);margin-top:12px;word-break:break-all;max-height:60px;overflow:hidden;cursor:pointer;" id="pixCodeText" onclick="copyPixCode()">...</p>
                             <button class="btn btn-secondary" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;width:auto;padding:8px 20px;font-size:13px;" onclick="copyPixCode()">Copiar código PIX</button>
                         </div>
-                        <div style="display:flex;flex-direction:column;gap:8px;" id="depositSteps">
+                        <button class="btn btn-primary" id="btnIPaid" style="margin-top:16px;background:var(--green);color:var(--black);" onclick="handleIPaid()">Já paguei o PIX</button>
+                        <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;" id="depositSteps">
                             <div class="prog-step done" id="ds-1"><span class="prog-icon">✓</span> QR Code gerado</div>
-                            <div class="prog-step" id="ds-2"><span class="prog-icon">2</span> Aguardando pagamento PIX...</div>
+                            <div class="prog-step" id="ds-2"><span class="prog-icon">2</span> Pagamento PIX confirmado</div>
                             <div class="prog-step" id="ds-3"><span class="prog-icon">3</span> Mintando tokens efixDI</div>
                             <div class="prog-step" id="ds-4"><span class="prog-icon">4</span> Tokens creditados!</div>
                         </div>
-                        <button class="btn btn-secondary" style="margin-top:16px;" onclick="resetDeposit()">Cancelar</button>
+                        <div id="deposit-msg" style="margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);text-align:center;min-height:20px;"></div>
+                        <button class="btn btn-secondary" style="margin-top:12px;" onclick="resetDeposit()">Cancelar</button>
                     </div>
                 </div>
             </div>
@@ -298,7 +300,6 @@
 
                 currentDepositRef = data.reference;
 
-                // Show QR
                 document.getElementById('deposit-form').style.display = 'none';
                 document.getElementById('deposit-qr').style.display = 'block';
 
@@ -310,8 +311,7 @@
                     document.getElementById('pixCodeText').dataset.code = data.pixCode;
                 }
 
-                // Start polling for payment confirmation
-                startPolling(data.reference);
+                setDepositMsg('Pague o PIX e clique em "Já paguei o PIX"');
 
             } catch (e) {
                 alert('Erro: ' + e.message);
@@ -321,43 +321,90 @@
             }
         }
 
-        function startPolling(reference) {
+        async function handleIPaid() {
+            if (!currentDepositRef) return;
+            
+            const btn = document.getElementById('btnIPaid');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Verificando pagamento...';
+            setDepositMsg('Consultando HausBank...');
+
+            try {
+                const res = await fetch(BACKEND_URL + '/deposit/confirm-paid', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reference: currentDepositRef })
+                });
+
+                const data = await res.json();
+
+                if (data.status === 'confirmed' || data.status === 'minted') {
+                    setStep(2, true); setStep(3, true); setStep(4, true);
+                    btn.style.display = 'none';
+                    setDepositMsg('Depósito confirmado! TX: ' + (data.txHash || '').slice(0, 14) + '...');
+                    setTimeout(() => refreshBalance(userAddress), 2000);
+                    
+                } else if (data.status === 'minting') {
+                    setStep(2, true); setStep(3, 'active');
+                    setDepositMsg('Mintando tokens... aguarde ~15 segundos');
+                    // Auto-poll until confirmed
+                    startStatusPoll();
+                    
+                } else if (data.status === 'not_found') {
+                    setDepositMsg('Pagamento não encontrado ainda. Aguarde 30s e tente novamente.');
+                    btn.disabled = false;
+                    btn.textContent = 'Já paguei o PIX';
+                    
+                } else {
+                    setDepositMsg('Status: ' + data.status + '. ' + (data.message || ''));
+                    btn.disabled = false;
+                    btn.textContent = 'Já paguei o PIX';
+                }
+            } catch (e) {
+                setDepositMsg('Erro: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = 'Já paguei o PIX';
+            }
+        }
+
+        function startStatusPoll() {
             if (pollTimer) clearInterval(pollTimer);
             pollTimer = setInterval(async () => {
                 try {
-                    const res = await fetch(BACKEND_URL + '/deposit/status/' + reference);
+                    const res = await fetch(BACKEND_URL + '/deposit/status/' + currentDepositRef);
                     const data = await res.json();
-
-                    if (data.status === 'minting' || data.status === 'processing') {
-                        setStep(2, true); setStep(3, 'active');
-                    } else if (data.status === 'minted' || data.status === 'confirmed') {
+                    
+                    if (data.status === 'confirmed' || data.status === 'minted') {
                         setStep(2, true); setStep(3, true); setStep(4, true);
+                        document.getElementById('btnIPaid').style.display = 'none';
+                        setDepositMsg('Depósito confirmado! TX: ' + (data.txHash || '').slice(0, 14) + '...');
                         clearInterval(pollTimer); pollTimer = null;
-                        // Refresh balance
                         setTimeout(() => refreshBalance(userAddress), 2000);
-                    } else if (data.status === 'failed') {
-                        clearInterval(pollTimer); pollTimer = null;
-                        alert('Erro no processamento: ' + (data.error || 'tente novamente'));
                     }
                 } catch(e) { /* keep polling */ }
-            }, 5000); // poll every 5 seconds
+            }, 5000);
         }
 
         function setStep(n, state) {
             const el = document.getElementById('ds-' + n);
             if (!el) return;
             el.classList.remove('done', 'active');
-            if (state === true) el.classList.add('done');
+            if (state === true) { el.classList.add('done'); el.querySelector('.prog-icon').textContent = '✓'; }
             else if (state === 'active') el.classList.add('active');
-            if (state === true) {
-                el.querySelector('.prog-icon').textContent = '✓';
-            }
+        }
+
+        function setDepositMsg(msg) {
+            const el = document.getElementById('deposit-msg');
+            if (el) el.textContent = msg;
         }
 
         function resetDeposit() {
             if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
             document.getElementById('deposit-form').style.display = 'block';
             document.getElementById('deposit-qr').style.display = 'none';
+            document.getElementById('btnIPaid').style.display = '';
+            document.getElementById('btnIPaid').disabled = false;
+            document.getElementById('btnIPaid').textContent = 'Já paguei o PIX';
             ['ds-1','ds-2','ds-3','ds-4'].forEach((id, i) => {
                 const el = document.getElementById(id);
                 el.classList.remove('done','active');
@@ -365,6 +412,7 @@
             });
             document.getElementById('ds-1').classList.add('done');
             document.getElementById('ds-1').querySelector('.prog-icon').textContent = '✓';
+            setDepositMsg('');
             currentDepositRef = null;
         }
 
