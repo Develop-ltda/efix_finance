@@ -246,6 +246,14 @@
             </div>
 
             <button class="btn btn-secondary" style="margin-top:24px;" onclick="handleDisconnect()">Desconectar</button>
+
+            <!-- Transaction History -->
+            <div style="margin-top:32px;">
+                <h3 style="font-size:14px;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Histórico</h3>
+                <div id="txHistory" style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="text-align:center;color:var(--gray-600);font-size:13px;font-family:var(--font-mono);padding:20px;">Carregando...</div>
+                </div>
+            </div>
         </div>
         <div class="app-footer">
             <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token</a> ·
@@ -343,6 +351,49 @@
             document.getElementById('userPillAddr').textContent = short;
             document.getElementById('userPill').classList.add('active');
             await refreshBalance(address);
+            loadHistory(address);
+        }
+
+        async function loadHistory(address) {
+            const container = document.getElementById('txHistory');
+            try {
+                const res = await fetch(BACKEND_URL + '/wallet/history/' + address);
+                const data = await res.json();
+
+                if (!data.history || data.history.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;color:var(--gray-600);font-size:13px;font-family:var(--font-mono);padding:20px;">Nenhuma transação ainda</div>';
+                    return;
+                }
+
+                container.innerHTML = data.history.map(tx => {
+                    const icons = { deposit: '↓', collateral: '🔒', withdrawal: '↑' };
+                    const colors = { deposit: 'var(--green)', collateral: '#eab308', withdrawal: 'var(--red)' };
+                    const labels = { deposit: 'Depósito', collateral: 'Colateral', withdrawal: 'Saque' };
+                    const statusColors = { confirmed: 'var(--green)', minted: 'var(--green)', pending: '#eab308', failed: 'var(--red)', completed: 'var(--green)' };
+
+                    const date = new Date(tx.date);
+                    const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+                    let amountStr = tx.amount + ' efixDI';
+                    if (tx.type === 'collateral') amountStr = tx.amount + ' efixDI → $' + tx.usdcCredit;
+                    if (tx.type === 'deposit') amountStr = 'R$ ' + tx.amount;
+
+                    return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:12px;">
+                        <div style="width:32px;height:32px;border-radius:50%;background:${colors[tx.type]}20;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${icons[tx.type]}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:13px;font-weight:600;color:var(--white);">${labels[tx.type]}</div>
+                            <div style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);">${dateStr} ${timeStr}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:13px;font-family:var(--font-mono);color:var(--white);">${amountStr}</div>
+                            <div style="font-size:11px;font-family:var(--font-mono);color:${statusColors[tx.status] || 'var(--gray-500)'};">${tx.status}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = '<div style="text-align:center;color:var(--gray-600);font-size:13px;">Erro ao carregar histórico</div>';
+            }
         }
 
         async function refreshBalance(address) {
@@ -472,6 +523,7 @@
                         setStep(3, true); setStep(4, true);
                         document.getElementById('btnIPaid').style.display = 'none';
                         setDepositMsg('Tokens creditados!');
+                        loadHistory(userAddress);
                         return;
                     }
                 } catch(e) { /* keep polling */ }
@@ -549,9 +601,33 @@
         async function handleWithdraw() {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const pixKey = document.getElementById('pixKey').value.trim();
-            if (!amount || amount <= 0) { alert('Insira um valor'); return; }
+            if (!amount || amount < 10) { alert('Mínimo 10 efixDI'); return; }
             if (!pixKey) { alert('Insira sua chave PIX'); return; }
-            alert('Saque será implementado em breve.\nValor: ' + amount + ' efixDI\nPIX: ' + pixKey);
+
+            const bal = parseFloat(document.getElementById('tokenBalance').textContent);
+            if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
+
+            if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nPIX será enviado para: ' + pixKey)) return;
+
+            try {
+                const res = await fetch(BACKEND_URL + '/withdraw/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: userAddress, amount, pixKey })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert('Saque solicitado: R$ ' + data.amount + '\nPIX: ' + pixKey + '\n\n' + data.message);
+                    document.getElementById('withdrawAmount').value = '';
+                    document.getElementById('pixKey').value = '';
+                    loadHistory(userAddress);
+                } else {
+                    alert('Erro: ' + (data.error || 'tente novamente'));
+                }
+            } catch (e) {
+                alert('Erro: ' + e.message);
+            }
         }
 
         async function handleCollateralize() {
@@ -581,6 +657,7 @@
                     document.getElementById('cardStatus').style.background = 'rgba(234,179,8,0.2)';
                     document.getElementById('cardStatus').style.color = '#eab308';
                     alert('Colateral registrado: ' + data.collateral + ' efixDI\nCrédito USDC: $' + data.usdcCredit + '\nLTV: ' + data.ltv + '\n\nVocê será notificado quando o USDC for creditado.');
+                    loadHistory(userAddress);
                 } else {
                     alert('Erro: ' + (data.error || 'tente novamente'));
                 }
