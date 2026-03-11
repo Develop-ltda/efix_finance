@@ -1302,4 +1302,24 @@ observer.observe(hero);
 
 // Fade-in on scroll
 const fadeEls = document.querySelectorAll('.fade-up');
-const fadeObserver = 
+const fadeObserver = new IntersectionObserver(
+    (entries) => entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    }),
+    { threshold: 0.1 }
+);
+fadeEls.forEach(el => fadeObserver.observe(el));
+
+// Card hover glow effect
+document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', (e.clientX - rect.left) + 'px');
+        card.style.setProperty('--mouse-y', (e.clientY - rect.top) + 'px');
+    });
+});
+</script>
+</body>
+</html>
