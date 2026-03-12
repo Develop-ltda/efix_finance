@@ -62,6 +62,10 @@
   .lz-hash{font-size:10px;color:var(--gray-500);text-decoration:none;font-family:var(--font-mono);transition:color .2s}
   .lz-hash:hover{color:var(--black)}
   .lz-nonce{font-size:10px;color:var(--gray-400);font-family:var(--font-mono);min-width:20px}
+  .lz-new{animation:lzNewFlash 2s ease;background:rgba(34,197,94,0.06)}
+  @keyframes lzNewFlash{0%{background:rgba(34,197,94,0.15)}100%{background:transparent}}
+  .lz-poll-indicator{position:fixed;bottom:20px;right:20px;font-size:10px;color:var(--gray-400);font-family:var(--font-mono);z-index:50;display:flex;align-items:center;gap:6px;background:var(--white);padding:4px 10px;border-radius:8px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .lz-poll-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:lzPulse 2s ease infinite}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
   .form-group{margin-bottom:12px}
   .form-group label{display:block;font-size:9px;color:var(--gray-400);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:700}
@@ -78,6 +82,7 @@
 </head>
 <body>
 <div id="toast" class="toast"></div>
+<div id="lzPollIndicator" class="lz-poll-indicator" style="display:none"><span class="lz-poll-dot"></span><span id="lzPollText">LZ: polling</span></div>
 <div id="login-screen" class="login">
   <h1 style="margin-bottom:4px;">efixDI<span style="color:var(--green)">+</span></h1>
   <p style="color:var(--gray-500);font-size:12px;margin-bottom:32px;">Protocol Operations</p>
@@ -124,7 +129,7 @@
     <button class="tab-btn" onclick="switchTab('withdrawals',this)">Saques</button>
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
     <button class="tab-btn" onclick="switchTab('protocol',this)">Protocolo</button>
-    <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
+    <button class="tab-btn" onclick="switchTab('bridge',this)" id="bridgeTabBtn">Bridge <span id="lzBadge" style="display:none;background:var(--green);color:#fff;font-size:9px;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:700;animation:lzPulse 1.5s ease infinite"></span></button>
     <button class="tab-btn" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
   </div>
   <div class="tab-content active" id="tab-mint">
@@ -347,25 +352,78 @@ catch(e2){baseHtml+='<tr><td colspan="2" style="color:var(--gray-500);font-size:
 el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr>'+baseHtml+'</table>'
 }catch(e){el.textContent='Error: '+e.message}}
 
-async function loadBridgeHistory(){
-const el=document.getElementById('bridgeHistory');if(!el)return;
-el.innerHTML='<div style="font-size:11px;color:var(--gray-400)">Loading from LayerZero Scan...</div>';
-try{
-// Try multiple API endpoints
-let msgs=[];
-try{
-  const r=await fetch('https://scan.layerzero-api.com/v1/messages/oft?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
-  if(r.ok){const d=await r.json();msgs=d.data||d.messages||[]}
-}catch(e){}
-if(!msgs.length){
+// === LZ MESSAGE MONITORING (always-on) ===
+const LZ_OFT_ADDR='0x603265754fDdd7FdE459CC6e6722bd526C1258Fc';
+const LZ_OP_ADDR='0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
+let _lzKnownHashes=new Set();
+let _lzMsgCount=0;
+let _lzPollTimer=null;
+let _lzFirstLoad=true;
+
+async function fetchLZMessages(){
+// Query multiple endpoints to catch all messages
+const endpoints=[
+  'https://scan.layerzero-api.com/v1/messages/oft?srcAddress='+LZ_OFT_ADDR+'&limit=20',
+  'https://scan.layerzero-api.com/v1/messages?srcAddress='+LZ_OFT_ADDR+'&limit=20',
+  'https://scan.layerzero-api.com/v1/messages/oft?srcAddress='+LZ_OP_ADDR+'&limit=20',
+  'https://scan.layerzero-api.com/v1/messages?srcAddress='+LZ_OP_ADDR+'&limit=20',
+];
+const allMsgs=new Map();
+for(const url of endpoints){
   try{
-    const r2=await fetch('https://scan.layerzero-api.com/v1/messages?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
-    if(r2.ok){const d2=await r2.json();msgs=d2.data||d2.messages||[]}
+    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok)continue;
+    const d=await r.json();
+    const msgs=d.data||d.messages||[];
+    msgs.forEach(m=>{
+      const hash=m.srcTxHash||m.pathway?.sender?.hash||'';
+      if(hash&&!allMsgs.has(hash))allMsgs.set(hash,m);
+    });
   }catch(e){}
 }
+// Sort by created date descending
+return Array.from(allMsgs.values()).sort((a,b)=>{
+  const ta=new Date(a.created||a.pathway?.created||0).getTime();
+  const tb=new Date(b.created||b.pathway?.created||0).getTime();
+  return tb-ta;
+});
+}
+
+async function loadBridgeHistory(){
+const el=document.getElementById('bridgeHistory');if(!el)return;
+if(_lzFirstLoad)el.innerHTML='<div style="font-size:11px;color:var(--gray-400)">Loading from LayerZero Scan...</div>';
+try{
+const msgs=await fetchLZMessages();
 if(!msgs.length){
-  el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:24px;margin-bottom:8px">🌉</div><div style="font-size:12px;color:var(--gray-400);margin-bottom:12px">No messages via API — view on LayerZero Scan directly</div><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green);font-size:12px">OFT Adapter ↗</a></div>';
+  el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:24px;margin-bottom:8px">🌉</div><div style="font-size:12px;color:var(--gray-400);margin-bottom:12px">No messages via API — view on LayerZero Scan directly</div><a href="https://layerzeroscan.com/address/'+LZ_OFT_ADDR+'" target="_blank" style="color:var(--green);font-size:12px">OFT Adapter ↗</a> · <a href="https://layerzeroscan.com/address/'+LZ_OP_ADDR+'" target="_blank" style="color:var(--green);font-size:12px">Operator ↗</a></div>';
   return}
+
+// Detect new messages
+let newCount=0;
+const currentHashes=new Set();
+msgs.forEach(m=>{
+  const hash=m.srcTxHash||m.pathway?.sender?.hash||'';
+  if(hash)currentHashes.add(hash);
+  if(hash&&!_lzKnownHashes.has(hash)&&!_lzFirstLoad)newCount++;
+});
+
+// Notify on new messages
+if(newCount>0&&!_lzFirstLoad){
+  toast('🌉 '+newCount+' new LayerZero message'+(newCount>1?'s':'')+'!',5000);
+  // Show badge on Bridge tab if not currently viewing it
+  const badge=document.getElementById('lzBadge');
+  if(badge&&!document.getElementById('tab-bridge').classList.contains('active')){
+    badge.textContent='+'+newCount;badge.style.display='inline';
+  }
+  // Browser notification
+  if(Notification&&Notification.permission==='granted'){
+    new Notification('efixDI+ Bridge',{body:newCount+' new LayerZero message'+(newCount>1?'s':''),icon:'https://efix.finance/logo_efix_400x400.jpg'});
+  }
+}
+// Update known hashes
+_lzKnownHashes=currentHashes;
+_lzMsgCount=msgs.length;
+_lzFirstLoad=false;
 
 let hasInflight=false;
 let html='';
@@ -373,17 +431,17 @@ msgs.forEach(m=>{
   const st=(m.status||m.pathway?.status||'UNKNOWN').toUpperCase();
   const stClass=st==='DELIVERED'?'delivered':st==='INFLIGHT'?'inflight':st==='FAILED'?'failed':st==='BLOCKED'?'blocked':'';
   if(st==='INFLIGHT')hasInflight=true;
+  const hash=m.srcTxHash||m.pathway?.sender?.hash||'';
+  const isNew=hash&&!_lzKnownHashes.has(hash)&&newCount>0;
 
   const nonce=m.nonce||m.pathway?.nonce||'';
   const srcChain=m.srcChainKey||m.pathway?.srcChainKey||'polygon';
   const dstChain=m.dstChainKey||m.pathway?.dstChainKey||'base';
-  const srcHash=m.srcTxHash||m.pathway?.sender?.hash||'';
+  const srcHash=hash;
   const dstHash=m.dstTxHash||m.pathway?.receiver?.hash||'';
-  const shortSrc=srcHash?srcHash.slice(0,10)+'…'+srcHash.slice(-4):'';
   const created=m.created||m.pathway?.created||'';
   const updated=m.updated||m.pathway?.updated||'';
 
-  // Time ago
   let timeAgo='-';
   if(created){
     const secs=Math.floor((Date.now()-new Date(created).getTime())/1000);
@@ -393,7 +451,6 @@ msgs.forEach(m=>{
     else timeAgo=Math.floor(secs/86400)+'d ago';
   }
 
-  // Duration for delivered
   let duration='';
   if(st==='DELIVERED'&&created&&updated){
     const dur=Math.floor((new Date(updated).getTime()-new Date(created).getTime())/1000);
@@ -406,7 +463,7 @@ msgs.forEach(m=>{
   const srcScan=srcChain.includes('polygon')||srcChain.includes('poly')?'https://polygonscan.com/tx/'+srcHash:'https://basescan.org/tx/'+srcHash;
   const dstScan=dstHash?(dstChain.includes('base')?'https://basescan.org/tx/'+dstHash:'https://polygonscan.com/tx/'+dstHash):'';
 
-  html+='<div class="lz-msg">';
+  html+='<div class="lz-msg'+(isNew?' lz-new':'')+'">';
   html+='<span class="lz-nonce">#'+nonce+'</span>';
   html+='<span class="lz-status '+stClass+'">'+st+'</span>';
   html+='<span class="lz-chain">'+srcChain+' <span class="arrow">→</span> '+dstChain+'</span>';
@@ -418,26 +475,39 @@ msgs.forEach(m=>{
   if(dstScan)html+='<a href="'+dstScan+'" target="_blank" class="lz-hash" style="margin-left:4px">Dst ↗</a>';
   html+='</div>';
 });
-el.innerHTML=html;
 
-// Auto-refresh if any inflight messages
-if(hasInflight){
-  if(!window._lzAutoRefresh){
-    window._lzAutoRefresh=setInterval(()=>{loadBridgeHistory()},8000);
-  }
-}else{
-  if(window._lzAutoRefresh){clearInterval(window._lzAutoRefresh);window._lzAutoRefresh=null}
-}
+// Header with message count + last poll time
+const headerHtml='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;color:var(--gray-400)"><span>'+msgs.length+' messages · '+(hasInflight?'<span style="color:var(--yellow)">INFLIGHT detected</span>':'all delivered')+'</span><span id="lzLastPoll">polled just now</span></div>';
+el.innerHTML=headerHtml+html;
+
+// Dynamic poll rate: 8s if inflight, 30s if all delivered
+const pollInterval=hasInflight?8000:30000;
+if(_lzPollTimer)clearInterval(_lzPollTimer);
+_lzPollTimer=setInterval(()=>{loadBridgeHistory()},pollInterval);
+
+// Update poll indicator
+const pi=document.getElementById('lzPollIndicator');
+if(pi){pi.style.display='flex';document.getElementById('lzPollText').textContent='LZ: '+msgs.length+' msgs · '+(hasInflight?'8s':'30s')+' poll'}
 
 }catch(e){
-el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:12px;color:var(--red);margin-bottom:8px">API error: '+e.message+'</div><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green);font-size:12px">View on LayerZero Scan ↗</a></div>'}}
+el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:12px;color:var(--red);margin-bottom:8px">API error: '+e.message+'</div><a href="https://layerzeroscan.com/address/'+LZ_OFT_ADDR+'" target="_blank" style="color:var(--green);font-size:12px">View on LayerZero Scan ↗</a></div>';
+// Don't stop polling on error — retry in 30s
+if(!_lzPollTimer)_lzPollTimer=setInterval(()=>{loadBridgeHistory()},30000);
+}
+}
+
+// Request browser notification permission on first interaction
+document.addEventListener('click',function _reqNotif(){
+  if(Notification&&Notification.permission==='default')Notification.requestPermission();
+  document.removeEventListener('click',_reqNotif);
+},{once:true});
 
 async function doBridge(){
 const amount=document.getElementById('bridgeAmount').value.trim();if(!amount||Number(amount)<=0){alert('Enter amount');return}
 if(!confirm('Bridge '+amount+' efixDI from Polygon to Base?'))return;
 const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">Bridging... (approve + quote + send)</span>';
 try{const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify({amount})});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base<br>TX: <a href="https://polygonscan.com/tx/'+d.txHash+'" target="_blank" style="color:var(--green)">'+d.txHash.slice(0,14)+'...</a><br>Fee: '+d.fee+'<br>'+d.message+'</span>';toast('Bridge sent!');setTimeout(()=>{loadBridgeBalances();loadBridgeHistory()},5000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
-function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=n==='dashboard'?'100%':'1100px'}
+function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=n==='dashboard'?'100%':'1100px';if(n==='bridge'){const badge=document.getElementById('lzBadge');if(badge)badge.style.display='none'}}
 </script>
 </body>
 </html>
