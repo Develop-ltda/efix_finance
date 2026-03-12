@@ -267,6 +267,7 @@
     </main>
     <script src="efix-wallet-bundle.js"></script>
     <script src="/shared/js/config.js"></script>
+    <script src="wallet.js"></script>
     <script>
         const BACKEND_URL = EFIX_CONFIG.backend;
         let userAddress = null;
@@ -361,15 +362,14 @@
         async function loadHistory(address) {
             const container = document.getElementById('txHistory');
             try {
-                const res = await fetch(BACKEND_URL + '/wallet/history/' + address);
-                const data = await res.json();
+                const history = await WalletLogic.fetchHistory(BACKEND_URL, address);
 
-                if (!data.history || data.history.length === 0) {
+                if (!history || history.length === 0) {
                     container.innerHTML = '<div style="text-align:center;color:var(--gray-600);font-size:13px;font-family:var(--font-mono);padding:20px;">Nenhuma transação ainda</div>';
                     return;
                 }
 
-                container.innerHTML = data.history.map(tx => {
+                container.innerHTML = history.map(tx => {
                     const icons = { deposit: '↓', collateral: '🔒', withdrawal: '↑' };
                     const colors = { deposit: 'var(--green)', collateral: '#eab308', withdrawal: 'var(--red)' };
                     const labels = { deposit: 'Depósito', collateral: 'Colateral', withdrawal: 'Saque' };
@@ -402,7 +402,7 @@
 
         async function refreshBalance(address) {
             try {
-                const bal = await EfixWallet.getBalance(address || userAddress);
+                const bal = await WalletLogic.getBalance(EfixWallet, address || userAddress);
                 document.getElementById('tokenBalance').textContent = bal.formatted + ' efixDI';
                 const brl = parseFloat(bal.formatted);
                 document.getElementById('balanceDisplay').textContent = 'R$ ' + brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -411,11 +411,10 @@
 
                 // Fetch locked collateral info
                 try {
-                    const balRes = await fetch(BACKEND_URL + '/wallet/balance/' + (address || userAddress));
-                    const balData = await balRes.json();
-                    if (balData.locked && parseFloat(balData.locked) > 0) {
-                        document.getElementById('collateralAmount').textContent = balData.locked;
-                        updateSpendingPower(parseFloat(balData.locked));
+                    const locked = await WalletLogic.fetchLockedBalance(BACKEND_URL, address || userAddress);
+                    if (locked > 0) {
+                        document.getElementById('collateralAmount').textContent = locked;
+                        updateSpendingPower(locked);
                     }
                 } catch(e) {}
             } catch(e) { console.error('Balance error:', e); }
@@ -433,14 +432,7 @@
             btn.innerHTML = '<span class="spinner"></span>Gerando QR Code...';
 
             try {
-                const res = await fetch(BACKEND_URL + '/deposit/qr', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount, address: userAddress })
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Backend error');
+                const data = await WalletLogic.createDeposit(BACKEND_URL, amount, userAddress);
 
                 currentDepositRef = data.reference;
 
@@ -467,38 +459,32 @@
 
         async function handleIPaid() {
             if (!currentDepositRef) return;
-            
+
             const btn = document.getElementById('btnIPaid');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span>Verificando pagamento...';
             setDepositMsg('Consultando HausBank...');
 
             try {
-                const res = await fetch(BACKEND_URL + '/deposit/confirm-paid', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reference: currentDepositRef })
-                });
-
-                const data = await res.json();
+                const data = await WalletLogic.confirmPayment(BACKEND_URL, currentDepositRef);
 
                 if (data.status === 'confirmed' || data.status === 'minted') {
                     setStep(2, true); setStep(3, true); setStep(4, true);
                     btn.style.display = 'none';
                     setDepositMsg('Depósito confirmado!');
                     waitForBalanceChange();
-                    
+
                 } else if (data.status === 'minting') {
                     setStep(2, true); setStep(3, 'active');
                     setDepositMsg('Mintando tokens... aguarde ~15 segundos');
                     // Poll balance until it changes
                     waitForBalanceChange();
-                    
+
                 } else if (data.status === 'not_found') {
                     setDepositMsg('Pagamento não encontrado ainda. Aguarde 30s e tente novamente.');
                     btn.disabled = false;
                     btn.textContent = 'Já paguei o PIX';
-                    
+
                 } else {
                     setDepositMsg('Status: ' + data.status + '. ' + (data.message || ''));
                     btn.disabled = false;
@@ -511,53 +497,34 @@
             }
         }
 
-        let balancePollTimer = null;
-
         function waitForBalanceChange() {
-            // Get current balance to compare
             const currentBal = document.getElementById('tokenBalance').textContent;
-            let attempts = 0;
-            const maxAttempts = 20; // 20 * 3s = 60 seconds max
 
-            if (balancePollTimer) clearInterval(balancePollTimer);
-            balancePollTimer = setInterval(async () => {
-                attempts++;
-                try {
-                    const bal = await EfixWallet.getBalance(userAddress);
-                    const newBalText = bal.formatted + ' efixDI';
+            WalletLogic.pollBalanceChange(EfixWallet, userAddress, currentBal, 20).then(result => {
+                if (result.changed) {
+                    document.getElementById('tokenBalance').textContent = result.bal.formatted + ' efixDI';
+                    const brl = parseFloat(result.bal.formatted);
+                    document.getElementById('balanceDisplay').textContent =
+                        'R$ ' + brl.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
-                    if (newBalText !== currentBal) {
-                        // Balance changed! Mint completed.
-                        clearInterval(balancePollTimer); balancePollTimer = null;
-                        document.getElementById('tokenBalance').textContent = newBalText;
-                        const brl = parseFloat(bal.formatted);
-                        document.getElementById('balanceDisplay').textContent =
-                            'R$ ' + brl.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-
-                        setStep(3, true); setStep(4, true);
-                        document.getElementById('btnIPaid').style.display = 'none';
-                        setDepositMsg('Tokens creditados!');
-                        loadHistory(userAddress);
-                        return;
-                    }
-                } catch(e) { /* keep polling */ }
-
-                if (attempts >= maxAttempts) {
-                    clearInterval(balancePollTimer); balancePollTimer = null;
+                    setStep(3, true); setStep(4, true);
+                    document.getElementById('btnIPaid').style.display = 'none';
+                    setDepositMsg('Tokens creditados!');
+                    loadHistory(userAddress);
+                } else {
                     setStep(3, true); setStep(4, true);
                     setDepositMsg('Verifique seu saldo — pode levar mais alguns segundos.');
                     refreshBalance(userAddress);
                 }
-            }, 3000);
+            });
         }
 
         function startStatusPoll() {
             if (pollTimer) clearInterval(pollTimer);
             pollTimer = setInterval(async () => {
                 try {
-                    const res = await fetch(BACKEND_URL + '/deposit/status/' + currentDepositRef);
-                    const data = await res.json();
-                    
+                    const data = await WalletLogic.checkDepositStatus(BACKEND_URL, currentDepositRef);
+
                     if (data.status === 'confirmed' || data.status === 'minted') {
                         setStep(2, true); setStep(3, true); setStep(4, true);
                         document.getElementById('btnIPaid').style.display = 'none';
@@ -584,7 +551,6 @@
 
         function resetDeposit() {
             if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-            if (balancePollTimer) { clearInterval(balancePollTimer); balancePollTimer = null; }
             document.getElementById('deposit-form').style.display = 'block';
             document.getElementById('deposit-qr').style.display = 'none';
             document.getElementById('btnIPaid').style.display = '';
@@ -624,13 +590,7 @@
             if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nPIX será enviado para: ' + pixKey)) return;
 
             try {
-                const res = await fetch(BACKEND_URL + '/withdraw/request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address: userAddress, amount, pixKey })
-                });
-
-                const data = await res.json();
+                const data = await WalletLogic.requestWithdraw(BACKEND_URL, userAddress, amount, pixKey);
                 if (data.success) {
                     alert('Saque solicitado: R$ ' + data.amount + '\nPIX: ' + pixKey + '\n\n' + data.message);
                     document.getElementById('withdrawAmount').value = '';
@@ -658,13 +618,7 @@
             btn.innerHTML = '<span class="spinner"></span>Registrando colateral...';
 
             try {
-                const res = await fetch(BACKEND_URL + '/deposit/collateralize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address: userAddress, amount: amount })
-                });
-
-                const data = await res.json();
+                const data = await WalletLogic.lockCollateral(BACKEND_URL, userAddress, amount);
 
                 if (data.success) {
                     document.getElementById('collateralAmount').textContent = data.collateral;
@@ -686,10 +640,7 @@
         }
 
         function updateSpendingPower(collateralAmount) {
-            // Spending power = collateral * LTV (50%) * BRL/USD rate (~0.17)
-            const ltv = 0.50;
-            const brlUsd = 0.17;
-            const spendingUSD = collateralAmount * ltv * brlUsd;
+            const spendingUSD = WalletLogic.calcSpendingPower(collateralAmount);
             document.getElementById('spendingPower').textContent = '$' + spendingUSD.toFixed(2);
         }
 

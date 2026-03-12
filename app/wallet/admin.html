@@ -475,6 +475,7 @@
 <script src="/shared/js/formatters.js"></script>
 <script src="/shared/js/rpc.js"></script>
 <script src="/shared/js/ui.js"></script>
+<script src="admin-logic.js"></script>
 <script>
   const B = EFIX_CONFIG.backend;
   const PR = EFIX_CONFIG.rpc.polygon;
@@ -487,16 +488,11 @@
   const sa = shortAddr;
   const fd = fmtDate;
 
-  function hdr() {
-    return { 'X-Admin-Key': K, 'Content-Type': 'application/json' };
-  }
-
   async function login() {
     K = document.getElementById('adminKey').value.trim();
     if (!K) return;
     try {
-      const r = await fetch(B + '/api/deposits', { headers: { 'X-Admin-Key': K } });
-      if (!r.ok) throw 0;
+      await AdminLogic.validateKey(B, K);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       loadAll();
@@ -517,41 +513,15 @@
 
   async function loadStats() {
     try {
-      const [ps, bs, mb] = await Promise.all([
-        rpcBigInt(PR, EP, '0x18160ddd'),
-        rpcBigInt(BR, EB, '0x18160ddd'),
-        ethBal(PR, OP)
-      ]);
-      const pn = Number(ps) / 1e18;
-      const bn = Number(bs) / 1e18;
-      document.getElementById('statPolygon').textContent = pn.toFixed(0);
-      document.getElementById('statBase').textContent = bn.toFixed(0);
-      document.getElementById('statTVL').textContent = pn.toFixed(0);
-      document.getElementById('statMatic').textContent = mb.toFixed(1);
-
-      const h = await (await fetch(B + '/health')).json();
+      const s = await AdminLogic.fetchStats(B, K, PR, BR, {efixPolygon:EP, efixBase:EB, operator:OP});
+      document.getElementById('statPolygon').textContent = s.polySupply.toFixed(0);
+      document.getElementById('statBase').textContent = s.baseSupply.toFixed(0);
+      document.getElementById('statTVL').textContent = s.polySupply.toFixed(0);
+      document.getElementById('statMatic').textContent = s.matic.toFixed(1);
       document.getElementById('healthMeta').textContent =
-        'Block ' + h.block + ' · Up ' + Math.round(h.uptime / 60) + 'm';
-
-      const c = await (await fetch(B + '/api/wallet/collateral', { headers: { 'X-Admin-Key': K } })).json();
-      let lk = 0;
-      const addrs = new Set();
-      (c.collateral || []).forEach(x => {
-        if (x.status === 'locked') lk += parseFloat(x.amount_efix);
-        addrs.add(x.address);
-      });
-      document.getElementById('statCollateral').textContent = lk.toFixed(0);
-
-      // Count unique deposit addresses
-      try {
-        const dp = await (await fetch(B + '/api/wallet/pending', { headers: { 'X-Admin-Key': K } })).json();
-        (dp.deposits || []).forEach(d => {
-          if (d.address) addrs.add(d.address);
-        });
-        document.getElementById('statUsers').textContent = addrs.size || '-';
-      } catch (e) {
-        document.getElementById('statUsers').textContent = addrs.size || '-';
-      }
+        'Block ' + s.block + ' · Up ' + s.uptime + 'm';
+      document.getElementById('statCollateral').textContent = s.locked.toFixed(0);
+      document.getElementById('statUsers').textContent = s.userCount || '-';
     } catch (e) {
       console.error(e);
     }
@@ -566,12 +536,7 @@
     document.getElementById('mintResult').innerHTML =
       '<span style="color:var(--yellow)">Minting...</span>';
     try {
-      const r = await fetch(B + '/api/admin/deposit', {
-        method: 'POST',
-        headers: hdr(),
-        body: JSON.stringify({ userAddress: a, amount: m, pixKey: 'admin', endToEndId: ref })
-      });
-      const d = await r.json();
+      const d = await AdminLogic.doMint(B, K, {address: a, amount: m, ref: ref});
       if (d.status === 'queued') {
         document.getElementById('mintResult').innerHTML =
           '<span style="color:var(--green)">✓ Minting ' + m + ' efixDI → ' + sa(a) + '</span>';
@@ -590,43 +555,12 @@
     const el = document.getElementById('depositsList');
     el.innerHTML = '<div class="empty">Loading...</div>';
     try {
-      const [dRes, wRes] = await Promise.all([
-        fetch(B + '/api/deposits', { headers: { 'X-Admin-Key': K } }),
-        fetch(B + '/api/wallet/pending', { headers: { 'X-Admin-Key': K } })
-      ]);
-      const dData = await dRes.json();
-      const wData = await wRes.json();
-      let all = [];
-
-      if (dData.processed) {
-        Object.entries(dData.processed).forEach(([id, d]) => {
-          all.push({
-            id: id.slice(0, 20),
-            addr: sa(d.user || OP),
-            amt: d.amount || '?',
-            st: d.status || '?',
-            dt: d.ts ? new Date(d.ts).toISOString() : null,
-            tx: d.txHash
-          });
-        });
-      }
-
-      (wData.deposits || []).forEach(d => {
-        all.push({
-          id: d.reference || '',
-          addr: sa(d.address || ''),
-          amt: d.amount || '?',
-          st: d.status || '?',
-          dt: d.createdAt ? new Date(d.createdAt).toISOString() : null
-        });
-      });
+      const all = await AdminLogic.fetchDeposits(B, K, sa, fd);
 
       if (!all.length) {
         el.innerHTML = '<div class="empty">No deposits</div>';
         return;
       }
-
-      all.sort((a, b) => (b.dt || '') > (a.dt || '') ? 1 : -1);
 
       let h = '<table class="tbl"><thead><tr>' +
         '<th>Ref</th><th>Address</th><th>Amount</th><th>Status</th><th>Date</th>' +
@@ -651,16 +585,15 @@
     const el = document.getElementById('withdrawalsList');
     el.innerHTML = '<div class="empty">Loading...</div>';
     try {
-      const r = await fetch(B + '/api/wallet/withdrawals', { headers: { 'X-Admin-Key': K } });
-      const d = await r.json();
-      if (!d.withdrawals || !d.withdrawals.length) {
+      const withdrawals = await AdminLogic.fetchWithdrawals(B, K);
+      if (!withdrawals.length) {
         el.innerHTML = '<div class="empty">No withdrawals</div>';
         return;
       }
       let h = '<table class="tbl"><thead><tr>' +
         '<th>#</th><th>Address</th><th>Amount</th><th>PIX Key</th><th>Status</th><th>Date</th><th></th>' +
         '</tr></thead><tbody>';
-      d.withdrawals.forEach(w => {
+      withdrawals.forEach(w => {
         const act = w.status === 'pending'
           ? '<button class="sm" onclick="processW(' + w.id + ')">Send PIX</button>'
           : '';
@@ -684,12 +617,7 @@
   async function processW(id) {
     if (!confirm('Process PIX #' + id + '?')) return;
     try {
-      const r = await fetch(B + '/api/wallet/withdrawals/process', {
-        method: 'POST',
-        headers: hdr(),
-        body: JSON.stringify({ id })
-      });
-      const d = await r.json();
+      const d = await AdminLogic.processWithdrawal(B, K, id);
       if (d.success) {
         toast('PIX sent!');
         loadWithdrawals();
@@ -706,38 +634,29 @@
     const sm = document.getElementById('collateralSummary');
     el.innerHTML = '<div class="empty">Loading...</div>';
     try {
-      const r = await fetch(B + '/api/wallet/collateral', { headers: { 'X-Admin-Key': K } });
-      const d = await r.json();
-      if (!d.collateral || !d.collateral.length) {
+      const c = await AdminLogic.fetchCollateral(B, K);
+      if (!c.items.length) {
         el.innerHTML = '<div class="empty">No collateral</div>';
         sm.innerHTML = '';
         return;
       }
 
-      let te = 0, tu = 0, lk = 0, pk = 0;
-      d.collateral.forEach(c => {
-        te += parseFloat(c.amount_efix);
-        tu += parseFloat(c.usdc_credit);
-        if (c.status === 'locked') lk += parseFloat(c.amount_efix);
-        else pk += parseFloat(c.amount_efix);
-      });
-
       sm.innerHTML =
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">' +
           '<div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">' +
-            '<div style="font-size:16px;font-weight:700;color:var(--green)">' + te.toFixed(0) + '</div>' +
+            '<div style="font-size:16px;font-weight:700;color:var(--green)">' + c.totalEfix.toFixed(0) + '</div>' +
             '<div style="font-size:10px;color:var(--gray-500)">Total efixDI</div>' +
           '</div>' +
           '<div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">' +
-            '<div style="font-size:16px;font-weight:700;color:var(--green)">$' + tu.toFixed(2) + '</div>' +
+            '<div style="font-size:16px;font-weight:700;color:var(--green)">$' + c.totalUsdc.toFixed(2) + '</div>' +
             '<div style="font-size:10px;color:var(--gray-500)">USDC Credit</div>' +
           '</div>' +
           '<div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">' +
-            '<div style="font-size:16px;font-weight:700;color:var(--green)">' + lk.toFixed(0) + '</div>' +
+            '<div style="font-size:16px;font-weight:700;color:var(--green)">' + c.locked.toFixed(0) + '</div>' +
             '<div style="font-size:10px;color:var(--gray-500)">Locked</div>' +
           '</div>' +
           '<div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">' +
-            '<div style="font-size:16px;font-weight:700;color:var(--yellow)">' + pk.toFixed(0) + '</div>' +
+            '<div style="font-size:16px;font-weight:700;color:var(--yellow)">' + c.pending.toFixed(0) + '</div>' +
             '<div style="font-size:10px;color:var(--gray-500)">Pending</div>' +
           '</div>' +
         '</div>';
@@ -745,13 +664,13 @@
       let h = '<table class="tbl"><thead><tr>' +
         '<th>Address</th><th>Amount</th><th>USDC</th><th>Status</th><th>Date</th>' +
         '</tr></thead><tbody>';
-      d.collateral.forEach(c => {
+      c.items.forEach(ci => {
         h += '<tr>' +
-          '<td class="addr">' + sa(c.address) + '</td>' +
-          '<td>' + c.amount_efix + ' efixDI</td>' +
-          '<td>$' + c.usdc_credit + '</td>' +
-          '<td><span class="badge ' + c.status + '">' + c.status + '</span></td>' +
-          '<td style="font-size:11px;color:var(--gray-500)">' + fd(c.created_at) + '</td>' +
+          '<td class="addr">' + sa(ci.address) + '</td>' +
+          '<td>' + ci.amount_efix + ' efixDI</td>' +
+          '<td>$' + ci.usdc_credit + '</td>' +
+          '<td><span class="badge ' + ci.status + '">' + ci.status + '</span></td>' +
+          '<td style="font-size:11px;color:var(--gray-500)">' + fd(ci.created_at) + '</td>' +
           '</tr>';
       });
       h += '</tbody></table>';
@@ -765,7 +684,7 @@
     const el = document.getElementById('protocolState');
     const op = document.getElementById('operatorInfo');
     try {
-      const s = await (await fetch(B + '/api/status?key=' + K)).json();
+      const s = await AdminLogic.fetchProtocol(B, K, OP);
 
       if (s.protocol) {
         const p = s.protocol;
@@ -797,14 +716,13 @@
 
     // Base operator info
     try {
-      const mr = await fetch(B + '/api/admin/morpho', { headers: { 'X-Admin-Key': K } });
-      const md = await mr.json();
+      const base = await AdminLogic.fetchBaseOperator(B, K);
       const ob = document.getElementById('operatorBase');
-      if (ob && md.base) {
+      if (ob && base) {
         ob.innerHTML = '<table class="tbl">' +
           '<tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">' + OP + '</td></tr>' +
-          '<tr><td style="color:var(--gray-500)">efixDI</td><td>' + md.base.efixDI + '</td></tr>' +
-          '<tr><td style="color:var(--gray-500)">USDC</td><td>' + md.base.usdc + '</td></tr>' +
+          '<tr><td style="color:var(--gray-500)">efixDI</td><td>' + base.efixDI + '</td></tr>' +
+          '<tr><td style="color:var(--gray-500)">USDC</td><td>' + base.usdc + '</td></tr>' +
           '</table>';
       }
     } catch (e) { /* silently fail */ }
@@ -814,8 +732,7 @@
     const el1 = document.getElementById('morphoState');
     const el2 = document.getElementById('morphoPosition');
     try {
-      const r = await fetch(B + '/api/admin/morpho', { headers: { 'X-Admin-Key': K } });
-      const d = await r.json();
+      const d = await AdminLogic.fetchMorpho(B, K);
 
       if (d.error) {
         const msg = '<div style="color:var(--red);font-size:12px">' + d.error + '</div>';
@@ -844,45 +761,22 @@
     const el = document.getElementById('bridgeBalances');
     if (!el) return;
     try {
-      // Get Polygon balances directly via RPC (always works)
-      const padOP = OP.toLowerCase().replace('0x', '').padStart(64, '0');
-      const [polyEfix, polyMatic] = await Promise.all([
-        rpcBigInt(PR, EP, '0x70a08231' + padOP),
-        ethBal(PR, OP)
-      ]);
-      const polyNum = Number(polyEfix) / 1e18;
+      const r = await AdminLogic.fetchBridgeBalances(PR, BR, {efixPolygon:EP, efixBase:EB, usdcBase:EFIX_CONFIG.contracts.usdcBase, operator:OP}, K, B);
 
       let baseHtml = '<tr><td colspan="2" style="color:var(--blue);font-weight:700;font-size:11px;padding-top:12px">BASE</td></tr>';
-
-      // Try Base balances via Morpho endpoint
-      try {
-        const r = await fetch(B + '/api/admin/morpho', { headers: { 'X-Admin-Key': K } });
-        const d = await r.json();
-        if (d.base) {
-          baseHtml += '<tr><td style="color:var(--gray-500)">efixDI</td><td>' + d.base.efixDI + '</td></tr>' +
-            '<tr><td style="color:var(--gray-500)">USDC</td><td>' + d.base.usdc + '</td></tr>';
-        } else {
-          baseHtml += '<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">Backend deploying...</td></tr>';
-        }
-      } catch (e) {
-        // Fallback: read Base balances directly via RPC
-        try {
-          const padOP2 = OP.toLowerCase().replace('0x', '').padStart(64, '0');
-          const baseEfix = await rpcBigInt(BR, EB, '0x70a08231' + padOP2);
-          const baseNum = Number(baseEfix) / 1e18;
-          const usdcBase = await rpcBigInt(BR, EFIX_CONFIG.contracts.usdcBase, '0x70a08231' + padOP2);
-          const usdcNum = Number(usdcBase) / 1e6;
-          baseHtml += '<tr><td style="color:var(--gray-500)">efixDI</td><td>' + baseNum.toFixed(2) + '</td></tr>' +
-            '<tr><td style="color:var(--gray-500)">USDC</td><td>' + usdcNum.toFixed(2) + '</td></tr>';
-        } catch (e2) {
-          baseHtml += '<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">RPC error</td></tr>';
-        }
+      if (r.base) {
+        baseHtml += '<tr><td style="color:var(--gray-500)">efixDI</td><td>' + r.base.efixDI + '</td></tr>' +
+          '<tr><td style="color:var(--gray-500)">USDC</td><td>' + r.base.usdc + '</td></tr>';
+      } else if (r.baseError) {
+        baseHtml += '<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">RPC error</td></tr>';
+      } else {
+        baseHtml += '<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">Backend deploying...</td></tr>';
       }
 
       el.innerHTML = '<table class="tbl">' +
         '<tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr>' +
-        '<tr><td style="color:var(--gray-500)">efixDI</td><td>' + polyNum.toFixed(2) + '</td></tr>' +
-        '<tr><td style="color:var(--gray-500)">POL</td><td>' + polyMatic.toFixed(4) + '</td></tr>' +
+        '<tr><td style="color:var(--gray-500)">efixDI</td><td>' + r.polygon.efixDI + '</td></tr>' +
+        '<tr><td style="color:var(--gray-500)">POL</td><td>' + r.polygon.matic + '</td></tr>' +
         baseHtml +
         '</table>';
     } catch (e) {
@@ -895,14 +789,9 @@
     if (!el) return;
     el.innerHTML = '<div style="font-size:11px;color:var(--gray-500)">Loading from LayerZero Scan...</div>';
     try {
-      // Fetch from LayerZero Scan API
-      const r = await fetch('https://scan.layerzero-api.com/v1/messages/oft?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
-      if (!r.ok) throw new Error('LZ Scan API error');
-      const d = await r.json();
-      const msgs = d.data || d.messages || [];
+      const msgs = await AdminLogic.fetchBridgeHistory('0x603265754fDdd7FdE459CC6e6722bd526C1258Fc');
 
       if (!msgs.length) {
-        // Fallback: show manual link
         el.innerHTML = '<div style="font-size:11px;color:var(--gray-500)">No messages found via API.<br>' +
           '<a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green)">View on LayerZero Scan ↗</a></div>';
         return;
@@ -932,7 +821,6 @@
       html += '</tbody></table>';
       el.innerHTML = html;
     } catch (e) {
-      // If API fails, show direct link
       el.innerHTML = '<table class="tbl"><tbody>' +
         '<tr><td style="font-size:11px">View bridge history on LayerZero Scan:</td></tr>' +
         '<tr><td>' +
@@ -950,12 +838,7 @@
     const el = document.getElementById('bridgeResult');
     el.innerHTML = '<span style="color:var(--yellow)">Bridging... (approve + quote + send)</span>';
     try {
-      const r = await fetch(B + '/api/admin/bridge', {
-        method: 'POST',
-        headers: hdr(),
-        body: JSON.stringify({ amount })
-      });
-      const d = await r.json();
+      const d = await AdminLogic.doBridge(B, K, amount);
       if (d.success) {
         el.innerHTML = '<span style="color:var(--green)">✓ ' + d.amount + ' efixDI bridging to Base<br>' +
           'TX: <a href="https://polygonscan.com/tx/' + d.txHash + '" target="_blank" style="color:var(--green)">' + d.txHash.slice(0, 14) + '...</a><br>' +

@@ -1539,33 +1539,8 @@
     <div id="toast" class="toast"></div>
 
     <script src="/shared/js/config.js"></script>
+    <script src="app.js"></script>
     <script>
-        // Contract Addresses (Polygon Mainnet)
-        const CONTRACTS = {
-            vault: '0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C',
-            efixDIToken: EFIX_CONFIG.contracts.efixPolygon,
-            pixBridge: '0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3',
-            lendingPool: '0x13AB76468eFE0d35f2700DEcBd52Ce28f8827A0C',
-            oracle: '0xD9d24596DDAbB1CcE603D4d8AD04A97c1836Ae94'
-        };
-
-        const POLYGON_CHAIN_ID = '0x89'; // 137
-
-        // ABIs
-        const VAULT_ABI = [
-            'function positions(address) view returns (uint256 principal, uint256 efixDIBalance, uint256 borrowedUSDC, uint256 leverageLoops, uint256 lastUpdateTimestamp, bool hedgeActive)',
-            'function getHealthFactor(address) view returns (uint256)',
-            'function applyLeverage(uint8 loops) external',
-            'function deleverage(uint8 loops) external',
-            'function withdraw(uint256 amount, string pixKey) external'
-        ];
-
-        const TOKEN_ABI = [
-            'function balanceOf(address) view returns (uint256)',
-            'function approve(address spender, uint256 amount) external returns (bool)',
-            'function allowance(address owner, address spender) view returns (uint256)'
-        ];
-
         // State
         let provider = null;
         let signer = null;
@@ -1584,17 +1559,19 @@
         document.addEventListener('DOMContentLoaded', init);
 
         async function init() {
+            AppLogic.init(EFIX_CONFIG.contracts.efixPolygon);
+
             // Setup event listeners
             connectBtn.addEventListener('click', connectWallet);
-            
+
             // Tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => switchTab(tab.dataset.tab));
             });
-            
+
             // Leverage slider
             document.getElementById('leverageSlider').addEventListener('input', updateLeverageDisplay);
-            
+
             // Buttons
             document.getElementById('generatePixBtn').addEventListener('click', generatePixQR);
             document.getElementById('copyPixBtn').addEventListener('click', copyPixCode);
@@ -1603,14 +1580,14 @@
             document.getElementById('leverageBtn').addEventListener('click', applyLeverage);
             document.getElementById('deleverageBtn').addEventListener('click', removeLeverage);
             document.getElementById('withdrawBtn').addEventListener('click', withdrawFunds);
-            
+
             // Check if already connected
             if (window.ethereum) {
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                 if (accounts.length > 0) {
                     await connectWallet();
                 }
-                
+
                 // Listen for account changes
                 window.ethereum.on('accountsChanged', handleAccountChange);
                 window.ethereum.on('chainChanged', () => window.location.reload());
@@ -1625,57 +1602,21 @@
             }
 
             try {
-                // Request accounts
-                const accounts = await window.ethereum.request({ 
-                    method: 'eth_requestAccounts' 
-                });
-                
-                // Check network
-                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-                if (chainId !== POLYGON_CHAIN_ID) {
-                    await switchToPolygon();
-                }
-                
-                // Setup provider
-                provider = new ethers.BrowserProvider(window.ethereum);
-                signer = await provider.getSigner();
-                userAddress = accounts[0];
-                
-                // Setup contracts
-                contracts.vault = new ethers.Contract(CONTRACTS.vault, VAULT_ABI, signer);
-                contracts.token = new ethers.Contract(CONTRACTS.efixDIToken, TOKEN_ABI, signer);
-                
+                const result = await AppLogic.connectWallet(window.ethereum);
+                provider = result.provider;
+                signer = result.signer;
+                userAddress = result.address;
+                contracts = result.contracts;
+
                 // Update UI
                 updateConnectedUI();
                 await loadPosition();
-                
+
                 showToast('Wallet conectada!', 'success');
-                
+
             } catch (error) {
                 console.error('Connect error:', error);
                 showToast('Erro ao conectar: ' + error.message, 'error');
-            }
-        }
-
-        async function switchToPolygon() {
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: POLYGON_CHAIN_ID }]
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: POLYGON_CHAIN_ID,
-                            chainName: 'Polygon Mainnet',
-                            nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-                            rpcUrls: ['https://polygon-rpc.com'],
-                            blockExplorerUrls: ['https://polygonscan.com']
-                        }]
-                    });
-                }
             }
         }
 
@@ -1696,7 +1637,7 @@
             connectBtn.classList.add('connected');
             statusBadge.classList.add('connected');
             statusText.textContent = 'Polygon Mainnet';
-            
+
             // Enable buttons
             document.getElementById('leverageBtn').disabled = false;
             document.getElementById('deleverageBtn').disabled = false;
@@ -1708,7 +1649,7 @@
             connectBtn.classList.remove('connected');
             statusBadge.classList.remove('connected');
             statusText.textContent = 'Desconectado';
-            
+
             // Disable buttons
             document.getElementById('leverageBtn').disabled = true;
             document.getElementById('deleverageBtn').disabled = true;
@@ -1717,55 +1658,34 @@
 
         async function loadPosition() {
             if (!contracts.vault || !userAddress) return;
-            
+
             try {
-                const position = await contracts.vault.positions(userAddress);
-                const hf = await contracts.vault.getHealthFactor(userAddress);
-                
-                currentPosition = {
-                    principal: position[0],
-                    efixDIBalance: position[1],
-                    borrowedUSDC: position[2],
-                    leverageLoops: Number(position[3])
-                };
-                
+                const pos = await AppLogic.fetchPosition(contracts.vault, userAddress);
+
+                currentPosition = pos;
+
                 // Update UI
-                document.getElementById('principalValue').textContent = 
-                    'R$ ' + parseFloat(ethers.formatEther(position[0])).toFixed(2).replace('.', ',');
-                document.getElementById('efixdiValue').textContent = 
-                    parseFloat(ethers.formatEther(position[1])).toFixed(2).replace('.', ',');
-                document.getElementById('debtValue').textContent = 
-                    '$' + parseFloat(ethers.formatUnits(position[2], 6)).toFixed(2);
-                document.getElementById('loopsValue').textContent = position[3].toString();
-                
+                document.getElementById('principalValue').textContent =
+                    'R$ ' + pos.principalFormatted.replace('.', ',');
+                document.getElementById('efixdiValue').textContent =
+                    pos.efixDIFormatted.replace('.', ',');
+                document.getElementById('debtValue').textContent =
+                    '$' + pos.debtFormatted;
+                document.getElementById('loopsValue').textContent = pos.loopsStr;
+
                 // Health Factor
-                let hfValue = '∞';
-                let hfPercent = 100;
-                let hfClass = 'safe';
-                
-                if (hf.toString() !== ethers.MaxUint256.toString()) {
-                    const hfNum = Number(hf) / 1e16;
-                    hfValue = hfNum.toFixed(2);
-                    hfPercent = Math.min(100, (hfNum / 3) * 100);
-                    
-                    if (hfNum < 1.1) hfClass = 'danger';
-                    else if (hfNum < 1.3) hfClass = 'warning';
-                }
-                
-                document.getElementById('healthValue').textContent = hfValue;
+                document.getElementById('healthValue').textContent = pos.hfValue;
                 const healthFill = document.getElementById('healthFill');
-                healthFill.style.width = hfPercent + '%';
-                healthFill.className = 'health-fill ' + hfClass;
-                
+                healthFill.style.width = pos.hfPercent + '%';
+                healthFill.className = 'health-fill ' + pos.hfClass;
+
                 // Update APY badge
-                const loops = Number(position[3]);
-                const apys = [15, 22, 27, 32];
-                document.getElementById('apyBadge').textContent = '~' + apys[Math.min(loops, 3)] + '% APY';
-                
+                document.getElementById('apyBadge').textContent = '~' + pos.apy + '% APY';
+
                 // Update leverage slider
-                document.getElementById('leverageSlider').value = loops;
+                document.getElementById('leverageSlider').value = pos.leverageLoops;
                 updateLeverageDisplay();
-                
+
             } catch (error) {
                 console.error('Load position error:', error);
             }
@@ -1780,7 +1700,7 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            
+
             document.getElementById('depositTab').classList.toggle('hidden', tab !== 'deposit');
             document.getElementById('withdrawTab').classList.toggle('hidden', tab !== 'withdraw');
         }
@@ -1806,7 +1726,7 @@
 
         async function generatePixQR() {
             const amount = parseFloat(document.getElementById('depositAmount').value);
-            
+
             if (!amount || amount < 1) {
                 showToast('Valor mínimo: R$ 1,00', 'error');
                 return;
@@ -1816,74 +1736,40 @@
                 showToast('Conecte sua wallet primeiro', 'error');
                 return;
             }
-            
+
             showToast('Gerando QR Code...', 'success');
-            
+
             const qrContainer = document.getElementById('qrContainer');
             const qrCode = document.getElementById('qrCode');
-            
+
             qrContainer.classList.remove('hidden');
             qrCode.innerHTML = '<div class="loading"></div>';
-            
+
             // Hide confirm button + tracker while generating
             document.getElementById('confirmPixBtn').style.display = 'none';
             document.getElementById('pixTracker').classList.add('hidden');
-            
+
             try {
-                let response, retries = 3;
-                while (retries > 0) {
-                    try {
-                        response = await fetch(PIX_BACKEND_URL + '/api/pix/qrcode', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                amount: amount.toFixed(2),
-                                walletAddress: userAddress
-                            })
-                        });
-                        if (response.ok) break;
-                    } catch (fetchErr) {
-                        console.warn('QR fetch retry', fetchErr);
-                    }
-                    retries--;
-                    if (retries > 0) await new Promise(r => setTimeout(r, 1500));
-                }
-                
-                if (!response || !response.ok) throw new Error('Servidor indisponível após 3 tentativas');
-    
-                
-                const data = await response.json();
-                
-                if (!data.success) {
-                    throw new Error(data.error || 'Erro ao gerar QR Code');
-                }
-                
-                pixCode = data.qrcode.emv;
+                const qr = await AppLogic.createPixQR(PIX_BACKEND_URL, amount, userAddress);
+
+                pixCode = qr.emv;
                 pixTrackerState.depositAmount = amount;
-                
+
                 qrCode.innerHTML = `
-                    <img src="${data.qrcode.imageUrl}" alt="QR Code PIX" style="border-radius: 8px;">
+                    <img src="${qr.imageUrl}" alt="QR Code PIX" style="border-radius: 8px;">
                     <p style="margin-top: 12px; font-size: 0.875rem; color: var(--gray-500);">
-                        Valor: <strong>R$ ${parseFloat(data.qrcode.amount).toFixed(2).replace('.', ',')}</strong>
+                        Valor: <strong>R$ ${qr.amount.replace('.', ',')}</strong>
                     </p>
                 `;
-                
+
                 // Show confirm button
                 document.getElementById('confirmPixBtn').style.display = 'flex';
 
                 // Snapshot current latest deposit e2eId (to detect NEW ones)
-                try {
-                    const snapRes = await fetch(PIX_BACKEND_URL + '/api/deposit/status/' + userAddress, {
-                     
-                    });
-                    const snapData = await snapRes.json();
-                    pixTrackerState.previousE2eId = snapData.found ? snapData.e2eId : null;
-                } catch (e) {
-                    pixTrackerState.previousE2eId = null;
-                }
-                
+                pixTrackerState.previousE2eId = await AppLogic.checkPreviousDeposit(PIX_BACKEND_URL, userAddress);
+
                 showToast('QR Code gerado! Pague e clique em confirmar.', 'success');
-                
+
             } catch (error) {
                 console.error('PIX QR Error:', error);
                 qrCode.innerHTML = '<p style="color: red;">Erro ao gerar QR Code</p>';
@@ -1900,7 +1786,7 @@
             const tracker = document.getElementById('pixTracker');
             tracker.classList.remove('hidden');
             tracker.classList.add('polling');
-            
+
             // Reset state
             pixTrackerState.active = true;
             pixTrackerState.startTime = Date.now();
@@ -1918,10 +1804,10 @@
 
             // Start timer
             pixTrackerState.timerInterval = setInterval(updateTrackerTimer, 1000);
-            
+
             // Start polling every 3 seconds
             pixTrackerState.pollingInterval = setInterval(pollDepositStatus, 3000);
-            
+
             // Initial poll
             pollDepositStatus();
         }
@@ -1966,10 +1852,7 @@
             if (!pixTrackerState.active || !userAddress) return;
 
             try {
-                const res = await fetch(PIX_BACKEND_URL + '/api/deposit/status/' + userAddress, {
-                  
-                });
-                const data = await res.json();
+                const data = await AppLogic.checkDepositStatus(PIX_BACKEND_URL, userAddress);
 
                 if (!data.found || data.status === 'waiting') return;
 
@@ -2031,20 +1914,20 @@
         // ═══════════════════════════════════════════
         function completeTracker() {
             if (!pixTrackerState.active) return;
-            
+
             const amt = pixTrackerState.depositAmount;
             updateStep(4, 'completed', '✓', `${amt.toFixed(2).replace('.', ',')} efixDI creditados`);
-            
+
             // Stop polling
             stopTrackerPolling();
-            
+
             // Show success
             const tracker = document.getElementById('pixTracker');
             tracker.classList.remove('polling');
-            
-            document.getElementById('successAmount').textContent = 
+
+            document.getElementById('successAmount').textContent =
                 `R$ ${amt.toFixed(2).replace('.', ',')} → ${amt.toFixed(2).replace('.', ',')} efixDI`;
-            
+
             const txLink = document.getElementById('successTxLink');
             if (pixTrackerState.txHash) {
                 txLink.href = `https://polygonscan.com/tx/${pixTrackerState.txHash}`;
@@ -2053,12 +1936,12 @@
             } else {
                 txLink.style.display = 'none';
             }
-            
+
             document.getElementById('trackerSuccess').classList.remove('hidden');
             document.getElementById('trackerCancel').style.display = 'none';
-            
+
             showToast('Tokens creditados na sua wallet!', 'success');
-            
+
             // Refresh position
             loadPosition();
         }
@@ -2099,33 +1982,24 @@
                 showToast('Conecte sua wallet primeiro', 'error');
                 return;
             }
-            
+
             const targetLoops = parseInt(document.getElementById('leverageSlider').value);
             const currentLoops = currentPosition?.leverageLoops || 0;
-            
+
             if (targetLoops <= currentLoops) {
                 showToast('Selecione um nível maior de alavancagem', 'error');
                 return;
             }
-            
+
             const loopsToApply = targetLoops - currentLoops;
-            
+
             try {
-                // Check allowance
-                const allowance = await contracts.token.allowance(userAddress, CONTRACTS.vault);
-                if (allowance < ethers.MaxUint256 / 2n) {
-                    showToast('Aprovando tokens...', 'success');
-                    const approveTx = await contracts.token.approve(CONTRACTS.vault, ethers.MaxUint256);
-                    await approveTx.wait();
-                }
-                
                 showToast('Aplicando alavancagem...', 'success');
-                const tx = await contracts.vault.applyLeverage(loopsToApply);
-                await tx.wait();
-                
+                await AppLogic.applyLeverage(contracts, userAddress, loopsToApply);
+
                 showToast('Alavancagem aplicada!', 'success');
                 await loadPosition();
-                
+
             } catch (error) {
                 console.error('Leverage error:', error);
                 showToast('Erro: ' + (error.reason || error.message), 'error');
@@ -2137,22 +2011,21 @@
                 showToast('Conecte sua wallet primeiro', 'error');
                 return;
             }
-            
+
             const currentLoops = currentPosition?.leverageLoops || 0;
-            
+
             if (currentLoops === 0) {
                 showToast('Você não tem alavancagem ativa', 'error');
                 return;
             }
-            
+
             try {
                 showToast('Removendo alavancagem...', 'success');
-                const tx = await contracts.vault.deleverage(1);
-                await tx.wait();
-                
+                await AppLogic.removeLeverage(contracts);
+
                 showToast('Alavancagem removida!', 'success');
                 await loadPosition();
-                
+
             } catch (error) {
                 console.error('Deleverage error:', error);
                 showToast('Erro: ' + (error.reason || error.message), 'error');
@@ -2216,7 +2089,7 @@
             const tracker = document.getElementById('withdrawTracker');
             tracker.classList.remove('polling');
 
-            document.getElementById('wdSuccessAmount').textContent = 
+            document.getElementById('wdSuccessAmount').textContent =
                 `${amount.toFixed(2).replace('.', ',')} efixDI → PIX`;
 
             const txLink = document.getElementById('wdSuccessTxLink');
@@ -2244,20 +2117,20 @@
                 showToast('Conecte sua wallet primeiro', 'error');
                 return;
             }
-            
+
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const pixKey = document.getElementById('pixKey').value;
-            
+
             if (!amount || amount <= 0) {
                 showToast('Digite um valor válido', 'error');
                 return;
             }
-            
+
             if (!pixKey) {
                 showToast('Digite sua chave PIX', 'error');
                 return;
             }
-            
+
             if (currentPosition?.leverageLoops > 0) {
                 showToast('Remova toda alavancagem antes de sacar', 'error');
                 return;
@@ -2265,12 +2138,11 @@
 
             // Show progress tracker
             showWithdrawTracker();
-            
+
             try {
                 // Step 1: Send TX
-                const amountWei = ethers.parseEther(amount.toString());
-                const tx = await contracts.vault.withdraw(amountWei, pixKey);
-                
+                const tx = await AppLogic.withdrawFunds(contracts, amount, pixKey);
+
                 const shortTx = `${tx.hash.slice(0, 10)}...${tx.hash.slice(-6)}`;
                 updateWdStep(0, 'completed', '✓', shortTx);
                 updateWdStep(1, 'active', undefined, 'Aguardando confirmação...');
@@ -2287,7 +2159,7 @@
                 wdTrackerState.pollingInterval = setInterval(async () => {
                     try {
                         const res = await fetch(PIX_BACKEND_URL + '/api/deposit/status/' + userAddress, {
-                            
+
                         });
                         // For now, we don't have a withdrawal-specific endpoint
                         // Auto-advance after 15 seconds as PIX is being processed
@@ -2299,7 +2171,7 @@
                     if (!wdTrackerState.active) return;
                     updateWdStep(2, 'completed', '✓', 'PIX enviado para sua chave');
                     updateWdStep(3, 'active', undefined, 'Finalizando...');
-                    
+
                     // Step 4: Complete
                     setTimeout(() => {
                         if (!wdTrackerState.active) return;
@@ -2309,7 +2181,7 @@
                         loadPosition();
                     }, 3000);
                 }, 15000);
-                
+
             } catch (error) {
                 console.error('Withdraw error:', error);
                 resetWithdrawTracker();
@@ -2320,7 +2192,7 @@
         function showToast(message, type = 'info') {
             toast.textContent = message;
             toast.className = 'toast show ' + type;
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);

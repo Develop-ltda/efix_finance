@@ -284,6 +284,7 @@
 </div>
 
 <script src="/shared/js/config.js"></script>
+<script src="card-app.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 //  CONFIG
@@ -336,16 +337,6 @@ function setLoading(btnId, loading) {
   }
 }
 
-async function api(path, opts = {}) {
-  const url = path.startsWith('http') ? path : `${PROXY_URL}${path}`;
-  const modeHeader = IS_DEMO ? { 'X-Bridge-Mode': 'sandbox' } : {};
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...modeHeader, ...opts.headers },
-    ...opts,
-  });
-  return res.json();
-}
-
 function copyFunding() {
   const addr = document.getElementById('fundingAddress').textContent;
   if (addr && addr !== '—') {
@@ -376,7 +367,7 @@ async function handleLogin() {
   setLoading('btnLogin', true);
 
   try {
-    const data = await api(`/users/lookup?email=${encodeURIComponent(email)}`);
+    const data = await CardAppLogic.loginUser(PROXY_URL, email, IS_DEMO);
 
     if (data.found) {
       currentUser = data.user;
@@ -435,35 +426,16 @@ async function autoIssueCardDemo() {
   document.getElementById('btnKyc').textContent = 'Sandbox'; document.getElementById('btnKyc').disabled = true;
   document.getElementById('btnIssueCard').textContent = 'Emitindo...'; document.getElementById('btnIssueCard').disabled = true;
 
-  try {
-    // First ensure sandbox cards are enabled
-    await api('/bridge/cards/enable', {
-      method: 'POST',
-      headers: { 'Idempotency-Key': `enable-${Date.now()}` },
-      body: JSON.stringify({ funding_strategy: 'top_up' }),
-    });
-  } catch (e) { /* already enabled, ignore */ }
+  // First ensure sandbox cards are enabled
+  await CardAppLogic.enableSandboxCards(PROXY_URL, IS_DEMO).catch(()=>{});
 
   try {
-    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}/card_accounts`, {
-      method: 'POST',
-      headers: { 'Idempotency-Key': `card-demo-${currentUser.bridge_customer_id}-${Date.now()}` },
-      body: JSON.stringify({ currency: 'usdc', chain: 'base' }),
-    });
+    const data = await CardAppLogic.issueCard(PROXY_URL, currentUser.bridge_customer_id, IS_DEMO);
 
     if (data.id || data.card_id) {
-      await api('/users/link-card', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: currentUser.email,
-          card_account_id: data.id || data.card_id,
-          card_last4: data.last_4 || data.last4,
-          card_funding_address: data.funding_address || data.source_deposit_instructions?.deposit_address,
-          card_status: 'active',
-        }),
-      });
+      await CardAppLogic.linkCard(PROXY_URL, currentUser.email, data, IS_DEMO);
 
-      const lookup = await api(`/users/lookup?email=${encodeURIComponent(currentUser.email)}`);
+      const lookup = await CardAppLogic.refreshUser(PROXY_URL, currentUser.email, IS_DEMO);
       currentUser = lookup.user;
       toast('Cartão emitido! (Demo)');
       renderCard();
@@ -510,10 +482,7 @@ async function handleRegister() {
       }
     };
 
-    const data = await api('/users/register', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
+    const data = await CardAppLogic.registerUser(PROXY_URL, body, IS_DEMO);
 
     if (data.error) {
       showError('regError', data.detail?.message || data.error);
@@ -543,16 +512,13 @@ async function loadOnboardingStatus() {
   if (!currentUser?.bridge_customer_id) return;
 
   try {
-    const bridge = await api(`/bridge/customers/${currentUser.bridge_customer_id}`);
-    currentBridgeCustomer = bridge;
-
-    const tosOk = bridge.tos_status === 'approved';
-    const kycOk = bridge.kyc_status === 'approved';
+    const status = await CardAppLogic.fetchOnboardingStatus(PROXY_URL, currentUser.bridge_customer_id, IS_DEMO);
+    currentBridgeCustomer = status.raw;
 
     // Step 1: TOS
     const tosNum = document.getElementById('stepTosNum');
     const btnTos = document.getElementById('btnTos');
-    if (tosOk) {
+    if (status.tosOk) {
       tosNum.classList.add('done'); tosNum.textContent = '✓';
       btnTos.textContent = 'Concluído'; btnTos.disabled = true;
     } else {
@@ -563,10 +529,10 @@ async function loadOnboardingStatus() {
     // Step 2: KYC
     const kycNum = document.getElementById('stepKycNum');
     const btnKyc = document.getElementById('btnKyc');
-    if (kycOk) {
+    if (status.kycOk) {
       kycNum.classList.add('done'); kycNum.textContent = '✓';
       btnKyc.textContent = 'Verificado'; btnKyc.disabled = true;
-    } else if (tosOk) {
+    } else if (status.tosOk) {
       kycNum.classList.add('active');
       btnKyc.disabled = false;
     } else {
@@ -576,13 +542,13 @@ async function loadOnboardingStatus() {
     // Step 3: Issue card
     const cardNum = document.getElementById('stepCardNum');
     const btnIssue = document.getElementById('btnIssueCard');
-    if (tosOk && kycOk) {
+    if (status.tosOk && status.kycOk) {
       cardNum.classList.add('active');
       btnIssue.disabled = false;
     }
 
     // Update pending badge
-    if (bridge.kyc_status === 'pending' || bridge.kyc_status === 'manual_review') {
+    if (status.kycPending) {
       document.getElementById('modeBadge').textContent = 'Em análise';
       document.getElementById('modeBadge').classList.add('pending');
     }
@@ -596,11 +562,9 @@ async function openTos() {
     window.open(tosLink, '_blank');
     return;
   }
-  // Production Bridge: TOS link is on the customer object
   try {
-    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}`);
-    if (data.tos_link) {
-      tosLink = data.tos_link;
+    tosLink = await CardAppLogic.requestTosLink(PROXY_URL, currentUser.bridge_customer_id, IS_DEMO);
+    if (tosLink) {
       window.open(tosLink, '_blank');
     } else {
       toast('TOS link não disponível');
@@ -615,11 +579,9 @@ async function openKyc() {
     window.open(kycLink, '_blank');
     return;
   }
-  // Production Bridge: KYC link is on the customer object
   try {
-    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}`);
-    if (data.kyc_link) {
-      kycLink = data.kyc_link;
+    kycLink = await CardAppLogic.requestKycLink(PROXY_URL, currentUser.bridge_customer_id, IS_DEMO);
+    if (kycLink) {
       window.open(kycLink, '_blank');
     } else {
       toast('Complete o TOS primeiro');
@@ -645,27 +607,12 @@ async function refreshStatus() {
 async function issueCard() {
   setLoading('btnIssueCard', true);
   try {
-    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}/card_accounts`, {
-      method: 'POST',
-      headers: { 'Idempotency-Key': `card-${currentUser.bridge_customer_id}-${Date.now()}` },
-      body: JSON.stringify({ currency: 'usdc', chain: 'base' }),
-    });
+    const data = await CardAppLogic.issueCard(PROXY_URL, currentUser.bridge_customer_id, IS_DEMO);
 
     if (data.id || data.card_id) {
-      // Save card to our DB
-      await api('/users/link-card', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: currentUser.email,
-          card_account_id: data.id || data.card_id,
-          card_last4: data.last_4 || data.last4,
-          card_funding_address: data.funding_address || data.source_deposit_instructions?.deposit_address,
-          card_status: 'active',
-        }),
-      });
+      await CardAppLogic.linkCard(PROXY_URL, currentUser.email, data, IS_DEMO);
 
-      // Refresh user
-      const lookup = await api(`/users/lookup?email=${encodeURIComponent(currentUser.email)}`);
+      const lookup = await CardAppLogic.refreshUser(PROXY_URL, currentUser.email, IS_DEMO);
       currentUser = lookup.user;
 
       toast('Cartão emitido com sucesso!');
@@ -707,11 +654,9 @@ async function loadBalance() {
   // Demo mode: read balance from Bridge sandbox card account
   if (IS_DEMO && currentUser.card_account_id) {
     try {
-      const data = await api(`/bridge/customers/5f33ae06-5dae-4344-98f7-172f88c12842/card_accounts/${currentUser.card_account_id}`);
-      if (data.balances) {
-        const raw = data.balances.available || data.balances.available_balance || '0';
-        const avail = parseFloat(raw) || 0;
-        document.getElementById('cardBalance').textContent = `$${avail.toFixed(2)}`;
+      const bal = await CardAppLogic.fetchDemoBalance(PROXY_URL, '5f33ae06-5dae-4344-98f7-172f88c12842', currentUser.card_account_id, IS_DEMO);
+      if (bal !== null) {
+        document.getElementById('cardBalance').textContent = `$${bal.toFixed(2)}`;
         return;
       }
     } catch (e) { console.warn('Bridge balance failed:', e); }
@@ -719,20 +664,7 @@ async function loadBalance() {
 
   // Production: check USDC balance on Base via Alchemy
   try {
-    const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-    const res = await fetch(`https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1, method: 'eth_call',
-        params: [{
-          to: USDC_BASE,
-          data: '0x70a08231' + currentUser.card_funding_address.slice(2).padStart(64, '0')
-        }, 'latest']
-      }),
-    });
-    const data = await res.json();
-    const bal = parseInt(data.result, 16) / 1e6;
+    const bal = await CardAppLogic.fetchCardBalance(ALCHEMY_KEY, currentUser.card_funding_address);
     document.getElementById('cardBalance').textContent = `$${bal.toFixed(2)}`;
   } catch (err) {
     console.warn('Balance check failed:', err);
@@ -748,21 +680,11 @@ async function depositEfixDI() {
   // For now: log the intent and show instructions
   toast(`Depósito de ${amount} efixDI registrado`);
 
-  // Log transaction
-  await api('/users/tx', {
-    method: 'POST',
-    body: JSON.stringify({
-      email: currentUser.email,
-      type: 'deposit',
-      amount: parseFloat(amount),
-      asset: 'efixDI',
-      description: `Depósito de ${amount} efixDI para colateralização`,
-    }),
-  });
+  await CardAppLogic.depositIntent(PROXY_URL, currentUser.email, amount, IS_DEMO);
 
   // In demo mode, simulate the USDC credit (75% LTV, ~0.199 USDC/efixDI)
   if (IS_DEMO) {
-    const usdcCredit = (parseFloat(amount) * 0.199 * 0.75).toFixed(2);
+    const usdcCredit = CardAppLogic.calcCredit(parseFloat(amount));
     toast(`Crédito de $${usdcCredit} USDC disponível (demo)`);
     setTimeout(loadBalance, 1000);
   }
@@ -783,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (input) {
     input.addEventListener('input', () => {
       const amt = parseFloat(input.value) || 0;
-      const credit = (amt * 0.199 * 0.75).toFixed(2);
+      const credit = CardAppLogic.calcCredit(amt);
       const el = document.getElementById('creditEstimate');
       if (el) el.textContent = `Crédito estimado: $${credit}`;
     });
@@ -796,7 +718,7 @@ async function showCardDetails() {
     return;
   }
   try {
-    const data = await api(`/bridge/customers/${currentUser.bridge_customer_id}/card_accounts/${currentUser.card_account_id}`);
+    const data = await CardAppLogic.fetchCardDetails(PROXY_URL, currentUser.bridge_customer_id, currentUser.card_account_id, IS_DEMO);
     if (data.card_number) {
       document.getElementById('cardNumber').textContent = data.card_number.replace(/(.{4})/g, '$1 ').trim();
     }
@@ -819,13 +741,8 @@ async function toggleFreeze() {
 async function simulateTopUp() {
   if (!IS_DEMO || !currentUser?.card_account_id) return toast('Somente no modo demo');
   try {
-    await api(`/bridge/customers/5f33ae06-5dae-4344-98f7-172f88c12842/card_accounts/${currentUser.card_account_id}/simulate_balance_top_up`, {
-      method: 'POST',
-      headers: { 'Idempotency-Key': `sim-topup-${Date.now()}` },
-      body: JSON.stringify({ amount: '1000.0' }),
-    });
+    await CardAppLogic.simulateTopUp(PROXY_URL, '5f33ae06-5dae-4344-98f7-172f88c12842', currentUser.card_account_id, currentUser.email, IS_DEMO);
     toast('Depósito de $1000 simulado');
-    api('/users/tx', { method: 'POST', body: JSON.stringify({ email: currentUser.email, type: 'top_up', amount: 1000, asset: 'USDC', description: 'Simulated top-up (demo)' }) });
     setTimeout(loadBalance, 1500);
   } catch (err) { toast('Erro: ' + err.message); }
 }
@@ -833,13 +750,8 @@ async function simulateTopUp() {
 async function simulatePurchase() {
   if (!IS_DEMO || !currentUser?.card_account_id) return toast('Somente no modo demo');
   try {
-    await api(`/bridge/customers/5f33ae06-5dae-4344-98f7-172f88c12842/card_accounts/${currentUser.card_account_id}/simulate_authorization`, {
-      method: 'POST',
-      headers: { 'Idempotency-Key': `sim-auth-${Date.now()}` },
-      body: JSON.stringify({ amount: '100.0', merchant_name: 'EFIX Demo Store' }),
-    });
+    await CardAppLogic.simulatePurchase(PROXY_URL, '5f33ae06-5dae-4344-98f7-172f88c12842', currentUser.card_account_id, currentUser.email, IS_DEMO);
     toast('Compra de $100 simulada');
-    api('/users/tx', { method: 'POST', body: JSON.stringify({ email: currentUser.email, type: 'purchase', amount: 100, asset: 'USDC', description: 'Simulated purchase (demo)' }) });
     setTimeout(loadBalance, 1500);
   } catch (err) { toast('Erro: ' + err.message); }
 }
@@ -847,13 +759,13 @@ async function simulatePurchase() {
 async function loadTransactions() {
   if (!currentUser?.email) return;
   try {
-    const data = await api(`/users/tx?email=${encodeURIComponent(currentUser.email)}`);
+    const txs = await CardAppLogic.fetchTransactions(PROXY_URL, currentUser.email, IS_DEMO);
     const list = document.getElementById('txList');
-    if (!data.transactions || data.transactions.length === 0) {
+    if (!txs || txs.length === 0) {
       list.innerHTML = '<p style="color:var(--gray-400);font-size:13px;text-align:center;padding:24px;">Nenhuma transação ainda.</p>';
       return;
     }
-    list.innerHTML = data.transactions.map(tx => {
+    list.innerHTML = txs.map(tx => {
       const isCredit = ['top_up', 'deposit', 'fund'].includes(tx.type);
       const sign = isCredit ? '+' : '-';
       const cls = isCredit ? 'positive' : 'negative';

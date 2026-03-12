@@ -398,6 +398,7 @@
 
 <script src="/shared/js/config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<script src="range-monitor.js"></script>
 <script>
 (function(){
     const C = {
@@ -411,88 +412,22 @@
         ms:30000, z:1.96, vol:0.105, days:30,
     };
 
-    const NABI=['function positions(uint256) external view returns (uint96, address, address, address, uint24, int24, int24, uint128, uint256, uint256, uint128, uint128)'];
-    const FABI=['function getPool(address,address,uint24) external view returns (address)'];
-    const PABI=['function slot0() external view returns (uint160, int24, uint16, uint16, uint16, uint8, bool)'];
-
-
-    function s2p(sqrtPX96) { const s=Number(sqrtPX96)/(2**96); return s*s*1e12; }
-    function t2p(tick) { return Math.exp(tick*Math.log(1.0001))*1e12; }
-    function gbm(p,v,d,z) { const pv=v*Math.sqrt(d/365),lo=p*Math.exp(-z*pv),hi=p*Math.exp(z*pv); return {lo,hi,pv,eff:Math.sqrt(p)/(Math.sqrt(hi)-Math.sqrt(lo))}; }
-    function fpt(v,b) { return Math.pow(Math.max(b,0.0001)/(v/Math.sqrt(365)),2); }
-    function isFullRange(tL,tU) { return tL<-800000&&tU>800000; }
-
-    async function gp(rpcs) {
-        for (const u of rpcs) try { const p=new ethers.JsonRpcProvider(u); await p.getBlockNumber(); return p; } catch{continue;}
-        throw new Error('RPCs failed');
-    }
     const $=id=>document.getElementById(id);
 
-    // Fetch holder count via RPC getLogs (same provider used for position data)
-    // No Polygonscan API needed — ethers.js provider.getLogs() works directly
     async function fetchHolders() {
-        const TRANSFER = ethers.id('Transfer(address,address,uint256)');
         let allHolders = new Set();
 
-        async function scanChain(contract, rpcs, label) {
-            const balances = {};
-            let provider = null;
-            for (const rpc of rpcs) {
-                try { provider = new ethers.JsonRpcProvider(rpc); await provider.getBlockNumber(); break; }
-                catch { provider = null; }
-            }
-            if (!provider) { console.log('[Holders] ' + label + ': no RPC'); return 0; }
-
-            try {
-                const latest = await provider.getBlockNumber();
-                let allLogs = [];
-                // Try full range first (works for Alchemy/Infura/low-event tokens)
-                try {
-                    allLogs = await provider.getLogs({
-                        address: contract, topics: [TRANSFER], fromBlock: 0, toBlock: latest
-                    });
-                } catch(e) {
-                    // Fall back to chunks of 50k blocks (public RPCs)
-                    console.log('[Holders] ' + label + ' chunking (RPC limit)...');
-                    const chunkSize = 50000;
-                    const startBlock = Math.max(latest - 2000000, 0);
-                    for (let from = startBlock; from <= latest; from += chunkSize) {
-                        const to = Math.min(from + chunkSize - 1, latest);
-                        try {
-                            const logs = await provider.getLogs({
-                                address: contract, topics: [TRANSFER], fromBlock: from, toBlock: to
-                            });
-                            allLogs = allLogs.concat(logs);
-                        } catch(e2) { /* skip chunk */ }
-                    }
-                }
-                console.log('[Holders] ' + label + ' Transfer events:', allLogs.length);
-
-                const zero = '0x0000000000000000000000000000000000000000';
-                for (const log of allLogs) {
-                    if (!log.topics || log.topics.length < 3) continue;
-                    const from = '0x' + log.topics[1].slice(26).toLowerCase();
-                    const to = '0x' + log.topics[2].slice(26).toLowerCase();
-                    const val = Number(BigInt(log.data)) / 1e18;
-                    if (from !== zero) balances[from] = (balances[from] || 0) - val;
-                    if (to !== zero) balances[to] = (balances[to] || 0) + val;
-                }
-            } catch(e) { console.log('[Holders] ' + label + ' error:', e.message); }
-
-            let count = 0;
-            for (const addr in balances) {
-                if (balances[addr] > 0.0001) { count++; allHolders.add(addr); }
-            }
-            console.log('[Holders] ' + label + ':', count, 'holders');
-            return count;
-        }
-
-        const poly = await scanChain(C.efixDI, C.rpcs, 'Polygon');
-        // Show Polygon results immediately
+        const polyProvider = await RangeLogic.getProvider(C.rpcs);
+        const polyHolders = await RangeLogic.scanChainHolders(polyProvider, C.efixDI, 'Polygon');
+        polyHolders.forEach(h => allHolders.add(h));
+        const poly = polyHolders.size;
         $('holders').textContent = allHolders.size > 0 ? allHolders.size : '—';
         $('holders').title = 'Polygon: ' + poly + ' · Base: loading...';
 
-        const base = await scanChain(C.efixDI_base, C.rpcs_base, 'Base');
+        const baseProvider = await RangeLogic.getProvider(C.rpcs_base);
+        const baseHolders = await RangeLogic.scanChainHolders(baseProvider, C.efixDI_base, 'Base');
+        baseHolders.forEach(h => allHolders.add(h));
+        const base = baseHolders.size;
         const total = allHolders.size;
         $('holders').textContent = total > 0 ? total : '—';
         $('holders').title = 'Polygon: ' + poly + ' · Base: ' + base;
@@ -500,99 +435,79 @@
     }
 
     async function fetchData() {
-        const pv=await gp(C.rpcs), bn=await pv.getBlockNumber();
-        const nft=new ethers.Contract(C.nft,NABI,pv), pos=await nft.positions(C.pid);
-        const token0=pos[2],token1=pos[3],fee=Number(pos[4]);
-        const tL=Number(pos[5]),tU=Number(pos[6]);
-        const fac=new ethers.Contract(C.fac,FABI,pv), pa=await fac.getPool(token0,token1,fee);
-        const pool=new ethers.Contract(pa,PABI,pv);
-        const s0=await pool.slot0();
-        const sqrtPX96=s0[0],tick=Number(s0[1]);
-        const cp=s2p(sqrtPX96);
-        console.log('[RM] tick:',tick,'tL:',tL,'tU:',tU,'price:',cp,'inRange:',tick>=tL&&tick<=tU);
-        return {cp,tL,tU,tick,ir:tick>=tL&&tick<=tU,bn,full:isFullRange(tL,tU)};
+        const provider = await RangeLogic.getProvider(C.rpcs);
+        const d = await RangeLogic.fetchPositionData(provider, C);
+        console.log('[RM] tick:',d.tick,'tL:',d.tL,'tU:',d.tU,'price:',d.cp,'inRange:',d.ir);
+        return d;
     }
 
     function ui(d) {
-        const full=d.full, o=gbm(d.cp,C.vol,C.days,C.z), optHalf=o.hi/d.cp-1, optFpt=fpt(C.vol,optHalf);
+        const m = RangeLogic.calcMetrics(d, C.vol, C.days, C.z);
+        const o = m.optimal;
 
         $('price').textContent='$'+d.cp.toFixed(5);
         $('fx').textContent='≈ R$'+(1/d.cp).toFixed(2)+'/USD';
         const nb=$('navBlock'); if(nb) nb.textContent='Mainnet · Block '+d.bn.toLocaleString();
 
         const ue=$('util');
-        if(full){ue.textContent='Full Range';ue.className='c-val sm c-cyan';$('dir').textContent='Concentrate for '+o.eff.toFixed(0)+'x efficiency';}
+        if(m.full){ue.textContent='Full Range';ue.className='c-val sm c-cyan';$('dir').textContent='Concentrate for '+o.eff.toFixed(0)+'x efficiency';}
         else{
-            const pL=t2p(d.tL),pU=t2p(d.tU);
-            const logU=Math.abs(Math.log(d.cp/pL)-Math.log(pU/pL)*0.5)/(Math.log(pU/pL)*0.5);
-            const u=Math.min(logU,1);
-            ue.textContent=(u*100).toFixed(1)+'%';
-            ue.className='c-val '+(u>.9?'c-red':u>.75?'c-yellow':'c-green');
-            $('dir').textContent=d.tick>(d.tL+d.tU)/2?'→ Upper':'← Lower';
+            ue.textContent=(m.util*100).toFixed(1)+'%';
+            ue.className='c-val '+(m.util>.9?'c-red':m.util>.75?'c-yellow':'c-green');
+            $('dir').textContent=m.direction;
         }
 
         const de=$('days'),ee=$('eff');
-        if(full){de.textContent='∞';de.className='c-val sm c-green';ee.textContent='1.0x';$('effS').textContent='Full range';}
+        if(m.full){de.textContent='∞';de.className='c-val sm c-green';ee.textContent='1.0x';$('effS').textContent='Full range';}
         else{
-            const pL=t2p(d.tL),pU=t2p(d.tU);
-            const halfW=Math.abs(Math.log(pU/d.cp));
-            const dte=fpt(C.vol,Math.exp(halfW)-1);
-            de.textContent='~'+Math.round(dte)+'d';de.className='c-val sm '+(dte<7?'c-red':dte<21?'c-yellow':'c-cyan');
-            const eff=Math.sqrt(d.cp)/(Math.sqrt(pU)-Math.sqrt(pL));
-            ee.textContent=eff.toFixed(1)+'x';
+            de.textContent='~'+Math.round(m.dte)+'d';de.className='c-val sm '+(m.dte<7?'c-red':m.dte<21?'c-yellow':'c-cyan');
+            ee.textContent=m.efficiency.toFixed(1)+'x';
         }
 
-        $('rbM').textContent=full?'0':(30/optFpt<1?'<1':'~'+(30/optFpt).toFixed(1));
-        $('rbY').textContent=full?'0':'~'+Math.round(365/optFpt);
+        $('rbM').textContent=m.full?'0':m.rbMonth;
+        $('rbY').textContent=m.full?'0':'~'+m.rbYear;
 
-        if(full){$('cur').style.left='50%';$('lo').textContent='MIN';$('loFx').textContent='tick '+d.tL;$('hi').textContent='MAX';$('hiFx').textContent='tick +'+d.tU;$('nftTag').textContent='NFT #2847354 · FULL';}
+        if(m.full){$('cur').style.left='50%';$('lo').textContent='MIN';$('loFx').textContent='tick '+d.tL;$('hi').textContent='MAX';$('hiFx').textContent='tick +'+d.tU;$('nftTag').textContent='NFT #2847354 · FULL';}
         else{
-            const pL=t2p(d.tL),pU=t2p(d.tU);
-            const logP=(Math.log(d.cp)-Math.log(pL))/(Math.log(pU)-Math.log(pL));
-            $('cur').style.left=Math.max(2,Math.min(98,logP*100))+'%';
-            $('lo').textContent='$'+pL.toFixed(5);$('loFx').textContent='≈ R$'+(1/pL).toFixed(2)+'/USD';
-            $('hi').textContent='$'+pU.toFixed(5);$('hiFx').textContent='≈ R$'+(1/pU).toFixed(2)+'/USD';
+            $('cur').style.left=Math.max(2,Math.min(98,m.logPosition*100))+'%';
+            $('lo').textContent='$'+m.pL.toFixed(5);$('loFx').textContent='≈ R$'+(1/m.pL).toFixed(2)+'/USD';
+            $('hi').textContent='$'+m.pU.toFixed(5);$('hiFx').textContent='≈ R$'+(1/m.pU).toFixed(2)+'/USD';
         }
         $('curL').textContent='$'+d.cp.toFixed(5);
         $('blk').textContent='#'+d.bn.toLocaleString();
         $('upd').textContent=new Date().toLocaleTimeString('pt-BR');
-        // Update status (no separate live badge in this design)
 
         const ab=$('aBar'),at=$('aText'),ai=$('aIcon');
         if(!d.ir){ab.className='alert a-crit';ai.textContent='🚨';at.innerHTML='<strong>OUT OF RANGE</strong> — Rebalancing needed.';}
-        else if(full){ab.className='alert a-ok';ai.textContent='📡';at.innerHTML='Full-range position. Apply concentrated range for <strong>'+o.eff.toFixed(0)+'x</strong> efficiency.';}
+        else if(m.full){ab.className='alert a-ok';ai.textContent='📡';at.innerHTML='Full-range position. Apply concentrated range for <strong>'+o.eff.toFixed(0)+'x</strong> efficiency.';}
         else{
-            const pL=t2p(d.tL),pU=t2p(d.tU);
-            const u=Math.min(Math.abs(Math.log(d.cp/pL)-Math.log(pU/pL)*0.5)/(Math.log(pU/pL)*0.5),1);
-            if(u>=.9){ab.className='alert a-crit';ai.textContent='🔶';at.innerHTML='<strong>CRITICAL</strong> — '+(u*100).toFixed(0)+'% used.';}
-            else if(u>=.75){ab.className='alert a-warn';ai.textContent='⚠';at.innerHTML='<strong>WARNING</strong> — '+(u*100).toFixed(0)+'% consumed.';}
-            else{ab.className='alert a-ok';ai.textContent='✅';at.innerHTML='Healthy — '+(u*100).toFixed(0)+'% used. ~'+Math.round(fpt(C.vol,Math.exp(Math.abs(Math.log(pU/d.cp)))-1))+'d until exit.';}
+            if(m.util>=.9){ab.className='alert a-crit';ai.textContent='🔶';at.innerHTML='<strong>CRITICAL</strong> — '+(m.util*100).toFixed(0)+'% used.';}
+            else if(m.util>=.75){ab.className='alert a-warn';ai.textContent='⚠';at.innerHTML='<strong>WARNING</strong> — '+(m.util*100).toFixed(0)+'% consumed.';}
+            else{ab.className='alert a-ok';ai.textContent='✅';at.innerHTML='Healthy — '+(m.util*100).toFixed(0)+'% used. ~'+Math.round(RangeLogic.fpt(C.vol,Math.exp(Math.abs(Math.log(m.pU/d.cp)))-1))+'d until exit.';}
         }
 
         $('oL').textContent='$'+o.lo.toFixed(5);$('oU').textContent='$'+o.hi.toFixed(5);
         $('oFx').textContent='R$'+(1/o.hi).toFixed(2)+'–'+(1/o.lo).toFixed(2);
-        $('oW').textContent='±'+(optHalf*100).toFixed(1)+'%';$('oE').textContent=o.eff.toFixed(1)+'x';
-        $('pvol').textContent=(o.pv*100).toFixed(2)+'%';$('oR').textContent='~'+Math.round(optFpt)+'d';
-        $('tw').textContent='~Day '+Math.round(fpt(C.vol,optHalf*.75));
-        $('tc').textContent='~Day '+Math.round(fpt(C.vol,optHalf*.90));
-        $('te').textContent='~Day '+Math.round(optFpt);
+        $('oW').textContent='±'+(m.optHalf*100).toFixed(1)+'%';$('oE').textContent=o.eff.toFixed(1)+'x';
+        $('pvol').textContent=(o.pv*100).toFixed(2)+'%';$('oR').textContent='~'+Math.round(m.optFpt)+'d';
+        $('tw').textContent='~Day '+m.twDay;
+        $('tc').textContent='~Day '+m.tcDay;
+        $('te').textContent='~Day '+m.teDay;
         $('copyLo').textContent=o.lo.toFixed(5);$('copyHi').textContent=o.hi.toFixed(5);
         $('newPosLink').href='https://app.uniswap.org/pool?chain=polygon';
 
         const actSub=document.querySelector('.act-sub');
         if(actSub){
-            if(full)actSub.textContent='Full-range — concentrate for '+o.eff.toFixed(0)+'x efficiency.';
+            if(m.full)actSub.textContent='Full-range — concentrate for '+o.eff.toFixed(0)+'x efficiency.';
             else{
-                const pL=t2p(d.tL),pU=t2p(d.tU);
-                const u=Math.min(Math.abs(Math.log(d.cp/pL)-Math.log(pU/pL)*0.5)/(Math.log(pU/pL)*0.5),1);
-                actSub.textContent=u>=.75?'Utilization at '+(u*100).toFixed(0)+'% — consider rebalancing soon.':'Position is concentrated and healthy. Rebalance when utilization reaches 90%+.';
+                actSub.textContent=m.util>=.75?'Utilization at '+(m.util*100).toFixed(0)+'% — consider rebalancing soon.':'Position is concentrated and healthy. Rebalance when utilization reaches 90%+.';
             }
         }
     }
 
     async function go(){try{ui(await fetchData());}catch(e){console.error('[RM]',e);}}
     go(); setInterval(go,C.ms);
-    setTimeout(fetchHolders, 2000); // Run after main data loads
+    setTimeout(fetchHolders, 2000);
 })();
 
 function copyVal(id){
