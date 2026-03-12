@@ -218,10 +218,12 @@
       <div class="card">
         <h2>LayerZero Live Messages</h2>
         <div id="bridgeHistory">Loading...</div>
-        <div style="margin-top:12px;display:flex;gap:8px;">
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <button class="sm secondary" onclick="loadBridgeHistory()">Refresh</button>
-          <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LayerZero Scan ↗</button></a>
+          <button class="sm secondary" onclick="discoverLzHashes()">Scan Chain</button>
+          <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LZ Scan ↗</button></a>
         </div>
+        <div style="margin-top:8px;display:flex;gap:6px;"><input type="text" id="manualTxHash" placeholder="Paste Polygon tx hash to track" style="flex:1;font-size:11px;padding:6px 10px"><button class="sm" onclick="addManualHash()">Add</button></div>
       </div>
     </div>
   </div>
@@ -352,97 +354,73 @@ catch(e2){baseHtml+='<tr><td colspan="2" style="color:var(--gray-500);font-size:
 el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr>'+baseHtml+'</table>'
 }catch(e){el.textContent='Error: '+e.message}}
 
-// === LZ MESSAGE MONITORING (always-on) ===
+// === LZ MESSAGE MONITORING (tx-hash tracking) ===
 const LZ_OFT_ADDR='0x603265754fDdd7FdE459CC6e6722bd526C1258Fc';
 const LZ_OP_ADDR='0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
 const LZ_API='https://scan.layerzero-api.com/v1';
-const POLYGON_EID=30109;
-const BASE_EID=30184;
-// Known tx hashes from LZ Scan (hardcoded fallback)
-const LZ_KNOWN_TXS=[
-  {hash:'0xf73b2d53a39534de5555',nonce:7,ago:'recent'},
-  {hash:'0x167fe6bd2b8aa806624a',nonce:6,ago:'~21h'},
-  {hash:'0x1ee0f56119fa5aa3dcb5',nonce:5,ago:'1d'},
-  {hash:'0x43fd997dda2d745506b2',nonce:4,ago:'1d'},
-  {hash:'0x20e20d0d44ea07a4242',nonce:3,ago:'3d'},
-  {hash:'0xff0c54783e1a22aa9b41',nonce:2,ago:'1mo'},
-  {hash:'0xb0664af63af088c2ad33',nonce:1,ago:'1mo'},
+// All known bridge tx hashes (Polygon side) — append new ones on bridge
+const LZ_TX_STORE_KEY='efixLzTxHashes';
+const LZ_SEED_HASHES=[
+  '0xff0c54783e1a22aa9b41c7eb44bcd9f9ebb76a8322133ccfd4ac088da09d16b2',
 ];
 let _lzKnownHashes=new Set();
-let _lzMsgCount=0;
 let _lzPollTimer=null;
 let _lzFirstLoad=true;
 let _lzLastError='';
 
+function getLzHashes(){
+  try{const s=sessionStorage.getItem(LZ_TX_STORE_KEY);return s?JSON.parse(s):[...LZ_SEED_HASHES]}catch(e){return[...LZ_SEED_HASHES]}
+}
+function saveLzHash(hash){
+  const hashes=getLzHashes();
+  if(!hashes.includes(hash)){hashes.unshift(hash);sessionStorage.setItem(LZ_TX_STORE_KEY,JSON.stringify(hashes))}
+}
+
 async function fetchLZMessages(){
-// Strategy: try documented API endpoints, then fallback to tx hash lookup
-const allMsgs=new Map();
+const hashes=getLzHashes();
+const results=[];
 _lzLastError='';
-
-// 1. Try documented endpoints
-const endpoints=[
-  LZ_API+'/messages/oapp/'+POLYGON_EID+'/'+LZ_OFT_ADDR,
-  LZ_API+'/messages/oapp/'+BASE_EID+'/'+LZ_OFT_ADDR,
-  LZ_API+'/messages/wallet/'+LZ_OP_ADDR,
-  LZ_API+'/messages/wallet/'+LZ_OFT_ADDR,
-];
-for(const url of endpoints){
+// Fetch each tx hash in parallel (max 10)
+const batch=hashes.slice(0,10);
+const promises=batch.map(async hash=>{
   try{
-    const r=await fetch(url,{signal:AbortSignal.timeout(10000)});
-    if(!r.ok){_lzLastError=url.split('/v1')[1]+' → '+r.status;continue}
+    const r=await fetch(LZ_API+'/messages/tx/'+hash,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok){_lzLastError='/messages/tx/'+hash.slice(0,10)+'… → '+r.status;return null}
     const d=await r.json();
-    const msgs=d.data||d.messages||[];
-    msgs.forEach(m=>{
-      const hash=m.srcTxHash||m.pathway?.sender?.hash||'';
-      if(hash&&!allMsgs.has(hash))allMsgs.set(hash,m);
-    });
-  }catch(e){_lzLastError=url.split('/v1')[1]+' → '+e.message}
-}
-
-// 2. If no results, try individual tx hash lookups
-if(!allMsgs.size){
-  for(const tx of LZ_KNOWN_TXS.slice(0,5)){
-    try{
-      const r=await fetch(LZ_API+'/messages/tx/'+tx.hash,{signal:AbortSignal.timeout(5000)});
-      if(!r.ok)continue;
-      const d=await r.json();
-      const msgs=d.data||d.messages||[];
-      msgs.forEach(m=>{
-        const hash=m.srcTxHash||m.pathway?.sender?.hash||'';
-        if(hash&&!allMsgs.has(hash))allMsgs.set(hash,m);
-      });
-    }catch(e){}
-  }
-}
-
-return Array.from(allMsgs.values()).sort((a,b)=>{
+    // API returns {messages:[...]} or {data:[...]}
+    const msgs=d.messages||d.data||[];
+    if(msgs.length)return msgs[0];
+    // Sometimes returns single message object
+    if(d.status||d.pathway)return d;
+    return null;
+  }catch(e){_lzLastError=hash.slice(0,10)+'… → '+e.message;return null}
+});
+const settled=await Promise.all(promises);
+settled.forEach(m=>{if(m)results.push(m)});
+// Sort by created desc
+results.sort((a,b)=>{
   const ta=new Date(a.created||a.pathway?.created||0).getTime();
   const tb=new Date(b.created||b.pathway?.created||0).getTime();
   return tb-ta;
 });
+return results;
 }
 
 async function loadBridgeHistory(){
 const el=document.getElementById('bridgeHistory');if(!el)return;
-if(_lzFirstLoad)el.innerHTML='<div style="font-size:11px;color:var(--gray-400)">Loading from LayerZero Scan...</div>';
+if(_lzFirstLoad)el.innerHTML='<div style="font-size:11px;color:var(--gray-400)">Fetching '+getLzHashes().length+' bridge transactions...</div>';
 try{
 const msgs=await fetchLZMessages();
 
 if(!msgs.length){
-  // All API methods failed — show static fallback with debug info
   let fallbackHtml='<div style="text-align:center;padding:20px">';
   fallbackHtml+='<div style="font-size:24px;margin-bottom:8px">🌉</div>';
-  fallbackHtml+='<div style="font-size:12px;color:var(--gray-400);margin-bottom:8px">API returned 0 messages — showing known history</div>';
-  if(_lzLastError)fallbackHtml+='<div style="font-size:10px;color:var(--red);margin-bottom:12px">Last error: '+_lzLastError+'</div>';
-  LZ_KNOWN_TXS.forEach(tx=>{
-    fallbackHtml+='<div class="lz-msg"><span class="lz-nonce">#'+tx.nonce+'</span><span class="lz-status delivered">DELIVERED</span><span style="flex:1"></span><span class="lz-time">'+tx.ago+'</span><a href="https://layerzeroscan.com/tx/'+tx.hash+'" target="_blank" class="lz-hash" style="margin-left:8px">LZ ↗</a></div>';
-  });
-  fallbackHtml+='<div style="margin-top:12px"><a href="https://layerzeroscan.com/address/'+LZ_OFT_ADDR+'" target="_blank" style="color:var(--green);font-size:12px">OFT Adapter ↗</a> · <a href="https://layerzeroscan.com/address/'+LZ_OP_ADDR+'" target="_blank" style="color:var(--green);font-size:12px">Operator ↗</a></div>';
+  fallbackHtml+='<div style="font-size:12px;color:var(--gray-400);margin-bottom:8px">Could not fetch any messages from LZ API</div>';
+  if(_lzLastError)fallbackHtml+='<div style="font-size:10px;color:var(--red);margin-bottom:12px">'+_lzLastError+'</div>';
+  fallbackHtml+='<div style="margin-top:8px"><a href="https://layerzeroscan.com/address/'+LZ_OFT_ADDR+'" target="_blank" style="color:var(--green);font-size:12px">View on LZ Scan ↗</a></div>';
   fallbackHtml+='</div>';
   el.innerHTML=fallbackHtml;
   if(!_lzPollTimer)_lzPollTimer=setInterval(()=>{loadBridgeHistory()},30000);
-  const pi=document.getElementById('lzPollIndicator');
-  if(pi){pi.style.display='flex';document.getElementById('lzPollText').textContent='LZ: fallback · 30s retry'}
   _lzFirstLoad=false;
   return;
 }
@@ -551,11 +529,42 @@ document.addEventListener('click',function _reqNotif(){
   document.removeEventListener('click',_reqNotif);
 },{once:true});
 
+// Discover bridge tx hashes from on-chain events (OFTSent / Transfer to adapter)
+async function discoverLzHashes(){
+toast('Scanning Polygon for bridge transactions...');
+try{
+  // Query Transfer events TO the OFT adapter (tokens locked for bridging)
+  // Transfer(address from, address to, uint256 value) — topic0 = 0xddf252ad...
+  const transferTopic='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+  const adapterPadded='0x000000000000000000000000'+LZ_OFT_ADDR.slice(2).toLowerCase();
+  const r=await fetch(PR,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_getLogs',params:[{address:EP,topics:[transferTopic,null,adapterPadded],fromBlock:'0x'+(67000000).toString(16),toBlock:'latest'}],id:1})});
+  const d=await r.json();
+  const logs=d.result||[];
+  let found=0;
+  for(const log of logs){
+    if(log.transactionHash){saveLzHash(log.transactionHash);found++}
+  }
+  if(found)toast(found+' bridge tx hashes discovered!');
+  else toast('No new hashes found via chain scan');
+  loadBridgeHistory();
+}catch(e){toast('Scan error: '+e.message)}
+}
+
+function addManualHash(){
+const input=document.getElementById('manualTxHash');
+const hash=input.value.trim();
+if(!hash||!hash.startsWith('0x')||hash.length<20){alert('Enter a valid tx hash');return}
+saveLzHash(hash);
+input.value='';
+toast('TX hash added — refreshing...');
+loadBridgeHistory();
+}
+
 async function doBridge(){
 const amount=document.getElementById('bridgeAmount').value.trim();if(!amount||Number(amount)<=0){alert('Enter amount');return}
 if(!confirm('Bridge '+amount+' efixDI from Polygon to Base?'))return;
 const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">Bridging... (approve + quote + send)</span>';
-try{const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify({amount})});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base<br>TX: <a href="https://polygonscan.com/tx/'+d.txHash+'" target="_blank" style="color:var(--green)">'+d.txHash.slice(0,14)+'...</a><br>Fee: '+d.fee+'<br>'+d.message+'</span>';toast('Bridge sent!');setTimeout(()=>{loadBridgeBalances();loadBridgeHistory()},5000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
+try{const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify({amount})});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base<br>TX: <a href="https://polygonscan.com/tx/'+d.txHash+'" target="_blank" style="color:var(--green)">'+d.txHash.slice(0,14)+'...</a><br>Fee: '+d.fee+'<br>'+d.message+'</span>';toast('Bridge sent!');if(d.txHash)saveLzHash(d.txHash);setTimeout(()=>{loadBridgeBalances();loadBridgeHistory()},5000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
 function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=n==='dashboard'?'100%':'1100px';if(n==='bridge'){const badge=document.getElementById('lzBadge');if(badge)badge.style.display='none'}}
 </script>
 </body>
