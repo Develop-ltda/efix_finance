@@ -634,6 +634,32 @@ git push origin main
 
 ## Segurança
 
+### Credenciais Expostas no Frontend
+
+Por ser um site estático sem build system, algumas chaves ficam visíveis no client-side. A proteção real depende de scoping/rate limiting configurado nos dashboards dos provedores.
+
+#### Sensíveis (requerem proteção no painel do provedor)
+
+| Credencial | Arquivo(s) | Risco se não houver scoping |
+|---|---|---|
+| **Alchemy API Key** `5QrXWREEtmi4gITNoJsJf` | `shared/js/config.js`, `app/wallet/efix-wallet-sdk.js` | RPC calls, smart wallet ops, custo na conta Alchemy |
+| **Gas Policy ID** `7b22b464-38cd-4e6f-bccb-00f1280ac14c` | `app/wallet/efix-wallet-sdk.js` | Patrocínio de gas — pode ser abusado para esgotar budget |
+
+**Mitigação recomendada**: configurar na dashboard Alchemy — domain allowlist (`efix.finance`), rate limits por IP, e gas budget cap na policy.
+
+#### Não-secretos (expostos por design)
+
+| Item | Notas |
+|---|---|
+| Backend URLs (3 Railway services) | `shared/js/config.js` — necessários no frontend para fetch |
+| Endereços de smart contracts | Públicos por natureza (blockchain) |
+| Google Analytics ID (`G-1Y391HW7NT`) | Público por design |
+
+#### Não hardcoded (seguros)
+
+- **X-Admin-Key** — digitado pelo usuário no login do admin panel, não está no código
+- **Bearer token do card admin** — idem, fornecido pelo usuário no login
+
 ### Gas Abstraction
 
 - UserOps patrocinados via Alchemy Gas Policy — usuário nunca paga gas
