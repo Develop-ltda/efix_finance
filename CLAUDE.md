@@ -31,27 +31,120 @@ Common code extracted from page-specific inline CSS/JS into reusable files:
 | `components.css` | tab-panel, spinner, @keyframes | protocol, card/app, listings, team |
 | `footer.css` | Inter footer | listings, team |
 
-**JS** (`shared/js/`):
-| File | Purpose | Consumed by |
-|------|---------|-------------|
-| `ga4.js` | Google Analytics 4 init | All 14 pages |
-| `config.js` | Backend URLs, RPCs, contract addresses | app/*, card/*, protocol, range-monitor, tdic |
-| `formatters.js` | `shortAddr()`, `fmtDate()`, `fmtDateTime()`, `fmtNum()` | app/wallet/admin, protocol, card/app, card/admin, app/wallet |
-| `rpc.js` | `padAddr()`, `rpc()`, `rpcBigInt()`, `balOf()`, `ethBal()` | app/wallet/admin, card/admin, card/app |
-| `ui.js` | `toast()`, `switchTab()`, `showScreen()`, `showError()`, `setLoading()`, `copyText()` | app/wallet/admin, card/app, app/wallet, protocol, card/admin, app |
+### JS Reference — Shared Utilities (`shared/js/`)
 
-### Business Logic Modules
+**`ga4.js`** — Google Analytics 4 bootstrap. Loaded by all pages.
 
-Pure JS modules extracted from inline `<script>` blocks. Each exposes a namespace object with no DOM references — functions receive dependencies as parameters and return data/Promises. HTML files keep only thin glue code (event listeners + DOM updates).
+**`config.js`** — Global `EFIX_CONFIG` object with backend URLs, Alchemy RPC endpoints, and contract addresses.
 
-| File | Namespace | HTML consumer | Key functions |
-|------|-----------|---------------|---------------|
-| `protocol/protocol.js` | `ProtocolLogic` | `protocol/index.html` | `calcAPY()`, `calcHF()`, `riskInfo()`, `fetchLive()`, `buildStressRow()` |
-| `range-monitor.js` | `RangeLogic` | `range-monitor.html` | `s2p()`, `t2p()`, `gbm()`, `fpt()`, `fetchPositionData()`, `calcMetrics()` |
-| `app/wallet/admin-logic.js` | `AdminLogic` | `app/wallet/admin.html` | `fetchStats()`, `fetchDeposits()`, `fetchCollateral()`, `doMint()`, `doBridge()` |
-| `app/app.js` | `AppLogic` | `app/index.html` | `connectWallet()`, `fetchPosition()`, `createPixQR()`, `applyLeverage()` |
-| `card/card-app.js` | `CardAppLogic` | `card/app.html` | `apiCall()`, `loginUser()`, `issueCard()`, `fetchCardBalance()`, `calcCredit()` |
-| `app/wallet/wallet.js` | `WalletLogic` | `app/wallet/index.html` | `createDeposit()`, `pollBalanceChange()`, `lockCollateral()`, `calcSpendingPower()` |
+**`formatters.js`** — Locale-aware formatting (pt-BR):
+- `shortAddr(addr)` → `"0x04082b...6441"` (first 6 + last 4 chars)
+- `fmtDate(d)` → `"dd/mm, HH:mm"` (short, no year)
+- `fmtDateTime(d)` → `"dd/mm/yyyy HH:mm"` (full date + time)
+- `fmtNum(n)` → `"1.234"` (integer, pt-BR thousands separator)
+
+**`rpc.js`** — Low-level EVM JSON-RPC helpers:
+- `padAddr(addr)` → zero-pads address to 64 hex chars (for ABI encoding)
+- `balOf(addr)` → returns `0x70a08231` + padded address (ERC-20 `balanceOf` calldata)
+- `rpc(url, to, data)` → `eth_call`, returns raw hex result
+- `rpcBigInt(url, to, data)` → wraps `rpc()`, returns `BigInt`
+- `ethBal(url, addr)` → `eth_getBalance`, returns native balance as `Number` (in ETH/POL units)
+
+**`ui.js`** — Shared DOM utilities (no business logic):
+- `toast(msg, ms?)` → shows `#toast` element for `ms` ms (default 3000). Supports both `display` and `classList.show` CSS patterns
+- `showScreen(id)` → hides all `.screen` elements, activates one by id
+- `showError(id, msg, ms?)` → shows error element by id, auto-hides after `ms` ms (default 5000)
+- `setLoading(btnId, loading)` → replaces button text with spinner + "Aguarde...", disables it. Pass `false` to restore
+- `copyText(text, opts?)` → copies to clipboard. `opts.toastMsg`: show toast. `opts.feedbackEl`: element id to flash "Copiado!"
+- `switchTab(name, clickedBtn, opts?)` → generic tab switcher. Defaults: tabs=`.tab`, panels=`.tab-panel`, prefix=`panel-`. Overridable via `opts.tabSelector`, `opts.panelSelector`, `opts.panelPrefix`, `opts.onSwitch`
+
+### JS Reference — Business Logic Modules
+
+Pure JS modules with no DOM references. Each exposes a namespace object. Functions receive dependencies as parameters and return data/Promises. HTML files keep only thin glue (event listeners + DOM updates).
+
+**`protocol/protocol.js`** — `ProtocolLogic` (consumed by `protocol/index.html`)
+- Constants: `SELIC`, `MBR`, `PF`, `LLTV`, `scenarios[]`, `stressTests[]`, `polyContracts[]`, `baseContracts[]`, `services[]`
+- `calcAPY(ltv, cdi?)` → net APY % after performance fee, with leverage from LTV
+- `calcHF(ltv, shock?)` → health factor given LTV and BRL shock %
+- `riskInfo(hf)` → `{t, c}` — risk label ("SAFE"/"WARNING"/"LIQUIDATION") + badge CSS class
+- `fetchLive(backendUrl, adminKey)` → GET `/health` + `/api/status`, returns `{tvlBrl, tvlUsd, supply, rate, uptimeH, uptimeM, block}`
+- `buildAPYData()` → array of scenario objects with computed APY, HF, leverage, annual return
+- `buildStressRow(stressTest)` → array of 6 LTV columns with APY, HF, risk, action per stress scenario
+- `buildMatrixData()` → 5×7 matrix of HF values (LTV × BRL shock) for heatmap
+- `runTerminalCmd(cmd, backendUrl, adminKey)` → simulates terminal output for `health`/`status`/`morpho` commands
+
+**`range-monitor.js`** — `RangeLogic` (consumed by `range-monitor.html`)
+- `s2p(sqrtPX96)` → converts Uniswap V3 sqrtPriceX96 to human price (adjusted for 12-decimal diff)
+- `t2p(tick)` → converts tick to price
+- `gbm(price, vol, days, zScore)` → GBM confidence bounds `{lo, hi, pv, eff}`
+- `fpt(vol, boundRatio)` → First Passage Time in days (expected time to hit bound)
+- `isFullRange(tickL, tickU)` → true if position covers ±800k ticks
+- `getProvider(rpcs[])` → tries RPCs in order, returns first working `ethers.JsonRpcProvider`
+- `fetchPositionData(provider, config)` → reads Uniswap NFT position + pool slot0, returns `{cp, tL, tU, tick, ir, bn, full}`
+- `scanChainHolders(provider, contract, label)` → scans Transfer events to compute holder set with positive balances
+- `calcMetrics(posData, vol, days, zScore)` → full analysis: optimal range, utilization, efficiency, DTE, rebalance estimates
+
+**`app/wallet/admin-logic.js`** — `AdminLogic` (consumed by `app/wallet/admin.html`)
+- `_getMorpho(backend, key, maxAgeMs?)` → cached fetch to `/api/admin/morpho` (5s TTL, deduplicates 3 callers)
+- `hdr(key)` → returns `{X-Admin-Key, Content-Type}` headers object
+- `validateKey(backend, key)` → tests admin key against `/api/deposits`
+- `fetchStats(backend, key, rpcPoly, rpcBase, contracts)` → supply (Polygon+Base), operator MATIC balance, health, locked collateral, user count
+- `fetchDeposits(backend, key, shortAddrFn, fmtDateFn)` → merges `/api/deposits` + `/api/wallet/pending`, sorted by date
+- `fetchWithdrawals(backend, key)` → GET `/api/wallet/withdrawals`
+- `processWithdrawal(backend, key, id)` → POST `/api/wallet/withdrawals/process`
+- `fetchCollateral(backend, key)` → collateral positions + summary `{items, totalEfix, totalUsdc, locked, pending}`
+- `fetchProtocol(backend, key)` → GET `/api/status`, returns `{protocol, operator, services}`
+- `fetchMorpho(backend, key)` → Morpho position (via cache)
+- `fetchBridgeBalances(rpcPoly, rpcBase, contracts, key, backend)` → operator balances on Polygon + Base (uses `balOf()`)
+- `fetchBridgeHistory(srcAddress)` → LayerZero Scan API, returns recent OFT bridge messages
+- `doMint(backend, key, params)` → POST `/api/admin/deposit` (manual mint)
+- `doBridge(backend, key, amount)` → POST `/api/admin/bridge` (Polygon→Base)
+- `fetchBaseOperator(backend, key)` → Base operator balances (via cache)
+
+**`app/app.js`** — `AppLogic` (consumed by `app/index.html`)
+- Constants: `CONTRACTS` (vault, token, pixBridge, lendingPool, oracle), `POLYGON_CHAIN_ID`, `VAULT_ABI`, `TOKEN_ABI`
+- `init(efixPolygonAddr)` → sets token contract address
+- `connectWallet(ethereum)` → MetaMask connect, switch to Polygon, returns `{provider, signer, address, contracts}`
+- `switchToPolygon(ethereum)` → `wallet_switchEthereumChain` / `wallet_addEthereumChain`
+- `fetchPosition(vaultContract, address)` → reads vault position + health factor, returns formatted object with HF class/percent, APY tier
+- `createPixQR(backend, amount, address)` → POST `/api/pix/qrcode` with 3 retries, returns `{emv, imageUrl, amount}`
+- `checkDepositStatus(backend, address)` → GET `/api/deposit/status/{address}`
+- `checkPreviousDeposit(backend, address)` → returns existing e2eId or null
+- `applyLeverage(contracts, address, loops)` → approve token if needed + `vault.applyLeverage(loops)`
+- `removeLeverage(contracts)` → `vault.deleverage(1)`
+- `withdrawFunds(contracts, amount, pixKey)` → `vault.withdraw(amountWei, pixKey)`
+
+**`card/card-app.js`** — `CardAppLogic` (consumed by `card/app.html`)
+- `apiCall(proxyUrl, path, opts, isDemo)` → fetch wrapper with demo mode header (`X-Bridge-Mode: sandbox`)
+- `loginUser(proxyUrl, email, isDemo)` → GET `/users/lookup`
+- `registerUser(proxyUrl, data, isDemo)` → POST `/users/register`
+- `fetchOnboardingStatus(proxyUrl, customerId, isDemo)` → GET Bridge customer, returns `{tosOk, kycOk, kycPending, tosLink, kycLink}`
+- `requestTosLink(proxyUrl, customerId, isDemo)` → returns TOS acceptance URL
+- `requestKycLink(proxyUrl, customerId, isDemo)` → returns KYC verification URL
+- `issueCard(proxyUrl, customerId, isDemo)` → POST `/bridge/customers/{id}/card_accounts`
+- `linkCard(proxyUrl, email, cardData, isDemo)` → POST `/users/link-card`
+- `refreshUser(proxyUrl, email, isDemo)` → re-fetches user data
+- `fetchCardBalance(alchemyKey, fundingAddress)` → direct RPC `balanceOf` for USDC on Base (uses `padAddr`)
+- `fetchDemoBalance(proxyUrl, customerId, cardAccountId, isDemo)` → card account balance from Bridge API
+- `fetchTransactions(proxyUrl, email, isDemo)` → GET `/users/tx`
+- `depositIntent(proxyUrl, email, amount, isDemo)` → POST deposit transaction log
+- `simulateTopUp(proxyUrl, customerId, cardAccountId, email, isDemo)` → sandbox balance top-up
+- `simulatePurchase(proxyUrl, customerId, cardAccountId, email, isDemo)` → sandbox purchase authorization
+- `enableSandboxCards(proxyUrl, isDemo)` → POST `/bridge/cards/enable`
+- `fetchCardDetails(proxyUrl, customerId, cardAccountId, isDemo)` → GET card account details
+- `calcCredit(efixdiAmount)` → pure: `(amount × 0.199 × 0.75).toFixed(2)` — USDC credit from efixDI collateral
+
+**`app/wallet/wallet.js`** — `WalletLogic` (consumed by `app/wallet/index.html`)
+- `calcSpendingPower(collateral, ltv?, fxRate?)` → pure: collateral × LTV(0.50) × fxRate(0.17)
+- `createDeposit(backend, amount, address)` → POST `/deposit/qr`, returns PIX QR data
+- `confirmPayment(backend, reference)` → POST `/deposit/confirm-paid`
+- `checkDepositStatus(backend, reference)` → GET `/deposit/status/{ref}`
+- `pollBalanceChange(walletLib, address, currentBalText, maxAttempts?)` → polls `getBalance` every 3s until balance changes or max attempts (20)
+- `requestWithdraw(backend, address, amount, pixKey)` → POST `/withdraw/request`
+- `lockCollateral(backend, address, amount)` → POST `/deposit/collateralize`
+- `fetchHistory(backend, address)` → GET `/wallet/history/{address}`
+- `fetchLockedBalance(backend, address)` → GET `/wallet/balance/{address}`, returns locked amount as float
+- `getBalance(walletLib, address)` → delegates to `walletLib.getBalance(address)`
 
 ### Pages
 
@@ -107,7 +200,7 @@ Centralized in `shared/js/config.js` as `EFIX_CONFIG`:
 - Inter pages use CSS vars: `--bg-primary`, `--text-primary`, `--border`, `--accent-blue`, etc.
 - Admin pages use password-based access (plaintext comparison)
 - `rpc()` returns raw hex string; `rpcBigInt()` wraps it for BigInt consumers
-- `toast()` in shared/js/ui.js uses `display:block/none`; card/app.html has its own classList-based toast
+- `toast()` in shared/js/ui.js supports both `display` and `classList.show` CSS patterns
 - Live data polling uses `setInterval` (typically 3-second intervals for balances)
 - Networks: Polygon (primary), Base (secondary)
 - Backend: 3 Railway services via `EFIX_CONFIG` — efixdi-backend, efix-bridge-proxy, efix-securitizadora
