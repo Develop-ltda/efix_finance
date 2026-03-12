@@ -436,7 +436,7 @@ const currentHashes=new Set();
 msgs.forEach(m=>{
   const hash=m.source?.tx?.txHash||m.srcTxHash||m.pathway?.sender?.hash||'';
   if(hash)currentHashes.add(hash);
-  if(hash&&!_lzKnownHashes.has(hash)&&!_lzFirstLoad)newCount++;
+  if(hash&&!_lzPrevHashes.has(hash)&&!_lzFirstLoad)newCount++;
 });
 
 // Notify on new messages
@@ -453,7 +453,7 @@ if(newCount>0&&!_lzFirstLoad){
   }
 }
 // Update known hashes
-_lzKnownHashes=currentHashes;
+_lzPrevHashes=currentHashes;
 _lzMsgCount=msgs.length;
 _lzFirstLoad=false;
 
@@ -475,7 +475,7 @@ msgs.forEach(m=>{
   const stClass=st==='DELIVERED'?'delivered':st==='INFLIGHT'?'inflight':st==='FAILED'?'failed':st==='BLOCKED'?'blocked':'';
   if(st==='INFLIGHT'||st==='CONFIRMING')hasInflight=true;
   const hash=m.source?.tx?.txHash||m.srcTxHash||m.pathway?.sender?.hash||'';
-  const isNew=hash&&!_lzKnownHashes.has(hash)&&newCount>0;
+  const isNew=hash&&!_lzPrevHashes.has(hash)&&newCount>0;
 
   const nonce=m.pathway?.nonce||m.nonce||'';
   const srcChain=m.pathway?.srcChainKey||m.srcChainKey||m.source?.chain||'polygon';
