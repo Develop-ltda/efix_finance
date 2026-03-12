@@ -66,7 +66,7 @@ const SEED=[
 {id:"REC-015",dupl:"14564-5",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"ROCHESA TINTAS E VERNIZES",cnpjSacado:"74.068.552/0001-78",valor:1233.10,vencto:"2026-03-16",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Mercado",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
 {id:"REC-016",dupl:"14565-3",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"ROCHESA TINTAS E VERNIZES",cnpjSacado:"74.068.552/0001-78",valor:549.79,vencto:"2026-03-16",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Mercado",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""}
 ];
-const defP={txDesconto:2.50,royalty:1.00,prazoSider:30,prazoMercado:3,irRegressivo:[22.5,20,17.5,15],nomeSecuritizadora:"EFIX Securitizadora S.A.",cnpjSecuritizadora:"60.756.859/0001-57",contaBanco:"Bco 332 Ag 0001 Conta Segregada"};
+const defP={txDesconto:2.50,royalty:1.00,prazoSider:30,prazoMercado:3,irRegressivo:[22.5,20,17.5,15],nomeSecuritizadora:"EFIX Plataforma de Tokenização e Crowdfunding Ltda",cnpjSecuritizadora:"60.756.859/0001-57",contaBanco:"Bco 332 Ag 0001 Conta Segregada"};
 
 /* ── Shared Components ── */
 const Card=({children,style:s,className:cn})=>h("div",{className:cn,style:{background:"#fff",borderRadius:12,padding:16,border:"1px solid "+c.border,...s}},children);
@@ -309,7 +309,7 @@ function App(){
     h("nav",{className:"sidebar"+(menu?" open":""),style:{width:180,background:"#1E1B2E",color:"#fff",padding:"14px 0",flexShrink:0,display:"flex",flexDirection:"column",position:"sticky",top:0,height:"100vh"}},
       h("div",{style:{padding:"0 14px",marginBottom:16,display:"flex",alignItems:"center",gap:6}},h("img",{src:LOGO,style:{width:24,height:24,borderRadius:6}}),h("div",null,h("div",{style:{fontSize:13,fontWeight:800}},"EFIX"),h("div",{style:{fontSize:7,color:"#9CA3AF",letterSpacing:".08em"}},"SECURITIZADORA S.A."))),
       pages.map(p=>h("div",{key:p,onClick:()=>nav(p),style:{padding:"8px 14px",cursor:"pointer",fontSize:12,fontWeight:page===p?700:400,color:page===p?"#fff":"#9CA3AF",background:page===p?"#6366F120":"transparent",borderLeft:page===p?"3px solid #6366F1":"3px solid transparent",transition:"all .15s"}},(icons[p]||"\u25c7")+" "+p)),
-      h("div",{style:{marginTop:"auto",padding:"8px 14px",fontSize:8,color:"#4B5563",lineHeight:1.4}},"EFIX Securitizadora S.A.\nCVM 88 \u00b7 Ato 23.635/2025")),
+      h("div",{style:{marginTop:"auto",padding:"8px 14px",fontSize:8,color:"#4B5563",lineHeight:1.4}},"EFIX Plataforma de Tokenização e Crowdfunding Ltda\nCVM 88 \u00b7 Ato 23.635/2025")),
     h("main",{className:"main",style:{flex:1,padding:18,overflowY:"auto",maxHeight:"100vh"}},!loaded?h("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",height:"50vh",color:c.dim}},"Carregando..."):ct()));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(h(App));
