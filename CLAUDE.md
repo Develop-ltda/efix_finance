@@ -40,6 +40,19 @@ Common code extracted from page-specific inline CSS/JS into reusable files:
 | `rpc.js` | `rpc()`, `rpcBigInt()`, `balOf()`, `ethBal()` | app/wallet/admin, card/admin |
 | `ui.js` | `toast()` (display-based) | app/wallet/admin |
 
+### Business Logic Modules
+
+Pure JS modules extracted from inline `<script>` blocks. Each exposes a namespace object with no DOM references — functions receive dependencies as parameters and return data/Promises. HTML files keep only thin glue code (event listeners + DOM updates).
+
+| File | Namespace | HTML consumer | Key functions |
+|------|-----------|---------------|---------------|
+| `protocol/protocol.js` | `ProtocolLogic` | `protocol/index.html` | `calcAPY()`, `calcHF()`, `riskInfo()`, `fetchLive()`, `buildStressRow()` |
+| `range-monitor.js` | `RangeLogic` | `range-monitor.html` | `s2p()`, `t2p()`, `gbm()`, `fpt()`, `fetchPositionData()`, `calcMetrics()` |
+| `app/wallet/admin-logic.js` | `AdminLogic` | `app/wallet/admin.html` | `fetchStats()`, `fetchDeposits()`, `fetchCollateral()`, `doMint()`, `doBridge()` |
+| `app/app.js` | `AppLogic` | `app/index.html` | `connectWallet()`, `fetchPosition()`, `createPixQR()`, `applyLeverage()` |
+| `card/card-app.js` | `CardAppLogic` | `card/app.html` | `apiCall()`, `loginUser()`, `issueCard()`, `fetchCardBalance()`, `calcCredit()` |
+| `app/wallet/wallet.js` | `WalletLogic` | `app/wallet/index.html` | `createDeposit()`, `pollBalanceChange()`, `lockCollateral()`, `calcSpendingPower()` |
+
 ### Pages
 
 | Path | Purpose | Font family |
@@ -67,7 +80,7 @@ GA4 → meta tags → fonts (preconnect + CSS) → shared CSS (reset → vars �
 ```
 And in `<body>`:
 ```
-shared JS (config → formatters → rpc → ui) → page <script>
+shared JS (config → formatters → rpc → ui) → page business logic module (.js) → page inline <script> (glue)
 ```
 
 ## Key Integrations

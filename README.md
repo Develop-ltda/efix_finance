@@ -73,7 +73,7 @@ EFIX é uma securitizadora registrada na CVM que conecta fundos DI brasileiros a
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-Cada página é um arquivo HTML self-contained (HTML + CSS + JS inline). Não há build system, bundler ou framework tooling — mudanças são feitas diretamente nos arquivos e deployadas via push para `main`.
+Não há build system, bundler ou framework tooling — mudanças são feitas diretamente nos arquivos e deployadas via push para `main`. A lógica de negócio (fetch, cálculos, chamadas a contratos) vive em módulos `.js` separados; os HTMLs mantêm apenas glue fino (event listeners + DOM updates).
 
 ### Estrutura de Diretórios
 
@@ -82,17 +82,25 @@ efix_finance/
 ├── index.html                  # Landing page (bilíngue PT/EN)
 ├── app/
 │   ├── index.html              # App principal — depósito, saque, cartão
+│   ├── app.js                  # AppLogic — lógica de negócio (wallet, PIX, leverage)
 │   └── wallet/
-│       ├── efix-wallet-sdk.js  # Alchemy Account Kit SDK wrapper
+│       ├── index.html          # Smart wallet interface
+│       ├── wallet.js           # WalletLogic — depósito, saque, colateral
 │       ├── admin.html          # Painel admin de operações
+│       ├── admin-logic.js      # AdminLogic — stats, mint, bridge, monitoramento
+│       ├── efix-wallet-sdk.js  # Alchemy Account Kit SDK wrapper
 │       └── *.bundle.js         # Bundles do Alchemy SDK
 ├── card/
 │   ├── index.html              # Landing page do cartão
 │   ├── app.html                # Aplicação e funding do cartão
+│   ├── card-app.js             # CardAppLogic — Bridge API, KYC, cartão
 │   └── admin.html              # Admin de operações do cartão
 ├── protocol/
-│   └── index.html              # Dashboard de métricas em tempo real
+│   ├── index.html              # Dashboard de métricas em tempo real
+│   └── protocol.js             # ProtocolLogic — APY, HF, stress tests
 ├── range-monitor.html          # Monitor Uniswap V3 (análise GBM)
+├── range-monitor.js            # RangeLogic — GBM, pricing, holders
+├── shared/                     # CSS/JS compartilhado (reset, config, rpc, formatters)
 ├── financials/
 │   └── index.html              # DRE + integração Google Sheets
 ├── op/
@@ -107,6 +115,19 @@ efix_finance/
 ├── CNAME                       # efix.finance
 └── .nojekyll                   # Desabilita Jekyll no GitHub Pages
 ```
+
+### Módulos de Lógica de Negócio
+
+Cada página principal tem um `.js` companion que expõe um namespace object (ex: `ProtocolLogic`, `AppLogic`). Esses módulos contêm **apenas lógica pura** — fetch de dados, cálculos financeiros, chamadas a contratos — sem referências ao DOM. O HTML inline fica responsável por event listeners, DOM updates e UI feedback.
+
+| Módulo | Namespace | Responsabilidade |
+|--------|-----------|------------------|
+| `protocol/protocol.js` | `ProtocolLogic` | Cálculo de APY/HF, stress tests, fetch de métricas |
+| `range-monitor.js` | `RangeLogic` | Pricing Uniswap V3 (sqrtPrice/tick), GBM bounds, First Passage Time |
+| `app/wallet/admin-logic.js` | `AdminLogic` | Operações admin: stats, mint, bridge, collateral, Morpho |
+| `app/app.js` | `AppLogic` | Wallet connect, posição Vault, PIX QR, alavancagem |
+| `card/card-app.js` | `CardAppLogic` | Bridge API wrapper, KYC/TOS, emissão de cartão, saldo |
+| `app/wallet/wallet.js` | `WalletLogic` | Depósito/saque via smart wallet, polling de saldo, colateral |
 
 ---
 
