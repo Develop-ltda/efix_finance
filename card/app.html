@@ -228,12 +228,12 @@
     </div>
 
     <div class="tabs">
-      <div class="tab active" onclick="switchTab(this, 'tabFunding')">Depositar</div>
-      <div class="tab" onclick="switchTab(this, 'tabActivity')">Atividade</div>
+      <div class="tab active" onclick="switchCardTab('funding', this)">Depositar</div>
+      <div class="tab" onclick="switchCardTab('activity', this)">Atividade</div>
     </div>
 
     <!-- Funding tab -->
-    <div id="tabFunding">
+    <div id="panel-funding" class="tab-panel active">
       <div class="info-msg" style="background: #f0fdf4; border-color: #86efac;">
         Deposite <strong>efixDI</strong> e receba crédito em USDC no cartão. Seu colateral rende <strong>~15% CDI</strong> enquanto você gasta a <strong>~5% a.a.</strong>
       </div>
@@ -259,7 +259,7 @@
     </div>
 
     <!-- Activity tab -->
-    <div id="tabActivity" style="display:none;">
+    <div id="panel-activity" class="tab-panel">
       <div id="txList"><p style="color: var(--gray-400); font-size: 13px; text-align:center; padding: 24px;">Nenhuma transação ainda.</p></div>
     </div>
 
@@ -284,6 +284,9 @@
 </div>
 
 <script src="/shared/js/config.js"></script>
+<script src="/shared/js/formatters.js"></script>
+<script src="/shared/js/rpc.js"></script>
+<script src="/shared/js/ui.js"></script>
 <script src="card-app.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -306,51 +309,14 @@ let kycLink = null;
 //  HELPERS
 // ═══════════════════════════════════════════════════════════════
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-function showError(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 5000);
-}
-
-function setLoading(btnId, loading) {
-  const btn = document.getElementById(btnId);
-  if (loading) {
-    btn.dataset.text = btn.textContent;
-    btn.innerHTML = '<span class="spinner"></span>Aguarde...';
-    btn.disabled = true;
-  } else {
-    btn.textContent = btn.dataset.text || 'OK';
-    btn.disabled = false;
-  }
-}
-
 function copyFunding() {
   const addr = document.getElementById('fundingAddress').textContent;
-  if (addr && addr !== '—') {
-    navigator.clipboard.writeText(addr);
-    toast('Endereço copiado');
-  }
+  if (addr && addr !== '—') copyText(addr, { toastMsg: 'Endereço copiado' });
 }
 
-function switchTab(tabEl, contentId) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
-  document.getElementById('tabFunding').style.display = contentId === 'tabFunding' ? 'block' : 'none';
-  document.getElementById('tabActivity').style.display = contentId === 'tabActivity' ? 'block' : 'none';
-  if (contentId === 'tabActivity') loadTransactions();
+function switchCardTab(name, tabEl) {
+  switchTab(name, tabEl);
+  if (name === 'activity') loadTransactions();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -769,10 +735,9 @@ async function loadTransactions() {
       const isCredit = ['top_up', 'deposit', 'fund'].includes(tx.type);
       const sign = isCredit ? '+' : '-';
       const cls = isCredit ? 'positive' : 'negative';
-      const d = new Date(tx.created_at);
       return `<div class="tx-item">
         <div><div class="tx-label">${tx.description || tx.type}</div>
-        <div class="tx-date">${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div></div>
+        <div class="tx-date">${fmtDateTime(tx.created_at)}</div></div>
         <div class="tx-amount ${cls}">${sign}$${parseFloat(tx.amount || 0).toFixed(2)}</div>
       </div>`;
     }).join('');

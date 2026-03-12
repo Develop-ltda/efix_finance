@@ -11,3 +11,10 @@ function fmtDate(d) {
 function fmtNum(n) {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 }
+
+function fmtDateTime(d) {
+  if (!d) return '-';
+  var dt = new Date(d);
+  return dt.toLocaleDateString('pt-BR') + ' ' +
+    dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}

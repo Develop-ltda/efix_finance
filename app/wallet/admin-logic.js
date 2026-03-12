@@ -2,6 +2,20 @@
 // No DOM references. Uses rpc/rpcBigInt/ethBal/balOf from shared/js/rpc.js as globals.
 
 const AdminLogic = {
+  _morphoCache: null,
+  _morphoCacheTime: 0,
+
+  async _getMorpho(backend, key, maxAgeMs) {
+    var now = Date.now();
+    if (this._morphoCache && (now - this._morphoCacheTime) < (maxAgeMs || 5000)) {
+      return this._morphoCache;
+    }
+    var r = await fetch(backend + '/api/admin/morpho', { headers: { 'X-Admin-Key': key } });
+    this._morphoCache = await r.json();
+    this._morphoCacheTime = now;
+    return this._morphoCache;
+  },
+
   hdr(key) {
     return { 'X-Admin-Key': key, 'Content-Type': 'application/json' };
   },
@@ -118,14 +132,12 @@ const AdminLogic = {
   },
 
   async fetchMorpho(backend, key) {
-    const r = await fetch(backend + '/api/admin/morpho', { headers: { 'X-Admin-Key': key } });
-    return await r.json();
+    return await this._getMorpho(backend, key);
   },
 
   async fetchBridgeBalances(rpcPoly, rpcBase, contracts, key, backend) {
-    const padOP = contracts.operator.toLowerCase().replace('0x', '').padStart(64, '0');
     const [polyEfix, polyMatic] = await Promise.all([
-      rpcBigInt(rpcPoly, contracts.efixPolygon, '0x70a08231' + padOP),
+      rpcBigInt(rpcPoly, contracts.efixPolygon, balOf(contracts.operator)),
       ethBal(rpcPoly, contracts.operator)
     ]);
     const result = {
@@ -134,16 +146,14 @@ const AdminLogic = {
     };
 
     try {
-      const r = await fetch(backend + '/api/admin/morpho', { headers: { 'X-Admin-Key': key } });
-      const d = await r.json();
+      const d = await this._getMorpho(backend, key);
       if (d.base) {
         result.base = { efixDI: d.base.efixDI, usdc: d.base.usdc };
       }
     } catch (e) {
       try {
-        const padOP2 = contracts.operator.toLowerCase().replace('0x', '').padStart(64, '0');
-        const baseEfix = await rpcBigInt(rpcBase, contracts.efixBase, '0x70a08231' + padOP2);
-        const usdcBase = await rpcBigInt(rpcBase, contracts.usdcBase, '0x70a08231' + padOP2);
+        const baseEfix = await rpcBigInt(rpcBase, contracts.efixBase, balOf(contracts.operator));
+        const usdcBase = await rpcBigInt(rpcBase, contracts.usdcBase, balOf(contracts.operator));
         result.base = {
           efixDI: (Number(baseEfix) / 1e18).toFixed(2),
           usdc: (Number(usdcBase) / 1e6).toFixed(2)
@@ -187,8 +197,7 @@ const AdminLogic = {
   },
 
   async fetchBaseOperator(backend, key) {
-    const r = await fetch(backend + '/api/admin/morpho', { headers: { 'X-Admin-Key': key } });
-    const d = await r.json();
+    const d = await this._getMorpho(backend, key);
     return d.base || null;
   }
 };

@@ -7,8 +7,12 @@ async function rpc(url, to, data) {
   return (await r.json()).result;
 }
 
+function padAddr(addr) {
+  return addr.toLowerCase().replace('0x', '').padStart(64, '0');
+}
+
 function balOf(addr) {
-  return '0x70a08231' + addr.slice(2).padStart(64, '0');
+  return '0x70a08231' + padAddr(addr);
 }
 
 async function rpcBigInt(url, to, data) {

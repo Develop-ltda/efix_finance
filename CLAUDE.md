@@ -36,9 +36,9 @@ Common code extracted from page-specific inline CSS/JS into reusable files:
 |------|---------|-------------|
 | `ga4.js` | Google Analytics 4 init | All 14 pages |
 | `config.js` | Backend URLs, RPCs, contract addresses | app/*, card/*, protocol, range-monitor, tdic |
-| `formatters.js` | `shortAddr()`, `fmtDate()`, `fmtNum()` | app/wallet/admin, protocol |
-| `rpc.js` | `rpc()`, `rpcBigInt()`, `balOf()`, `ethBal()` | app/wallet/admin, card/admin |
-| `ui.js` | `toast()` (display-based) | app/wallet/admin |
+| `formatters.js` | `shortAddr()`, `fmtDate()`, `fmtDateTime()`, `fmtNum()` | app/wallet/admin, protocol, card/app, card/admin, app/wallet |
+| `rpc.js` | `padAddr()`, `rpc()`, `rpcBigInt()`, `balOf()`, `ethBal()` | app/wallet/admin, card/admin, card/app |
+| `ui.js` | `toast()`, `switchTab()`, `showScreen()`, `showError()`, `setLoading()`, `copyText()` | app/wallet/admin, card/app, app/wallet, protocol, card/admin, app |
 
 ### Business Logic Modules
 

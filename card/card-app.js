@@ -79,7 +79,7 @@ const CardAppLogic = {
         jsonrpc: '2.0', id: 1, method: 'eth_call',
         params: [{
           to: USDC_BASE,
-          data: '0x70a08231' + fundingAddress.slice(2).padStart(64, '0')
+          data: '0x70a08231' + padAddr(fundingAddress)
         }, 'latest']
       }),
     });

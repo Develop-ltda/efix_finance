@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/shared/css/reset.css">
     <link rel="stylesheet" href="/shared/css/vars-syne.css">
     <link rel="stylesheet" href="/shared/css/nav-syne.css">
+    <link rel="stylesheet" href="/shared/css/components.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
     <style>
         body {
@@ -1298,12 +1299,12 @@
                 <!-- Deposit/Withdraw Card -->
                 <div class="card">
                     <div class="tabs">
-                        <button class="tab active" data-tab="deposit">Depositar</button>
-                        <button class="tab" data-tab="withdraw">Sacar</button>
+                        <button class="tab active" onclick="switchTab('deposit',this)">Depositar</button>
+                        <button class="tab" onclick="switchTab('withdraw',this)">Sacar</button>
                     </div>
                     
                     <!-- Deposit Tab -->
-                    <div id="depositTab">
+                    <div id="panel-deposit" class="tab-panel active">
                         <div class="input-group">
                             <label class="input-label">Valor do Depósito</label>
                             <div class="input-wrapper">
@@ -1409,7 +1410,7 @@
                     </div>
                     
                     <!-- Withdraw Tab -->
-                    <div id="withdrawTab" class="hidden">
+                    <div id="panel-withdraw" class="tab-panel">
                         <div class="input-group">
                             <label class="input-label">Valor do Saque</label>
                             <div class="input-wrapper">
@@ -1539,6 +1540,7 @@
     <div id="toast" class="toast"></div>
 
     <script src="/shared/js/config.js"></script>
+    <script src="/shared/js/ui.js"></script>
     <script src="app.js"></script>
     <script>
         // State
@@ -1695,14 +1697,6 @@
             const slider = document.getElementById('leverageSlider');
             const value = parseInt(slider.value);
             document.getElementById('leverageDisplay').textContent = value + 'x';
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-
-            document.getElementById('depositTab').classList.toggle('hidden', tab !== 'deposit');
-            document.getElementById('withdrawTab').classList.toggle('hidden', tab !== 'withdraw');
         }
 
         // Backend URL - PIX Bridge Server
