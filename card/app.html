@@ -3,18 +3,18 @@
 <head>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1Y391HW7NT');</script>
+<script src="/shared/js/ga4.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EFIX Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/css/reset.css">
+  <link rel="stylesheet" href="/shared/css/vars-syne.css">
+  <link rel="stylesheet" href="/shared/css/components.css">
   <style>
-    :root {
-      --black: #000; --white: #fff; --gray-100: #f5f5f5; --gray-200: #e5e5e5;
-      --gray-400: #999; --gray-600: #666; --gray-800: #222;
-      --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --gray-400: #999; --gray-600: #666; --gray-800: #222; }
     body { font-family: 'Syne', sans-serif; background: var(--white); color: var(--black); min-height: 100vh; }
 
     /* Layout */
@@ -81,8 +81,6 @@
     .toast.show { opacity: 1; }
 
     /* Spinner */
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Tabs */
     .tabs { display: flex; border-bottom: 1px solid var(--gray-200); margin-bottom: 16px; }
@@ -285,13 +283,14 @@
   <div class="toast" id="toast"></div>
 </div>
 
+<script src="/shared/js/config.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 //  CONFIG
 // ═══════════════════════════════════════════════════════════════
 
-const PROXY_URL = 'https://efix-bridge-proxy-production.up.railway.app';
-const ALCHEMY_KEY = '5QrXWREEtmi4gITNoJsJf';
+const PROXY_URL = EFIX_CONFIG.bridgeProxy;
+const ALCHEMY_KEY = EFIX_CONFIG.alchemy;
 
 // Demo mode: ?demo=true in URL uses sandbox Bridge (cards work)
 const IS_DEMO = new URLSearchParams(window.location.search).get('demo') === 'true';

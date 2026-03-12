@@ -3,13 +3,14 @@
 <head>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1Y391HW7NT');</script>
+<script src="/shared/js/ga4.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Range Monitor — efixDI/USDC | EFIX Protocol</title>
     <meta name="description" content="Live Uniswap V3 liquidity range monitor for efixDI/USDC on Polygon.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◈</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shared/css/reset.css">
     <style>
         :root {
             --bg: #ffffff;
@@ -32,7 +33,7 @@
             --mono: 'JetBrains Mono', monospace;
             --sans: 'Inter', -apple-system, sans-serif;
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
+
         body { font-family:var(--sans); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
 
         /* NAV — matches protocol page */
@@ -395,6 +396,7 @@
     <div class="ft-bot">© 2026 Efix Securitizadora S.A. · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025</div>
 </footer>
 
+<script src="/shared/js/config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
 <script>
 (function(){
@@ -402,9 +404,9 @@
         pid:2847354,
         nft:'0xC36442b4a4522E871399CD717aBDD847Ab11FE88',
         fac:'0x1F98431c8aD98523631AE4a59f267346ea31F984',
-        efixDI:'0x04082b283818D9d0dd9Ee8742892eEe5CC396441',
-        efixDI_base:'0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608',
-        rpcs:['https://polygon-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf','https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://1rpc.io/matic'],
+        efixDI:EFIX_CONFIG.contracts.efixPolygon,
+        efixDI_base:EFIX_CONFIG.contracts.efixBase,
+        rpcs:[EFIX_CONFIG.rpc.polygon,'https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://1rpc.io/matic'],
         rpcs_base:['https://base-rpc.publicnode.com','https://base.drpc.org','https://1rpc.io/base'],
         ms:30000, z:1.96, vol:0.105, days:30,
     };

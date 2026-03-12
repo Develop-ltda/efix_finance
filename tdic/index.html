@@ -2,14 +2,14 @@
 <html lang="pt-BR"><head>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1Y391HW7NT');</script>
+<script src="/shared/js/ga4.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EFIX Securitizadora</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<link rel="stylesheet" href="/shared/css/reset.css">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:#FAFBFD;color:#111827;font-size:14px}
 .mono{font-family:'JetBrains Mono',monospace}
 input,select,textarea{font-family:'Inter',sans-serif;font-size:13px;padding:8px 10px;border:1px solid #D1D5DB;border-radius:8px;outline:none;background:#fff;width:100%;transition:border .2s}
@@ -36,17 +36,18 @@ tr:hover td{background:#F9FAFB}
 }
 </style>
 </head><body><div id="root"></div>
+<script src="/shared/js/config.js"></script>
 <script>
 const{createElement:h,useState,useEffect,Fragment}=React;
 const c={accent:"#6366F1",green:"#10B981",red:"#EF4444",amber:"#F59E0B",purple:"#8B5CF6",blue:"#3B82F6",bg:"#FAFBFD",dim:"#6B7280",sec:"#9CA3AF",border:"#E5E7EB"};
-const LOGO="https://efix-securitizadora-production.up.railway.app/efix-logo.png";
+const LOGO=EFIX_CONFIG.securitizadora+"/efix-logo.png";
 const fB=v=>"R$ "+Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
 const fP=v=>Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})+"%";
 const fD=d=>{if(!d)return"\u2014";return new Date(d+"T12:00:00").toLocaleDateString("pt-BR")};
 const dA=d=>{if(!d)return 0;const h=new Date();h.setHours(0,0,0,0);return Math.ceil((new Date(d+"T12:00:00")-h)/864e5)};
 const hj=()=>new Date().toISOString().split("T")[0];
 
-const API_BASE="https://efix-securitizadora-production.up.railway.app";const api=async(m,u,b)=>{try{const r=await fetch(API_BASE+u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});return await r.json()}catch(e){return{ok:false,error:e.message}}};
+const API_BASE=EFIX_CONFIG.securitizadora;const api=async(m,u,b)=>{try{const r=await fetch(API_BASE+u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});return await r.json()}catch(e){return{ok:false,error:e.message}}};
 
 const SEED=[
 {id:"REC-001",dupl:"14550-5",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:51384.99,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
@@ -78,10 +79,7 @@ function In({label:l,value:v,onChange:oc,placeholder:ph,type:t,prefix:px,suffix:
 
 function exportCSV(d,f){if(!d.length)return;const k=Object.keys(d[0]);const csv=[k.join(";"),...d.map(r=>k.map(x=>String(r[x]||"").replace(/;/g,",")).join(";"))].join("\n");const b=new Blob(["\uFEFF"+csv],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=f;a.click();URL.revokeObjectURL(u);}
 
-function gerarCR(rec,par){const html="<!DOCTYPE html><html><head>
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1Y391HW7NT');</script><meta charset='UTF-8'><title>CR "+rec.dupl+"</title><style>body{font-family:Arial;max-width:800px;margin:40px auto;padding:20px;color:#333}h1{color:#6366F1;border-bottom:2px solid #6366F1;padding-bottom:10px}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border:1px solid #ddd;padding:8px 12px;text-align:left;font-size:13px}th{background:#F3F4F6}.ft{margin-top:40px;border-top:1px solid #ddd;padding-top:16px;font-size:11px;color:#888;text-align:center}</style></head><body><h1>CR "+rec.dupl+"</h1><p>"+par.nomeSecuritizadora+" CNPJ "+par.cnpjSecuritizadora+"</p><table><tr><th>Duplicata</th><td>"+rec.dupl+"</td><th>Op</th><td>"+rec.op+"</td></tr><tr><th>Valor</th><td>R$ "+(rec.valor||0).toLocaleString("pt-BR",{minimumFractionDigits:2})+"</td><th>Vencto</th><td>"+fD(rec.vencto)+"</td></tr><tr><th>Cedente</th><td>"+rec.cedente+"</td><th>CNPJ</th><td>"+rec.cnpjCedente+"</td></tr><tr><th>Sacado</th><td>"+rec.sacado+"</td><th>CNPJ</th><td>"+rec.cnpjSacado+"</td></tr><tr><th>Desconto</th><td>"+par.txDesconto+"%</td><th>Royalty</th><td>"+par.royalty+"%</td></tr><tr><th>Regime</th><td colspan='3'>"+(rec.op==="Siderqu\u00edmica"?"IR Regressivo":"Ganho Capital GCAP")+"</td></tr></table><div class='ft'>Gerado em "+new Date().toLocaleString("pt-BR")+"</div></body></html>";const b=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="CR-"+rec.dupl+".html";a.click();URL.revokeObjectURL(u);}
+function gerarCR(rec,par){const html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>CR "+rec.dupl+"</title><style>body{font-family:Arial;max-width:800px;margin:40px auto;padding:20px;color:#333}h1{color:#6366F1;border-bottom:2px solid #6366F1;padding-bottom:10px}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border:1px solid #ddd;padding:8px 12px;text-align:left;font-size:13px}th{background:#F3F4F6}.ft{margin-top:40px;border-top:1px solid #ddd;padding-top:16px;font-size:11px;color:#888;text-align:center}</style></head><body><h1>CR "+rec.dupl+"</h1><p>"+par.nomeSecuritizadora+" CNPJ "+par.cnpjSecuritizadora+"</p><table><tr><th>Duplicata</th><td>"+rec.dupl+"</td><th>Op</th><td>"+rec.op+"</td></tr><tr><th>Valor</th><td>R$ "+(rec.valor||0).toLocaleString("pt-BR",{minimumFractionDigits:2})+"</td><th>Vencto</th><td>"+fD(rec.vencto)+"</td></tr><tr><th>Cedente</th><td>"+rec.cedente+"</td><th>CNPJ</th><td>"+rec.cnpjCedente+"</td></tr><tr><th>Sacado</th><td>"+rec.sacado+"</td><th>CNPJ</th><td>"+rec.cnpjSacado+"</td></tr><tr><th>Desconto</th><td>"+par.txDesconto+"%</td><th>Royalty</th><td>"+par.royalty+"%</td></tr><tr><th>Regime</th><td colspan='3'>"+(rec.op==="Siderqu\u00edmica"?"IR Regressivo":"Ganho Capital GCAP")+"</td></tr></table><div class='ft'>Gerado em "+new Date().toLocaleString("pt-BR")+"</div></body></html>";const b=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="CR-"+rec.dupl+".html";a.click();URL.revokeObjectURL(u);}
 
 const pages=["Dashboard","Opera\u00e7\u00f5es","Receb\u00edveis","Concilia\u00e7\u00e3o","On-Chain","Cadastros","Par\u00e2metros"];
 const icons={"Dashboard":"\u25c8","Opera\u00e7\u00f5es":"\u25c9","Receb\u00edveis":"\u25a4","Concilia\u00e7\u00e3o":"\u2713","On-Chain":"\u25c7","Cadastros":"\u25ce","Par\u00e2metros":"\u2699"};

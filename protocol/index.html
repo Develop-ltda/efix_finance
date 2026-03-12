@@ -3,7 +3,7 @@
 <head>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1Y391HW7NT');</script>
+<script src="/shared/js/ga4.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>efixDI+ Protocol Dashboard</title>
@@ -11,30 +11,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shared/css/reset.css">
+    <link rel="stylesheet" href="/shared/css/vars-syne.css">
+    <link rel="stylesheet" href="/shared/css/nav-syne.css">
+    <link rel="stylesheet" href="/shared/css/components.css">
     <style>
-        :root {
-            --black: #000000;
-            --white: #ffffff;
-            --gray-100: #f5f5f5;
-            --gray-200: #e5e5e5;
-            --gray-300: #d4d4d4;
-            --gray-400: #a3a3a3;
-            --gray-500: #737373;
-            --gray-600: #525252;
-            --gray-700: #404040;
-            --gray-800: #262626;
-            --gray-900: #171717;
-            --green: #22c55e;
-            --green-bg: #f0fdf4;
-            --red: #ef4444;
-            --red-bg: #fef2f2;
-            --yellow: #f59e0b;
-            --yellow-bg: #fffbeb;
-            --blue: #3b82f6;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Syne', -apple-system, sans-serif;
             background: var(--white);
@@ -44,42 +25,6 @@
         }
 
         ::selection { background: var(--black); color: var(--white); }
-
-        /* Nav */
-        nav {
-            position: fixed; top: 0; left: 0; right: 0;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--gray-200);
-            z-index: 1000; padding: 1rem 2rem;
-        }
-
-        .nav-content {
-            max-width: 1400px; margin: 0 auto;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--black); }
-        .nav-logo img { height: 32px; width: auto; }
-        .nav-logo span { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em; }
-
-        .nav-right { display: flex; align-items: center; gap: 2rem; }
-
-        .nav-links { display: flex; gap: 2rem; list-style: none; }
-        .nav-links a {
-            color: var(--gray-600); text-decoration: none; font-size: 0.875rem;
-            font-weight: 500; letter-spacing: 0.02em; transition: color 0.2s;
-        }
-        .nav-links a:hover, .nav-links a.active { color: var(--black); }
-
-        .nav-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: var(--gray-100); padding: 6px 14px;
-            border-radius: 50px; font-size: 0.75rem; color: var(--gray-600); font-weight: 600;
-        }
-        .nav-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
         /* Container */
         .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
@@ -241,9 +186,6 @@
         footer a { color: var(--gray-300); text-decoration: none; }
         footer a:hover { color: var(--white); }
 
-        /* Tab panels */
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
     </style>
 </head>
 <body>
@@ -377,13 +319,16 @@
     <p style="margin-top:8px;font-size:.72rem">EFIX Securitizadora — CVM Resolution 88/2022</p>
 </footer>
 
+<script src="/shared/js/config.js"></script>
+<script src="/shared/js/formatters.js"></script>
 <script>
 // ═══════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════
-const BE='https://efixdi-backend-production.up.railway.app';
+const BE=EFIX_CONFIG.backend;
 const AK='efixdi-admin-2026';
 const SELIC=14.90,MBR=0.67,PF=0.20,LLTV=0.77;
+const fmt=fmtNum;
 
 // ═══════════════════════════════════════
 // MATH
@@ -396,7 +341,6 @@ function riskInfo(hf){
   if(hf>=1.0)return{t:'AUTO-DELEV',c:'badge-yellow'};
   return{t:'LIQUIDATION',c:'badge-red'};
 }
-function fmt(n){return n.toLocaleString('pt-BR',{maximumFractionDigits:0})}
 
 // ═══════════════════════════════════════
 // LIVE DATA

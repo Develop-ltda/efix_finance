@@ -3,14 +3,17 @@
 <head>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1Y391HW7NT');</script>
+<script src="/shared/js/ga4.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EFIX Card — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/css/reset.css">
+  <link rel="stylesheet" href="/shared/css/vars-syne.css">
   <style>
-    :root { --black:#000; --white:#fff; --gray-100:#f5f5f5; --gray-200:#e5e5e5; --gray-400:#999; --gray-600:#666; --green:#22c55e; --red:#ef4444; --blue:#3b82f6; --orange:#f59e0b; }
-    * { margin:0; padding:0; box-sizing:border-box; }
+    :root { --gray-400: #999; --gray-600: #666; --orange: #f59e0b; }
     body { font-family:'Syne',sans-serif; background:var(--white); color:var(--black); }
     .container { max-width:1100px; margin:0 auto; padding:24px 16px; }
     .header { display:flex; align-items:center; justify-content:space-between; padding:12px 0 24px; border-bottom:1px solid var(--gray-200); margin-bottom:24px; }
@@ -230,18 +233,19 @@
   </div>
 </div>
 
+<script src="/shared/js/config.js"></script>
+<script src="/shared/js/rpc.js"></script>
 <script>
-const PROXY = 'https://efix-bridge-proxy-production.up.railway.app';
-const ALCHEMY = '5QrXWREEtmi4gITNoJsJf';
-const POLY_RPC = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY}`;
-const BASE_RPC = `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY}`;
-const OP = '0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
+const PROXY = EFIX_CONFIG.bridgeProxy;
+const POLY_RPC = EFIX_CONFIG.rpc.polygon;
+const BASE_RPC = EFIX_CONFIG.rpc.base;
+const OP = EFIX_CONFIG.contracts.operator;
 const ADDRS = {
-  polyEfix: '0x04082b283818D9d0dd9Ee8742892eEe5CC396441',
-  baseEfix: '0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608',
-  baseUSDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  morpho: '0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb',
-  marketId: '0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a',
+  polyEfix: EFIX_CONFIG.contracts.efixPolygon,
+  baseEfix: EFIX_CONFIG.contracts.efixBase,
+  baseUSDC: EFIX_CONFIG.contracts.usdcBase,
+  morpho: EFIX_CONFIG.contracts.morpho,
+  marketId: EFIX_CONFIG.contracts.morphoMarketId,
 };
 
 let adminToken = '', allUsers = [], chain = {};
@@ -268,13 +272,6 @@ document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', (
   t.classList.add('active');
   document.getElementById(t.dataset.tab).classList.add('active');
 }));
-
-// RPC
-async function rpc(url, to, data) {
-  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_call',params:[{to,data},'latest']})});
-  return (await r.json()).result;
-}
-function balOf(addr) { return '0x70a08231' + addr.slice(2).padStart(64,'0'); }
 
 // Chain data
 async function loadChain() {
