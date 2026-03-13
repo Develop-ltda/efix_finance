@@ -1,553 +1,306 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>efixDI+ Protocol Operations</title>
+<meta http-equiv="Pragma" content="no-cache">
+<title>efixDI+ Admin v5</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
-:root{
-  --bg:#08090a;--surface:#0f1114;--card:#141619;--card-hover:#1a1d21;
-  --border:#1e2228;--border-hover:#2a2f38;
-  --text:#e8eaed;--text-secondary:#8b8f96;--text-muted:#555960;
-  --green:#10b981;--green-dim:rgba(16,185,129,0.08);--green-glow:rgba(16,185,129,0.15);
-  --red:#ef4444;--red-dim:rgba(239,68,68,0.08);
-  --yellow:#f59e0b;--yellow-dim:rgba(245,158,11,0.08);
-  --blue:#3b82f6;--blue-dim:rgba(59,130,246,0.08);
-  --purple:#8b5cf6;
-  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-::selection{background:var(--green);color:var(--bg)}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased;min-height:100vh}
-.container{max-width:1200px;margin:0 auto;padding:24px}
-h1{font-family:var(--font);font-size:24px;font-weight:800;letter-spacing:-0.03em;color:var(--text)}
-h2{font-family:var(--mono);font-size:10px;color:var(--text-muted);margin:0 0 16px;text-transform:uppercase;letter-spacing:3px;font-weight:500}
-
-/* Login */
-.login{max-width:380px;margin:15vh auto;text-align:center;background:var(--card);padding:48px 36px;border-radius:20px;border:1px solid var(--border);box-shadow:0 0 80px rgba(16,185,129,0.03),0 24px 48px rgba(0,0,0,0.4)}
-.login h1{font-size:32px;margin-bottom:4px}
-.login-subtitle{color:var(--text-muted);font-size:13px;margin-bottom:36px;font-family:var(--mono);letter-spacing:0.5px}
-.login-divider{margin-top:28px;border-top:1px solid var(--border);padding-top:20px}
-.login-divider p{color:var(--text-muted);font-size:11px;margin-bottom:12px;font-family:var(--mono)}
-
-/* Forms */
-input,select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:10px;font-family:var(--mono);font-size:13px;width:100%;transition:all .2s}
-input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim)}
-input::placeholder{color:var(--text-muted)}
-button{background:var(--green);color:var(--bg);border:none;padding:11px 20px;border-radius:10px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;width:100%;transition:all .25s;letter-spacing:0.5px}
-button:hover{opacity:0.9;transform:translateY(-1px);box-shadow:0 4px 16px rgba(16,185,129,0.2)}
-button.danger{background:var(--red)}
-button.secondary{background:var(--surface);color:var(--text-secondary);border:1px solid var(--border)}
-button.secondary:hover{border-color:var(--text-muted);color:var(--text);transform:none;box-shadow:none}
-button.sm{width:auto;padding:7px 16px;font-size:11px}
-
-/* Header */
-.header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid var(--border);margin-bottom:24px}
-.header-left{display:flex;align-items:baseline;gap:12px}
-.header-reg{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:0.5px;padding:4px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border)}
-.header-status{display:flex;align-items:center;gap:8px}
-.header-status .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-#userInfo{display:flex;align-items:center;gap:10px;margin-left:20px}
-#userPic{width:30px;height:30px;border-radius:50%;display:none;border:2px solid var(--border)}
-#userName{font-size:12px;color:var(--text-secondary);font-family:var(--mono)}
-
-/* Stats */
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 16px;text-align:center;transition:all .3s;position:relative;overflow:hidden}
-.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:0;transition:opacity .3s}
-.stat:hover{border-color:var(--border-hover)}.stat:hover::before{opacity:1}
-.stat .num{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--green);line-height:1.1}
-.stat .lbl{font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-top:8px;text-transform:uppercase;letter-spacing:2px}
-@media(max-width:768px){.stats{grid-template-columns:repeat(3,1fr)}}
-
-/* Tabs */
-.tab-bar{display:flex;gap:2px;margin-bottom:24px;background:var(--surface);border-radius:12px;padding:4px;border:1px solid var(--border)}
-.tab-btn{background:none;border:none;color:var(--text-muted);font-family:var(--mono);font-size:11px;padding:10px 18px;cursor:pointer;border-radius:9px;width:auto;font-weight:500;transition:all .2s;letter-spacing:0.3px}
-.tab-btn:hover{color:var(--text-secondary)}
-.tab-btn.active{color:var(--green);background:var(--card);font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.tab-content{display:none}.tab-content.active{display:block}
-
-/* Cards */
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;transition:border-color .2s}
-.card:hover{border-color:var(--border-hover)}
-
-/* Tables */
-.tbl{width:100%;border-collapse:collapse}
-.tbl th{font-family:var(--mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface)}
-.tbl td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary);font-family:var(--mono);font-size:12px}
-.tbl tr:hover td{background:rgba(16,185,129,0.02)}
-.addr{color:var(--text-muted);font-size:11px;font-family:var(--mono)}
-
-/* Badges */
-.badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;font-family:var(--mono);letter-spacing:0.5px}
-.badge.pending{background:var(--yellow-dim);color:var(--yellow)}
-.badge.confirmed,.badge.completed,.badge.locked,.badge.minted{background:var(--green-dim);color:var(--green)}
-.badge.failed{background:var(--red-dim);color:var(--red)}
-.badge.minting,.badge.queued{background:var(--blue-dim);color:var(--blue)}
-
-/* LZ Messages */
-.lz-msg{display:flex;align-items:center;gap:14px;padding:12px 14px;border-bottom:1px solid var(--border);transition:background .15s}
-.lz-msg:hover{background:rgba(16,185,129,0.02)}
-.lz-msg:last-child{border-bottom:none}
-.lz-status{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;white-space:nowrap;min-width:78px;text-align:center;letter-spacing:0.5px}
-.lz-status.delivered{background:var(--green-dim);color:var(--green)}
-.lz-status.inflight{background:var(--yellow-dim);color:var(--yellow);animation:lzPulse 1.5s ease infinite}
-.lz-status.failed,.lz-status.blocked{background:var(--red-dim);color:var(--red)}
-@keyframes lzPulse{0%,100%{opacity:1}50%{opacity:.4}}
-.lz-chain{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px;font-family:var(--mono)}
-.lz-chain .arrow{color:var(--green);font-weight:700;font-size:13px}
-.lz-time{font-size:11px;color:var(--text-muted);white-space:nowrap;font-family:var(--mono)}
-.lz-hash{font-size:10px;color:var(--text-muted);text-decoration:none;font-family:var(--mono);transition:color .2s;letter-spacing:0.3px}
-.lz-hash:hover{color:var(--green)}
-.lz-nonce{font-size:11px;color:var(--text-muted);font-family:var(--mono);min-width:24px;font-weight:500}
-.lz-new{animation:lzNewFlash 2s ease;background:var(--green-dim)}
-@keyframes lzNewFlash{0%{background:var(--green-glow)}100%{background:transparent}}
-
-/* Poll indicator */
-.lz-poll-indicator{position:fixed;bottom:20px;right:20px;font-size:10px;color:var(--text-muted);font-family:var(--mono);z-index:50;display:flex;align-items:center;gap:7px;background:var(--card);padding:6px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.lz-poll-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:lzPulse 2s ease infinite}
-
-/* Misc */
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:2px;font-weight:500}
-.toast{position:fixed;top:20px;right:20px;background:var(--green);color:var(--bg);padding:14px 22px;border-radius:10px;font-family:var(--mono);font-size:12px;font-weight:700;z-index:999;display:none;box-shadow:0 8px 32px rgba(16,185,129,.25)}
-.empty{color:var(--text-muted);font-size:13px;text-align:center;padding:48px 20px;font-family:var(--mono)}
-#app{display:none}
-.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px}
-.dot.green{background:var(--green);box-shadow:0 0 8px var(--green)}
-.iframe-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
-.iframe-wrap iframe{width:100%;height:calc(100vh - 260px);border:none}
-
-/* External links grid */
-.ext-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.ext-link{text-decoration:none;display:block;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;transition:all .2s}
-.ext-link:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 4px 16px rgba(16,185,129,0.08)}
-.ext-link .icon{font-size:20px;margin-bottom:6px}
-.ext-link .name{font-size:12px;color:var(--text);font-weight:500}
-.ext-link .desc{font-size:10px;color:var(--text-muted);margin-top:3px;font-family:var(--mono)}
-
-/* Subtle noise texture */
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  :root{--black:#0a0a0a;--white:#fff;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--card:#111;--border:#1f1f1f;--gray-600:#666;--gray-500:#888;--gray-400:#aaa;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--black);color:var(--white);font-family:var(--font-mono);font-size:13px}
+  .container{max-width:1100px;margin:0 auto;padding:20px}
+  h1{font-family:var(--font-display);font-size:22px}
+  h2{font-size:13px;color:var(--green);margin:0 0 12px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+  .login{max-width:360px;margin:120px auto;text-align:center}
+  input,select{background:#1a1a1a;border:1px solid var(--border);color:var(--white);padding:10px 14px;border-radius:8px;font-family:var(--font-mono);font-size:13px;width:100%}
+  input:focus{outline:none;border-color:var(--green)}
+  button{background:var(--green);color:var(--black);border:none;padding:10px 20px;border-radius:8px;font-family:var(--font-mono);font-size:12px;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s}
+  button:hover{opacity:0.85}
+  button.danger{background:var(--red);color:var(--white)}
+  button.secondary{background:#222;color:var(--gray-400)}
+  button.sm{width:auto;padding:6px 14px;font-size:11px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+  .header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+  .stat .num{font-size:20px;font-weight:700;color:var(--green);line-height:1.2}
+  .stat .lbl{font-size:10px;color:var(--gray-500);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+  @media(max-width:768px){.stats{grid-template-columns:repeat(3,1fr)}}
+  .tab-bar{display:flex;gap:2px;margin-bottom:20px;background:#111;border-radius:10px;padding:3px;border:1px solid var(--border)}
+  .tab-btn{background:none;border:none;color:var(--gray-500);font-family:var(--font-mono);font-size:12px;padding:8px 16px;cursor:pointer;border-radius:8px;width:auto;font-weight:400}
+  .tab-btn.active{color:var(--white);background:#222;font-weight:700}
+  .tab-content{display:none}.tab-content.active{display:block}
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+  .tbl td{padding:8px 10px;border-bottom:1px solid #1a1a1a;font-size:12px}
+  .tbl tr:hover td{background:#1a1a1a}
+  .addr{color:var(--gray-400)}.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+  .badge.pending{background:rgba(234,179,8,0.15);color:#eab308}
+  .badge.confirmed,.badge.completed,.badge.locked,.badge.minted,.badge.locked_onchain{background:rgba(34,197,94,0.15);color:#22c55e}
+  .badge.failed{background:rgba(239,68,68,0.15);color:#ef4444}
+  .badge.minting,.badge.queued{background:rgba(59,130,246,0.15);color:#3b82f6}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .form-group{margin-bottom:12px}
+  .form-group label{display:block;font-size:10px;color:var(--gray-500);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+  .toast{position:fixed;top:20px;right:20px;background:var(--green);color:var(--black);padding:12px 20px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;display:none}
+  .empty{color:var(--gray-600);font-size:12px;text-align:center;padding:40px}
+  #app{display:none}
+  .dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px}
+  .dot.green{background:var(--green)}
+  .iframe-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#fff}
+  .iframe-wrap iframe{width:100%;height:calc(100vh - 260px);border:none}
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="toast" class="toast"></div>
-<div id="lzPollIndicator" class="lz-poll-indicator" style="display:none"><span class="lz-poll-dot"></span><span id="lzPollText">LZ: polling</span></div>
-
-<!-- LOGIN -->
 <div id="login-screen" class="login">
-  <h1>efixDI<span style="color:var(--green)">+</span></h1>
-  <div class="login-subtitle">Protocol Operations</div>
-  <div id="g_id_onload"
-    data-client_id="299439946528-3vqe63ie5l318h3g73t3lv0d8f0ahd1v.apps.googleusercontent.com"
-    data-callback="handleGoogleLogin"
-    data-auto_prompt="false"
-    data-context="signin"
-    data-ux_mode="popup">
-  </div>
-  <div class="g_id_signin"
-    data-type="standard"
-    data-shape="rectangular"
-    data-theme="filled_black"
-    data-text="signin_with"
-    data-size="large"
-    data-logo_alignment="left"
-    data-width="320">
-  </div>
-  <div id="loginError" style="margin-top:16px;font-size:11px;color:var(--red);min-height:20px;font-family:var(--mono)"></div>
-  <div class="login-divider">
-    <p>Or use admin key</p>
-    <div class="form-group"><input type="password" id="adminKey" placeholder="Admin Key" onkeydown="if(event.key==='Enter')loginLegacy()"></div>
-    <button onclick="loginLegacy()" class="secondary" style="font-size:11px;">Sign In</button>
-  </div>
+  <h1 style="margin-bottom:4px;">efixDI<span style="color:var(--green)">+</span></h1>
+  <p style="color:var(--gray-500);font-size:12px;margin-bottom:32px;">Protocol Operations</p>
+  <div class="form-group"><input type="password" id="adminKey" placeholder="Admin Key" onkeydown="if(event.key==='Enter')login()"></div>
+  <button onclick="login()">Entrar</button>
 </div>
-
-<!-- APP -->
 <div id="app" class="container">
   <div class="header">
-    <div class="header-left">
-      <h1>efixDI<span style="color:var(--green)">+</span></h1>
-      <span class="header-reg">CVM Act 23.635/2025</span>
-    </div>
-    <div class="header-status">
-      <span class="dot green"></span>
-      <span id="healthText" style="font-size:12px;font-family:var(--mono);color:var(--text-secondary)">Connected</span>
-      <span id="healthMeta" style="font-size:10px;color:var(--text-muted);font-family:var(--mono);margin-left:4px">...</span>
-    </div>
-    <div id="userInfo"><img id="userPic"><span id="userName"></span><button class="sm secondary" onclick="logout()" style="font-size:10px;padding:5px 12px;">Sign Out</button></div>
+    <div><h1>efixDI<span style="color:var(--green)">+</span> Operations</h1><span style="font-size:11px;color:var(--gray-500)">CVM Act 23.635/2025</span></div>
+    <div style="text-align:right"><span class="dot green"></span><span id="healthText" style="font-size:11px;">Connected</span><br><span id="healthMeta" style="font-size:10px;color:var(--gray-500)">...</span></div>
   </div>
-
   <div class="stats">
-    <div class="stat"><div class="num" id="statTVL">-</div><div class="lbl">TVL (USD)</div></div>
+    <div class="stat"><div class="num" id="statTVL">-</div><div class="lbl">TVL (efixDI)</div></div>
     <div class="stat"><div class="num" id="statPolygon">-</div><div class="lbl">Polygon</div></div>
     <div class="stat"><div class="num" id="statBase">-</div><div class="lbl">Base</div></div>
-    <div class="stat"><div class="num" id="statUsers">-</div><div class="lbl">Wallets</div></div>
+    <div class="stat"><div class="num" id="statUsers">-</div><div class="lbl">Users</div></div>
     <div class="stat"><div class="num" id="statMatic">-</div><div class="lbl">POL</div></div>
-    <div class="stat"><div class="num" id="statCollateral">-</div><div class="lbl">Locked</div></div>
+    <div class="stat"><div class="num" id="statCollateral">-</div><div class="lbl">Vault Locked</div></div>
   </div>
-
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchAdminTab('mint',this)">Mint</button>
-    <button class="tab-btn" onclick="switchAdminTab('deposits',this)">Deposits</button>
-    <button class="tab-btn" onclick="switchAdminTab('withdrawals',this)">Withdrawals</button>
-    <button class="tab-btn" onclick="switchAdminTab('collateral',this)">Collateral</button>
-    <button class="tab-btn" onclick="switchAdminTab('protocol',this)">Protocol</button>
-    <button class="tab-btn" onclick="switchAdminTab('bridge',this)" id="bridgeTabBtn">Bridge <span id="lzBadge" style="display:none;background:var(--green);color:var(--bg);font-size:9px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700;animation:lzPulse 1.5s ease infinite"></span></button>
-    <button class="tab-btn" onclick="switchAdminTab('dashboard',this)">Dashboard</button>
+    <button class="tab-btn active" onclick="switchTab('mint',this)">Mint</button>
+    <button class="tab-btn" onclick="switchTab('deposits',this)">Depósitos</button>
+    <button class="tab-btn" onclick="switchTab('withdrawals',this)">Saques</button>
+    <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
+    <button class="tab-btn" onclick="switchTab('protocol',this)">Protocolo</button>
+    <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
+    <button class="tab-btn" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
   </div>
-
-  <!-- MINT -->
   <div class="tab-content active" id="tab-mint">
     <div class="card">
       <h2>Mint efixDI</h2>
       <div class="form-row"><div class="form-group"><label>Wallet Address</label><input type="text" id="mintAddress" placeholder="0x..."></div><div class="form-group"><label>Amount (BRL)</label><input type="number" id="mintAmount" placeholder="20" min="1"></div></div>
       <div class="form-group"><label>Reference</label><input type="text" id="mintRef" placeholder="PIX-FRIEND-20BRL (optional)"></div>
       <button onclick="doMint()">Mint efixDI</button>
-      <div id="mintResult" style="margin-top:14px;min-height:20px;font-family:var(--mono);font-size:12px"></div>
+      <div id="mintResult" style="margin-top:12px;min-height:20px;"></div>
     </div>
   </div>
-
-  <!-- DEPOSITS -->
   <div class="tab-content" id="tab-deposits">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h2 style="margin:0">Wallet Deposits</h2><button class="sm secondary" onclick="loadDeposits()">Refresh</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">Wallet Deposits</h2><button class="sm secondary" onclick="loadDeposits()">Refresh</button></div>
       <div id="depositsList"></div>
     </div>
   </div>
-
-  <!-- WITHDRAWALS -->
   <div class="tab-content" id="tab-withdrawals">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h2 style="margin:0">Withdrawal Requests</h2><button class="sm secondary" onclick="loadWithdrawals()">Refresh</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">Withdrawal Requests</h2><button class="sm secondary" onclick="loadWithdrawals()">Refresh</button></div>
       <div id="withdrawalsList"></div>
     </div>
   </div>
-
-  <!-- COLLATERAL -->
   <div class="tab-content" id="tab-collateral">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h2 style="margin:0">Collateral Positions</h2><button class="sm secondary" onclick="loadCollateral()">Refresh</button></div>
-      <div id="collateralSummary" style="margin-bottom:16px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">Collateral Vault (On-Chain)</h2><button class="sm secondary" onclick="loadCollateral()">Refresh</button></div>
+      <div id="vaultState" style="margin-bottom:16px"></div>
+      <div id="vaultPositions"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">Collateral History (DB)</h2><button class="sm secondary" onclick="loadCollateralHistory()">Refresh</button></div>
       <div id="collateralList"></div>
     </div>
   </div>
-
-  <!-- PROTOCOL -->
   <div class="tab-content" id="tab-protocol">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="card"><h2>Protocol State — Polygon</h2><div id="protocolState">Loading...</div></div>
-      <div class="card"><h2>Morpho Position — Base</h2><div id="morphoState">Loading...</div></div>
+      <div class="card">
+        <h2>Protocol State (Polygon)</h2>
+        <div id="protocolState">Loading...</div>
+      </div>
+      <div class="card">
+        <h2>Morpho Position (Base)</h2>
+        <div id="morphoState">Loading...</div>
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="card"><h2>Operator — Polygon</h2><div id="operatorInfo">Loading...</div></div>
-      <div class="card"><h2>Operator — Base</h2><div id="operatorBase">Loading...</div></div>
+      <div class="card">
+        <h2>Operator (Polygon)</h2>
+        <div id="operatorInfo">Loading...</div>
+      </div>
+      <div class="card">
+        <h2>Operator (Base)</h2>
+        <div id="operatorBase">Loading...</div>
+      </div>
     </div>
     <div class="card">
       <h2>External Dashboards</h2>
-      <div class="ext-grid">
-        <a href="https://efix.finance/protocol/" target="_blank" class="ext-link"><div class="icon">📊</div><div class="name">Protocol Dashboard</div><div class="desc">APY · Stress Tests</div></a>
-        <a href="https://efix.finance/range-monitor" target="_blank" class="ext-link"><div class="icon">🎯</div><div class="name">Range Monitor</div><div class="desc">Uniswap V3 · GBM</div></a>
-        <a href="https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a" target="_blank" class="ext-link"><div class="icon">🏦</div><div class="name">Morpho Market</div><div class="desc">efixDI/USDC</div></a>
-        <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" class="ext-link"><div class="icon">🌉</div><div class="name">LayerZero Bridge</div><div class="desc">OFT Adapter</div></a>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <a href="https://efix.finance/protocol/" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">📊</div><div style="font-size:11px;color:var(--white);">Protocol Dashboard</div><div style="font-size:10px;color:var(--gray-500)">APY · Stress Tests</div></a>
+        <a href="https://efix.finance/range-monitor/" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🎯</div><div style="font-size:11px;color:var(--white);">Range Monitor</div><div style="font-size:10px;color:var(--gray-500)">Uniswap V3 · GBM</div></a>
+        <a href="https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🏦</div><div style="font-size:11px;color:var(--white);">Morpho Market</div><div style="font-size:10px;color:var(--gray-500)">efixDI/USDC</div></a>
+        <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🌉</div><div style="font-size:11px;color:var(--white);">LayerZero Bridge</div><div style="font-size:10px;color:var(--gray-500)">OFT Adapter</div></a>
       </div>
     </div>
   </div>
-
-  <!-- BRIDGE -->
   <div class="tab-content" id="tab-bridge">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       <div class="card">
         <h2>Bridge efixDI → Base</h2>
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:18px;font-family:var(--mono);line-height:1.5">Transfer efixDI from operator on Polygon to Base via LayerZero V2 OFT. Tokens arrive on Base in ~2-5 minutes.</p>
-        <div class="form-group"><label>Amount (efixDI)</label><input type="number" id="bridgeAmount" placeholder="50" min="1"></div>
+        <p style="font-size:11px;color:var(--gray-500);margin-bottom:16px;">Transfer efixDI from vault/operator on Polygon to Base via LayerZero V2 OFT. If user address provided, releases from vault first (bridgeCollateral → OFT).</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Amount (efixDI)</label>
+            <input type="number" id="bridgeAmount" placeholder="50" min="1">
+          </div>
+          <div class="form-group">
+            <label>User Address (optional — for vault)</label>
+            <input type="text" id="bridgeUser" placeholder="0x... (leave empty for operator pool)">
+          </div>
+        </div>
         <button onclick="doBridge()">Bridge to Base</button>
-        <div id="bridgeResult" style="margin-top:14px;min-height:20px;font-size:12px;font-family:var(--mono)"></div>
+        <div id="bridgeResult" style="margin-top:12px;min-height:20px;font-size:12px;"></div>
       </div>
       <div class="card">
         <h2>Live Balances</h2>
         <div id="bridgeBalances">Loading...</div>
-        <button class="sm secondary" style="margin-top:14px;" onclick="loadBridgeBalances()">Refresh</button>
+        <button class="sm secondary" style="margin-top:12px;" onclick="loadBridgeBalances()">Refresh</button>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       <div class="card">
         <h2>Morpho Position</h2>
         <div id="morphoPosition">Loading...</div>
-        <button class="sm secondary" style="margin-top:14px;" onclick="loadMorpho()">Refresh</button>
+        <button class="sm secondary" style="margin-top:12px;" onclick="loadMorpho()">Refresh</button>
       </div>
       <div class="card">
-        <h2>LayerZero Live Messages</h2>
+        <h2>Bridge History</h2>
         <div id="bridgeHistory">Loading...</div>
-        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <div style="margin-top:12px;display:flex;gap:8px;">
           <button class="sm secondary" onclick="loadBridgeHistory()">Refresh</button>
-          <button class="sm secondary" onclick="discoverLzHashes()">Scan Chain</button>
-          <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LZ Scan ↗</button></a>
+          <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LayerZero Scan ↗</button></a>
         </div>
-        <div style="margin-top:10px;display:flex;gap:6px;"><input type="text" id="manualTxHash" placeholder="Paste Polygon tx hash to track" style="flex:1;font-size:11px;padding:8px 12px"><button class="sm" onclick="addManualHash()">Add</button></div>
       </div>
     </div>
   </div>
-
-  <!-- DASHBOARD -->
   <div class="tab-content" id="tab-dashboard">
     <div class="iframe-wrap"><iframe src="https://efix.finance/protocol/" loading="lazy"></iframe></div>
   </div>
 </div>
-
-<script src="/shared/js/config.js"></script>
-<script src="/shared/js/formatters.js"></script>
-<script src="/shared/js/rpc.js"></script>
-<script src="/shared/js/ui.js"></script>
 <script>
-const B=EFIX_CONFIG.backend,PR=EFIX_CONFIG.rpc.polygon,BR=EFIX_CONFIG.rpc.base,EP=EFIX_CONFIG.contracts.efixPolygon,EB=EFIX_CONFIG.contracts.efixBase,OP=EFIX_CONFIG.contracts.operator;
+const B='https://efixdi-backend-production.up.railway.app',PR='https://polygon-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf',BR='https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf',EP='0x04082b283818D9d0dd9Ee8742892eEe5CC396441',EB='0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608',OP='0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
 let K='';
-let adminToken='';
-let adminEmail='';
-function hdr(){
-  const h={'Content-Type':'application/json'};
-  if(adminToken) h['Authorization']='Bearer '+adminToken;
-  else if(K) h['X-Admin-Key']=K;
-  return h;
-}
-
-async function handleGoogleLogin(response){
-  const errEl=document.getElementById('loginError');
-  errEl.textContent='Authenticating...';errEl.style.color='var(--yellow)';
-  try{
-    const r=await fetch(B+'/api/admin/auth/google',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:response.credential})});
-    const d=await r.json();
-    if(!r.ok||!d.success){errEl.textContent=d.error||'Access denied';errEl.style.color='var(--red)';return}
-    adminToken=d.token;adminEmail=d.email;
-    sessionStorage.setItem('efixAdminToken',d.token);sessionStorage.setItem('efixAdminEmail',d.email);sessionStorage.setItem('efixAdminName',d.name||'');sessionStorage.setItem('efixAdminPic',d.picture||'');
-    showApp(d.name,d.picture);
-  }catch(e){errEl.textContent='Connection error: '+e.message;errEl.style.color='var(--red)'}
-}
-async function loginLegacy(){K=document.getElementById('adminKey').value.trim();if(!K)return;try{const r=await fetch(B+'/api/deposits',{headers:hdr()});if(!r.ok)throw 0;sessionStorage.setItem('efixAdminKey',K);showApp('Admin','')}catch(e){alert('Invalid key')}}
-function showApp(name,pic){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';if(name){document.getElementById('userName').textContent=name}if(pic){const img=document.getElementById('userPic');img.src=pic;img.style.display='block'}loadAll()}
-function logout(){adminToken='';K='';adminEmail='';sessionStorage.removeItem('efixAdminToken');sessionStorage.removeItem('efixAdminKey');sessionStorage.removeItem('efixAdminEmail');sessionStorage.removeItem('efixAdminName');sessionStorage.removeItem('efixAdminPic');document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='';toast('Signed out')}
-(function(){const t=sessionStorage.getItem('efixAdminToken');const k=sessionStorage.getItem('efixAdminKey');if(t){adminToken=t;adminEmail=sessionStorage.getItem('efixAdminEmail')||'';showApp(sessionStorage.getItem('efixAdminName')||'Admin',sessionStorage.getItem('efixAdminPic')||'')}else if(k){K=k;showApp('Admin','')}})();
-
-async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadProtocol();loadBridgeBalances();loadBridgeHistory()}
-async function loadStats(){try{const[ps,bs,mb]=await Promise.all([rpcBigInt(PR,EP,'0x18160ddd'),rpcBigInt(BR,EB,'0x18160ddd'),ethBal(PR,OP)]);const pn=Number(ps)/1e18,bn=Number(bs)/1e18;document.getElementById('statPolygon').textContent=pn.toFixed(0);document.getElementById('statBase').textContent=bn.toFixed(0);document.getElementById('statMatic').textContent=mb.toFixed(1);
-// Fetch BRL/USD from Chainlink oracle for USD TVL calc
-try{const oraclePrice=await rpcBigInt(PR,'0xB90DA3ff54C3ED09115abf6FbA0Ff4645586af2c','0x50d25bcd');const price=Number(oraclePrice)/1e8;const totalTokens=pn+bn;const usdTVL=totalTokens*price;document.getElementById('statTVL').textContent='$'+usdTVL.toFixed(0)}catch(e){document.getElementById('statTVL').textContent='$'+((pn+bn)*0.19).toFixed(0)}
-const h=await(await fetch(B+'/health')).json();document.getElementById('healthMeta').textContent='Block '+h.block+' · Up '+Math.round(h.uptime/60)+'m';const c=await(await fetch(B+'/api/wallet/collateral',{headers:hdr()})).json();let lk=0,addrs=new Set();(c.collateral||[]).forEach(x=>{if(x.status==='locked')lk+=parseFloat(x.amount_efix);addrs.add(x.address)});document.getElementById('statCollateral').textContent=lk.toFixed(0);
-try{const dp=await(await fetch(B+'/api/wallet/pending',{headers:hdr()})).json();(dp.deposits||[]).forEach(d=>{if(d.address)addrs.add(d.address)});document.getElementById('statUsers').textContent=addrs.size||'-'}catch(e){document.getElementById('statUsers').textContent=addrs.size||'-'}}catch(e){console.error(e)}}
-async function doMint(){const a=document.getElementById('mintAddress').value.trim(),m=document.getElementById('mintAmount').value.trim(),ref=document.getElementById('mintRef').value.trim()||'ADMIN-'+Date.now();if(!a||!m){alert('Address + amount required');return}document.getElementById('mintResult').innerHTML='<span style="color:var(--yellow)">Minting...</span>';try{const r=await fetch(B+'/api/admin/deposit',{method:'POST',headers:hdr(),body:JSON.stringify({userAddress:a,amount:m,pixKey:'admin',endToEndId:ref})});const d=await r.json();if(d.status==='queued'){document.getElementById('mintResult').innerHTML='<span style="color:var(--green)">✓ Minting '+m+' efixDI → '+shortAddr(a)+'</span>';toast('Mint queued!')}else document.getElementById('mintResult').innerHTML='<span style="color:var(--red)">'+JSON.stringify(d)+'</span>'}catch(e){document.getElementById('mintResult').innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
-async function loadDeposits(){const el=document.getElementById('depositsList');el.innerHTML='<div class="empty">Loading...</div>';try{const[dRes,wRes,aRes]=await Promise.all([fetch(B+'/api/deposits',{headers:hdr()}).catch(()=>({ok:false})),fetch(B+'/api/wallet/pending',{headers:hdr()}).catch(()=>({ok:false})),fetch(B+'/api/wallet/deposits/all',{headers:hdr()}).catch(()=>({ok:false}))]);let all=[];try{if(dRes.ok){const dData=await dRes.json();if(dData.processed)Object.entries(dData.processed).forEach(([id,d])=>{all.push({id:id.slice(0,20),addr:shortAddr(d.user||OP),amt:d.amount||'?',st:d.status||'?',dt:d.ts?new Date(d.ts).toISOString():null,tx:d.txHash})})}}catch(e){}try{if(wRes.ok){const wData=await wRes.json();(wData.deposits||[]).forEach(d=>{all.push({id:d.reference||'',addr:shortAddr(d.address||''),amt:d.amount||'?',st:d.status||'?',dt:d.createdAt?new Date(d.createdAt).toISOString():null})})}}catch(e){}try{if(aRes.ok){const aData=await aRes.json();const seen=new Set(all.map(a=>a.id));(aData.deposits||[]).forEach(d=>{const ref=d.reference||'';if(!seen.has(ref)&&!seen.has(ref.slice(0,20))){all.push({id:ref.slice(0,20),addr:shortAddr(d.address||''),amt:d.amount||'?',st:d.status||'?',dt:d.created_at?new Date(d.created_at).toISOString():null,tx:d.tx_hash})}})}}catch(e){}if(!all.length){el.innerHTML='<div class="empty">No deposits</div>';return}all.sort((a,b)=>(b.dt||'')>(a.dt||'')?1:-1);let h='<table class="tbl"><thead><tr><th>Ref</th><th>Address</th><th>Amount</th><th>Status</th><th>TX</th><th>Date</th></tr></thead><tbody>';all.forEach(d=>{h+='<tr><td style="font-size:11px;color:var(--text-muted)">'+d.id+'</td><td class="addr">'+d.addr+'</td><td>R$ '+d.amt+'</td><td><span class="badge '+d.st+'">'+d.st+'</span></td><td>'+(d.tx?'<a href="https://polygonscan.com/tx/'+d.tx+'" target="_blank" class="lz-hash">'+d.tx.slice(0,10)+'…</a>':'-')+'</td><td style="font-size:11px;color:var(--text-muted)">'+fmtDate(d.dt)+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
-async function loadWithdrawals(){const el=document.getElementById('withdrawalsList');el.innerHTML='<div class="empty">Loading...</div>';try{const r=await fetch(B+'/api/wallet/withdrawals',{headers:hdr()});const d=await r.json();if(!d.withdrawals||!d.withdrawals.length){el.innerHTML='<div class="empty">No withdrawals</div>';return}let h='<table class="tbl"><thead><tr><th>#</th><th>Address</th><th>Amount</th><th>PIX Key</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>';d.withdrawals.forEach(w=>{let act=w.status==='pending'?'<button class="sm" onclick="processW('+w.id+')">Send PIX</button>':'';h+='<tr><td>'+w.id+'</td><td class="addr">'+shortAddr(w.address)+'</td><td>'+w.amount+'</td><td style="font-size:11px">'+w.pix_key+'</td><td><span class="badge '+w.status+'">'+w.status+'</span></td><td style="font-size:11px;color:var(--text-muted)">'+fmtDate(w.created_at)+'</td><td>'+act+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
+function toast(m,t=3e3){const e=document.getElementById('toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',t)}
+function hdr(){return{'X-Admin-Key':K,'Content-Type':'application/json'}}
+function sa(a){return a?a.slice(0,6)+'...'+a.slice(-4):'-'}
+function fd(d){return d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'-'}
+async function rpc(u,to,d){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to,data:d},'latest'],id:1})});const j=await r.json();return BigInt(j.result||'0x0')}
+async function ethBal(u,a){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_getBalance',params:[a,'latest'],id:1})});const j=await r.json();return Number(BigInt(j.result||'0x0'))/1e18}
+async function login(){K=document.getElementById('adminKey').value.trim();if(!K)return;try{const r=await fetch(B+'/api/deposits',{headers:{'X-Admin-Key':K}});if(!r.ok)throw 0;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';loadAll()}catch(e){alert('Invalid key')}}
+async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadCollateralHistory();loadProtocol();loadBridgeBalances();loadBridgeHistory()}
+async function loadStats(){try{const[ps,bs,mb]=await Promise.all([rpc(PR,EP,'0x18160ddd'),rpc(BR,EB,'0x18160ddd'),ethBal(PR,OP)]);const pn=Number(ps)/1e18,bn=Number(bs)/1e18;document.getElementById('statPolygon').textContent=pn.toFixed(0);document.getElementById('statBase').textContent=bn.toFixed(0);document.getElementById('statTVL').textContent=pn.toFixed(0);document.getElementById('statMatic').textContent=mb.toFixed(1);const h=await(await fetch(B+'/health')).json();document.getElementById('healthMeta').textContent='Block '+h.block+' · Up '+Math.round(h.uptime/60)+'m';
+// Read vault state on-chain
+try{const v=await(await fetch(B+'/api/admin/vault',{headers:{'X-Admin-Key':K}})).json();document.getElementById('statCollateral').textContent=parseFloat(v.vault.totalCollateral).toFixed(0);document.getElementById('statUsers').textContent=v.vault.userCount||'-'}catch(e){
+// Fallback to Postgres
+const c=await(await fetch(B+'/api/wallet/collateral',{headers:{'X-Admin-Key':K}})).json();let lk=0,addrs=new Set();(c.collateral||[]).forEach(x=>{if(x.status==='locked'||x.status==='locked_onchain')lk+=parseFloat(x.amount_efix);addrs.add(x.address)});document.getElementById('statCollateral').textContent=lk.toFixed(0);document.getElementById('statUsers').textContent=addrs.size||'-'}}catch(e){console.error(e)}}
+async function doMint(){const a=document.getElementById('mintAddress').value.trim(),m=document.getElementById('mintAmount').value.trim(),ref=document.getElementById('mintRef').value.trim()||'ADMIN-'+Date.now();if(!a||!m){alert('Address + amount required');return}document.getElementById('mintResult').innerHTML='<span style="color:var(--yellow)">Minting...</span>';try{const r=await fetch(B+'/api/admin/deposit',{method:'POST',headers:hdr(),body:JSON.stringify({userAddress:a,amount:m,pixKey:'admin',endToEndId:ref})});const d=await r.json();if(d.status==='queued'){document.getElementById('mintResult').innerHTML='<span style="color:var(--green)">✓ Minting '+m+' efixDI → '+sa(a)+'</span>';toast('Mint queued!')}else document.getElementById('mintResult').innerHTML='<span style="color:var(--red)">'+JSON.stringify(d)+'</span>'}catch(e){document.getElementById('mintResult').innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
+async function loadDeposits(){const el=document.getElementById('depositsList');el.innerHTML='<div class="empty">Loading...</div>';try{const[dRes,wRes]=await Promise.all([fetch(B+'/api/deposits',{headers:{'X-Admin-Key':K}}),fetch(B+'/api/wallet/pending',{headers:{'X-Admin-Key':K}})]);const dData=await dRes.json(),wData=await wRes.json();let all=[];if(dData.processed)Object.entries(dData.processed).forEach(([id,d])=>{all.push({id:id.slice(0,20),addr:sa(d.user||OP),amt:d.amount||'?',st:d.status||'?',dt:d.ts?new Date(d.ts).toISOString():null,tx:d.txHash})});(wData.deposits||[]).forEach(d=>{all.push({id:d.reference||'',addr:sa(d.address||''),amt:d.amount||'?',st:d.status||'?',dt:d.createdAt?new Date(d.createdAt).toISOString():null})});if(!all.length){el.innerHTML='<div class="empty">No deposits</div>';return}all.sort((a,b)=>(b.dt||'')>(a.dt||'')?1:-1);let h='<table class="tbl"><thead><tr><th>Ref</th><th>Address</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>';all.forEach(d=>{h+='<tr><td style="font-size:11px;color:var(--gray-400)">'+d.id+'</td><td class="addr">'+d.addr+'</td><td>R$ '+d.amt+'</td><td><span class="badge '+d.st+'">'+d.st+'</span></td><td style="font-size:11px;color:var(--gray-500)">'+fd(d.dt)+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
+async function loadWithdrawals(){const el=document.getElementById('withdrawalsList');el.innerHTML='<div class="empty">Loading...</div>';try{const r=await fetch(B+'/api/wallet/withdrawals',{headers:{'X-Admin-Key':K}});const d=await r.json();if(!d.withdrawals||!d.withdrawals.length){el.innerHTML='<div class="empty">No withdrawals</div>';return}let h='<table class="tbl"><thead><tr><th>#</th><th>Address</th><th>Amount</th><th>PIX Key</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>';d.withdrawals.forEach(w=>{let act=w.status==='pending'?'<button class="sm" onclick="processW('+w.id+')">Send PIX</button>':'';h+='<tr><td>'+w.id+'</td><td class="addr">'+sa(w.address)+'</td><td>'+w.amount+'</td><td style="font-size:11px">'+w.pix_key+'</td><td><span class="badge '+w.status+'">'+w.status+'</span></td><td style="font-size:11px;color:var(--gray-500)">'+fd(w.created_at)+'</td><td>'+act+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
 async function processW(id){if(!confirm('Process PIX #'+id+'?'))return;try{const r=await fetch(B+'/api/wallet/withdrawals/process',{method:'POST',headers:hdr(),body:JSON.stringify({id})});const d=await r.json();if(d.success){toast('PIX sent!');loadWithdrawals()}else alert(d.error||JSON.stringify(d))}catch(e){alert(e.message)}}
-async function loadCollateral(){const el=document.getElementById('collateralList'),sm=document.getElementById('collateralSummary');el.innerHTML='<div class="empty">Loading...</div>';try{const r=await fetch(B+'/api/wallet/collateral',{headers:hdr()});const d=await r.json();if(!d.collateral||!d.collateral.length){el.innerHTML='<div class="empty">No collateral</div>';sm.innerHTML='';return}let te=0,tu=0,lk=0,pk=0;d.collateral.forEach(c=>{te+=parseFloat(c.amount_efix);tu+=parseFloat(c.usdc_credit);if(c.status==='locked')lk+=parseFloat(c.amount_efix);else pk+=parseFloat(c.amount_efix)});sm.innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div style="text-align:center;padding:12px;background:var(--surface);border-radius:10px;border:1px solid var(--border)"><div style="font-size:18px;font-weight:700;color:var(--green);font-family:var(--mono)">'+te.toFixed(0)+'</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px">Total efixDI</div></div><div style="text-align:center;padding:12px;background:var(--surface);border-radius:10px;border:1px solid var(--border)"><div style="font-size:18px;font-weight:700;color:var(--green);font-family:var(--mono)">$'+tu.toFixed(2)+'</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px">USDC Credit</div></div><div style="text-align:center;padding:12px;background:var(--surface);border-radius:10px;border:1px solid var(--border)"><div style="font-size:18px;font-weight:700;color:var(--green);font-family:var(--mono)">'+lk.toFixed(0)+'</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px">Locked</div></div><div style="text-align:center;padding:12px;background:var(--surface);border-radius:10px;border:1px solid var(--border)"><div style="font-size:18px;font-weight:700;color:var(--yellow);font-family:var(--mono)">'+pk.toFixed(0)+'</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px">Pending</div></div></div>';let h='<table class="tbl"><thead><tr><th>Address</th><th>Amount</th><th>USDC</th><th>Status</th><th>Date</th></tr></thead><tbody>';d.collateral.forEach(c=>{h+='<tr><td class="addr">'+shortAddr(c.address)+'</td><td>'+c.amount_efix+' efixDI</td><td>$'+c.usdc_credit+'</td><td><span class="badge '+c.status+'">'+c.status+'</span></td><td style="font-size:11px;color:var(--text-muted)">'+fmtDate(c.created_at)+'</td></tr>'});h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
-async function loadProtocol(){const el=document.getElementById('protocolState'),op=document.getElementById('operatorInfo');try{const s=await(await fetch(B+'/api/status',{headers:hdr()})).json();if(s.protocol){const p=s.protocol;el.innerHTML='<table class="tbl"><tr><td style="color:var(--text-muted)">TVL (BRL)</td><td>R$ '+parseFloat(p.tvl_brl).toFixed(2)+'</td></tr><tr><td style="color:var(--text-muted)">TVL (USD)</td><td>$'+p.tvl_usd+'</td></tr><tr><td style="color:var(--text-muted)">efixDI Supply</td><td>'+parseFloat(p.efix_total_supply).toFixed(2)+'</td></tr><tr><td style="color:var(--text-muted)">BRL/USD</td><td>'+p.brl_usd_rate+'</td></tr><tr><td style="color:var(--text-muted)">Vault</td><td>'+(p.vault_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--text-muted)">Bridge</td><td>'+(p.bridge_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--text-muted)">Block</td><td>'+p.current_block+'</td></tr></table>'}if(s.operator){op.innerHTML='<table class="tbl"><tr><td style="color:var(--text-muted)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--text-muted)">POL</td><td>'+parseFloat(s.operator.matic).toFixed(4)+'</td></tr><tr><td style="color:var(--text-muted)">USDC</td><td>'+s.operator.usdc+'</td></tr></table>'}}catch(e){el.textContent='Error: '+e.message}
+async function loadCollateral(){
+const vs=document.getElementById('vaultState'),vp=document.getElementById('vaultPositions');
+vs.innerHTML='<div class="empty">Loading vault...</div>';
+try{const r=await fetch(B+'/api/admin/vault',{headers:{'X-Admin-Key':K}});const d=await r.json();const v=d.vault;
+vs.innerHTML='<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">'+parseFloat(v.totalLocked).toFixed(2)+'</div><div style="font-size:10px;color:var(--gray-500)">Locked (Polygon)</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--blue)">'+parseFloat(v.totalBridged).toFixed(2)+'</div><div style="font-size:10px;color:var(--gray-500)">Bridged (Base)</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">'+parseFloat(v.totalCollateral).toFixed(2)+'</div><div style="font-size:10px;color:var(--gray-500)">Total Collateral</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;'+(v.invariantOk?'color:var(--green)':'color:var(--red)')+'">'+( v.invariantOk?'OK':'BROKEN')+'</div><div style="font-size:10px;color:var(--gray-500)">Invariant</div></div><div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px"><div style="font-size:16px;font-weight:700;color:var(--green)">'+v.userCount+'</div><div style="font-size:10px;color:var(--gray-500)">Vault Users</div></div></div><div style="margin-top:8px;font-size:10px;color:var(--gray-500)">Vault: <a href="https://polygonscan.com/address/'+v.address+'#readContract" target="_blank" style="color:var(--green)">'+v.address.slice(0,10)+'...'+v.address.slice(-4)+'</a> · Balance: '+parseFloat(v.vaultBalance).toFixed(2)+' efixDI · '+(v.paused?'<span style="color:var(--red)">PAUSED</span>':'<span style="color:var(--green)">Active</span>')+'</div>';
+if(!d.positions||!d.positions.length){vp.innerHTML='<div class="empty">No vault positions</div>';return}
+let h='<table class="tbl"><thead><tr><th>Address</th><th>Locked</th><th>Bridged</th><th>Borrowed</th><th>Total</th><th>Withdraw</th></tr></thead><tbody>';
+d.positions.forEach(p=>{h+='<tr><td class="addr">'+sa(p.address)+'</td><td>'+parseFloat(p.locked).toFixed(2)+'</td><td style="color:var(--blue)">'+parseFloat(p.bridged).toFixed(2)+'</td><td style="color:var(--red)">'+p.borrowed+' USDC</td><td style="font-weight:700;color:var(--green)">'+parseFloat(p.positionCollateral).toFixed(2)+'</td><td>'+(p.canWithdraw?'<span style="color:var(--green)">Yes</span>':'<span style="color:var(--gray-500)">No</span>')+'</td></tr>'});
+h+='</tbody></table>';vp.innerHTML=h}catch(e){vs.innerHTML='<div class="empty" style="color:var(--red)">'+e.message+'</div>'}}
+
+async function loadCollateralHistory(){
+const el=document.getElementById('collateralList');el.innerHTML='<div class="empty">Loading...</div>';
+try{const r=await fetch(B+'/api/wallet/collateral',{headers:{'X-Admin-Key':K}});const d=await r.json();
+if(!d.collateral||!d.collateral.length){el.innerHTML='<div class="empty">No collateral history</div>';return}
+let h='<table class="tbl"><thead><tr><th>Address</th><th>Amount</th><th>USDC</th><th>Status</th><th>TX</th><th>Date</th></tr></thead><tbody>';
+d.collateral.forEach(c=>{h+='<tr><td class="addr">'+sa(c.address)+'</td><td>'+c.amount_efix+' efixDI</td><td>$'+c.usdc_credit+'</td><td><span class="badge '+c.status+'">'+c.status+'</span></td><td style="font-size:11px">'+(c.tx_hash_in?'<a href="https://polygonscan.com/tx/'+c.tx_hash_in+'" target="_blank" style="color:var(--green)">'+c.tx_hash_in.slice(0,10)+'...</a>':'-')+'</td><td style="font-size:11px;color:var(--gray-500)">'+fd(c.created_at)+'</td></tr>'});
+h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
+async function loadProtocol(){const el=document.getElementById('protocolState'),op=document.getElementById('operatorInfo');try{const s=await(await fetch(B+'/api/status?key='+K)).json();if(s.protocol){const p=s.protocol;el.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">TVL (BRL)</td><td>R$ '+parseFloat(p.tvl_brl).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">TVL (USD)</td><td>$'+p.tvl_usd+'</td></tr><tr><td style="color:var(--gray-500)">efixDI Supply</td><td>'+parseFloat(p.efix_total_supply).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">BRL/USD</td><td>'+p.brl_usd_rate+'</td></tr><tr><td style="color:var(--gray-500)">Vault</td><td>'+(p.vault_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Bridge</td><td>'+(p.bridge_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Block</td><td>'+p.current_block+'</td></tr></table>'}if(s.operator){op.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+parseFloat(s.operator.matic).toFixed(4)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+s.operator.usdc+'</td></tr></table>'}}catch(e){el.textContent='Error: '+e.message}
+// Load Morpho position
 loadMorpho();loadBridgeBalances();
-try{const mr=await fetch(B+'/api/admin/morpho',{headers:hdr()});const md=await mr.json();const ob=document.getElementById('operatorBase');if(ob&&md.base){ob.innerHTML='<table class="tbl"><tr><td style="color:var(--text-muted)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--text-muted)">efixDI</td><td>'+md.base.efixDI+'</td></tr><tr><td style="color:var(--text-muted)">USDC</td><td>'+md.base.usdc+'</td></tr></table>'}}catch(e){}}
+// Base operator info
+try{const mr=await fetch(B+'/api/admin/morpho',{headers:{'X-Admin-Key':K}});const md=await mr.json();const ob=document.getElementById('operatorBase');if(ob&&md.base){ob.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+md.base.efixDI+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+md.base.usdc+'</td></tr></table>'}}catch(e){}}
 
 async function loadMorpho(){
 const el1=document.getElementById('morphoState');const el2=document.getElementById('morphoPosition');
-try{const r=await fetch(B+'/api/admin/morpho',{headers:hdr()});const d=await r.json();if(d.error){const msg='<div style="color:var(--red);font-size:12px;font-family:var(--mono)">'+d.error+'</div>';if(el1)el1.innerHTML=msg;if(el2)el2.innerHTML=msg;return}
-const html='<table class="tbl"><tr><td style="color:var(--text-muted)">Collateral</td><td style="color:var(--green);font-weight:700">'+d.morpho.collateral+(d.morpho.collateralUSD?' <span style="color:var(--text-muted);font-weight:400;font-size:11px">('+d.morpho.collateralUSD+')</span>':'')+'</td></tr><tr><td style="color:var(--text-muted)">Borrowed</td><td style="color:var(--red);font-weight:700">'+d.morpho.borrowed+'</td></tr><tr><td style="color:var(--text-muted)">LTV</td><td>'+d.morpho.ltv+' <span style="font-size:10px;color:var(--text-muted)">(LLTV: '+(d.morpho.lltv||'77%')+')</span></td></tr><tr><td style="color:var(--text-muted);font-weight:700">Health Factor</td><td style="font-size:22px;font-weight:700;font-family:var(--mono);color:'+(d.morpho.healthFactor==='∞'||parseFloat(d.morpho.healthFactor)>1.5?'var(--green)':parseFloat(d.morpho.healthFactor)>1.15?'var(--yellow)':'var(--red)')+'">'+d.morpho.healthFactor+(d.morpho.healthFactor!=='∞'?'<span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:8px">'+(parseFloat(d.morpho.healthFactor)>2?'Safe':parseFloat(d.morpho.healthFactor)>1.5?'Healthy':parseFloat(d.morpho.healthFactor)>1.15?'Warning':'Danger')+'</span>':'')+'</td></tr><tr><td style="color:var(--text-muted)">Oracle Price</td><td>'+(d.morpho.oraclePrice||'N/A')+'</td></tr><tr><td style="color:var(--text-muted)">Market Supply</td><td>'+d.market.totalSupply+'</td></tr><tr><td style="color:var(--text-muted)">Market Borrow</td><td>'+d.market.totalBorrow+'</td></tr></table>';
+try{const r=await fetch(B+'/api/admin/morpho',{headers:{'X-Admin-Key':K}});const d=await r.json();if(d.error){const msg='<div style="color:var(--red);font-size:12px">'+d.error+'</div>';if(el1)el1.innerHTML=msg;if(el2)el2.innerHTML=msg;return}
+const html='<table class="tbl"><tr><td style="color:var(--gray-500)">Collateral</td><td style="color:var(--green);font-weight:700">'+d.morpho.collateral+'</td></tr><tr><td style="color:var(--gray-500)">Borrowed</td><td style="color:var(--red)">'+d.morpho.borrowed+'</td></tr><tr><td style="color:var(--gray-500)">LTV</td><td>'+d.morpho.ltv+'</td></tr><tr><td style="color:var(--gray-500)">Market Supply</td><td>'+d.market.totalSupply+'</td></tr><tr><td style="color:var(--gray-500)">Market Borrow</td><td>'+d.market.totalBorrow+'</td></tr></table>';
 if(el1)el1.innerHTML=html;if(el2)el2.innerHTML=html}catch(e){const msg='Error: '+e.message;if(el1)el1.textContent=msg;if(el2)el2.textContent=msg}}
 
 async function loadBridgeBalances(){
 const el=document.getElementById('bridgeBalances');if(!el)return;
 try{
-const[polyEfix,polyMatic]=await Promise.all([rpcBigInt(PR,EP,balOf(OP)),ethBal(PR,OP)]);
+// Get Polygon balances directly via RPC (always works)
+const padOP=OP.toLowerCase().replace('0x','').padStart(64,'0');
+const[polyEfix,polyMatic]=await Promise.all([rpc(PR,EP,'0x70a08231'+padOP),ethBal(PR,OP)]);
 const polyNum=Number(polyEfix)/1e18;
-let baseHtml='<tr><td colspan="2" style="color:var(--blue);font-weight:700;font-size:11px;padding-top:14px;font-family:var(--mono);letter-spacing:1px">BASE</td></tr>';
-try{const r=await fetch(B+'/api/admin/morpho',{headers:hdr()});const d=await r.json();
-if(d.base){baseHtml+='<tr><td style="color:var(--text-muted)">efixDI</td><td>'+d.base.efixDI+'</td></tr><tr><td style="color:var(--text-muted)">USDC</td><td>'+d.base.usdc+'</td></tr>'}
-else{baseHtml+='<tr><td colspan="2" style="color:var(--text-muted);font-size:11px">Backend deploying...</td></tr>'}}
+
+let baseHtml='<tr><td colspan="2" style="color:var(--blue);font-weight:700;font-size:11px;padding-top:12px">BASE</td></tr>';
+// Try Base balances via Morpho endpoint
+try{const r=await fetch(B+'/api/admin/morpho',{headers:{'X-Admin-Key':K}});const d=await r.json();
+if(d.base){baseHtml+='<tr><td style="color:var(--gray-500)">efixDI</td><td>'+d.base.efixDI+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+d.base.usdc+'</td></tr>'}
+else{baseHtml+='<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">Backend deploying...</td></tr>'}}
 catch(e){
-try{const baseEfix=await rpcBigInt(BR,EB,balOf(OP));const baseNum=Number(baseEfix)/1e18;
-const usdcBase=await rpcBigInt(BR,EFIX_CONFIG.contracts.usdcBase,balOf(OP));const usdcNum=Number(usdcBase)/1e6;
-baseHtml+='<tr><td style="color:var(--text-muted)">efixDI</td><td>'+baseNum.toFixed(2)+'</td></tr><tr><td style="color:var(--text-muted)">USDC</td><td>'+usdcNum.toFixed(2)+'</td></tr>'}
-catch(e2){baseHtml+='<tr><td colspan="2" style="color:var(--text-muted);font-size:11px">RPC error</td></tr>'}}
-el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px;font-family:var(--mono);letter-spacing:1px">POLYGON</td></tr><tr><td style="color:var(--text-muted)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--text-muted)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr>'+baseHtml+'</table>'
+// Fallback: read Base balances directly via RPC
+try{const padOP2=OP.toLowerCase().replace('0x','').padStart(64,'0');
+const baseEfix=await rpc(BR,EB,'0x70a08231'+padOP2);const baseNum=Number(baseEfix)/1e18;
+const usdcBase=await rpc(BR,'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','0x70a08231'+padOP2);const usdcNum=Number(usdcBase)/1e6;
+baseHtml+='<tr><td style="color:var(--gray-500)">efixDI</td><td>'+baseNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+usdcNum.toFixed(2)+'</td></tr>'}
+catch(e2){baseHtml+='<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">RPC error</td></tr>'}}
+
+el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr>'+baseHtml+'</table>'
 }catch(e){el.textContent='Error: '+e.message}}
-
-// === LZ MESSAGE MONITORING (Postgres-backed) ===
-const LZ_OFT_ADDR='0x603265754fDdd7FdE459CC6e6722bd526C1258Fc';
-const LZ_OP_ADDR='0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
-const LZ_API='https://scan.layerzero-api.com/v1';
-let _lzPollTimer=null;
-let _lzFirstLoad=true;
-let _lzLastError='';
-let _lzPrevHashes=new Set();
-
-async function getStoredHashes(){
-  try{
-    const r=await fetch(B+'/api/bridge/txs',{headers:hdr()});
-    if(!r.ok)throw new Error('Backend '+r.status);
-    const d=await r.json();
-    return(d.messages||[]).map(m=>m.tx_hash).filter(Boolean);
-  }catch(e){
-    return['0xd8b12318709bb71b8d6c637ab106cadae058c10f3ec5b34be56852b4f3fb7347'];
-  }
-}
-async function saveTxHash(txHash,amount){
-  try{await fetch(B+'/api/bridge/tx',{method:'POST',headers:hdr(),body:JSON.stringify({txHash,amount})})}catch(e){}
-}
-
-async function fetchLZMessages(){
-const hashes=await getStoredHashes();
-if(!hashes.length)return[];
-const results=[];
-_lzLastError='';
-const batch=hashes.slice(0,15);
-const promises=batch.map(async(hash,i)=>{
-  try{
-    const r=await fetch(LZ_API+'/messages/tx/'+hash,{signal:AbortSignal.timeout(15000)});
-    if(!r.ok){_lzLastError=hash.slice(0,10)+'…→'+r.status;return null}
-    const d=await r.json();
-    let msg=null;
-    if(Array.isArray(d.messages)&&d.messages.length)msg=d.messages[0];
-    else if(Array.isArray(d.data)&&d.data.length)msg=d.data[0];
-    else if(d.source||d.pathway)msg=d;
-    if(msg){
-      let st='UNKNOWN';
-      try{const s=msg.status;st=typeof s==='string'?s:(s&&s.name?String(s.name):'UNKNOWN')}catch(e){}
-      const nonce=msg.pathway?.nonce||msg.nonce||null;
-      fetch(B+'/api/bridge/tx/status',{method:'POST',headers:hdr(),body:JSON.stringify({txHash:hash,lzStatus:st,nonce})}).catch(()=>{});
-    }
-    return msg;
-  }catch(e){_lzLastError=hash.slice(0,10)+'…→'+e.message;return null}
-});
-const settled=await Promise.all(promises);
-settled.forEach(m=>{if(m)results.push(m)});
-results.sort((a,b)=>{
-  const ta=new Date(a.created||a.pathway?.created||0).getTime();
-  const tb=new Date(b.created||b.pathway?.created||0).getTime();
-  return tb-ta;
-});
-return results;
-}
 
 async function loadBridgeHistory(){
 const el=document.getElementById('bridgeHistory');if(!el)return;
-if(_lzFirstLoad)el.innerHTML='<div style="font-size:11px;color:var(--text-muted);font-family:var(--mono)">Loading from DB + LZ API...</div>';
+el.innerHTML='<div style="font-size:11px;color:var(--gray-500)">Loading from LayerZero Scan...</div>';
 try{
-const msgs=await fetchLZMessages();
+// Fetch from LayerZero Scan API
+const r=await fetch('https://scan.layerzero-api.com/v1/messages/oft?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
+if(!r.ok)throw new Error('LZ Scan API error');
+const d=await r.json();
+const msgs=d.data||d.messages||[];
 if(!msgs.length){
-  let fallbackHtml='<div style="text-align:center;padding:24px">';
-  fallbackHtml+='<div style="font-size:28px;margin-bottom:10px">🌉</div>';
-  fallbackHtml+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-family:var(--mono)">No messages — try Scan Chain</div>';
-  if(_lzLastError)fallbackHtml+='<div style="font-size:10px;color:var(--red);margin-bottom:12px;font-family:var(--mono)">'+_lzLastError+'</div>';
-  fallbackHtml+='<div style="margin-top:8px"><a href="https://layerzeroscan.com/address/'+LZ_OFT_ADDR+'" target="_blank" style="color:var(--green);font-size:12px;font-family:var(--mono)">View on LZ Scan ↗</a></div>';
-  fallbackHtml+='</div>';
-  el.innerHTML=fallbackHtml;
-  if(!_lzPollTimer)_lzPollTimer=setInterval(()=>{loadBridgeHistory()},30000);
-  _lzFirstLoad=false;
-  return;
-}
-
-let newCount=0;
-const currentHashes=new Set();
+// Fallback: show manual link
+el.innerHTML='<div style="font-size:11px;color:var(--gray-500)">No messages found via API.<br><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green)">View on LayerZero Scan ↗</a></div>';
+return}
+let html='<table class="tbl"><thead><tr><th>Status</th><th>From→To</th><th>Amount</th><th>Date</th><th></th></tr></thead><tbody>';
 msgs.forEach(m=>{
-  const hash=m.source?.tx?.txHash||m.srcTxHash||m.pathway?.sender?.hash||'';
-  if(hash)currentHashes.add(hash);
-  if(hash&&!_lzPrevHashes.has(hash)&&!_lzFirstLoad)newCount++;
-});
-if(newCount>0&&!_lzFirstLoad){
-  toast('🌉 '+newCount+' new LayerZero message'+(newCount>1?'s':'')+'!',5000);
-  const badge=document.getElementById('lzBadge');
-  if(badge&&!document.getElementById('tab-bridge').classList.contains('active')){badge.textContent='+'+newCount;badge.style.display='inline'}
-  if(Notification&&Notification.permission==='granted'){new Notification('efixDI+ Bridge',{body:newCount+' new LayerZero message'+(newCount>1?'s':''),icon:'https://efix.finance/logo_efix_400x400.jpg'})}
-}
-_lzPrevHashes=currentHashes;
-_lzFirstLoad=false;
-
-let hasInflight=false;
-let html='';
-msgs.forEach(m=>{
-  let st='UNKNOWN';
-  try{const s=m.status;if(typeof s==='string')st=s.toUpperCase();else if(s&&typeof s==='object'&&s.name)st=String(s.name).toUpperCase();else if(m.pathway?.status){const ps=m.pathway.status;if(typeof ps==='string')st=ps.toUpperCase();else if(ps&&ps.name)st=String(ps.name).toUpperCase()}}catch(e){st='UNKNOWN'}
-  const stClass=st==='DELIVERED'?'delivered':st==='INFLIGHT'?'inflight':st==='FAILED'?'failed':st==='BLOCKED'?'blocked':'';
-  if(st==='INFLIGHT'||st==='CONFIRMING')hasInflight=true;
-  const hash=m.source?.tx?.txHash||m.srcTxHash||m.pathway?.sender?.hash||'';
-  const isNew=hash&&!_lzPrevHashes.has(hash)&&newCount>0;
-  const nonce=m.pathway?.nonce||m.nonce||'';
-  const srcChain=m.pathway?.srcChainKey||m.srcChainKey||m.source?.chain||'polygon';
-  const dstChain=m.pathway?.dstChainKey||m.dstChainKey||m.destination?.chain||'base';
-  const srcHash=m.source?.tx?.txHash||m.srcTxHash||m.pathway?.sender?.hash||'';
-  const dstHash=m.destination?.tx?.txHash||m.dstTxHash||m.pathway?.receiver?.hash||'';
-  const created=m.created||m.pathway?.created||m.source?.tx?.created||'';
-  const updated=m.updated||m.pathway?.updated||m.destination?.tx?.created||'';
-  let timeAgo='-';
-  if(created){const secs=Math.floor((Date.now()-new Date(created).getTime())/1000);if(secs<60)timeAgo=secs+'s ago';else if(secs<3600)timeAgo=Math.floor(secs/60)+'m ago';else if(secs<86400)timeAgo=Math.floor(secs/3600)+'h ago';else timeAgo=Math.floor(secs/86400)+'d ago'}
-  let duration='';
-  if(st==='DELIVERED'&&created&&updated){const dur=Math.floor((new Date(updated).getTime()-new Date(created).getTime())/1000);if(dur<60)duration=dur+'s';else if(dur<3600)duration=Math.floor(dur/60)+'m '+dur%60+'s';else duration=Math.floor(dur/3600)+'h'}
-  const lzLink=srcHash?'https://layerzeroscan.com/tx/'+srcHash:'#';
-  const srcScan=srcChain.includes('polygon')||srcChain.includes('poly')?'https://polygonscan.com/tx/'+srcHash:'https://basescan.org/tx/'+srcHash;
-  const dstScan=dstHash?(dstChain.includes('base')?'https://basescan.org/tx/'+dstHash:'https://polygonscan.com/tx/'+dstHash):'';
-  html+='<div class="lz-msg'+(isNew?' lz-new':'')+'">';
-  html+='<span class="lz-nonce">#'+nonce+'</span>';
-  html+='<span class="lz-status '+stClass+'">'+st+'</span>';
-  html+='<span class="lz-chain">'+srcChain+' <span class="arrow">→</span> '+dstChain+'</span>';
-  html+='<span style="flex:1"></span>';
-  if(duration)html+='<span style="font-size:10px;color:var(--green);margin-right:8px;font-family:var(--mono)">⏱ '+duration+'</span>';
-  html+='<span class="lz-time">'+timeAgo+'</span>';
-  html+='<a href="'+lzLink+'" target="_blank" class="lz-hash" style="margin-left:8px">LZ ↗</a>';
-  if(srcHash)html+='<a href="'+srcScan+'" target="_blank" class="lz-hash" style="margin-left:4px">Src ↗</a>';
-  if(dstScan)html+='<a href="'+dstScan+'" target="_blank" class="lz-hash" style="margin-left:4px">Dst ↗</a>';
-  html+='</div>';
-});
-const headerHtml='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text-muted);font-family:var(--mono)"><span>'+msgs.length+' messages · '+(hasInflight?'<span style="color:var(--yellow)">INFLIGHT</span>':'all delivered')+'</span><span id="lzLastPoll">polled just now</span></div>';
-el.innerHTML=headerHtml+html;
-const pollInterval=hasInflight?8000:30000;
-if(_lzPollTimer)clearInterval(_lzPollTimer);
-_lzPollTimer=setInterval(()=>{loadBridgeHistory()},pollInterval);
-const pi=document.getElementById('lzPollIndicator');
-if(pi){pi.style.display='flex';document.getElementById('lzPollText').textContent='LZ: '+msgs.length+' msgs · '+(hasInflight?'8s':'30s')+' poll'}
-}catch(e){
-el.innerHTML='<div style="text-align:center;padding:24px"><div style="font-size:12px;color:var(--red);margin-bottom:8px;font-family:var(--mono)">API error: '+e.message+'</div><a href="https://layerzeroscan.com/address/'+LZ_OFT_ADDR+'" target="_blank" style="color:var(--green);font-size:12px;font-family:var(--mono)">View on LayerZero Scan ↗</a></div>';
-if(!_lzPollTimer)_lzPollTimer=setInterval(()=>{loadBridgeHistory()},30000);
-}
-}
-
-document.addEventListener('click',function _reqNotif(){if(Notification&&Notification.permission==='default')Notification.requestPermission();document.removeEventListener('click',_reqNotif)},{once:true});
-
-async function discoverLzHashes(){
-toast('Scanning Polygon for bridge transactions...');
-try{
-  const r=await fetch(B+'/api/bridge/scan',{headers:hdr()});
-  if(!r.ok)throw new Error('Scan endpoint: '+r.status);
-  const d=await r.json();
-  if(d.saved)toast(d.saved+' new hashes saved! ('+d.scanned+' total on-chain)');
-  else toast('No new hashes ('+d.scanned+' already tracked)');
-  loadBridgeHistory();
-}catch(e){
-  toast('Backend scan unavailable, scanning from browser...');
-  const transferTopic='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-  const adapterPadded='0x000000000000000000000000'+LZ_OFT_ADDR.slice(2).toLowerCase();
-  try{
-    const r2=await fetch(PR,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_getLogs',params:[{address:EP,topics:[transferTopic,null,adapterPadded],fromBlock:'0x'+(67000000).toString(16),toBlock:'latest'}],id:1})});
-    const d2=await r2.json();const logs=d2.result||[];let found=0;
-    for(const log of logs){if(log.transactionHash){await saveTxHash(log.transactionHash);found++}}
-    toast(found+' hashes discovered via RPC');loadBridgeHistory();
-  }catch(e2){toast('Scan error: '+e2.message)}
-}
-}
-
-function addManualHash(){
-const input=document.getElementById('manualTxHash');
-const hash=input.value.trim();
-if(!hash||!hash.startsWith('0x')||hash.length<20){alert('Enter a valid tx hash');return}
-saveTxHash(hash);
-input.value='';
-toast('TX hash added — refreshing...');
-loadBridgeHistory();
-}
+const st=m.status||m.pathway?.status||'unknown';
+const stColor=st==='DELIVERED'?'var(--green)':st==='INFLIGHT'?'var(--yellow)':'var(--gray-500)';
+const srcChain=m.srcChainKey||m.pathway?.srcChainKey||'polygon';
+const dstChain=m.dstChainKey||m.pathway?.dstChainKey||'base';
+const date=m.created?fd(m.created):'-';
+const hash=m.srcTxHash||m.pathway?.sender?.hash||'';
+const shortHash=hash?hash.slice(0,10)+'...':'';
+const link=hash?'<a href="https://layerzeroscan.com/tx/'+hash+'" target="_blank" style="color:var(--green);font-size:11px">View ↗</a>':'';
+html+='<tr><td><span style="color:'+stColor+';font-size:11px;font-weight:700">'+st+'</span></td><td style="font-size:11px">'+srcChain+'→'+dstChain+'</td><td style="font-size:11px">efixDI</td><td style="font-size:11px;color:var(--gray-500)">'+date+'</td><td>'+link+'</td></tr>'});
+html+='</tbody></table>';
+el.innerHTML=html}catch(e){
+// If API fails, show direct link
+el.innerHTML='<table class="tbl"><tbody><tr><td style="font-size:11px">View bridge history on LayerZero Scan:</td></tr><tr><td><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green)">OFT Adapter ↗</a> · <a href="https://layerzeroscan.com/address/0x9eFc11e4d285b5a749faFBC2613836Dcda899e12" target="_blank" style="color:var(--green)">Operator ↗</a></td></tr></tbody></table>'}}
 
 async function doBridge(){
 const amount=document.getElementById('bridgeAmount').value.trim();if(!amount||Number(amount)<=0){alert('Enter amount');return}
-if(!confirm('Bridge '+amount+' efixDI from Polygon to Base?'))return;
-const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">Bridging... (approve + quote + send)</span>';
-try{const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify({amount})});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base<br>TX: <a href="https://polygonscan.com/tx/'+d.txHash+'" target="_blank" style="color:var(--green)">'+d.txHash.slice(0,14)+'...</a><br>Fee: '+d.fee+'<br>'+d.message+'</span>';toast('Bridge sent!');if(d.txHash)saveTxHash(d.txHash,amount);setTimeout(()=>{loadBridgeBalances();loadBridgeHistory()},5000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
-function switchAdminTab(n,b){switchTab(n,b,{tabSelector:'.tab-btn',panelSelector:'.tab-content',panelPrefix:'tab-'});document.querySelector('.container').style.maxWidth=n==='dashboard'?'100%':'1200px';if(n==='bridge'){const badge=document.getElementById('lzBadge');if(badge)badge.style.display='none'}}
+const userAddress=(document.getElementById('bridgeUser')||{}).value?.trim()||null;
+if(!confirm('Bridge '+amount+' efixDI from '+(userAddress?'vault ('+sa(userAddress)+')':'operator pool')+' to Base?'))return;
+const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">'+(userAddress?'Releasing from vault → ':'')+'Bridging...</span>';
+try{const body={amount};if(userAddress)body.userAddress=userAddress;const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify(body)});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base'+(d.vaultBridgeTx?'<br>Vault TX: <a href="https://polygonscan.com/tx/'+d.vaultBridgeTx+'" target="_blank" style="color:var(--green)">'+d.vaultBridgeTx.slice(0,14)+'...</a>':'')+'<br>Bridge TX: <a href="https://polygonscan.com/tx/'+d.bridgeTx+'" target="_blank" style="color:var(--green)">'+d.bridgeTx.slice(0,14)+'...</a><br>Fee: '+d.fee+'</span>';toast('Bridge sent!');setTimeout(()=>{loadBridgeBalances();loadCollateral()},10000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
+function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=n==='dashboard'?'100%':'1100px'}
+if(location.hash){document.getElementById('adminKey').value=location.hash.slice(1);login()}
 </script>
 </body>
 </html>
