@@ -53,19 +53,40 @@
   .iframe-wrap iframe{width:100%;height:calc(100vh - 260px);border:none}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div id="toast" class="toast"></div>
 <div id="login-screen" class="login">
   <h1 style="margin-bottom:4px;">efixDI<span style="color:var(--green)">+</span></h1>
   <p style="color:var(--gray-500);font-size:12px;margin-bottom:32px;">Protocol Operations</p>
-  <div class="form-group"><input type="password" id="adminKey" placeholder="Admin Key" onkeydown="if(event.key==='Enter')login()"></div>
-  <button onclick="login()">Entrar</button>
+  <div id="g_id_onload"
+    data-client_id="299439946528-3vqe63ie5l318h3g73t3lv0d8f0ahd1v.apps.googleusercontent.com"
+    data-callback="handleGoogleLogin"
+    data-auto_prompt="false"
+    data-context="signin"
+    data-ux_mode="popup">
+  </div>
+  <div class="g_id_signin"
+    data-type="standard"
+    data-shape="rectangular"
+    data-theme="outline"
+    data-text="signin_with"
+    data-size="large"
+    data-logo_alignment="left"
+    data-width="320">
+  </div>
+  <div id="loginError" style="margin-top:16px;font-size:11px;color:var(--red);min-height:20px;"></div>
+  <details style="margin-top:24px;"><summary style="font-size:10px;color:var(--gray-600);cursor:pointer">Admin Key Login</summary>
+    <div style="margin-top:8px"><div class="form-group"><input type="password" id="adminKey" placeholder="Admin Key" onkeydown="if(event.key==='Enter')loginLegacy()"></div>
+    <button onclick="loginLegacy()">Entrar</button></div>
+  </details>
 </div>
 <div id="app" class="container">
   <div class="header">
     <div><h1>efixDI<span style="color:var(--green)">+</span> Operations</h1><span style="font-size:11px;color:var(--gray-500)">CVM Act 23.635/2025</span></div>
     <div style="text-align:right"><span class="dot green"></span><span id="healthText" style="font-size:11px;">Connected</span><br><span id="healthMeta" style="font-size:10px;color:var(--gray-500)">...</span></div>
+    <div id="userInfo" style="display:flex;align-items:center;gap:8px;margin-left:16px;"><img id="userPic" style="width:28px;height:28px;border-radius:50%;display:none;border:1px solid var(--border)"><span id="userName" style="font-size:11px;color:var(--gray-400)"></span><button class="sm secondary" onclick="logout()" style="font-size:10px;padding:4px 10px;">Sair</button></div>
   </div>
   <div class="stats">
     <div class="stat"><div class="num" id="statTVL">-</div><div class="lbl">TVL (efixDI)</div></div>
@@ -194,13 +215,76 @@
 <script>
 const B='https://efixdi-backend-production.up.railway.app',PR='https://polygon-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf',BR='https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf',EP='0x04082b283818D9d0dd9Ee8742892eEe5CC396441',EB='0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608',OP='0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
 let K='';
+let adminToken='';
+let adminEmail='';
 function toast(m,t=3e3){const e=document.getElementById('toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',t)}
-function hdr(){return{'X-Admin-Key':K,'Content-Type':'application/json'}}
+function hdr(){
+  const h={'Content-Type':'application/json'};
+  if(adminToken) h['Authorization']='Bearer '+adminToken;
+  else if(K) h['X-Admin-Key']=K;
+  return h;
+}
 function sa(a){return a?a.slice(0,6)+'...'+a.slice(-4):'-'}
 function fd(d){return d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'-'}
 async function rpc(u,to,d){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to,data:d},'latest'],id:1})});const j=await r.json();return BigInt(j.result||'0x0')}
 async function ethBal(u,a){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_getBalance',params:[a,'latest'],id:1})});const j=await r.json();return Number(BigInt(j.result||'0x0'))/1e18}
-async function login(){K=document.getElementById('adminKey').value.trim();if(!K)return;try{const r=await fetch(B+'/api/deposits',{headers:{'X-Admin-Key':K}});if(!r.ok)throw 0;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';loadAll()}catch(e){alert('Invalid key')}}
+
+async function handleGoogleLogin(response){
+  const errEl=document.getElementById('loginError');
+  errEl.textContent='Authenticating...';errEl.style.color='var(--yellow)';
+  try{
+    const r=await fetch(B+'/api/admin/auth/google',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({credential:response.credential})
+    });
+    const d=await r.json();
+    if(!r.ok||!d.success){errEl.textContent=d.error||'Access denied';errEl.style.color='var(--red)';return}
+    adminToken=d.token;adminEmail=d.email;
+    sessionStorage.setItem('efixAdminToken',d.token);
+    sessionStorage.setItem('efixAdminEmail',d.email);
+    sessionStorage.setItem('efixAdminName',d.name||'');
+    sessionStorage.setItem('efixAdminPic',d.picture||'');
+    showApp(d.name,d.picture);
+  }catch(e){errEl.textContent='Connection error: '+e.message;errEl.style.color='var(--red)'}
+}
+
+function loginLegacy(){
+  K=document.getElementById('adminKey').value.trim();
+  if(!K)return;
+  fetch(B+'/api/deposits',{headers:hdr()}).then(r=>{
+    if(!r.ok)throw 0;
+    sessionStorage.setItem('efixAdminKey',K);
+    showApp('Admin','');
+  }).catch(()=>alert('Invalid key'));
+}
+
+function showApp(name,pic){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  if(name){document.getElementById('userName').textContent=name}
+  if(pic){const img=document.getElementById('userPic');img.src=pic;img.style.display='block'}
+  loadAll();
+}
+
+function logout(){
+  adminToken='';K='';adminEmail='';
+  sessionStorage.removeItem('efixAdminToken');
+  sessionStorage.removeItem('efixAdminKey');
+  sessionStorage.removeItem('efixAdminEmail');
+  sessionStorage.removeItem('efixAdminName');
+  sessionStorage.removeItem('efixAdminPic');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='';
+  toast('Logged out');
+}
+
+(function(){
+  const t=sessionStorage.getItem('efixAdminToken');
+  const k=sessionStorage.getItem('efixAdminKey');
+  if(t){adminToken=t;adminEmail=sessionStorage.getItem('efixAdminEmail')||'';showApp(sessionStorage.getItem('efixAdminName')||'Admin',sessionStorage.getItem('efixAdminPic')||'')}
+  else if(k){K=k;showApp('Admin','')}
+})();
 async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadCollateralHistory();loadProtocol();loadBridgeBalances();loadBridgeHistory()}
 async function loadStats(){try{const[ps,bs,mb]=await Promise.all([rpc(PR,EP,'0x18160ddd'),rpc(BR,EB,'0x18160ddd'),ethBal(PR,OP)]);const pn=Number(ps)/1e18,bn=Number(bs)/1e18;document.getElementById('statPolygon').textContent=pn.toFixed(0);document.getElementById('statBase').textContent=bn.toFixed(0);document.getElementById('statTVL').textContent=pn.toFixed(0);document.getElementById('statMatic').textContent=mb.toFixed(1);const h=await(await fetch(B+'/health')).json();document.getElementById('healthMeta').textContent='Block '+h.block+' · Up '+Math.round(h.uptime/60)+'m';
 // Read vault state on-chain
@@ -228,7 +312,7 @@ if(!d.collateral||!d.collateral.length){el.innerHTML='<div class="empty">No coll
 let h='<table class="tbl"><thead><tr><th>Address</th><th>Amount</th><th>USDC</th><th>Status</th><th>TX</th><th>Date</th></tr></thead><tbody>';
 d.collateral.forEach(c=>{h+='<tr><td class="addr">'+sa(c.address)+'</td><td>'+c.amount_efix+' efixDI</td><td>$'+c.usdc_credit+'</td><td><span class="badge '+c.status+'">'+c.status+'</span></td><td style="font-size:11px">'+(c.tx_hash_in?'<a href="https://polygonscan.com/tx/'+c.tx_hash_in+'" target="_blank" style="color:var(--green)">'+c.tx_hash_in.slice(0,10)+'...</a>':'-')+'</td><td style="font-size:11px;color:var(--gray-500)">'+fd(c.created_at)+'</td></tr>'});
 h+='</tbody></table>';el.innerHTML=h}catch(e){el.innerHTML='<div class="empty">'+e.message+'</div>'}}
-async function loadProtocol(){const el=document.getElementById('protocolState'),op=document.getElementById('operatorInfo');try{const s=await(await fetch(B+'/api/status?key='+K)).json();if(s.protocol){const p=s.protocol;el.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">TVL (BRL)</td><td>R$ '+parseFloat(p.tvl_brl).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">TVL (USD)</td><td>$'+p.tvl_usd+'</td></tr><tr><td style="color:var(--gray-500)">efixDI Supply</td><td>'+parseFloat(p.efix_total_supply).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">BRL/USD</td><td>'+p.brl_usd_rate+'</td></tr><tr><td style="color:var(--gray-500)">Vault</td><td>'+(p.vault_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Bridge</td><td>'+(p.bridge_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Block</td><td>'+p.current_block+'</td></tr></table>'}if(s.operator){op.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+parseFloat(s.operator.matic).toFixed(4)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+s.operator.usdc+'</td></tr></table>'}}catch(e){el.textContent='Error: '+e.message}
+async function loadProtocol(){const el=document.getElementById('protocolState'),op=document.getElementById('operatorInfo');try{const s=await(await fetch(B+'/api/status',{headers:hdr()})).json();if(s.protocol){const p=s.protocol;el.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">TVL (BRL)</td><td>R$ '+parseFloat(p.tvl_brl).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">TVL (USD)</td><td>$'+p.tvl_usd+'</td></tr><tr><td style="color:var(--gray-500)">efixDI Supply</td><td>'+parseFloat(p.efix_total_supply).toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">BRL/USD</td><td>'+p.brl_usd_rate+'</td></tr><tr><td style="color:var(--gray-500)">Vault</td><td>'+(p.vault_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Bridge</td><td>'+(p.bridge_paused?'⚠️ Paused':'✅ Active')+'</td></tr><tr><td style="color:var(--gray-500)">Block</td><td>'+p.current_block+'</td></tr></table>'}if(s.operator){op.innerHTML='<table class="tbl"><tr><td style="color:var(--gray-500)">Address</td><td class="addr" style="font-size:11px">'+OP+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+parseFloat(s.operator.matic).toFixed(4)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+s.operator.usdc+'</td></tr></table>'}}catch(e){el.textContent='Error: '+e.message}
 // Load Morpho position
 loadMorpho();loadBridgeBalances();
 // Base operator info
@@ -300,7 +384,6 @@ if(!confirm('Bridge '+amount+' efixDI from '+(userAddress?'vault ('+sa(userAddre
 const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">'+(userAddress?'Releasing from vault → ':'')+'Bridging...</span>';
 try{const body={amount};if(userAddress)body.userAddress=userAddress;const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify(body)});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base'+(d.vaultBridgeTx?'<br>Vault TX: <a href="https://polygonscan.com/tx/'+d.vaultBridgeTx+'" target="_blank" style="color:var(--green)">'+d.vaultBridgeTx.slice(0,14)+'...</a>':'')+'<br>Bridge TX: <a href="https://polygonscan.com/tx/'+d.bridgeTx+'" target="_blank" style="color:var(--green)">'+d.bridgeTx.slice(0,14)+'...</a><br>Fee: '+d.fee+'</span>';toast('Bridge sent!');setTimeout(()=>{loadBridgeBalances();loadCollateral()},10000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
 function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=n==='dashboard'?'100%':'1100px'}
-if(location.hash){document.getElementById('adminKey').value=location.hash.slice(1);login()}
 </script>
 </body>
 </html>
