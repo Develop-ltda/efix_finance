@@ -21,6 +21,14 @@
         .nav-links{display:flex;gap:20px;align-items:center}
         .nav-links a{color:var(--gray-400);text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;transition:color .2s}
         .nav-links a:hover{color:var(--white)}
+        .lang-sel{position:relative;display:flex;align-items:center}
+        .lang-btn{background:var(--gray-900);border:1px solid var(--gray-700);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--gray-300);font-family:var(--font-mono);display:flex;align-items:center;gap:4px}
+        .lang-btn:hover{border-color:var(--gray-500)}
+        .lang-menu{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:10px;padding:4px;min-width:140px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+        .lang-menu.open{display:block}
+        .lang-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--gray-300);font-family:var(--font-mono);transition:background .15s}
+        .lang-opt:hover{background:var(--gray-800);color:var(--white)}
+        .lang-opt.active{color:var(--green)}
         .user-pill{display:none;align-items:center;gap:8px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:100px;padding:6px 14px 6px 10px;font-size:12px;color:var(--gray-300);font-family:var(--font-mono)}
         .user-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
         .user-pill.active{display:flex}
@@ -84,31 +92,55 @@
             <a href="/">Protocol</a>
             <a href="/card/">Card</a>
             <div class="user-pill" id="userPill"><span class="dot"></span><span id="userPillAddr">0x...</span></div>
+            <div class="lang-sel">
+                <div class="lang-btn" onclick="document.querySelector('.lang-menu').classList.toggle('open')">
+                    <span id="langFlag">🇧🇷</span><span id="langCode">PT</span>
+                </div>
+                <div class="lang-menu" id="langMenu">
+                    <div class="lang-opt active" onclick="setLang('pt')">🇧🇷 Português</div>
+                    <div class="lang-opt" onclick="setLang('en')">🇺🇸 English</div>
+                    <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+                    <div class="lang-opt" onclick="setLang('fr')">🇫🇷 Français</div>
+                    <div class="lang-opt" onclick="setLang('ja')">🇯🇵 日本語</div>
+                    <div class="lang-opt" onclick="setLang('zh')">🇨🇳 中文</div>
+                    <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+                    <div class="lang-opt" onclick="setLang('ko')">🇰🇷 한국어</div>
+                </div>
+            </div>
         </div>
     </header>
     <main>
         <!-- AUTH SCREEN -->
         <div id="auth-screen">
-            <h1>Renda Fixa Tokenizada</h1>
-            <p class="subtitle">Deposite BRL via PIX. Receba rendimento CDI de até 25% a.a.<br>Sem MetaMask. Sem taxas de gas. Só email.</p>
+            <h1 data-i18n="hero_title">Renda Fixa Tokenizada</h1>
+            <p class="subtitle" data-i18n="hero_subtitle">Deposite BRL via PIX. Receba rendimento CDI de até 25% a.a.<br>Sem MetaMask. Sem taxas de gas. Só email.</p>
             <div class="auth-box">
                 <!-- Step 1: Email -->
                 <div class="auth-step active" id="step-email">
                     <div class="input-group">
                         <input type="email" id="emailInput" placeholder="seu@email.com" autocomplete="email">
-                        <button class="btn btn-primary" id="btnSendOTP" onclick="handleSendOTP()">Entrar com Email</button>
+                        <button class="btn btn-primary" id="btnSendOTP" onclick="handleSendOTP()" data-i18n="btn_login">Entrar com Email</button>
                     </div>
                 </div>
                 <!-- Step 2: OTP Code -->
                 <div class="auth-step" id="step-otp">
                     <div class="input-group">
-                        <p style="font-size:14px;color:var(--gray-400);margin-bottom:8px;">Verifique seu email e insira o código de 6 dígitos:</p>
+                        <p style="font-size:14px;color:var(--gray-400);margin-bottom:8px;" data-i18n="otp_prompt">Verifique seu email e insira o código de 6 dígitos:</p>
                         <input type="text" id="otpInput" placeholder="000000" autocomplete="one-time-code" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px;">
-                        <button class="btn btn-primary" id="btnVerifyOTP" onclick="handleVerifyOTP()">Verificar Código</button>
-                        <button class="btn btn-secondary" onclick="resetAuth()">Voltar</button>
+                        <button class="btn btn-primary" id="btnVerifyOTP" onclick="handleVerifyOTP()" data-i18n="btn_verify">Verificar Código</button>
+                        <button class="btn btn-secondary" onclick="resetAuth()" data-i18n="btn_back">Voltar</button>
                     </div>
                 </div>
                 <div class="status-msg" id="authStatus"></div>
+            </div>
+            <!-- Waitlist Capture -->
+            <div id="waitlist-box" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--gray-800);width:100%;max-width:380px;">
+                <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px;font-family:var(--font-mono);text-align:center;" data-i18n="waitlist_text">Don't have an account yet? Join the early access list.</p>
+                <div style="display:flex;gap:8px;">
+                    <input type="email" id="waitlistEmail" placeholder="your@email.com" style="flex:1;padding:12px 14px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:10px;color:var(--white);font-family:var(--font-mono);font-size:13px;outline:none;" data-i18n-placeholder="waitlist_placeholder">
+                    <button onclick="joinWaitlist()" style="padding:12px 18px;background:var(--green);color:var(--black);border:none;border-radius:10px;font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .2s;" data-i18n="waitlist_btn">Join</button>
+                </div>
+                <div id="waitlistMsg" style="margin-top:8px;font-size:12px;font-family:var(--font-mono);text-align:center;min-height:18px;"></div>
             </div>
         </div>
 
@@ -121,56 +153,56 @@
                 <span id="shortAddr">0x...</span>
             </div>
             <div class="balance-card">
-                <div class="balance-label">Seu Saldo</div>
+                <div class="balance-label" data-i18n="your_balance">Seu Saldo</div>
                 <div class="balance-value" id="balanceDisplay">R$ 0,00</div>
                 <div class="balance-sub" id="tokenBalance">0.00 efixDI</div>
                 <div class="apy-badge">~22% APY</div>
             </div>
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('deposit', this)">Depositar</button>
-                <button class="tab" onclick="switchTab('withdraw', this)">Sacar</button>
+                <button class="tab active" onclick="switchTab('deposit', this)" data-i18n="tab_deposit">Depositar</button>
+                <button class="tab" onclick="switchTab('withdraw', this)" data-i18n="tab_withdraw">Sacar</button>
                 <button class="tab" onclick="switchTab('card', this)">Card</button>
             </div>
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">
-                    <h3>Depositar via PIX</h3>
+                    <h3 data-i18n="deposit_title">Depositar via PIX</h3>
                     <div id="deposit-form">
                         <div class="amount-input-wrap">
                             <input type="number" id="depositAmount" placeholder="0,00" min="10" step="0.01">
                             <span class="currency">BRL</span>
                         </div>
-                        <button class="btn btn-primary" id="btnDeposit" onclick="handleDeposit()">Gerar QR Code PIX</button>
+                        <button class="btn btn-primary" id="btnDeposit" onclick="handleDeposit()" data-i18n="btn_generate_qr">Gerar QR Code PIX</button>
                     </div>
                     <div id="deposit-qr" style="display:none;">
                         <div style="background:var(--white);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px;">
-                            <p style="color:var(--black);font-size:14px;font-weight:600;margin-bottom:12px;">Escaneie com seu app bancário</p>
+                            <p style="color:var(--black);font-size:14px;font-weight:600;margin-bottom:12px;" data-i18n="scan_prompt">Escaneie com seu app bancário</p>
                             <img id="qrImage" src="" alt="QR Code PIX" style="width:200px;height:200px;border-radius:8px;">
                             <p style="color:var(--gray-600);font-size:11px;font-family:var(--font-mono);margin-top:12px;word-break:break-all;max-height:60px;overflow:hidden;cursor:pointer;" id="pixCodeText" onclick="copyPixCode()">...</p>
-                            <button class="btn btn-secondary" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;width:auto;padding:8px 20px;font-size:13px;" onclick="copyPixCode()">Copiar código PIX</button>
+                            <button class="btn btn-secondary" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;width:auto;padding:8px 20px;font-size:13px;" onclick="copyPixCode()" data-i18n="btn_copy_pix">Copiar código PIX</button>
                         </div>
-                        <button class="btn btn-primary" id="btnIPaid" style="margin-top:16px;background:var(--green);color:var(--black);" onclick="handleIPaid()">Já paguei o PIX</button>
+                        <button class="btn btn-primary" id="btnIPaid" style="margin-top:16px;background:var(--green);color:var(--black);" onclick="handleIPaid()" data-i18n="btn_i_paid">Já paguei o PIX</button>
                         <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;" id="depositSteps">
-                            <div class="prog-step done" id="ds-1"><span class="prog-icon">✓</span> QR Code gerado</div>
-                            <div class="prog-step" id="ds-2"><span class="prog-icon">2</span> Pagamento PIX confirmado</div>
-                            <div class="prog-step" id="ds-3"><span class="prog-icon">3</span> Mintando tokens efixDI</div>
-                            <div class="prog-step" id="ds-4"><span class="prog-icon">4</span> Tokens creditados!</div>
+                            <div class="prog-step done" id="ds-1"><span class="prog-icon">✓</span> <span data-i18n="step_qr_generated">QR Code gerado</span></div>
+                            <div class="prog-step" id="ds-2"><span class="prog-icon">2</span> <span data-i18n="step_pix_confirmed">Pagamento PIX confirmado</span></div>
+                            <div class="prog-step" id="ds-3"><span class="prog-icon">3</span> <span data-i18n="step_minting">Mintando tokens efixDI</span></div>
+                            <div class="prog-step" id="ds-4"><span class="prog-icon">4</span> <span data-i18n="step_credited">Tokens creditados!</span></div>
                         </div>
                         <div id="deposit-msg" style="margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);text-align:center;min-height:20px;"></div>
-                        <button class="btn btn-secondary" style="margin-top:12px;" onclick="resetDeposit()">Cancelar</button>
+                        <button class="btn btn-secondary" style="margin-top:12px;" onclick="resetDeposit()" data-i18n="btn_cancel">Cancelar</button>
                     </div>
                 </div>
             </div>
             <div class="tab-panel" id="panel-withdraw">
                 <div class="action-card">
-                    <h3>Sacar via PIX</h3>
+                    <h3 data-i18n="withdraw_title">Sacar via PIX</h3>
                     <div class="amount-input-wrap">
                         <input type="number" id="withdrawAmount" placeholder="0,00" min="10" step="0.01">
                         <span class="currency">efixDI</span>
                     </div>
                     <div class="input-group" style="margin-bottom:16px;">
-                        <input type="text" id="pixKey" placeholder="Chave PIX (CPF, email, telefone)">
+                        <input type="text" id="pixKey" placeholder="Chave PIX (CPF, email, telefone)" data-i18n-placeholder="pix_key_placeholder">
                     </div>
-                    <button class="btn btn-primary" onclick="handleWithdraw()">Solicitar Saque</button>
+                    <button class="btn btn-primary" onclick="handleWithdraw()" data-i18n="btn_withdraw">Solicitar Saque</button>
                 </div>
             </div>
 
@@ -203,19 +235,19 @@
                     <!-- Collateral Info -->
                     <div style="padding:20px 24px;">
                         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                            <span style="font-size:13px;color:var(--gray-500);">Colateral efixDI</span>
+                            <span style="font-size:13px;color:var(--gray-500);" data-i18n="card_collateral">Colateral efixDI</span>
                             <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);" id="collateralAmount">0.00</span>
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                            <span style="font-size:13px;color:var(--gray-500);">Taxa de crédito</span>
+                            <span style="font-size:13px;color:var(--gray-500);" data-i18n="card_credit_rate">Taxa de crédito</span>
                             <span style="font-size:13px;font-family:var(--font-mono);color:var(--red);">-5% a.a.</span>
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                            <span style="font-size:13px;color:var(--gray-500);">Rendimento do colateral</span>
+                            <span style="font-size:13px;color:var(--gray-500);" data-i18n="card_yield">Rendimento do colateral</span>
                             <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);">+15% CDI</span>
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                            <span style="font-size:13px;color:var(--gray-500);">Carry líquido</span>
+                            <span style="font-size:13px;color:var(--gray-500);" data-i18n="card_net_carry">Carry líquido</span>
                             <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);font-weight:700;">+10% a.a.</span>
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:10px 0;">
@@ -230,8 +262,8 @@
                             <input type="number" id="collateralInput" placeholder="0,00" min="10" step="0.01">
                             <span class="currency">efixDI</span>
                         </div>
-                        <button class="btn btn-primary" style="background:var(--green);color:var(--black);" id="btnCollateralize" onclick="handleCollateralize()">Depositar Colateral</button>
-                        <p style="font-size:11px;color:var(--gray-600);text-align:center;margin-top:12px;font-family:var(--font-mono);line-height:1.5;">
+                        <button class="btn btn-primary" style="background:var(--green);color:var(--black);" id="btnCollateralize" onclick="handleCollateralize()" data-i18n="btn_collateralize">Depositar Colateral</button>
+                        <p style="font-size:11px;color:var(--gray-600);text-align:center;margin-top:12px;font-family:var(--font-mono);line-height:1.5;" data-i18n="card_desc">
                             Seu efixDI rende ~15% CDI enquanto colateral.<br>
                             Crédito no cartão a ~5%. Carry positivo de +10%.
                         </p>
@@ -240,19 +272,19 @@
 
                 <!-- Waitlist -->
                 <div style="margin-top:20px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:16px;padding:20px 24px;text-align:center;">
-                    <p style="font-size:14px;color:var(--gray-400);margin-bottom:12px;">O cartão EFIX está em fase de produção.<br>Deposite colateral agora para garantir prioridade.</p>
+                    <p style="font-size:14px;color:var(--gray-400);margin-bottom:12px;" data-i18n="card_waitlist">O cartão EFIX está em fase de produção.<br>Deposite colateral agora para garantir prioridade.</p>
                     <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
                         <div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;"></div>
-                        <span style="font-size:12px;color:var(--green);font-family:var(--font-mono);">Fila de espera ativa</span>
+                        <span style="font-size:12px;color:var(--green);font-family:var(--font-mono);" data-i18n="card_waitlist_active">Fila de espera ativa</span>
                     </div>
                 </div>
             </div>
 
-            <button class="btn btn-secondary" style="margin-top:24px;" onclick="handleDisconnect()">Desconectar</button>
+            <button class="btn btn-secondary" style="margin-top:24px;" onclick="handleDisconnect()" data-i18n="btn_disconnect">Desconectar</button>
 
             <!-- Transaction History -->
             <div style="margin-top:32px;">
-                <h3 style="font-size:14px;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Histórico</h3>
+                <h3 style="font-size:14px;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;" data-i18n="history_title">Histórico</h3>
                 <div id="txHistory" style="display:flex;flex-direction:column;gap:8px;">
                     <div style="text-align:center;color:var(--gray-600);font-size:13px;font-family:var(--font-mono);padding:20px;">Carregando...</div>
                 </div>
@@ -262,7 +294,7 @@
             <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token</a> ·
             <a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank">Vault</a> ·
             <a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho</a>
-            <br><br>© 2026 Efix Securitizadora S.A. · CVM Act 23.635/2025
+            <br><br>© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CVM Act 23.635/2025
         </div>
     </main>
     <script src="efix-wallet-bundle.js"></script>
@@ -272,8 +304,88 @@
     <script src="wallet.js"></script>
     <script>
         const BACKEND_URL = EFIX_CONFIG.backend;
+
+        // ═══ i18n — 8 languages ═══
+        const i18n = {
+          pt: { hero_title:'Renda Fixa Tokenizada', hero_subtitle:'Deposite BRL via PIX. Receba rendimento CDI de até 25% a.a.<br>Sem MetaMask. Sem taxas de gas. Só email.', btn_login:'Entrar com Email', otp_prompt:'Verifique seu email e insira o código de 6 dígitos:', btn_verify:'Verificar Código', btn_back:'Voltar', your_balance:'Seu Saldo', tab_deposit:'Depositar', tab_withdraw:'Sacar', deposit_title:'Depositar via PIX', btn_generate_qr:'Gerar QR Code PIX', scan_prompt:'Escaneie com seu app bancário', btn_copy_pix:'Copiar código PIX', btn_i_paid:'Já paguei o PIX', step_qr_generated:'QR Code gerado', step_pix_confirmed:'Pagamento PIX confirmado', step_minting:'Mintando tokens efixDI', step_credited:'Tokens creditados!', btn_cancel:'Cancelar', withdraw_title:'Sacar via PIX', pix_key_placeholder:'Chave PIX (CPF, email, telefone)', btn_withdraw:'Solicitar Saque', card_collateral:'Colateral efixDI', card_credit_rate:'Taxa de crédito', card_yield:'Rendimento do colateral', card_net_carry:'Carry líquido', btn_collateralize:'Depositar Colateral', card_desc:'Seu efixDI rende ~15% CDI enquanto colateral.<br>Crédito no cartão a ~5%. Carry positivo de +10%.', card_waitlist:'O cartão EFIX está em fase de produção.<br>Deposite colateral agora para garantir prioridade.', card_waitlist_active:'Fila de espera ativa', btn_disconnect:'Desconectar', history_title:'Histórico', waitlist_text:'Ainda não tem conta? Entre na lista de acesso antecipado.', waitlist_placeholder:'seu@email.com', waitlist_btn:'Entrar', waitlist_success:'Você está na lista! 🚀', waitlist_error:'Tente novamente.', flag:'🇧🇷', code:'PT' },
+          en: { hero_title:'Tokenized Fixed Income', hero_subtitle:'Deposit BRL via PIX. Earn up to 25% APY on CDI yield.<br>No MetaMask. No gas fees. Just email.', btn_login:'Login with Email', otp_prompt:'Check your email and enter the 6-digit code:', btn_verify:'Verify Code', btn_back:'Back', your_balance:'Your Balance', tab_deposit:'Deposit', tab_withdraw:'Withdraw', deposit_title:'Deposit via PIX', btn_generate_qr:'Generate PIX QR Code', scan_prompt:'Scan with your banking app', btn_copy_pix:'Copy PIX code', btn_i_paid:'I already paid', step_qr_generated:'QR Code generated', step_pix_confirmed:'PIX payment confirmed', step_minting:'Minting efixDI tokens', step_credited:'Tokens credited!', btn_cancel:'Cancel', withdraw_title:'Withdraw via PIX', pix_key_placeholder:'PIX Key (CPF, email, phone)', btn_withdraw:'Request Withdrawal', card_collateral:'efixDI Collateral', card_credit_rate:'Credit rate', card_yield:'Collateral yield', card_net_carry:'Net carry', btn_collateralize:'Deposit Collateral', card_desc:'Your efixDI earns ~15% CDI as collateral.<br>Card credit at ~5%. Positive carry of +10%.', card_waitlist:'The EFIX card is in production phase.<br>Deposit collateral now to secure priority.', card_waitlist_active:'Waitlist active', btn_disconnect:'Disconnect', history_title:'History', waitlist_text:'Don\'t have an account yet? Join the early access list.', waitlist_placeholder:'your@email.com', waitlist_btn:'Join', waitlist_success:'You\'re on the list! 🚀', waitlist_error:'Please try again.', flag:'🇺🇸', code:'EN' },
+          es: { hero_title:'Renta Fija Tokenizada', hero_subtitle:'Deposite BRL vía PIX. Reciba rendimiento CDI de hasta 25% a.a.<br>Sin MetaMask. Sin tarifas de gas. Solo email.', btn_login:'Entrar con Email', otp_prompt:'Verifique su email e ingrese el código de 6 dígitos:', btn_verify:'Verificar Código', btn_back:'Volver', your_balance:'Su Saldo', tab_deposit:'Depositar', tab_withdraw:'Retirar', deposit_title:'Depositar vía PIX', btn_generate_qr:'Generar QR Code PIX', scan_prompt:'Escanee con su app bancaria', btn_copy_pix:'Copiar código PIX', btn_i_paid:'Ya pagué el PIX', step_qr_generated:'QR Code generado', step_pix_confirmed:'Pago PIX confirmado', step_minting:'Acuñando tokens efixDI', step_credited:'¡Tokens acreditados!', btn_cancel:'Cancelar', withdraw_title:'Retirar vía PIX', pix_key_placeholder:'Clave PIX (CPF, email, teléfono)', btn_withdraw:'Solicitar Retiro', card_collateral:'Colateral efixDI', card_credit_rate:'Tasa de crédito', card_yield:'Rendimiento del colateral', card_net_carry:'Carry neto', btn_collateralize:'Depositar Colateral', card_desc:'Su efixDI rinde ~15% CDI como colateral.<br>Crédito en tarjeta a ~5%. Carry positivo de +10%.', card_waitlist:'La tarjeta EFIX está en fase de producción.<br>Deposite colateral ahora para asegurar prioridad.', card_waitlist_active:'Lista de espera activa', btn_disconnect:'Desconectar', history_title:'Historial', waitlist_text:'¿Aún no tienes cuenta? Únete a la lista de acceso anticipado.', waitlist_placeholder:'tu@email.com', waitlist_btn:'Unirse', waitlist_success:'¡Estás en la lista! 🚀', waitlist_error:'Inténtalo de nuevo.', flag:'🇪🇸', code:'ES' },
+          fr: { hero_title:'Revenu Fixe Tokenisé', hero_subtitle:'Déposez des BRL via PIX. Recevez un rendement CDI jusqu\'à 25% par an.<br>Sans MetaMask. Sans frais de gas. Juste un email.', btn_login:'Se connecter par Email', otp_prompt:'Vérifiez votre email et entrez le code à 6 chiffres:', btn_verify:'Vérifier le Code', btn_back:'Retour', your_balance:'Votre Solde', tab_deposit:'Déposer', tab_withdraw:'Retirer', deposit_title:'Déposer via PIX', btn_generate_qr:'Générer QR Code PIX', scan_prompt:'Scannez avec votre app bancaire', btn_copy_pix:'Copier le code PIX', btn_i_paid:'J\'ai déjà payé', step_qr_generated:'QR Code généré', step_pix_confirmed:'Paiement PIX confirmé', step_minting:'Frappe des tokens efixDI', step_credited:'Tokens crédités!', btn_cancel:'Annuler', withdraw_title:'Retirer via PIX', pix_key_placeholder:'Clé PIX (CPF, email, téléphone)', btn_withdraw:'Demander le Retrait', card_collateral:'Collatéral efixDI', card_credit_rate:'Taux de crédit', card_yield:'Rendement du collatéral', card_net_carry:'Carry net', btn_collateralize:'Déposer le Collatéral', card_desc:'Votre efixDI rapporte ~15% CDI en collatéral.<br>Crédit carte à ~5%. Carry positif de +10%.', card_waitlist:'La carte EFIX est en phase de production.<br>Déposez du collatéral maintenant pour garantir la priorité.', card_waitlist_active:'Liste d\'attente active', btn_disconnect:'Déconnecter', history_title:'Historique', waitlist_text:'Pas encore de compte? Rejoignez la liste d\'accès anticipé.', waitlist_placeholder:'votre@email.com', waitlist_btn:'Rejoindre', waitlist_success:'Vous êtes sur la liste! 🚀', waitlist_error:'Veuillez réessayer.', flag:'🇫🇷', code:'FR' },
+          ja: { hero_title:'トークン化された固定利回り', hero_subtitle:'PIXでBRLを入金。CDI利回りで最大25%のAPYを獲得。<br>MetaMask不要。ガス代不要。メールだけ。', btn_login:'メールでログイン', otp_prompt:'メールを確認し、6桁のコードを入力してください：', btn_verify:'コードを確認', btn_back:'戻る', your_balance:'残高', tab_deposit:'入金', tab_withdraw:'出金', deposit_title:'PIXで入金', btn_generate_qr:'PIX QRコードを生成', scan_prompt:'銀行アプリでスキャン', btn_copy_pix:'PIXコードをコピー', btn_i_paid:'支払い済み', step_qr_generated:'QRコード生成済み', step_pix_confirmed:'PIX支払い確認済み', step_minting:'efixDIトークン発行中', step_credited:'トークン入金完了！', btn_cancel:'キャンセル', withdraw_title:'PIXで出金', pix_key_placeholder:'PIXキー（CPF、メール、電話）', btn_withdraw:'出金リクエスト', card_collateral:'efixDI担保', card_credit_rate:'信用レート', card_yield:'担保利回り', card_net_carry:'ネットキャリー', btn_collateralize:'担保を預ける', card_desc:'efixDIは担保として~15% CDIの利回り。<br>カード信用~5%。+10%のポジティブキャリー。', card_waitlist:'EFIXカードは生産フェーズです。<br>今すぐ担保を預けて優先権を確保。', card_waitlist_active:'ウェイトリスト受付中', btn_disconnect:'切断', history_title:'履歴', waitlist_text:'アカウントをお持ちでないですか？早期アクセスリストに参加。', waitlist_placeholder:'your@email.com', waitlist_btn:'参加', waitlist_success:'リストに登録されました！🚀', waitlist_error:'もう一度お試しください。', flag:'🇯🇵', code:'JA' },
+          zh: { hero_title:'代币化固定收益', hero_subtitle:'通过PIX存入BRL。获得高达25%的CDI年化收益。<br>无需MetaMask。无Gas费。仅需邮箱。', btn_login:'邮箱登录', otp_prompt:'请查收邮件并输入6位验证码：', btn_verify:'验证代码', btn_back:'返回', your_balance:'余额', tab_deposit:'存入', tab_withdraw:'提取', deposit_title:'通过PIX存入', btn_generate_qr:'生成PIX二维码', scan_prompt:'使用银行APP扫描', btn_copy_pix:'复制PIX代码', btn_i_paid:'我已付款', step_qr_generated:'二维码已生成', step_pix_confirmed:'PIX支付已确认', step_minting:'正在铸造efixDI代币', step_credited:'代币已到账！', btn_cancel:'取消', withdraw_title:'通过PIX提取', pix_key_placeholder:'PIX密钥（CPF、邮箱、电话）', btn_withdraw:'申请提取', card_collateral:'efixDI抵押品', card_credit_rate:'信用利率', card_yield:'抵押品收益', card_net_carry:'净利差', btn_collateralize:'存入抵押品', card_desc:'您的efixDI作为抵押品可获~15% CDI收益。<br>信用卡利率~5%。正利差+10%。', card_waitlist:'EFIX卡正在生产阶段。<br>现在存入抵押品以确保优先权。', card_waitlist_active:'等候名单开放中', btn_disconnect:'断开连接', history_title:'历史记录', waitlist_text:'还没有账户？加入早期访问名单。', waitlist_placeholder:'your@email.com', waitlist_btn:'加入', waitlist_success:'您已加入名单！🚀', waitlist_error:'请重试。', flag:'🇨🇳', code:'ZH' },
+          ar: { hero_title:'دخل ثابت مُرمَّز', hero_subtitle:'أودع BRL عبر PIX. احصل على عائد CDI يصل إلى 25% سنوياً.<br>بدون MetaMask. بدون رسوم غاز. فقط بريد إلكتروني.', btn_login:'تسجيل الدخول بالبريد', otp_prompt:'تحقق من بريدك وأدخل الرمز المكون من 6 أرقام:', btn_verify:'تحقق من الرمز', btn_back:'رجوع', your_balance:'رصيدك', tab_deposit:'إيداع', tab_withdraw:'سحب', deposit_title:'إيداع عبر PIX', btn_generate_qr:'إنشاء رمز QR PIX', scan_prompt:'امسح باستخدام تطبيق البنك', btn_copy_pix:'نسخ رمز PIX', btn_i_paid:'لقد دفعت بالفعل', step_qr_generated:'تم إنشاء رمز QR', step_pix_confirmed:'تم تأكيد دفع PIX', step_minting:'جاري سك رموز efixDI', step_credited:'تم إيداع الرموز!', btn_cancel:'إلغاء', withdraw_title:'سحب عبر PIX', pix_key_placeholder:'مفتاح PIX (CPF، بريد، هاتف)', btn_withdraw:'طلب سحب', card_collateral:'ضمان efixDI', card_credit_rate:'معدل الائتمان', card_yield:'عائد الضمان', card_net_carry:'صافي العائد', btn_collateralize:'إيداع الضمان', card_desc:'efixDI الخاص بك يربح ~15% CDI كضمان.<br>بطاقة ائتمان بـ ~5%. عائد صافي إيجابي +10%.', card_waitlist:'بطاقة EFIX في مرحلة الإنتاج.<br>أودع الضمان الآن لضمان الأولوية.', card_waitlist_active:'قائمة الانتظار مفتوحة', btn_disconnect:'قطع الاتصال', history_title:'السجل', waitlist_text:'ليس لديك حساب بعد؟ انضم إلى قائمة الوصول المبكر.', waitlist_placeholder:'your@email.com', waitlist_btn:'انضم', waitlist_success:'أنت في القائمة! 🚀', waitlist_error:'حاول مرة أخرى.', flag:'🇸🇦', code:'AR' },
+          ko: { hero_title:'토큰화된 고정 수익', hero_subtitle:'PIX로 BRL을 입금하세요. CDI 수익률 최대 25% APY.<br>MetaMask 불필요. 가스비 없음. 이메일만 있으면 됩니다.', btn_login:'이메일로 로그인', otp_prompt:'이메일을 확인하고 6자리 코드를 입력하세요:', btn_verify:'코드 확인', btn_back:'뒤로', your_balance:'잔액', tab_deposit:'입금', tab_withdraw:'출금', deposit_title:'PIX로 입금', btn_generate_qr:'PIX QR 코드 생성', scan_prompt:'뱅킹 앱으로 스캔', btn_copy_pix:'PIX 코드 복사', btn_i_paid:'이미 결제했습니다', step_qr_generated:'QR 코드 생성됨', step_pix_confirmed:'PIX 결제 확인됨', step_minting:'efixDI 토큰 발행 중', step_credited:'토큰 입금 완료!', btn_cancel:'취소', withdraw_title:'PIX로 출금', pix_key_placeholder:'PIX 키 (CPF, 이메일, 전화)', btn_withdraw:'출금 요청', card_collateral:'efixDI 담보', card_credit_rate:'신용 금리', card_yield:'담보 수익률', card_net_carry:'순 캐리', btn_collateralize:'담보 예치', card_desc:'efixDI는 담보로 ~15% CDI 수익을 얻습니다.<br>카드 신용 ~5%. +10% 포지티브 캐리.', card_waitlist:'EFIX 카드는 생산 단계입니다.<br>지금 담보를 예치하여 우선권을 확보하세요.', card_waitlist_active:'대기자 명단 활성', btn_disconnect:'연결 해제', history_title:'거래 내역', waitlist_text:'아직 계정이 없으신가요? 얼리 액세스 리스트에 참여하세요.', waitlist_placeholder:'your@email.com', waitlist_btn:'참여', waitlist_success:'리스트에 등록되었습니다! 🚀', waitlist_error:'다시 시도해주세요.', flag:'🇰🇷', code:'KO' },
+        };
+        let currentLang = 'pt';
+
+        function setLang(lang) {
+          if (!i18n[lang]) return;
+          currentLang = lang;
+          const t = i18n[lang];
+          // Update all data-i18n elements
+          document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) el.innerHTML = t[key];
+          });
+          // Update placeholders
+          document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key]) el.placeholder = t[key];
+          });
+          // Update flag/code
+          document.getElementById('langFlag').textContent = t.flag;
+          document.getElementById('langCode').textContent = t.code;
+          // Update active state
+          document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+          document.querySelectorAll('.lang-opt').forEach(o => { if(o.onclick.toString().includes("'"+lang+"'")) o.classList.add('active'); });
+          // Close menu
+          document.getElementById('langMenu').classList.remove('open');
+          // RTL for Arabic
+          document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+          // Store preference
+          try { localStorage.setItem('efixLang', lang); } catch(e) {}
+        }
+
+        // Auto-detect language on load
+        (function() {
+          const saved = localStorage.getItem('efixLang');
+          if (saved && i18n[saved]) { setTimeout(() => setLang(saved), 100); return; }
+          const bl = (navigator.language || '').slice(0,2).toLowerCase();
+          const map = { pt:'pt', en:'en', es:'es', fr:'fr', ja:'ja', zh:'zh', ar:'ar', ko:'ko' };
+          if (map[bl] && bl !== 'pt') setTimeout(() => setLang(map[bl]), 100);
+        })();
+
+        // Close lang menu on outside click
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.lang-sel')) document.getElementById('langMenu').classList.remove('open');
+        });
         let userAddress = null;
         let userEmail = '';
+
+        // ═══ WAITLIST ═══
+        async function joinWaitlist() {
+            const email = document.getElementById('waitlistEmail').value.trim();
+            const msg = document.getElementById('waitlistMsg');
+            if (!email || !email.includes('@')) { msg.style.color='var(--red)'; msg.textContent=T('waitlist_error'); return; }
+            try {
+                const r = await fetch(BACKEND_URL + '/api/waitlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, source: 'wallet' })
+                });
+                const d = await r.json();
+                msg.style.color = 'var(--green)';
+                msg.textContent = T('waitlist_success');
+                document.getElementById('waitlistEmail').value = '';
+                document.getElementById('waitlistEmail').disabled = true;
+                // Also set as login email for convenience
+                document.getElementById('emailInput').value = email;
+            } catch(e) {
+                msg.style.color = 'var(--red)';
+                msg.textContent = T('waitlist_error');
+            }
+        }
+        function T(key) { return (i18n[currentLang] && i18n[currentLang][key]) || key; }
 
         // ═══ INIT ═══
         document.addEventListener('DOMContentLoaded', async () => {

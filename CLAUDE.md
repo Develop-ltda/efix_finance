@@ -84,22 +84,12 @@ Pure JS modules with no DOM references. Each exposes a namespace object. Functio
 - `scanChainHolders(provider, contract, label)` → scans Transfer events to compute holder set with positive balances
 - `calcMetrics(posData, vol, days, zScore)` → full analysis: optimal range, utilization, efficiency, DTE, rebalance estimates
 
-**`app/wallet/admin-logic.js`** — `AdminLogic` (consumed by `app/wallet/admin.html`)
-- `_getMorpho(backend, key, maxAgeMs?)` → cached fetch to `/api/admin/morpho` (5s TTL, deduplicates 3 callers)
-- `hdr(key)` → returns `{X-Admin-Key, Content-Type}` headers object
-- `validateKey(backend, key)` → tests admin key against `/api/deposits`
-- `fetchStats(backend, key, rpcPoly, rpcBase, contracts)` → supply (Polygon+Base), operator MATIC balance, health, locked collateral, user count
-- `fetchDeposits(backend, key, shortAddrFn, fmtDateFn)` → merges `/api/deposits` + `/api/wallet/pending`, sorted by date
-- `fetchWithdrawals(backend, key)` → GET `/api/wallet/withdrawals`
-- `processWithdrawal(backend, key, id)` → POST `/api/wallet/withdrawals/process`
-- `fetchCollateral(backend, key)` → collateral positions + summary `{items, totalEfix, totalUsdc, locked, pending}`
-- `fetchProtocol(backend, key)` → GET `/api/status`, returns `{protocol, operator, services}`
-- `fetchMorpho(backend, key)` → Morpho position (via cache)
-- `fetchBridgeBalances(rpcPoly, rpcBase, contracts, key, backend)` → operator balances on Polygon + Base (uses `balOf()`)
-- `fetchBridgeHistory(srcAddress)` → LayerZero Scan API, returns recent OFT bridge messages
-- `doMint(backend, key, params)` → POST `/api/admin/deposit` (manual mint)
-- `doBridge(backend, key, amount)` → POST `/api/admin/bridge` (Polygon→Base)
-- `fetchBaseOperator(backend, key)` → Base operator balances (via cache)
+**`app/wallet/admin/index.html`** — self-contained admin panel (no external logic module)
+- Redesigned with Outfit/JetBrains Mono fonts, dark institutional theme
+- Auth: Google Sign-In (`/api/admin/auth/google`) + legacy X-Admin-Key
+- Uses shared: `EFIX_CONFIG`, `shortAddr`, `fmtDate`, `rpcBigInt`, `balOf`, `padAddr`, `ethBal`, `toast`, `switchTab`
+- Inline: `hdr()` (dual Bearer/X-Admin-Key), `loadStats/Deposits/Withdrawals/Collateral/Protocol/Morpho/BridgeBalances/BridgeHistory`
+- LZ monitoring: Postgres-backed tx hash storage, batch LZ API polling, browser notifications, chain scan fallback
 
 **`app/app.js`** — `AppLogic` (consumed by `app/index.html`)
 - Constants: `CONTRACTS` (vault, token, pixBridge, lendingPool, oracle), `POLYGON_CHAIN_ID`, `VAULT_ABI`, `TOKEN_ABI`
@@ -153,7 +143,7 @@ Pure JS modules with no DOM references. Each exposes a namespace object. Functio
 | `index.html` | Landing page (bilingual PT/EN) | Syne |
 | `app/index.html` | Main user app — deposit, withdraw, card ops via PIX + Alchemy smart wallets | Syne |
 | `app/wallet/index.html` | Smart wallet deposit/withdraw/card interface | Syne (dark theme) |
-| `app/wallet/admin.html` | Protocol operations dashboard (mint, collateral, bridge, monitoring) | Syne (dark theme) |
+| `app/wallet/admin/index.html` | Protocol operations dashboard (mint, collateral, bridge, LZ monitoring) | Outfit (dark theme) |
 | `card/index.html` | Visa card product landing | Syne |
 | `card/app.html` | Card app — collateralize efixDI, borrow USDC (50% LTV) | Syne |
 | `card/admin.html` | Card admin — bridge ops, Morpho position, chain breakdown | Syne |
@@ -198,7 +188,7 @@ Centralized in `shared/js/config.js` as `EFIX_CONFIG`:
 - Two CSS design families: **Syne** (main pages) and **Inter** (listings, team)
 - Syne pages use CSS vars: `--black`, `--white`, `--gray-100`..`--gray-900`, `--green`, `--red`
 - Inter pages use CSS vars: `--bg-primary`, `--text-primary`, `--border`, `--accent-blue`, etc.
-- Admin pages use password-based access (plaintext comparison)
+- Admin pages use Google Sign-In or X-Admin-Key header for access
 - `rpc()` returns raw hex string; `rpcBigInt()` wraps it for BigInt consumers
 - `toast()` in shared/js/ui.js supports both `display` and `classList.show` CSS patterns
 - Live data polling uses `setInterval` (typically 3-second intervals for balances)
