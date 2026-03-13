@@ -3,13 +3,29 @@
 
 const CardAppLogic = {
   async apiCall(proxyUrl, path, opts, isDemo) {
+    opts = opts || {};
     const url = path.startsWith('http') ? path : proxyUrl + path;
     const modeHeader = isDemo ? { 'X-Bridge-Mode': 'sandbox' } : {};
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...modeHeader, ...(opts.headers || {}) },
       ...opts,
+      headers: { 'Content-Type': 'application/json', ...modeHeader, ...(opts.headers || {}) },
     });
-    return res.json();
+    const text = await res.text();
+    let data = {};
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = text;
+      }
+    }
+    if (!res.ok) {
+      const message = typeof data === 'string'
+        ? data
+        : data.detail?.message || data.message || data.error || ('HTTP ' + res.status);
+      throw new Error(message);
+    }
+    return data;
   },
 
   async loginUser(proxyUrl, email, isDemo) {
@@ -108,7 +124,7 @@ const CardAppLogic = {
       headers: { 'Idempotency-Key': 'sim-topup-' + Date.now() },
       body: JSON.stringify({ amount: '1000.0' }),
     }, isDemo);
-    this.apiCall(proxyUrl, '/users/tx', {
+    await this.apiCall(proxyUrl, '/users/tx', {
       method: 'POST',
       body: JSON.stringify({ email, type: 'top_up', amount: 1000, asset: 'USDC', description: 'Simulated top-up (demo)' }),
     }, isDemo);
@@ -120,7 +136,7 @@ const CardAppLogic = {
       headers: { 'Idempotency-Key': 'sim-auth-' + Date.now() },
       body: JSON.stringify({ amount: '100.0', merchant_name: 'EFIX Demo Store' }),
     }, isDemo);
-    this.apiCall(proxyUrl, '/users/tx', {
+    await this.apiCall(proxyUrl, '/users/tx', {
       method: 'POST',
       body: JSON.stringify({ email, type: 'purchase', amount: 100, asset: 'USDC', description: 'Simulated purchase (demo)' }),
     }, isDemo);

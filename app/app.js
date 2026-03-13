@@ -31,14 +31,17 @@ const AppLogic = {
   },
 
   async connectWallet(ethereum) {
-    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-    const chainId = await ethereum.request({ method: 'eth_chainId' });
+    await ethereum.request({ method: 'eth_requestAccounts' });
+    let chainId = await ethereum.request({ method: 'eth_chainId' });
     if (chainId !== this.POLYGON_CHAIN_ID) {
-      await this.switchToPolygon(ethereum);
+      chainId = await this.switchToPolygon(ethereum);
+    }
+    if (chainId !== this.POLYGON_CHAIN_ID) {
+      throw new Error('Mude para Polygon Mainnet para continuar');
     }
     const provider = new ethers.BrowserProvider(ethereum);
     const signer = await provider.getSigner();
-    const address = accounts[0];
+    const address = await signer.getAddress();
     const contracts = {
       vault: new ethers.Contract(this.CONTRACTS.vault, this.VAULT_ABI, signer),
       token: new ethers.Contract(this.CONTRACTS.efixDIToken, this.TOKEN_ABI, signer)
@@ -53,19 +56,25 @@ const AppLogic = {
         params: [{ chainId: this.POLYGON_CHAIN_ID }]
       });
     } catch (switchError) {
-      if (switchError.code === 4902) {
-        await ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: this.POLYGON_CHAIN_ID,
-            chainName: 'Polygon Mainnet',
-            nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-            rpcUrls: ['https://polygon-rpc.com'],
-            blockExplorerUrls: ['https://polygonscan.com']
-          }]
-        });
+      if (switchError.code !== 4902) {
+        throw switchError;
       }
+      await ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: this.POLYGON_CHAIN_ID,
+          chainName: 'Polygon Mainnet',
+          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+          rpcUrls: ['https://polygon-rpc.com'],
+          blockExplorerUrls: ['https://polygonscan.com']
+        }]
+      });
+      await ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: this.POLYGON_CHAIN_ID }]
+      });
     }
+    return await ethereum.request({ method: 'eth_chainId' });
   },
 
   async fetchPosition(vaultContract, address) {

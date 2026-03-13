@@ -479,10 +479,27 @@ async function loadOnboardingStatus() {
   try {
     const status = await CardAppLogic.fetchOnboardingStatus(PROXY_URL, currentUser.bridge_customer_id, IS_DEMO);
     currentBridgeCustomer = status.raw;
+    tosLink = status.tosLink || tosLink;
+    kycLink = status.kycLink || kycLink;
 
     // Step 1: TOS
     const tosNum = document.getElementById('stepTosNum');
     const btnTos = document.getElementById('btnTos');
+    const badge = document.getElementById('modeBadge');
+
+    [tosNum, document.getElementById('stepKycNum'), document.getElementById('stepCardNum')].forEach((el, index) => {
+      el.classList.remove('done', 'active');
+      el.textContent = String(index + 1);
+    });
+    btnTos.textContent = 'Abrir';
+    btnTos.disabled = true;
+    document.getElementById('btnKyc').textContent = 'Verificar';
+    document.getElementById('btnKyc').disabled = true;
+    document.getElementById('btnIssueCard').textContent = 'Emitir';
+    document.getElementById('btnIssueCard').disabled = true;
+    badge.textContent = IS_DEMO ? 'Demo' : 'Live';
+    badge.classList.remove('pending');
+
     if (status.tosOk) {
       tosNum.classList.add('done'); tosNum.textContent = '✓';
       btnTos.textContent = 'Concluído'; btnTos.disabled = true;
@@ -497,11 +514,13 @@ async function loadOnboardingStatus() {
     if (status.kycOk) {
       kycNum.classList.add('done'); kycNum.textContent = '✓';
       btnKyc.textContent = 'Verificado'; btnKyc.disabled = true;
+    } else if (status.kycPending) {
+      kycNum.classList.add('active');
+      btnKyc.textContent = 'Em análise';
+      btnKyc.disabled = true;
     } else if (status.tosOk) {
       kycNum.classList.add('active');
       btnKyc.disabled = false;
-    } else {
-      btnKyc.disabled = true;
     }
 
     // Step 3: Issue card
@@ -514,8 +533,8 @@ async function loadOnboardingStatus() {
 
     // Update pending badge
     if (status.kycPending) {
-      document.getElementById('modeBadge').textContent = 'Em análise';
-      document.getElementById('modeBadge').classList.add('pending');
+      badge.textContent = 'Em análise';
+      badge.classList.add('pending');
     }
   } catch (err) {
     console.error('Onboarding status error:', err);
@@ -558,14 +577,22 @@ async function openKyc() {
 
 async function refreshStatus() {
   document.getElementById('refreshSpinner').style.display = 'inline-block';
-  await loadOnboardingStatus();
-  document.getElementById('refreshSpinner').style.display = 'none';
-  toast('Status atualizado');
+  try {
+    if (currentUser?.email) {
+      const lookup = await CardAppLogic.refreshUser(PROXY_URL, currentUser.email, IS_DEMO);
+      if (lookup?.user) currentUser = lookup.user;
+    }
+    await loadOnboardingStatus();
+    toast('Status atualizado');
 
-  // Check if ready for card screen
-  if (currentUser?.card_last4 && currentUser?.card_funding_address) {
-    renderCard();
-    showScreen('screenCard');
+    if (currentUser?.card_last4 && currentUser?.card_funding_address) {
+      renderCard();
+      showScreen('screenCard');
+    }
+  } catch (err) {
+    toast('Erro: ' + err.message);
+  } finally {
+    document.getElementById('refreshSpinner').style.display = 'none';
   }
 }
 
@@ -617,9 +644,9 @@ async function loadBalance() {
   if (!currentUser?.card_funding_address) return;
 
   // Demo mode: read balance from Bridge sandbox card account
-  if (IS_DEMO && currentUser.card_account_id) {
+  if (IS_DEMO && currentUser.card_account_id && currentUser.bridge_customer_id) {
     try {
-      const bal = await CardAppLogic.fetchDemoBalance(PROXY_URL, '5f33ae06-5dae-4344-98f7-172f88c12842', currentUser.card_account_id, IS_DEMO);
+      const bal = await CardAppLogic.fetchDemoBalance(PROXY_URL, currentUser.bridge_customer_id, currentUser.card_account_id, IS_DEMO);
       if (bal !== null) {
         document.getElementById('cardBalance').textContent = `$${bal.toFixed(2)}`;
         return;
@@ -704,18 +731,18 @@ async function toggleFreeze() {
 
 // Demo-only: Sandbox simulate functions
 async function simulateTopUp() {
-  if (!IS_DEMO || !currentUser?.card_account_id) return toast('Somente no modo demo');
+  if (!IS_DEMO || !currentUser?.card_account_id || !currentUser?.bridge_customer_id) return toast('Somente no modo demo');
   try {
-    await CardAppLogic.simulateTopUp(PROXY_URL, '5f33ae06-5dae-4344-98f7-172f88c12842', currentUser.card_account_id, currentUser.email, IS_DEMO);
+    await CardAppLogic.simulateTopUp(PROXY_URL, currentUser.bridge_customer_id, currentUser.card_account_id, currentUser.email, IS_DEMO);
     toast('Depósito de $1000 simulado');
     setTimeout(loadBalance, 1500);
   } catch (err) { toast('Erro: ' + err.message); }
 }
 
 async function simulatePurchase() {
-  if (!IS_DEMO || !currentUser?.card_account_id) return toast('Somente no modo demo');
+  if (!IS_DEMO || !currentUser?.card_account_id || !currentUser?.bridge_customer_id) return toast('Somente no modo demo');
   try {
-    await CardAppLogic.simulatePurchase(PROXY_URL, '5f33ae06-5dae-4344-98f7-172f88c12842', currentUser.card_account_id, currentUser.email, IS_DEMO);
+    await CardAppLogic.simulatePurchase(PROXY_URL, currentUser.bridge_customer_id, currentUser.card_account_id, currentUser.email, IS_DEMO);
     toast('Compra de $100 simulada');
     setTimeout(loadBalance, 1500);
   } catch (err) { toast('Erro: ' + err.message); }
@@ -782,4 +809,3 @@ function logout() {
 </script>
 </body>
 </html>
-

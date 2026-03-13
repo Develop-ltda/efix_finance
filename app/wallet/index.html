@@ -566,6 +566,7 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span>Verificando pagamento...';
             setDepositMsg('Consultando HausBank...');
+            startStatusPoll();
 
             try {
                 const data = await WalletLogic.confirmPayment(BACKEND_URL, currentDepositRef);
@@ -627,12 +628,20 @@
                 try {
                     const data = await WalletLogic.checkDepositStatus(BACKEND_URL, currentDepositRef);
 
+                    if (data.status === 'minting') {
+                        setStep(2, true); setStep(3, 'active');
+                        setDepositMsg('Mintando tokens... aguarde ~15 segundos');
+                    }
+
                     if (data.status === 'confirmed' || data.status === 'minted') {
                         setStep(2, true); setStep(3, true); setStep(4, true);
                         document.getElementById('btnIPaid').style.display = 'none';
                         setDepositMsg('Depósito confirmado! TX: ' + (data.txHash || '').slice(0, 14) + '...');
                         clearInterval(pollTimer); pollTimer = null;
-                        setTimeout(() => refreshBalance(userAddress), 2000);
+                        setTimeout(async () => {
+                            await refreshBalance(userAddress);
+                            loadHistory(userAddress);
+                        }, 2000);
                     }
                 } catch(e) { /* keep polling */ }
             }, 5000);
