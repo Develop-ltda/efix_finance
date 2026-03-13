@@ -51,6 +51,20 @@
   .dot.green{background:var(--green)}
   .iframe-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#fff}
   .iframe-wrap iframe{width:100%;height:calc(100vh - 260px);border:none}
+  .lz-msg{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border);transition:background .15s}
+  .lz-msg:hover{background:#1a1a1a}
+  .lz-msg:last-child{border-bottom:none}
+  .lz-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;text-transform:uppercase;white-space:nowrap;min-width:72px;text-align:center}
+  .lz-status.delivered{background:rgba(34,197,94,0.1);color:#16a34a}
+  .lz-status.inflight{background:rgba(234,179,8,0.1);color:#ca8a04;animation:lzPulse 1.5s ease infinite}
+  .lz-status.failed,.lz-status.blocked{background:rgba(239,68,68,0.1);color:#dc2626}
+  @keyframes lzPulse{0%,100%{opacity:1}50%{opacity:.5}}
+  .lz-chain{font-size:10px;color:var(--gray-500);display:flex;align-items:center;gap:4px}
+  .lz-chain .arrow{color:var(--green);font-weight:700}
+  .lz-time{font-size:10px;color:var(--gray-400);white-space:nowrap}
+  .lz-hash{font-size:10px;color:var(--gray-500);text-decoration:none;font-family:var(--font-mono);transition:color .2s}
+  .lz-hash:hover{color:var(--white)}
+  .lz-nonce{font-size:10px;color:var(--gray-400);font-family:var(--font-mono);min-width:20px}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -199,7 +213,7 @@
         <button class="sm secondary" style="margin-top:12px;" onclick="loadMorpho()">Refresh</button>
       </div>
       <div class="card">
-        <h2>Bridge History</h2>
+        <h2>LayerZero Live Messages</h2>
         <div id="bridgeHistory">Loading...</div>
         <div style="margin-top:12px;display:flex;gap:8px;">
           <button class="sm secondary" onclick="loadBridgeHistory()">Refresh</button>
@@ -350,32 +364,81 @@ el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);f
 
 async function loadBridgeHistory(){
 const el=document.getElementById('bridgeHistory');if(!el)return;
-el.innerHTML='<div style="font-size:11px;color:var(--gray-500)">Loading from LayerZero Scan...</div>';
+el.innerHTML='<div style="font-size:11px;color:var(--gray-400)">Loading from LayerZero Scan...</div>';
 try{
-// Fetch from LayerZero Scan API
-const r=await fetch('https://scan.layerzero-api.com/v1/messages/oft?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
-if(!r.ok)throw new Error('LZ Scan API error');
-const d=await r.json();
-const msgs=d.data||d.messages||[];
+let msgs=[];
+try{
+  const r=await fetch('https://scan.layerzero-api.com/v1/messages/oft?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
+  if(r.ok){const d=await r.json();msgs=d.data||d.messages||[]}
+}catch(e){}
 if(!msgs.length){
-// Fallback: show manual link
-el.innerHTML='<div style="font-size:11px;color:var(--gray-500)">No messages found via API.<br><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green)">View on LayerZero Scan ↗</a></div>';
-return}
-let html='<table class="tbl"><thead><tr><th>Status</th><th>From→To</th><th>Amount</th><th>Date</th><th></th></tr></thead><tbody>';
+  try{
+    const r2=await fetch('https://scan.layerzero-api.com/v1/messages?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
+    if(r2.ok){const d2=await r2.json();msgs=d2.data||d2.messages||[]}
+  }catch(e){}
+}
+if(!msgs.length){
+  el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:24px;margin-bottom:8px">🌉</div><div style="font-size:12px;color:var(--gray-400);margin-bottom:12px">No messages via API — view on LayerZero Scan directly</div><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green);font-size:12px">OFT Adapter ↗</a></div>';
+  return}
+
+let hasInflight=false;
+let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:10px;color:var(--gray-500)"><span>'+msgs.length+' messages</span><span>polled just now</span></div>';
 msgs.forEach(m=>{
-const st=m.status||m.pathway?.status||'unknown';
-const stColor=st==='DELIVERED'?'var(--green)':st==='INFLIGHT'?'var(--yellow)':'var(--gray-500)';
-const srcChain=m.srcChainKey||m.pathway?.srcChainKey||'polygon';
-const dstChain=m.dstChainKey||m.pathway?.dstChainKey||'base';
-const date=m.created?fd(m.created):'-';
-const hash=m.srcTxHash||m.pathway?.sender?.hash||'';
-const shortHash=hash?hash.slice(0,10)+'...':'';
-const link=hash?'<a href="https://layerzeroscan.com/tx/'+hash+'" target="_blank" style="color:var(--green);font-size:11px">View ↗</a>':'';
-html+='<tr><td><span style="color:'+stColor+';font-size:11px;font-weight:700">'+st+'</span></td><td style="font-size:11px">'+srcChain+'→'+dstChain+'</td><td style="font-size:11px">efixDI</td><td style="font-size:11px;color:var(--gray-500)">'+date+'</td><td>'+link+'</td></tr>'});
-html+='</tbody></table>';
-el.innerHTML=html}catch(e){
-// If API fails, show direct link
-el.innerHTML='<table class="tbl"><tbody><tr><td style="font-size:11px">View bridge history on LayerZero Scan:</td></tr><tr><td><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green)">OFT Adapter ↗</a> · <a href="https://layerzeroscan.com/address/0x9eFc11e4d285b5a749faFBC2613836Dcda899e12" target="_blank" style="color:var(--green)">Operator ↗</a></td></tr></tbody></table>'}}
+  const st=(m.status||m.pathway?.status||'UNKNOWN').toUpperCase();
+  const stClass=st==='DELIVERED'?'delivered':st==='INFLIGHT'?'inflight':st==='FAILED'?'failed':st==='BLOCKED'?'blocked':'';
+  if(st==='INFLIGHT')hasInflight=true;
+
+  const nonce=m.nonce||m.pathway?.nonce||'';
+  const srcChain=m.srcChainKey||m.pathway?.srcChainKey||'polygon';
+  const dstChain=m.dstChainKey||m.pathway?.dstChainKey||'base';
+  const srcHash=m.srcTxHash||m.pathway?.sender?.hash||'';
+  const dstHash=m.dstTxHash||m.pathway?.receiver?.hash||'';
+  const created=m.created||m.pathway?.created||'';
+  const updated=m.updated||m.pathway?.updated||'';
+
+  let timeAgo='-';
+  if(created){
+    const secs=Math.floor((Date.now()-new Date(created).getTime())/1000);
+    if(secs<60)timeAgo=secs+'s ago';
+    else if(secs<3600)timeAgo=Math.floor(secs/60)+'m ago';
+    else if(secs<86400)timeAgo=Math.floor(secs/3600)+'h ago';
+    else timeAgo=Math.floor(secs/86400)+'d ago';
+  }
+
+  let duration='';
+  if(st==='DELIVERED'&&created&&updated){
+    const dur=Math.floor((new Date(updated).getTime()-new Date(created).getTime())/1000);
+    if(dur<60)duration=dur+'s';
+    else if(dur<3600)duration=Math.floor(dur/60)+'m '+dur%60+'s';
+    else duration=Math.floor(dur/3600)+'h';
+  }
+
+  const lzLink=srcHash?'https://layerzeroscan.com/tx/'+srcHash:'#';
+  const srcScan=srcChain.includes('polygon')||srcChain.includes('poly')?'https://polygonscan.com/tx/'+srcHash:'https://basescan.org/tx/'+srcHash;
+  const dstScan=dstHash?(dstChain.includes('base')?'https://basescan.org/tx/'+dstHash:'https://polygonscan.com/tx/'+dstHash):'';
+
+  html+='<div class="lz-msg">';
+  html+='<span class="lz-nonce">#'+nonce+'</span>';
+  html+='<span class="lz-status '+stClass+'">'+st+'</span>';
+  html+='<span class="lz-chain">'+srcChain+' <span class="arrow">→</span> '+dstChain+'</span>';
+  html+='<span style="flex:1"></span>';
+  if(duration)html+='<span style="font-size:10px;color:var(--green);margin-right:8px">⏱ '+duration+'</span>';
+  html+='<span class="lz-time">'+timeAgo+'</span>';
+  html+='<a href="'+lzLink+'" target="_blank" class="lz-hash" style="margin-left:8px">LZ ↗</a>';
+  if(srcHash)html+='<a href="'+srcScan+'" target="_blank" class="lz-hash" style="margin-left:4px">Src ↗</a>';
+  if(dstScan)html+='<a href="'+dstScan+'" target="_blank" class="lz-hash" style="margin-left:4px">Dst ↗</a>';
+  html+='</div>';
+});
+el.innerHTML=html;
+
+if(hasInflight){
+  if(!window._lzAutoRefresh){window._lzAutoRefresh=setInterval(()=>{loadBridgeHistory()},8000)}
+}else{
+  if(window._lzAutoRefresh){clearInterval(window._lzAutoRefresh);window._lzAutoRefresh=null}
+}
+
+}catch(e){
+el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:12px;color:var(--red);margin-bottom:8px">API error: '+e.message+'</div><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green);font-size:12px">View on LayerZero Scan ↗</a></div>'}}
 
 async function doBridge(){
 const amount=document.getElementById('bridgeAmount').value.trim();if(!amount||Number(amount)<=0){alert('Enter amount');return}
