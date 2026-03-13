@@ -80,10 +80,13 @@ const ProtocolLogic = {
   },
 
   async fetchLive(backendUrl, adminKey) {
-    const [h, s] = await Promise.all([
-      fetch(backendUrl + '/health').then(r => r.json()),
-      fetch(backendUrl + '/api/status?key=' + adminKey).then(r => r.json())
+    const [hRes, sRes] = await Promise.all([
+      fetch(backendUrl + '/health'),
+      fetch(backendUrl + '/api/status?key=' + adminKey)
     ]);
+    if (!hRes.ok) throw new Error('Health endpoint HTTP ' + hRes.status);
+    if (!sRes.ok) throw new Error('Status endpoint HTTP ' + sRes.status);
+    const [h, s] = await Promise.all([hRes.json(), sRes.json()]);
     const p = s.protocol;
     return {
       tvlBrl: parseFloat(p.tvl_brl).toFixed(2),
@@ -138,7 +141,7 @@ const ProtocolLogic = {
   async runTerminalCmd(cmd, backendUrl, adminKey) {
     const lines = [];
     if (cmd === 'health') {
-      const r = await fetch(backendUrl + '/health').then(r => r.json());
+      const r = await fetch(backendUrl + '/health').then(res => res.json());
       lines.push({ cls: 't-green', txt: 'HTTP 200 — ' + r.ts });
       lines.push({ cls: 't-white', txt: '  status: ' + r.status + ' | block: ' + r.block + ' | uptime: ' + Math.floor(r.uptime / 3600) + 'h' });
       Object.entries(r.services).forEach(([k, v]) => {
@@ -146,7 +149,7 @@ const ProtocolLogic = {
         lines.push({ cls: ok ? 't-green' : 't-yellow', txt: '  ' + k + ': ' + v });
       });
     } else if (cmd === 'status') {
-      const r = await fetch(backendUrl + '/api/status?key=' + adminKey).then(r => r.json());
+      const r = await fetch(backendUrl + '/api/status?key=' + adminKey).then(res => res.json());
       lines.push({ cls: 't-green', txt: 'HTTP 200' });
       lines.push({ cls: 't-green', txt: '  tvl: R$ ' + parseFloat(r.protocol.tvl_brl).toFixed(2) + ' ($' + parseFloat(r.protocol.tvl_usd).toFixed(2) + ')' });
       lines.push({ cls: 't-white', txt: '  supply: ' + parseFloat(r.protocol.efix_total_supply).toFixed(2) + ' efixDI' });

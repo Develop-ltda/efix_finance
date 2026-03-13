@@ -4,7 +4,10 @@ async function rpc(url, to, data) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{ to, data }, 'latest'] })
   });
-  return (await r.json()).result;
+  if (!r.ok) throw new Error('RPC HTTP ' + r.status);
+  const j = await r.json();
+  if (j.error) throw new Error('RPC error: ' + (j.error.message || j.error));
+  return j.result;
 }
 
 function padAddr(addr) {
@@ -34,7 +37,9 @@ async function ethBal(url, addr) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getBalance', params: [addr, 'latest'] })
   });
+  if (!r.ok) throw new Error('RPC HTTP ' + r.status);
   const j = await r.json();
+  if (j.error) throw new Error('RPC error: ' + (j.error.message || j.error));
   const bi = BigInt(j.result || '0x0');
   const divisor = 10n ** 18n;
   const intPart = bi / divisor;

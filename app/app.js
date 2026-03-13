@@ -137,7 +137,9 @@ const AppLogic = {
 
   async checkDepositStatus(backend, address) {
     const res = await fetch(backend + '/api/deposit/status/' + address);
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
+    return data;
   },
 
   async checkPreviousDeposit(backend, address) {

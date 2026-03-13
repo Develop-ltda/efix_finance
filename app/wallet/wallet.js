@@ -26,12 +26,16 @@ const WalletLogic = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reference })
     });
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
+    return data;
   },
 
   async checkDepositStatus(backend, reference) {
     const res = await fetch(backend + '/deposit/status/' + reference);
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
+    return data;
   },
 
   _pollTimer: null,
@@ -68,7 +72,9 @@ const WalletLogic = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address, amount, pixKey })
     });
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
+    return data;
   },
 
   async lockCollateral(backend, address, amount) {
@@ -77,18 +83,22 @@ const WalletLogic = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address, amount })
     });
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
+    return data;
   },
 
   async fetchHistory(backend, address) {
     const res = await fetch(backend + '/wallet/history/' + address);
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
     return data.history || [];
   },
 
   async fetchLockedBalance(backend, address) {
     const res = await fetch(backend + '/wallet/balance/' + address);
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
     return data.locked ? parseFloat(data.locked) : 0;
   },
 

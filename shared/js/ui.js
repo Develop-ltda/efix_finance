@@ -15,7 +15,8 @@ function toast(msg, ms) {
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
 }
 
 function showError(id, msg, ms) {
@@ -41,7 +42,7 @@ function setLoading(btnId, loading) {
 
 function copyText(text, opts) {
   if (!text) return;
-  navigator.clipboard.writeText(text);
+  navigator.clipboard.writeText(text).catch(function() {});
   var o = opts || {};
   if (o.toastMsg) toast(o.toastMsg);
   if (o.feedbackEl) {
@@ -64,7 +65,7 @@ function switchTab(name, clickedBtn, opts) {
   scope.querySelectorAll(tabSel).forEach(function(t) { t.classList.remove(activeCls); });
   scope.querySelectorAll(panelSel).forEach(function(p) { p.classList.remove(activeCls); });
   clickedBtn.classList.add(activeCls);
-  var panel = document.getElementById(prefix + name);
+  var panel = scope === document ? document.getElementById(prefix + name) : scope.querySelector('#' + prefix + name);
   if (panel) panel.classList.add(activeCls);
   if (o.onSwitch) o.onSwitch(name);
 }
