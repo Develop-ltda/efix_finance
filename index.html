@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="/shared/css/reset.css">
     <link rel="stylesheet" href="/shared/css/vars-syne.css">
     <link rel="stylesheet" href="/shared/css/nav-syne.css">
+    <link rel="stylesheet" href="/shared/css/lang-selector.css">
     <style>
         html { scroll-behavior: smooth; }
 
@@ -41,16 +42,6 @@
         .logo { height: 28px; width: auto; }
         .nav-links a { color: var(--gray-500); transition: color 0.3s; }
         .nav-cta { padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 0.8rem; letter-spacing: 0.01em; }
-
-        /* ─── Language Selector ─── */
-        .lang-sel{position:relative;display:flex;align-items:center}
-        .lang-btn{background:var(--gray-100);border:1px solid var(--gray-200);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--gray-500);font-family:'Space Mono',monospace;display:flex;align-items:center;gap:4px;transition:border-color .2s}
-        .lang-btn:hover{border-color:var(--gray-400)}
-        .lang-menu{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--white);border:1px solid var(--gray-200);border-radius:10px;padding:4px;min-width:140px;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.1)}
-        .lang-menu.open{display:block}
-        .lang-opt{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:11px;color:var(--gray-600);font-family:'Space Mono',monospace;transition:background .15s}
-        .lang-opt:hover{background:var(--gray-100);color:var(--black)}
-        .lang-opt.active{color:#22c55e;font-weight:700}
 
         /* ─── Hero ─── */
         .hero {

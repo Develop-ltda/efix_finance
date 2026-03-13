@@ -70,21 +70,9 @@ const CardAppLogic = {
     return this.apiCall(proxyUrl, '/users/lookup?email=' + encodeURIComponent(email), {}, isDemo);
   },
 
-  async fetchCardBalance(alchemyKey, fundingAddress) {
-    const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-    const res = await fetch('https://base-mainnet.g.alchemy.com/v2/' + alchemyKey, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1, method: 'eth_call',
-        params: [{
-          to: USDC_BASE,
-          data: '0x70a08231' + padAddr(fundingAddress)
-        }, 'latest']
-      }),
-    });
-    const data = await res.json();
-    return parseInt(data.result, 16) / 1e6;
+  async fetchCardBalance(fundingAddress) {
+    const hex = await rpc(EFIX_CONFIG.rpc.base, EFIX_CONFIG.contracts.usdcBase, balOf(fundingAddress));
+    return hexToNum(hex, 6);
   },
 
   async fetchDemoBalance(proxyUrl, customerId, cardAccountId, isDemo) {

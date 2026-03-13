@@ -294,7 +294,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 const PROXY_URL = EFIX_CONFIG.bridgeProxy;
-const ALCHEMY_KEY = EFIX_CONFIG.alchemy;
 
 // Demo mode: ?demo=true in URL uses sandbox Bridge (cards work)
 const IS_DEMO = new URLSearchParams(window.location.search).get('demo') === 'true';
@@ -630,7 +629,7 @@ async function loadBalance() {
 
   // Production: check USDC balance on Base via Alchemy
   try {
-    const bal = await CardAppLogic.fetchCardBalance(ALCHEMY_KEY, currentUser.card_funding_address);
+    const bal = await CardAppLogic.fetchCardBalance(currentUser.card_funding_address);
     document.getElementById('cardBalance').textContent = `$${bal.toFixed(2)}`;
   } catch (err) {
     console.warn('Balance check failed:', err);

@@ -363,7 +363,7 @@ if(d.base){baseHtml+='<tr><td style="color:var(--text-muted)">efixDI</td><td>'+d
 else{baseHtml+='<tr><td colspan="2" style="color:var(--text-muted);font-size:11px">Backend deploying...</td></tr>'}}
 catch(e){
 try{const baseEfix=await rpcBigInt(BR,EB,balOf(OP));const baseNum=Number(baseEfix)/1e18;
-const usdcBase=await rpcBigInt(BR,'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',balOf(OP));const usdcNum=Number(usdcBase)/1e6;
+const usdcBase=await rpcBigInt(BR,EFIX_CONFIG.contracts.usdcBase,balOf(OP));const usdcNum=Number(usdcBase)/1e6;
 baseHtml+='<tr><td style="color:var(--text-muted)">efixDI</td><td>'+baseNum.toFixed(2)+'</td></tr><tr><td style="color:var(--text-muted)">USDC</td><td>'+usdcNum.toFixed(2)+'</td></tr>'}
 catch(e2){baseHtml+='<tr><td colspan="2" style="color:var(--text-muted);font-size:11px">RPC error</td></tr>'}}
 el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px;font-family:var(--mono);letter-spacing:1px">POLYGON</td></tr><tr><td style="color:var(--text-muted)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--text-muted)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr>'+baseHtml+'</table>'

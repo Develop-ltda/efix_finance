@@ -28,7 +28,8 @@ Common code extracted from page-specific inline CSS/JS into reusable files:
 | `vars-inter.css` | CSS variables for Inter-family pages | listings, team |
 | `nav-syne.css` | Syne nav bar | index, app, protocol, card/index |
 | `nav-inter.css` | Inter nav bar | listings, team |
-| `components.css` | tab-panel, spinner, @keyframes | protocol, card/app, listings, team |
+| `components.css` | tab-panel, spinner, @keyframes | protocol, card/app, app/wallet, listings, team |
+| `lang-selector.css` | Language selector (.lang-sel/btn/menu/opt) with CSS var theming | index, app, app/wallet |
 | `footer.css` | Inter footer | listings, team |
 
 ### JS Reference — Shared Utilities (`shared/js/`)
@@ -48,6 +49,7 @@ Common code extracted from page-specific inline CSS/JS into reusable files:
 - `balOf(addr)` → returns `0x70a08231` + padded address (ERC-20 `balanceOf` calldata)
 - `rpc(url, to, data)` → `eth_call`, returns raw hex result
 - `rpcBigInt(url, to, data)` → wraps `rpc()`, returns `BigInt`
+- `hexToNum(hex, decimals?)` → converts hex string to number with decimal scaling (default 18)
 - `ethBal(url, addr)` → `eth_getBalance`, returns native balance as `Number` (in ETH/POL units)
 
 **`ui.js`** — Shared DOM utilities (no business logic):
@@ -114,7 +116,7 @@ Pure JS modules with no DOM references. Each exposes a namespace object. Functio
 - `issueCard(proxyUrl, customerId, isDemo)` → POST `/bridge/customers/{id}/card_accounts`
 - `linkCard(proxyUrl, email, cardData, isDemo)` → POST `/users/link-card`
 - `refreshUser(proxyUrl, email, isDemo)` → re-fetches user data
-- `fetchCardBalance(alchemyKey, fundingAddress)` → direct RPC `balanceOf` for USDC on Base (uses `padAddr`)
+- `fetchCardBalance(fundingAddress)` → RPC `balanceOf` for USDC on Base via shared `rpc()` + `EFIX_CONFIG`
 - `fetchDemoBalance(proxyUrl, customerId, cardAccountId, isDemo)` → card account balance from Bridge API
 - `fetchTransactions(proxyUrl, email, isDemo)` → GET `/users/tx`
 - `depositIntent(proxyUrl, email, amount, isDemo)` → POST deposit transaction log

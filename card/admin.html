@@ -280,16 +280,16 @@ async function loadChain() {
       rpc(BASE_RPC, ADDRS.baseEfix, balOf(OP)),
       rpc(BASE_RPC, ADDRS.baseUSDC, balOf(OP)),
     ]);
-    chain.polyEfix = (parseInt(pe,16)/1e18).toFixed(2);
-    chain.baseEfix = (parseInt(be,16)/1e18).toFixed(2);
-    chain.baseUSDC = (parseInt(bu,16)/1e6).toFixed(2);
+    chain.polyEfix = hexToNum(pe).toFixed(2);
+    chain.baseEfix = hexToNum(be).toFixed(2);
+    chain.baseUSDC = hexToNum(bu, 6).toFixed(2);
     // Morpho position
     const pd = '0x93c52062' + ADDRS.marketId.slice(2) + padAddr(OP);
     const pr = await rpc(BASE_RPC, ADDRS.morpho, pd);
     if (pr && pr !== '0x') {
       const h = pr.slice(2);
-      chain.coll = (parseInt(h.slice(128,192),16)/1e18).toFixed(2);
-      chain.bShares = parseInt(h.slice(64,128),16);
+      chain.coll = hexToNum('0x'+h.slice(128,192)).toFixed(2);
+      chain.bShares = Number(BigInt('0x'+h.slice(64,128)));
       chain.debt = chain.bShares > 0 ? (chain.bShares/1e12).toFixed(2) : '0.00';
     } else { chain.coll='0.00'; chain.debt='0.00'; }
     const cv = parseFloat(chain.coll)*0.199, dv = parseFloat(chain.debt);

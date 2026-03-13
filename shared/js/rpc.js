@@ -19,6 +19,10 @@ async function rpcBigInt(url, to, data) {
   return BigInt(await rpc(url, to, data) || '0x0');
 }
 
+function hexToNum(hex, decimals) {
+  return Number(BigInt(hex || '0x0')) / Math.pow(10, decimals || 18);
+}
+
 async function ethBal(url, addr) {
   const r = await fetch(url, {
     method: 'POST',
