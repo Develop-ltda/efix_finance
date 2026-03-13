@@ -155,6 +155,9 @@ const CardAppLogic = {
   },
 
   calcCredit(efixdiAmount) {
-    return (efixdiAmount * 0.199 * 0.75).toFixed(2);
+    const amount_100 = Math.round(efixdiAmount * 100);
+    const rate_1000 = 199; // 0.199 * 1000
+    const ltv_100 = 75;    // 0.75 * 100
+    return ((amount_100 * rate_1000 * ltv_100) / 10000000).toFixed(2);
   }
 };

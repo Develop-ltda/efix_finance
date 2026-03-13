@@ -87,7 +87,11 @@ const RangeLogic = {
         if (!log.topics || log.topics.length < 3) continue;
         const from = '0x' + log.topics[1].slice(26).toLowerCase();
         const to = '0x' + log.topics[2].slice(26).toLowerCase();
-        const val = Number(BigInt(log.data)) / 1e18;
+        const bi = BigInt(log.data);
+        const divisor = 10n ** 18n;
+        const intPart = bi / divisor;
+        const fracPart = bi % divisor;
+        const val = Number(intPart) + Number(fracPart) / Number(divisor);
         if (from !== zero) balances[from] = (balances[from] || 0) - val;
         if (to !== zero) balances[to] = (balances[to] || 0) + val;
       }

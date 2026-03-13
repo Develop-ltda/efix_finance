@@ -343,9 +343,15 @@ async function loadTx() {
   try {
     const users = await (await fetch(`${PROXY}/admin/users`, {headers:{'Authorization':`Bearer ${adminToken}`}})).json();
     const txs = [];
-    for (const u of (users.users||[]).slice(0,10)) {
-      try { const d = await (await fetch(`${PROXY}/users/tx?email=${encodeURIComponent(u.email)}`)).json(); if(d.transactions) txs.push(...d.transactions.map(t=>({...t,email:u.email}))); } catch{}
-    }
+    const txPromises = (users.users||[]).slice(0,10).map(async u => {
+      try {
+        const d = await (await fetch(`${PROXY}/users/tx?email=${encodeURIComponent(u.email)}`)).json();
+        if(d.transactions) return d.transactions.map(t=>({...t,email:u.email}));
+      } catch{}
+      return [];
+    });
+    const results = await Promise.all(txPromises);
+    for (const r of results) { txs.push(...r); }
     txs.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
     const tb = document.getElementById('recentTxBody');
     if (!txs.length) { tb.innerHTML='<tr><td colspan="4" class="mono" style="text-align:center;color:var(--gray-400);">No transactions.</td></tr>'; return; }

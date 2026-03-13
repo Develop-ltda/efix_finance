@@ -54,14 +54,22 @@ const ProtocolLogic = {
   calcAPY(ltv, cdi) {
     cdi = cdi || this.SELIC;
     if (!ltv) return cdi * (1 - this.PF);
-    const l = 1 / (1 - ltv);
-    return (cdi * l - this.MBR * (l - 1)) * (1 - this.PF);
+    const l_10000 = Math.round((1 / (1 - ltv)) * 10000);
+    const cdi_10000 = Math.round(cdi * 10000);
+    const mbr_10000 = Math.round(this.MBR * 10000);
+    const pf_10000 = Math.round(this.PF * 10000);
+    
+    const gross_apy_10000 = Math.round((cdi_10000 * l_10000) / 10000) - Math.round((mbr_10000 * (l_10000 - 10000)) / 10000);
+    return (gross_apy_10000 * (10000 - pf_10000)) / 100000000;
   },
 
   calcHF(ltv, shock) {
     shock = shock || 0;
     if (!ltv) return Infinity;
-    return (this.LLTV * (1 + shock / 100)) / ltv;
+    const lltv_10000 = Math.round(this.LLTV * 10000);
+    const shock_factor_10000 = 10000 + Math.round(shock * 100);
+    const ltv_10000 = Math.round(ltv * 10000);
+    return (lltv_10000 * shock_factor_10000) / (ltv_10000 * 10000);
   },
 
   riskInfo(hf) {

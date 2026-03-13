@@ -20,7 +20,12 @@ async function rpcBigInt(url, to, data) {
 }
 
 function hexToNum(hex, decimals) {
-  return Number(BigInt(hex || '0x0')) / Math.pow(10, decimals || 18);
+  const d = BigInt(decimals || 18);
+  const bi = BigInt(hex || '0x0');
+  const divisor = 10n ** d;
+  const intPart = bi / divisor;
+  const fracPart = bi % divisor;
+  return Number(intPart) + Number(fracPart) / Number(divisor);
 }
 
 async function ethBal(url, addr) {
@@ -30,5 +35,9 @@ async function ethBal(url, addr) {
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getBalance', params: [addr, 'latest'] })
   });
   const j = await r.json();
-  return Number(BigInt(j.result || '0x0')) / 1e18;
+  const bi = BigInt(j.result || '0x0');
+  const divisor = 10n ** 18n;
+  const intPart = bi / divisor;
+  const fracPart = bi % divisor;
+  return Number(intPart) + Number(fracPart) / Number(divisor);
 }

@@ -160,7 +160,10 @@ async function getBalance(address) {
   
   const result = await response.json();
   const rawBalance = BigInt(result.result || "0x0");
-  const balance = Number(rawBalance) / 1e18; // 18 decimals
+  const divisor = 10n ** 18n;
+  const intPart = rawBalance / divisor;
+  const fracPart = rawBalance % divisor;
+  const balance = Number(intPart) + Number(fracPart) / Number(divisor); // 18 decimals
   
   return {
     raw: rawBalance.toString(),

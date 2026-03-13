@@ -3,7 +3,10 @@
 
 const WalletLogic = {
   calcSpendingPower(collateralAmount, ltvRatio, fxRate) {
-    return collateralAmount * (ltvRatio || 0.50) * (fxRate || 0.17);
+    const amount_100 = Math.round((collateralAmount || 0) * 100);
+    const ltv_100 = Math.round((ltvRatio || 0.50) * 100);
+    const fx_100 = Math.round((fxRate || 0.17) * 100);
+    return (amount_100 * ltv_100 * fx_100) / 1000000;
   },
 
   async createDeposit(backend, amount, address) {
@@ -31,25 +34,29 @@ const WalletLogic = {
     return await res.json();
   },
 
+  _pollTimer: null,
   async pollBalanceChange(walletLib, address, currentBalText, maxAttempts) {
     maxAttempts = maxAttempts || 20;
+    if (this._pollTimer) { clearInterval(this._pollTimer); }
     return new Promise((resolve) => {
       let attempts = 0;
-      const timer = setInterval(async () => {
+      this._pollTimer = setInterval(async () => {
         attempts++;
         try {
           const bal = await walletLib.getBalance(address);
           const newBalText = bal.formatted + ' efixDI';
           if (newBalText !== currentBalText) {
-            clearInterval(timer);
+            clearInterval(this._pollTimer);
+            this._pollTimer = null;
             resolve({ changed: true, bal });
             return;
           }
         } catch (e) { /* keep polling */ }
 
         if (attempts >= maxAttempts) {
-          clearInterval(timer);
-          resolve({ changed: false });
+          clearInterval(this._pollTimer);
+          this._pollTimer = null;
+          resolve({ changed: false, bal: null });
         }
       }, 3000);
     });
