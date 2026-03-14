@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>efixDI+ — Protocol Risk Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
+/* ── DARK MODE (default) ── */
+:root, [data-theme="dark"] {
   --bg: #050608;
   --surface: #0c0d10;
   --surface2: #111318;
@@ -26,6 +27,69 @@
   --text3: #454858;
   --mono: 'IBM Plex Mono', monospace;
   --sans: 'IBM Plex Sans', sans-serif;
+  --scanlines: rgba(0,0,0,0.03);
+  --shadow: none;
+}
+
+/* ── LIGHT MODE ── */
+[data-theme="light"] {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface2: #f0f1f4;
+  --border: #e2e4ea;
+  --border2: #d0d3dc;
+  --green: #00a854;
+  --green-dim: rgba(0,168,84,0.08);
+  --green-mid: rgba(0,168,84,0.15);
+  --yellow: #d97706;
+  --yellow-dim: rgba(217,119,6,0.08);
+  --red: #dc2626;
+  --red-dim: rgba(220,38,38,0.08);
+  --blue: #1d4ed8;
+  --blue-dim: rgba(29,78,216,0.08);
+  --text: #0f1117;
+  --text2: #4b5068;
+  --text3: #9ca3b0;
+  --scanlines: transparent;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* ── TRANSITION ── */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  width: 28px;
+  height: 24px;
+  border-radius: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: background 0.15s;
+  color: var(--text2);
+}
+
+.theme-toggle-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -39,7 +103,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Scanlines texture */
+/* Scanlines texture — dark only */
 body::before {
   content: '';
   position: fixed;
@@ -48,8 +112,8 @@ body::before {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0,0,0,0.03) 2px,
-    rgba(0,0,0,0.03) 4px
+    var(--scanlines) 2px,
+    var(--scanlines) 4px
   );
   pointer-events: none;
   z-index: 9999;
@@ -772,6 +836,11 @@ body::before {
       Live
     </div>
     <div class="ts" id="lastUpdate">Fetching data...</div>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle-btn active" id="btnDark" title="Dark mode">🌙</button>
+      <button class="theme-toggle-btn" id="btnLight" title="Light mode">☀️</button>
+    </div>
     <button class="refresh-btn" onclick="loadAll()">
       <span id="refreshIcon">↻</span> Refresh
     </button>
@@ -1632,6 +1701,32 @@ function computeRiskScore() {
     }
   }
 }
+
+// ── THEME ────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('efixRiskTheme', newTheme);
+  document.getElementById('btnDark').classList.toggle('active', newTheme === 'dark');
+  document.getElementById('btnLight').classList.toggle('active', newTheme === 'light');
+}
+
+// Apply saved theme on load
+(function() {
+  const saved = localStorage.getItem('efixRiskTheme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  // buttons updated after DOM ready
+  window.addEventListener('DOMContentLoaded', () => {
+    const d = document.getElementById('btnDark');
+    const l = document.getElementById('btnLight');
+    if (d && l) {
+      d.classList.toggle('active', saved === 'dark');
+      l.classList.toggle('active', saved === 'light');
+    }
+  });
+})();
 
 // ── LOAD ALL ────────────────────────────────────────────────────────────────
 async function loadAll() {
