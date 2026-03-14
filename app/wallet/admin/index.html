@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -68,6 +68,24 @@
   .lz-hash{font-size:10px;color:var(--gray-500);text-decoration:none;font-family:var(--font-mono);transition:color .2s}
   .lz-hash:hover{color:var(--white)}
   .lz-nonce{font-size:10px;color:var(--gray-400);font-family:var(--font-mono);min-width:20px}
+  /* LIGHT MODE */
+  [data-theme="light"]{--black:#f5f5f7;--white:#0d0d0d;--green:#16a34a;--red:#dc2626;--yellow:#d97706;--blue:#1d4ed8;--card:#ffffff;--border:#e2e4ea;--gray-600:#9ca3af;--gray-500:#6b7280;--gray-400:#374151}
+  [data-theme="light"] body{background:#f0f1f4}
+  [data-theme="light"] input,[data-theme="light"] select{background:#fff;color:#0d0d0d;border-color:#d1d5db}
+  [data-theme="light"] button.secondary{background:#e5e7eb;color:#374151}
+  [data-theme="light"] .tab-bar{background:#e5e7eb}
+  [data-theme="light"] .tab-btn.active{background:#fff;color:#0d0d0d}
+  [data-theme="light"] .tbl td{border-bottom-color:#f3f4f6}
+  [data-theme="light"] .tbl tr:hover td{background:#f9fafb}
+  [data-theme="light"] .lz-msg:hover{background:#f9fafb}
+  [data-theme="light"] .lz-hash:hover{color:#0d0d0d}
+  [data-theme="light"] #app{background:#f0f1f4}
+  *,*::before,*::after{transition:background-color .2s,border-color .2s,color .15s}
+  /* THEME TOGGLE */
+  .theme-pill{display:flex;align-items:center;background:#1a1a1a;border:1px solid var(--border);border-radius:20px;padding:3px;gap:2px;cursor:pointer}
+  [data-theme="light"] .theme-pill{background:#e5e7eb}
+  .theme-pill button{background:none;border:none;width:26px;height:22px;border-radius:14px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);transition:background .15s}
+  .theme-pill button.active{background:var(--card);color:var(--white)}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -103,7 +121,12 @@
   <div class="header">
     <div><h1>efixDI<span style="color:var(--green)">+</span> Operations</h1><span style="font-size:11px;color:var(--gray-500)">CVM Act 23.635/2025</span></div>
     <div style="text-align:right"><span class="dot green"></span><span id="healthText" style="font-size:11px;">Connected</span><br><span id="healthMeta" style="font-size:10px;color:var(--gray-500)">...</span></div>
-    <div id="userInfo" style="display:flex;align-items:center;gap:8px;margin-left:16px;"><img id="userPic" style="width:28px;height:28px;border-radius:50%;display:none;border:1px solid var(--border)"><span id="userName" style="font-size:11px;color:var(--gray-400)"></span><button class="sm secondary" onclick="logout()" style="font-size:10px;padding:4px 10px;">Sair</button></div>
+    <div id="userInfo" style="display:flex;align-items:center;gap:8px;margin-left:16px;">
+      <div class="theme-pill" onclick="toggleAdminTheme()" title="Toggle light/dark">
+        <button id="adminBtnDark" class="active">🌙</button>
+        <button id="adminBtnLight">☀️</button>
+      </div>
+      <img id="userPic" style="width:28px;height:28px;border-radius:50%;display:none;border:1px solid var(--border)"><span id="userName" style="font-size:11px;color:var(--gray-400)"></span><button class="sm secondary" onclick="logout()" style="font-size:10px;padding:4px 10px;">Sair</button></div>
   </div>
   <div class="stats">
     <div class="stat"><div class="num" id="statTVL">-</div><div class="lbl">TVL (efixDI)</div></div>
@@ -316,6 +339,23 @@ function logout(){
   const k=sessionStorage.getItem('efixAdminKey');
   if(t){adminToken=t;adminEmail=sessionStorage.getItem('efixAdminEmail')||'';showApp(sessionStorage.getItem('efixAdminName')||'Admin',sessionStorage.getItem('efixAdminPic')||'')}
   else if(k){K=k;showApp('Admin','')}
+})();
+function toggleAdminTheme(){
+  const html=document.documentElement;
+  const t=html.getAttribute('data-theme')==='dark'?'light':'dark';
+  html.setAttribute('data-theme',t);
+  localStorage.setItem('efixAdminTheme',t);
+  document.getElementById('adminBtnDark').classList.toggle('active',t==='dark');
+  document.getElementById('adminBtnLight').classList.toggle('active',t==='light');
+}
+(function(){
+  const t=localStorage.getItem('efixAdminTheme')||'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  window.addEventListener('DOMContentLoaded',()=>{
+    const d=document.getElementById('adminBtnDark');
+    const l=document.getElementById('adminBtnLight');
+    if(d&&l){d.classList.toggle('active',t==='dark');l.classList.toggle('active',t==='light');}
+  });
 })();
 async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadCollateralHistory();loadProtocol();loadBridgeBalances();loadBridgeHistory()}
 async function loadStats(){try{const[ps,bs,mb]=await Promise.all([rpc(PR,EP,'0x18160ddd'),rpc(BR,EB,'0x18160ddd'),ethBal(PR,OP)]);const pn=Number(ps)/1e18,bn=Number(bs)/1e18;document.getElementById('statPolygon').textContent=pn.toFixed(0);document.getElementById('statBase').textContent=bn.toFixed(0);document.getElementById('statTVL').textContent=pn.toFixed(0);document.getElementById('statMatic').textContent=mb.toFixed(1);const h=await(await fetch(B+'/health')).json();document.getElementById('healthMeta').textContent='Block '+h.block+' · Up '+Math.round(h.uptime/60)+'m';
