@@ -851,7 +851,7 @@ body::before {
 <!-- SECTION: KEY METRICS -->
   <div class="section-label">Protocol Metrics</div>
 
-  <div class="metrics-grid" style="grid-template-columns:repeat(7,1fr)">
+  <div class="metrics-grid" style="grid-template-columns:repeat(8,1fr)">
     <div class="metric-card green">
       <div class="metric-label">Health Factor</div>
       <div class="metric-value green" id="mHF">—</div>
@@ -861,6 +861,11 @@ body::before {
       <div class="metric-label">TVL (Polygon)</div>
       <div class="metric-value green" id="mTVL">—</div>
       <div class="metric-sub" id="mTVLsub">efixDI tokens</div>
+    </div>
+    <div class="metric-card neutral">
+      <div class="metric-label">Base Supply</div>
+      <div class="metric-value" id="mBase" style="color:var(--text)">—</div>
+      <div class="metric-sub">efixDI bridged</div>
     </div>
     <div class="metric-card blue">
       <div class="metric-label">Collateral (Morpho)</div>
@@ -1612,6 +1617,7 @@ async function loadSupplies() {
     set('opBalance',  fmt(opPol, 2) + ' POL');
     set('flowWallet', fmt(Math.max(0, poly - base), 0) + ' efixDI');
     set('flowBridged', fmt(base, 2) + ' efixDI');
+    set('mBase', fmt(base, 0) + ' efixDI');
 
     const gasScore = Math.min((opPol / 10) * 100, 100);
     const rfGas = document.getElementById('rfGas');
