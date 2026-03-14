@@ -1196,33 +1196,42 @@ async function load() {
 
   // Reserve + Morpho from backend
   try {
-    const hdr = {};
-    const t = localStorage.getItem('efixAdminToken');
-    const k = localStorage.getItem('efixAdminKey');
-    if(t) hdr['Authorization'] = 'Bearer ' + t;
-    else if(k) hdr['X-Admin-Key'] = k;
+    // Build auth header same way as admin panel
+    function hdr() {
+      const h = {'Content-Type':'application/json'};
+      const t = localStorage.getItem('efixAdminToken');
+      const k = localStorage.getItem('efixAdminKey') || 'efixdi-admin-2026';
+      if(t) h['Authorization'] = 'Bearer ' + t;
+      else h['X-Admin-Key'] = k;
+      return h;
+    }
 
-    const [res, morpho] = await Promise.all([
-      fetch(B+'/api/admin/reserve', {headers:hdr}).then(r=>r.json()),
-      fetch(B+'/api/admin/morpho',  {headers:hdr}).then(r=>r.json()),
-    ]);
-
-    if(res.reserve?.account_brl !== null) {
+    // Reserve
+    const res = await fetch(B+'/api/admin/reserve', {headers:hdr()}).then(r=>r.json());
+    if(res.reserve?.account_brl !== null && res.reserve?.account_brl !== undefined) {
       set('archBrl', 'R$ ' + fmt(res.reserve.account_brl));
       set('archReserve', 'R$ ' + fmt(res.reserve.account_brl));
     }
-    if(res.proof_of_reserve?.coverage_ratio !== null)
+    if(res.proof_of_reserve?.coverage_ratio !== null && res.proof_of_reserve?.coverage_ratio !== undefined)
       set('archCoverage', fmt(res.proof_of_reserve.coverage_ratio,2) + '%');
+    if(res.protocol?.tvl_efix)
+      set('archTvl', fmt(res.protocol.tvl_efix,2) + ' efixDI');
 
-    if(morpho.morpho) {
-      const m = morpho.morpho;
-      set('archMorpho', m.collateral);
-      set('archMorphoCol', m.collateral);
-      set('archMorphoBor', m.borrowed);
-      set('archUsdc', m.borrowed);
-      set('archHF', m.healthFactor||'—');
-      set('archLTV', (m.ltv||'—') + ' / 77%');
+    // Vault + Morpho via /api/status (always works)
+    const st = await fetch(B+'/api/status?key=' + (localStorage.getItem('efixAdminKey')||'efixdi-admin-2026')).then(r=>r.json());
+    if(st.vault) {
+      set('archLocked', fmt(parseFloat(st.vault.totalLocked||0),2) + ' efixDI');
     }
+    if(st.morpho) {
+      const m = st.morpho;
+      set('archMorpho', fmt(parseFloat(m.collateral||0),0) + ' efixDI');
+      set('archMorphoCol', fmt(parseFloat(m.collateral||0),2) + ' efixDI');
+      set('archMorphoBor', fmt(parseFloat(m.borrowed||0),2) + ' USDC');
+      set('archUsdc', fmt(parseFloat(m.borrowed||0),2) + ' USDC');
+      set('archHF', parseFloat(m.healthFactor||0).toFixed(2));
+      set('archLTV', parseFloat(m.ltv||0).toFixed(1) + '% / 77%');
+    }
+    if(st.tvl_brl) set('archSupply', fmt(parseFloat(st.efix_total_supply||0),0) + ' efixDI');
   } catch {}
 
   // Base supply = bridged
