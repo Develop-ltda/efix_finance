@@ -52,8 +52,8 @@
   #app{display:none}
   .dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px}
   .dot.green{background:var(--green)}
-  .iframe-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#fff}
-  .iframe-wrap iframe{width:100%;height:calc(100vh - 260px);border:none}
+  .iframe-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:transparent}
+  .iframe-wrap iframe{width:100%;height:calc(100vh - 180px);border:none}
   .lz-msg{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border);transition:background .15s}
   .lz-msg:hover{background:#1a1a1a}
   .lz-msg:last-child{border-bottom:none}
@@ -226,12 +226,14 @@
         <h2 style="margin:0">efixDI Token Holders (Polygon)</h2>
         <button class="sm secondary" onclick="loadHolders()">Refresh</button>
       </div>
-      <div id="holderStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+      <div id="holderStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;"></div>
       <div id="holdersList"></div>
     </div>
   </div>
   <div class="tab-content active" id="tab-risk">
-    <div class="iframe-wrap"><iframe src="https://efix.finance/app/wallet/admin/risk.html" loading="lazy"></iframe></div>
+    <div class="iframe-wrap" style="background:transparent;border:none">
+      <iframe src="https://efix.finance/app/wallet/admin/risk.html" loading="lazy" style="height:calc(100vh - 200px)"></iframe>
+    </div>
   </div>
   </div>
 <script>
@@ -365,18 +367,9 @@ async function loadHolders() {
     const protocols = results.filter(r => KNOWN[r.addr]);
     const users     = results.filter(r => !KNOWN[r.addr]);
     statsEl.innerHTML = `
-      <div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">
-        <div style="font-size:18px;font-weight:700;color:var(--green)">${supplyNum.toFixed(2)}</div>
-        <div style="font-size:10px;color:var(--gray-500)">Total Supply (efixDI)</div>
-      </div>
-      <div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">
-        <div style="font-size:18px;font-weight:700;color:var(--blue)">${users.length}</div>
-        <div style="font-size:10px;color:var(--gray-500)">User Wallets</div>
-      </div>
-      <div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">
-        <div style="font-size:18px;font-weight:700;color:var(--green)">${results.length}</div>
-        <div style="font-size:10px;color:var(--gray-500)">Total Holders</div>
-      </div>`;
+      <div class="stat"><div class="num">${supplyNum.toFixed(2)}</div><div class="lbl">Total Supply (efixDI)</div></div>
+      <div class="stat"><div class="num" style="color:var(--blue)">${users.length}</div><div class="lbl">User Wallets</div></div>
+      <div class="stat"><div class="num">${results.length}</div><div class="lbl">Total Holders</div></div>`;
 
     // Table
     let h = '<table class="tbl"><thead><tr><th>#</th><th>Address</th><th>Label</th><th>Balance (efixDI)</th><th>% Supply</th><th></th></tr></thead><tbody>';
