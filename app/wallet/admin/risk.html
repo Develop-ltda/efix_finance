@@ -208,9 +208,9 @@ body::before {
   font-size: 9px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 12px;
-  margin-top: 28px;
+  color: var(--text2);
+  margin-bottom: 10px;
+  margin-top: 20px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -325,7 +325,7 @@ body::before {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   position: relative;
   overflow: hidden;
   transition: border-color 0.2s;
@@ -351,15 +351,17 @@ body::before {
   font-size: 9px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 8px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  font-weight: 500;
 }
 
 .metric-value {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.1;
   margin-bottom: 4px;
+  letter-spacing: -0.3px;
 }
 
 .metric-value.green { color: var(--green); }
@@ -370,6 +372,7 @@ body::before {
 .metric-sub {
   font-size: 10px;
   color: var(--text2);
+  line-height: 1.3;
 }
 
 .metric-change {
@@ -467,14 +470,16 @@ body::before {
   font-size: 9px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--text2);
+  color: var(--text);
+  font-weight: 600;
+  opacity: 0.6;
 }
 
 .panel-body { padding: 14px 16px; }
 
 .kv { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); }
 .kv:last-child { border-bottom: none; }
-.kv-key { font-size: 10px; color: var(--text2); }
+.kv-key { font-size: 10px; color: var(--text2); font-weight: 400; }
 .kv-val { font-size: 11px; color: var(--text); font-weight: 500; }
 .kv-val.green { color: var(--green); }
 .kv-val.yellow { color: var(--yellow); }
@@ -860,7 +865,7 @@ body::before {
     <div class="metric-card green">
       <div class="metric-label">TVL (Polygon)</div>
       <div class="metric-value green" id="mTVL">—</div>
-      <div class="metric-sub" id="mTVLsub">efixDI · <span id="mTVLusd" style="color:var(--text2)">$—</span></div>
+      <div class="metric-sub"><span id="mTVLusd" style="font-weight:600;color:var(--text)">$—</span> · efixDI</div>
     </div>
     <div class="metric-card neutral">
       <div class="metric-label">Base Supply</div>
@@ -1575,6 +1580,12 @@ async function loadOracle() {
 
     set('oraclePrice', '$' + price.toFixed(4));
     set('mOracle', '$' + price.toFixed(4));
+    // Update TVL USD
+    try {
+      const tvlEl = document.getElementById('mTVL');
+      const tvlNum = tvlEl ? parseFloat(tvlEl.textContent.replace(/[^0-9.]/g,'')) : 0;
+      if(tvlNum > 0 && price > 0) set('mTVLusd', '$' + Math.round(tvlNum * price));
+    } catch(e) {}
     set('oracleAge', ageMin < 60 ? ageMin + 'm ago' : Math.floor(ageMin/60) + 'h ago');
     set('mOracleAge', ageMin < 60 ? ageMin + 'm' : Math.floor(ageMin/60) + 'h');
 
