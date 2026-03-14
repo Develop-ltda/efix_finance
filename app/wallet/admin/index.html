@@ -141,10 +141,10 @@
     <button class="tab-btn" onclick="switchTab('deposits',this)">Depósitos</button>
     <button class="tab-btn" onclick="switchTab('withdrawals',this)">Saques</button>
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
-    <button class="tab-btn" onclick="switchTab('protocol',this)">Protocolo</button>
+    
     <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
-    <button class="tab-btn" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
-    <button class="tab-btn active" onclick="switchTab('risk',this)">🛡 Risk</button>
+    
+    <button class="tab-btn active" onclick="switchTab('risk',this)">Protocolo</button>
   </div>
   <div class="tab-content" id="tab-mint">
     <div class="card">
@@ -176,48 +176,6 @@
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">Collateral History (DB)</h2><button class="sm secondary" onclick="loadCollateralHistory()">Refresh</button></div>
       <div id="collateralList"></div>
-    </div>
-  </div>
-  <div class="tab-content" id="tab-protocol">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="card">
-        <h2>Protocol State (Polygon)</h2>
-        <div id="protocolState">Loading...</div>
-      </div>
-      <div class="card">
-        <h2>Morpho Position (Base)</h2>
-        <div id="morphoState">Loading...</div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="card">
-        <h2>Operator (Polygon)</h2>
-        <div id="operatorInfo">Loading...</div>
-      </div>
-      <div class="card">
-        <h2>Operator (Base)</h2>
-        <div id="operatorBase">Loading...</div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">Live Balances</h2><button class="sm secondary" onclick="loadBridgeBalances()">Refresh</button></div>
-        <div id="protocolBalances">Loading...</div>
-      </div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">LayerZero Live Messages</h2><button class="sm secondary" onclick="loadBridgeHistory()">Refresh</button></div>
-        <div id="protocolLZ">Loading...</div>
-        <div style="margin-top:8px;"><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LayerZero Scan ↗</button></a></div>
-      </div>
-    </div>
-    <div class="card">
-      <h2>External Dashboards</h2>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
-        <a href="https://efix.finance/protocol/" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">📊</div><div style="font-size:11px;color:var(--white);">Protocol Dashboard</div><div style="font-size:10px;color:var(--gray-500)">APY · Stress Tests</div></a>
-        <a href="https://efix.finance/range-monitor/" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🎯</div><div style="font-size:11px;color:var(--white);">Range Monitor</div><div style="font-size:10px;color:var(--gray-500)">Uniswap V3 · GBM</div></a>
-        <a href="https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🏦</div><div style="font-size:11px;color:var(--white);">Morpho Market</div><div style="font-size:10px;color:var(--gray-500)">efixDI/USDC</div></a>
-        <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px;margin-bottom:4px;">🌉</div><div style="font-size:11px;color:var(--white);">LayerZero Bridge</div><div style="font-size:10px;color:var(--gray-500)">OFT Adapter</div></a>
-      </div>
     </div>
   </div>
   <div class="tab-content" id="tab-bridge">
@@ -263,10 +221,7 @@
   <div class="tab-content active" id="tab-risk">
     <div class="iframe-wrap"><iframe src="https://efix.finance/app/wallet/admin/risk.html" loading="lazy"></iframe></div>
   </div>
-  <div class="tab-content" id="tab-dashboard">
-    <div class="iframe-wrap"><iframe src="https://efix.finance/protocol/" loading="lazy"></iframe></div>
   </div>
-</div>
 <script>
 const B='https://efixdi-backend-production.up.railway.app',PR='https://polygon-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf',BR='https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf',EP='0x04082b283818D9d0dd9Ee8742892eEe5CC396441',EB='0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608',OP='0x9eFc11e4d285b5a749faFBC2613836Dcda899e12';
 let K='';
@@ -491,7 +446,7 @@ const userAddress=(document.getElementById('bridgeUser')||{}).value?.trim()||nul
 if(!confirm('Bridge '+amount+' efixDI from '+(userAddress?'vault ('+sa(userAddress)+')':'operator pool')+' to Base?'))return;
 const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">'+(userAddress?'Releasing from vault → ':'')+'Bridging...</span>';
 try{const body={amount};if(userAddress)body.userAddress=userAddress;const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify(body)});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base'+(d.vaultBridgeTx?'<br>Vault TX: <a href="https://polygonscan.com/tx/'+d.vaultBridgeTx+'" target="_blank" style="color:var(--green)">'+d.vaultBridgeTx.slice(0,14)+'...</a>':'')+'<br>Bridge TX: <a href="https://polygonscan.com/tx/'+d.bridgeTx+'" target="_blank" style="color:var(--green)">'+d.bridgeTx.slice(0,14)+'...</a><br>Fee: '+d.fee+'</span>';toast('Bridge sent!');setTimeout(()=>{loadBridgeBalances();loadCollateral()},10000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
-function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=(n==='dashboard'||n==='risk')?'100%':'1100px'}
+function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=n==='risk'?'100%':'1100px'}
 </script>
 </body>
 </html>
