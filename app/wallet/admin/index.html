@@ -141,10 +141,10 @@
     <button class="tab-btn" onclick="switchTab('deposits',this)">Depósitos</button>
     <button class="tab-btn" onclick="switchTab('withdrawals',this)">Saques</button>
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
-    <button class="tab-btn active" onclick="switchTab('protocol',this)">Protocolo</button>
+    <button class="tab-btn" onclick="switchTab('protocol',this)">Protocolo</button>
     <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
     <button class="tab-btn" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
-    <button class="tab-btn" onclick="switchTab('risk',this)">🛡 Risk</button>
+    <button class="tab-btn active" onclick="switchTab('risk',this)">🛡 Risk</button>
   </div>
   <div class="tab-content" id="tab-mint">
     <div class="card">
@@ -178,7 +178,7 @@
       <div id="collateralList"></div>
     </div>
   </div>
-  <div class="tab-content active" id="tab-protocol">
+  <div class="tab-content" id="tab-protocol">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       <div class="card">
         <h2>Protocol State (Polygon)</h2>
@@ -260,7 +260,7 @@
       </div>
     </div>
   </div>
-  <div class="tab-content" id="tab-risk">
+  <div class="tab-content active" id="tab-risk">
     <div class="iframe-wrap"><iframe src="https://efix.finance/app/wallet/admin/risk.html" loading="lazy"></iframe></div>
   </div>
   <div class="tab-content" id="tab-dashboard">
