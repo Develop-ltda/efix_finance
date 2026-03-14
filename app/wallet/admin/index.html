@@ -88,6 +88,7 @@
   .theme-pill button.active{background:var(--card);color:var(--white)}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -143,6 +144,7 @@
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
     
     <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
+    <button class="tab-btn" onclick="switchTab('holders',this)">Holders</button>
     
     <button class="tab-btn active" onclick="switchTab('risk',this)">Protocolo</button>
   </div>
@@ -216,6 +218,16 @@
           <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LayerZero Scan ↗</button></a>
         </div>
       </div>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-holders">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2 style="margin:0">efixDI Token Holders (Polygon)</h2>
+        <button class="sm secondary" onclick="loadHolders()">Refresh</button>
+      </div>
+      <div id="holderStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+      <div id="holdersList"></div>
     </div>
   </div>
   <div class="tab-content active" id="tab-risk">
@@ -312,6 +324,82 @@ function toggleAdminTheme(){
     if(d&&l){d.classList.toggle('active',t==='dark');l.classList.toggle('active',t==='light');}
   });
 })();
+
+async function loadHolders() {
+  const el = document.getElementById('holdersList');
+  const statsEl = document.getElementById('holderStats');
+  el.innerHTML = '<div class="empty">Loading holders via Transfer events...</div>';
+
+  const KNOWN = {"0x603265754fDdd7FdE459CC6e6722bd526C1258Fc": "OFT Adapter (Bridge Lock)", "0xdE8286f7E369aA4cbD7F3de324f7D715165ADE6B": "CollateralVault V2", "0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C": "VaultV2", "0x1d97f1adbf545F3C99d33A6a2166Ee423A78f4C3": "PIX Bridge", "0x12eC6e60C0298C3bf7f29154913104B04449AD42": "Uniswap V3 Pool", "0x7C54Dccd6fC5DB73b34f32aCA4d1631E054c7537": "Deployer (old)", "0x9eFc11e4d285b5a749faFBC2613836Dcda899e12": "Operator Wallet"};
+  const TOKEN = '0x04082b283818D9d0dd9Ee8742892eEe5CC396441';
+  const ABI_TRANSFER = ['event Transfer(address indexed from, address indexed to, uint256 value)'];
+  const ABI_BAL = ['function balanceOf(address) view returns (uint256)', 'function totalSupply() view returns (uint256)'];
+
+  try {
+    const provider = new ethers.JsonRpcProvider(PR);
+    const token = new ethers.Contract(TOKEN, [...ABI_TRANSFER, ...ABI_BAL], provider);
+
+    const supply = await token.totalSupply();
+    const supplyNum = Number(supply) / 1e18;
+
+    // Get Transfer events
+    const currentBlock = await provider.getBlockNumber();
+    const events = await token.queryFilter(token.filters.Transfer(), 21800000, currentBlock);
+
+    const addresses = new Set();
+    events.forEach(e => {
+      if (e.args.to   !== ethers.ZeroAddress) addresses.add(e.args.to);
+      if (e.args.from !== ethers.ZeroAddress) addresses.add(e.args.from);
+    });
+
+    // Get balances
+    const results = [];
+    for (const addr of addresses) {
+      const bal = await token.balanceOf(addr);
+      const num = Number(bal) / 1e18;
+      if (num > 0.0001) results.push({ addr, bal: num });
+    }
+    results.sort((a, b) => b.bal - a.bal);
+
+    // Stats
+    const protocols = results.filter(r => KNOWN[r.addr]);
+    const users     = results.filter(r => !KNOWN[r.addr]);
+    statsEl.innerHTML = `
+      <div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">
+        <div style="font-size:18px;font-weight:700;color:var(--green)">${supplyNum.toFixed(2)}</div>
+        <div style="font-size:10px;color:var(--gray-500)">Total Supply (efixDI)</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">
+        <div style="font-size:18px;font-weight:700;color:var(--blue)">${users.length}</div>
+        <div style="font-size:10px;color:var(--gray-500)">User Wallets</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:#1a1a1a;border-radius:8px">
+        <div style="font-size:18px;font-weight:700;color:var(--green)">${results.length}</div>
+        <div style="font-size:10px;color:var(--gray-500)">Total Holders</div>
+      </div>`;
+
+    // Table
+    let h = '<table class="tbl"><thead><tr><th>#</th><th>Address</th><th>Label</th><th>Balance (efixDI)</th><th>% Supply</th><th></th></tr></thead><tbody>';
+    results.forEach((r, i) => {
+      const label = KNOWN[r.addr] || '<span style="color:var(--yellow)">Unknown</span>';
+      const pct   = (r.bal / supplyNum * 100).toFixed(2);
+      const bar   = `<div style="height:4px;background:#1a1a1a;border-radius:2px;margin-top:4px"><div style="height:100%;width:${Math.min(pct,100)}%;background:var(--green);border-radius:2px"></div></div>`;
+      h += `<tr>
+        <td style="color:var(--gray-500)">${i+1}</td>
+        <td class="addr" style="font-size:11px">${r.addr}</td>
+        <td style="font-size:11px">${label}</td>
+        <td style="font-weight:700;color:var(--green)">${r.bal.toFixed(4)}</td>
+        <td style="min-width:80px">${pct}%${bar}</td>
+        <td><a href="https://polygonscan.com/address/${r.addr}" target="_blank" style="color:var(--green);font-size:11px">↗</a></td>
+      </tr>`;
+    });
+    h += '</tbody></table>';
+    el.innerHTML = h;
+  } catch(e) {
+    el.innerHTML = '<div class="empty" style="color:var(--red)">Error: ' + e.message + '</div>';
+  }
+}
+
 async function loadAll(){loadStats();loadDeposits();loadWithdrawals();loadCollateral();loadCollateralHistory();loadProtocol();loadBridgeBalances();loadBridgeHistory()}
 async function loadStats(){try{const[ps,bs,mb]=await Promise.all([rpc(PR,EP,'0x18160ddd'),rpc(BR,EB,'0x18160ddd'),ethBal(PR,OP)]);const pn=Number(ps)/1e18,bn=Number(bs)/1e18;document.getElementById('statPolygon').textContent=pn.toFixed(0);document.getElementById('statBase').textContent=bn.toFixed(0);document.getElementById('statTVL').textContent=pn.toFixed(0);document.getElementById('statMatic').textContent=mb.toFixed(1);const h=await(await fetch(B+'/health')).json();document.getElementById('healthMeta').textContent='Block '+h.block+' · Up '+Math.round(h.uptime/60)+'m';
 // Read vault state on-chain
