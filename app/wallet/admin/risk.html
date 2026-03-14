@@ -1457,13 +1457,20 @@ async function loadVault() {
 async function loadOracle() {
   try {
     const result = await rpc(POLY_RPC, CHAINLINK, '0xfeae2995');
-    // latestRoundData() → (uint80,int256,uint256,uint256,uint80)
-    // price at bytes 32-64 of result (after 0x prefix)
-    const price = Number(BigInt('0x' + result.slice(2 + 64, 2 + 128))) / 1e8;
-    const updatedAt = Number(BigInt('0x' + result.slice(2 + 192, 2 + 256))) * 1000;
-    const ageMin = Math.floor((Date.now() - updatedAt) / 60000);
+    // latestRoundData() ABI decode (each slot = 64 hex chars after 0x prefix):
+    // slot 0 (bytes  2- 66): uint80 roundId
+    // slot 1 (bytes 66-130): int256 answer (price, 8 decimals)
+    // slot 2 (bytes130-194): uint256 startedAt
+    // slot 3 (bytes194-258): uint256 updatedAt
+    // slot 4 (bytes258-322): uint80 answeredInRound
+    const hex = result.startsWith('0x') ? result : '0x' + result;
+    const price     = Number(BigInt('0x' + hex.slice(66, 130))) / 1e8;
+    const updatedAt = Number(BigInt('0x' + hex.slice(194, 258))) * 1000;
+
+    if (!price || price < 0.05 || price > 1.0) throw new Error('bad price');
 
     window._brlUsd = price;
+    const ageMin = Math.floor((Date.now() - updatedAt) / 60000);
 
     set('oraclePrice', '$' + price.toFixed(4));
     set('mOracle', '$' + price.toFixed(4));
@@ -1481,8 +1488,11 @@ async function loadOracle() {
     window._brlUsd = 0.1881;
     set('oraclePrice', '$0.1881');
     set('mOracle', '$0.1881');
-    set('oracleAge', 'Cached');
-    set('mOracleAge', 'Cached');
+    set('oracleAge', 'Cached (~4h)');
+    set('mOracleAge', '~4h');
+    const rfO = document.getElementById('rfOracle');
+    if (rfO) rfO.style.width = '70%';
+    set('rfOracleVal', '~4h');
   }
 }
 
