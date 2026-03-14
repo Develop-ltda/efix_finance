@@ -1583,7 +1583,7 @@ async function loadOracle() {
     // Update TVL USD
     try {
       const tvlEl = document.getElementById('mTVL');
-      const tvlNum = tvlEl ? parseFloat(tvlEl.textContent.replace(/[^0-9.]/g,'')) : 0;
+      const tvlNum = tvlEl ? parseFloat(tvlEl.textContent.replace(/,/g,'').replace(/[^0-9.]/g,'')) : 0;
       if(tvlNum > 0 && price > 0) set('mTVLusd', '$' + Math.round(tvlNum * price));
     } catch(e) {}
     set('oracleAge', ageMin < 60 ? ageMin + 'm ago' : Math.floor(ageMin/60) + 'h ago');
