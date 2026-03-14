@@ -961,7 +961,7 @@ body::before {
   <!-- SECTION: KEY METRICS -->
   <div class="section-label">Protocol Metrics</div>
 
-  <div class="metrics-grid">
+  <div class="metrics-grid" style="grid-template-columns:repeat(7,1fr)">
     <div class="metric-card green">
       <div class="metric-label">Health Factor</div>
       <div class="metric-value green" id="mHF">—</div>
@@ -991,6 +991,12 @@ body::before {
       <div class="metric-label">LZ Messages</div>
       <div class="metric-value green" id="mLZ">11</div>
       <div class="metric-sub">Polygon → Base · All delivered</div>
+    </div>
+    <!-- PROOF OF RESERVE -->
+    <div class="metric-card" id="mReserveCard" style="border-top-color:var(--green)">
+      <div class="metric-label">Reserve Coverage</div>
+      <div class="metric-value green" id="mReserve">—</div>
+      <div class="metric-sub" id="mReserveSub">iHold BRL ≥ TVL</div>
     </div>
   </div>
 
@@ -1080,7 +1086,7 @@ body::before {
   <!-- SECTION: PANELS -->
   <div class="section-label">On-Chain State</div>
 
-  <div class="panels-grid">
+  <div class="panels-grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
 
     <!-- Morpho Panel -->
     <div class="panel">
@@ -1141,9 +1147,28 @@ body::before {
       </div>
     </div>
 
-  </div>
+    <!-- Proof of Reserve Panel -->
+    <div class="panel" id="reservePanel">
+      <div class="panel-header">
+        <div class="panel-title">Proof of Reserve</div>
+        <div id="reserveStatusBadge" style="font-size:9px;padding:2px 8px;border-radius:3px;background:var(--surface2);color:var(--text2)">Loading...</div>
+      </div>
+      <div class="panel-body">
+        <div style="margin-bottom:12px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">iHold W2 Account (BRL)</div>
+          <div style="font-size:26px;font-weight:700" id="reserveBRL">—</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">HausBank · PIX custodial account</div>
+        </div>
+        <div class="kv"><span class="kv-key">efixDI Supply (TVL)</span><span class="kv-val" id="reserveTVL">—</span></div>
+        <div class="kv"><span class="kv-key">Coverage</span><span class="kv-val green" id="reserveRatio">—</span></div>
+        <div class="kv"><span class="kv-key">Surplus BRL</span><span class="kv-val green" id="reserveSurplus">—</span></div>
+        <div class="kv"><span class="kv-key">Invariant</span><span style="font-size:9px;color:var(--text3)">iHold BRL ≥ efixDI supply (1:1)</span></div>
+        <div class="kv"><span class="kv-key">Poll frequency</span><span class="kv-val" style="color:var(--text2)">Every 5 min</span></div>
+        <div style="margin-top:8px;font-size:9px;color:var(--text3)" id="reserveTs">Last checked: —</div>
+      </div>
+    </div>
 
-  <!-- SECTION: OZ AUDIT -->
+  </div>
   <div class="section-label">OpenZeppelin Audit</div>
 
   <div class="panel">
@@ -1728,6 +1753,97 @@ function toggleTheme() {
   });
 })();
 
+// ── LOAD PROOF-OF-RESERVE — backend /api/admin/reserve ───────────────────────
+async function loadReserve() {
+  try {
+    const r = await fetch(B + '/api/admin/reserve', { headers: hdr() });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+
+    const acctBrl     = d.reserve?.account_brl;
+    const tvl         = d.protocol?.tvl_efix;
+    const ratio       = d.proof_of_reserve?.coverage_ratio;
+    const surplus     = d.proof_of_reserve?.surplus_brl;
+    const covered     = d.proof_of_reserve?.covered;
+    const ts          = d.timestamp;
+
+    // BRL value display
+    if (acctBrl !== null && acctBrl !== undefined) {
+      const brlFmt = 'R$ ' + acctBrl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      set('reserveBRL', brlFmt);
+      set('mReserve', ratio ? ratio.toFixed(1) + '%' : '—');
+      setColor('reserveBRL', covered ? 'green' : 'red');
+      setColor('mReserve', covered ? 'green' : 'red');
+    }
+
+    if (tvl !== null && tvl !== undefined) {
+      set('reserveTVL', tvl.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' efixDI');
+    }
+
+    if (ratio !== null && ratio !== undefined) {
+      set('reserveRatio', ratio.toFixed(2) + '%');
+      setColor('reserveRatio', ratio >= 100 ? 'green' : 'red');
+    }
+
+    if (surplus !== null && surplus !== undefined) {
+      const surplusFmt = 'R$ ' + surplus.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      set('reserveSurplus', surplusFmt);
+      setColor('reserveSurplus', surplus >= 0 ? 'green' : 'red');
+    }
+
+    // Status badge
+    const badge = document.getElementById('reserveStatusBadge');
+    if (badge) {
+      if (covered === true) {
+        badge.textContent = '✓ COVERED';
+        badge.style.background = 'var(--green-dim)';
+        badge.style.color = 'var(--green)';
+      } else if (covered === false) {
+        badge.textContent = '✗ UNDERCOLLATERALIZED';
+        badge.style.background = 'var(--red-dim)';
+        badge.style.color = 'var(--red)';
+      } else {
+        badge.textContent = '⚠ PENDING';
+        badge.style.background = 'var(--yellow-dim)';
+        badge.style.color = 'var(--yellow)';
+      }
+    }
+
+    // Metric card color
+    const card = document.getElementById('mReserveCard');
+    if (card) {
+      card.style.setProperty('--top-color', covered ? 'var(--green)' : 'var(--red)');
+      card.querySelector('.metric-card::before') || (card.style.borderTopColor = covered ? 'var(--green)' : 'var(--red)');
+    }
+
+    // Sub label
+    if (covered !== null && covered !== undefined) {
+      set('mReserveSub', covered ? '✓ iHold BRL ≥ TVL' : '⚠ Undercollateralized');
+    }
+
+    if (ts) {
+      const ago = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+      set('reserveTs', 'Last checked: ' + (ago < 60 ? ago + 's ago' : Math.floor(ago/60) + 'm ago'));
+    }
+
+  } catch(e) {
+    // Backend not available or iHold credentials not set yet
+    set('reserveBRL', 'Pending setup');
+    set('reserveTVL', '—');
+    set('reserveRatio', '—');
+    set('reserveSurplus', '—');
+    set('mReserve', 'N/A');
+    set('mReserveSub', 'Genial API pending');
+    set('reserveTs', 'iHold credentials required');
+    const badge = document.getElementById('reserveStatusBadge');
+    if (badge) {
+      badge.textContent = 'SETUP REQUIRED';
+      badge.style.background = 'var(--yellow-dim)';
+      badge.style.color = 'var(--yellow)';
+    }
+  }
+}
+
 // ── LOAD ALL ────────────────────────────────────────────────────────────────
 async function loadAll() {
   const icon = document.getElementById('refreshIcon');
@@ -1740,7 +1856,8 @@ async function loadAll() {
     loadVault(),
     loadOracle(),
     loadSupplies(),
-    loadLZ()
+    loadLZ(),
+    loadReserve(),
   ]);
 
   setTimeout(computeRiskScore, 500);
@@ -1754,7 +1871,8 @@ async function loadAll() {
 // ── INIT ────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   loadAll();
-  setInterval(loadAll, 60000); // auto-refresh every 60s
+  setInterval(loadAll, 60000);          // full refresh every 60s
+  setInterval(loadReserve, 5 * 60000);  // reserve-only poll every 5min
 });
 </script>
 </body>
