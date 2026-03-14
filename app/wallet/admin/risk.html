@@ -724,15 +724,18 @@ body::before {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 16px;
+  padding: 14px 16px;
 }
 
 .moat-icon {
-  font-size: 20px;
-  margin-bottom: 8px;
+  font-size: 16px;
+  margin-bottom: 6px;
 }
 
 .moat-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
   font-family: var(--sans);
   font-size: 12px;
   font-weight: 600;
@@ -986,136 +989,6 @@ body::before {
     </div>
 
   </div>
-  <div class="section-label" data-section="audit" style="display:none">OpenZeppelin Audit</div>
-
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">Audit Status — EfixDIToken.sol</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:9px;color:var(--text2)">Auditor: Kostadin Madzherski · PM: Maria Gomez</span>
-        <div class="live-badge" style="font-size:9px">
-          <div class="live-dot"></div>
-          Report: 16 Mar 2026
-        </div>
-      </div>
-    </div>
-    <div class="panel-body">
-      <div class="audit-grid">
-        <div class="audit-pill sev-h">
-          <div class="ap-num">1</div>
-          <div class="ap-label">High</div>
-        </div>
-        <div class="audit-pill sev-m">
-          <div class="ap-num">1</div>
-          <div class="ap-label">Medium</div>
-        </div>
-        <div class="audit-pill sev-l">
-          <div class="ap-num">5</div>
-          <div class="ap-label">Low</div>
-        </div>
-        <div class="audit-pill sev-n">
-          <div class="ap-num">8</div>
-          <div class="ap-label">Notes</div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div>
-          <div style="font-size:9px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Critical Findings</div>
-          <div class="finding-row">
-            <span class="fr-tag h">H-01</span>
-            <span class="fr-name">User Transfer Blocks Liquidation</span>
-            <span class="fr-status mitigated">Mitigated</span>
-          </div>
-          <div class="finding-row">
-            <span class="fr-tag m">M-01</span>
-            <span class="fr-name">Paused Token Blocks Emergency Withdrawal</span>
-            <span class="fr-status ack">Acknowledged</span>
-          </div>
-          <div class="finding-row">
-            <span class="fr-tag l">L-01</span>
-            <span class="fr-name">Unchecked ERC20 Transfer in emergencyWithdraw</span>
-            <span class="fr-status ack">Acknowledged</span>
-          </div>
-          <div class="finding-row">
-            <span class="fr-tag l">L-02</span>
-            <span class="fr-name">Floating Pragma</span>
-            <span class="fr-status ack">Acknowledged</span>
-          </div>
-          <div class="finding-row">
-            <span class="fr-tag l">L-03</span>
-            <span class="fr-name">Possible Duplicate Event Emissions</span>
-            <span class="fr-status ack">Acknowledged</span>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:9px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">H-01 Mitigation Detail</div>
-          <div style="background:var(--green-dim);border:1px solid rgba(0,230,118,0.2);border-radius:6px;padding:12px">
-            <div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:6px">✓ EfixCollateralVault V2 Deployed</div>
-            <div style="font-size:10px;color:var(--text2);line-height:1.6;font-family:var(--sans)">
-              Custodial model: tokens transferred into vault custody via <code style="color:var(--green)">depositFor()</code> before any leverage. User never holds collateralized tokens. Attack vector structurally eliminated.<br><br>
-              <span style="color:var(--text3)">Contract: 0xdE82...ADE6B · Polygon · 13 Mar 2026</span><br>
-              <span style="color:var(--text3)">PR #1: github.com/Develop-ltda/efixdi-backend/pull/1</span>
-            </div>
-          </div>
-          <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:10px">
-            <span style="color:var(--text2)">Fix Review Deadline</span>
-            <span style="color:var(--yellow)">23 Mar 2026</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px">
-            <span style="color:var(--text2)">All 15 findings responded</span>
-            <span style="color:var(--green)">✓ Platform</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px">
-            <span style="color:var(--text2)">Payment #2 ($6,250)</span>
-            <span style="color:var(--yellow)">Due 16 Mar 2026</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">TVL IN USD</div>
-        <span style="font-size:9px;color:var(--text2)">Chainlink BRL/USD</span>
-      </div>
-      <div class="panel-body">
-        <div class="kv"><span class="kv-key">TVL (USD)</span><span class="kv-val green" id="mTVLusd">$—</span></div>
-        <div class="kv"><span class="kv-key">TVL (BRL)</span><span class="kv-val" id="mTVLbrl">R$—</span></div>
-        <div class="kv"><span class="kv-key">BRL/USD Rate</span><span class="kv-val" id="mTVLrate">—</span></div>
-        <div class="kv"><span class="kv-key">efixDI Supply</span><span class="kv-val green" id="mTVLsupply">—</span></div>
-        <div class="kv"><span class="kv-key">Onchain Mktcap</span><span class="kv-val"><a href="https://defillama.com/rwa/asset/efixdi" target="_blank" style="color:var(--blue);text-decoration:none">DefiLlama ↗</a></span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION: COMPETITIVE MOAT -->
-  <div class="section-label" data-section="moat">Structural Advantages</div>
-
-  <div class="moat-grid">
-    <div class="moat-card">
-      <div class="moat-icon">⚡</div>
-      <div class="moat-title">D+0 Redemption — The Core Moat</div>
-      <div class="moat-body">
-        Same-day redemption of DI fund shares at <span class="moat-highlight">full NAV</span> eliminates FX hedge costs (~2–3% annually). Serves as the liquidation guarantee for Morpho positions. No crypto collateral can match this: DI fund is backed by Brazilian sovereign debt, not market price.
-      </div>
-    </div>
-    <div class="moat-card">
-      <div class="moat-icon">🏛️</div>
-      <div class="moat-title">Regulatory Infrastructure</div>
-      <div class="moat-body">
-        CVM Act 23.635/2025 under Resolution 88/2022. HausBank provides PIX infrastructure (Central Bank regulated). Genial IAAS for DI fund custody. <span class="moat-highlight">Institutional-grade regulatory stack</span> — not a DeFi workaround.
-      </div>
-    </div>
-    <div class="moat-card">
-      <div class="moat-icon">📐</div>
-      <div class="moat-title">Yield Architecture</div>
-      <div class="moat-body">
-        CDI ~14.9% APY base. Leverage via Morpho Blue at 50% LTV, USDC borrow at ~5%. <span class="moat-highlight">Target 25–35% net APY</span>. Spread widens as CDI rises. No impermanent loss, no liquidation via oracle manipulation — liquidation is fund redemption.
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION: LayerZero -->
   <div class="section-label" data-section="bridge">Bridge Activity</div>
 
   <div class="panel">
@@ -1329,6 +1202,145 @@ body::before {
   </div>
 
   </div><!-- end collateralSection -->
+
+<div class="section-label">OpenZeppelin Audit</div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Audit Status — EfixDIToken.sol</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:9px;color:var(--text2)">Auditor: Kostadin Madzherski · PM: Maria Gomez</span>
+        <div class="live-badge" style="font-size:9px">
+          <div class="live-dot"></div>
+          Report: 16 Mar 2026
+        </div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="audit-grid">
+        <div class="audit-pill sev-h">
+          <div class="ap-num">1</div>
+          <div class="ap-label">High</div>
+        </div>
+        <div class="audit-pill sev-m">
+          <div class="ap-num">1</div>
+          <div class="ap-label">Medium</div>
+        </div>
+        <div class="audit-pill sev-l">
+          <div class="ap-num">5</div>
+          <div class="ap-label">Low</div>
+        </div>
+        <div class="audit-pill sev-n">
+          <div class="ap-num">8</div>
+          <div class="ap-label">Notes</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:9px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Critical Findings</div>
+          <div class="finding-row">
+            <span class="fr-tag h">H-01</span>
+            <span class="fr-name">User Transfer Blocks Liquidation</span>
+            <span class="fr-status mitigated">Mitigated</span>
+          </div>
+          <div class="finding-row">
+            <span class="fr-tag m">M-01</span>
+            <span class="fr-name">Paused Token Blocks Emergency Withdrawal</span>
+            <span class="fr-status ack">Acknowledged</span>
+          </div>
+          <div class="finding-row">
+            <span class="fr-tag l">L-01</span>
+            <span class="fr-name">Unchecked ERC20 Transfer in emergencyWithdraw</span>
+            <span class="fr-status ack">Acknowledged</span>
+          </div>
+          <div class="finding-row">
+            <span class="fr-tag l">L-02</span>
+            <span class="fr-name">Floating Pragma</span>
+            <span class="fr-status ack">Acknowledged</span>
+          </div>
+          <div class="finding-row">
+            <span class="fr-tag l">L-03</span>
+            <span class="fr-name">Possible Duplicate Event Emissions</span>
+            <span class="fr-status ack">Acknowledged</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:9px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">H-01 Mitigation Detail</div>
+          <div style="background:var(--green-dim);border:1px solid rgba(0,230,118,0.2);border-radius:6px;padding:12px">
+            <div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:6px">✓ EfixCollateralVault V2 Deployed</div>
+            <div style="font-size:10px;color:var(--text2);line-height:1.6;font-family:var(--sans)">
+              Custodial model: tokens transferred into vault custody via <code style="color:var(--green)">depositFor()</code> before any leverage. User never holds collateralized tokens. Attack vector structurally eliminated.<br><br>
+              <span style="color:var(--text3)">Contract: 0xdE82...ADE6B · Polygon · 13 Mar 2026</span><br>
+              <span style="color:var(--text3)">PR #1: github.com/Develop-ltda/efixdi-backend/pull/1</span>
+            </div>
+          </div>
+          <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:10px">
+            <span style="color:var(--text2)">Fix Review Deadline</span>
+            <span style="color:var(--yellow)">23 Mar 2026</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px">
+            <span style="color:var(--text2)">All 15 findings responded</span>
+            <span style="color:var(--green)">✓ Platform</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px">
+            <span style="color:var(--text2)">Payment #2 ($6,250)</span>
+            <span style="color:var(--yellow)">Due 16 Mar 2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">TVL IN USD</div>
+        <span style="font-size:9px;color:var(--text2)">Chainlink BRL/USD</span>
+      </div>
+      <div class="panel-body">
+        <div class="kv"><span class="kv-key">TVL (USD)</span><span class="kv-val green" id="mTVLusd">$—</span></div>
+        <div class="kv"><span class="kv-key">TVL (BRL)</span><span class="kv-val" id="mTVLbrl">R$—</span></div>
+        <div class="kv"><span class="kv-key">BRL/USD Rate</span><span class="kv-val" id="mTVLrate">—</span></div>
+        <div class="kv"><span class="kv-key">efixDI Supply</span><span class="kv-val green" id="mTVLsupply">—</span></div>
+        <div class="kv"><span class="kv-key">Onchain Mktcap</span><span class="kv-val"><a href="https://defillama.com/rwa/asset/efixdi" target="_blank" style="color:var(--blue);text-decoration:none">DefiLlama ↗</a></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: COMPETITIVE MOAT -->
+  
+
+  <div class="section-label">Structural Advantages</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
+    <div class="panel">
+      <div class="panel-header">
+        <span style="font-size:16px">⚡</span>
+        <div class="panel-title" style="font-size:10px">D+0 Redemption — Core Moat</div>
+      </div>
+      <div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.6">
+        Same-day redemption of DI fund shares at <span class="moat-highlight">full NAV</span> eliminates FX hedge costs (~2–3% annually). Serves as the liquidation guarantee for Morpho positions. No crypto collateral can match this: DI fund is backed by Brazilian sovereign debt, not market price.
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span style="font-size:16px">🏛️</span>
+        <div class="panel-title" style="font-size:10px">Regulatory Infrastructure</div>
+      </div>
+      <div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.6">
+        CVM Act 23.635/2025 under Resolution 88/2022. HausBank provides PIX infrastructure (Central Bank regulated). Genial IAAS for DI fund custody. <span class="moat-highlight">Institutional-grade regulatory stack</span> — not a DeFi workaround.
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span style="font-size:16px">📐</span>
+        <div class="panel-title" style="font-size:10px">Yield Architecture</div>
+      </div>
+      <div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.6">
+        CDI ~14.9% APY base. Leverage via Morpho Blue at 50% LTV, USDC borrow at ~5%. <span class="moat-highlight">Target 25–35% net APY</span>. Spread widens as CDI rises. No impermanent loss, no liquidation via oracle manipulation — liquidation is fund redemption.
+      </div>
+    </div>
+  </div>
+
+
   <!-- FOOTER -->
 <div class="footer">
   <div class="footer-links">
@@ -1898,6 +1910,22 @@ async function loadAll() {
   ]);
 
   setTimeout(computeRiskScore, 500);
+
+  // TVL USD — calculated after all loads complete
+  try {
+    const tvlEl  = document.getElementById('mTVL');
+    const oraEl  = document.getElementById('mOracle');
+    const supply = tvlEl  ? parseFloat(tvlEl.textContent.replace(/,/g,'').replace(/[^0-9.]/g,'')) : 0;
+    const price  = oraEl  ? parseFloat(oraEl.textContent.replace('$','')) : 0;
+    if (supply > 0 && price > 0) {
+      const usd = Math.round(supply * price);
+      const brl = supply.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+      document.getElementById('mTVLusd').textContent    = '$' + usd.toLocaleString();
+      document.getElementById('mTVLbrl').textContent    = 'R$ ' + brl;
+      document.getElementById('mTVLrate').textContent   = '$' + price.toFixed(4) + ' / R$1';
+      document.getElementById('mTVLsupply').textContent = supply.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' efixDI';
+    }
+  } catch(e) {}
 
   const now = new Date();
   set('lastUpdate', 'Updated ' + now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' }));
