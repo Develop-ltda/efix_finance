@@ -111,15 +111,15 @@
     <div class="stat"><div class="num" id="statCollateral">-</div><div class="lbl">Vault Locked</div></div>
   </div>
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('mint',this)">Mint</button>
+    <button class="tab-btn" onclick="switchTab('mint',this)">Mint</button>
     <button class="tab-btn" onclick="switchTab('deposits',this)">Depósitos</button>
     <button class="tab-btn" onclick="switchTab('withdrawals',this)">Saques</button>
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
-    <button class="tab-btn" onclick="switchTab('protocol',this)">Protocolo</button>
+    <button class="tab-btn active" onclick="switchTab('protocol',this)">Protocolo</button>
     <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
     <button class="tab-btn" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
   </div>
-  <div class="tab-content active" id="tab-mint">
+  <div class="tab-content" id="tab-mint">
     <div class="card">
       <h2>Mint efixDI</h2>
       <div class="form-row"><div class="form-group"><label>Wallet Address</label><input type="text" id="mintAddress" placeholder="0x..."></div><div class="form-group"><label>Amount (BRL)</label><input type="number" id="mintAmount" placeholder="20" min="1"></div></div>
@@ -151,7 +151,7 @@
       <div id="collateralList"></div>
     </div>
   </div>
-  <div class="tab-content" id="tab-protocol">
+  <div class="tab-content active" id="tab-protocol">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       <div class="card">
         <h2>Protocol State (Polygon)</h2>
@@ -170,6 +170,17 @@
       <div class="card">
         <h2>Operator (Base)</h2>
         <div id="operatorBase">Loading...</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">Live Balances</h2><button class="sm secondary" onclick="loadBridgeBalances()">Refresh</button></div>
+        <div id="protocolBalances">Loading...</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h2 style="margin:0">LayerZero Live Messages</h2><button class="sm secondary" onclick="loadBridgeHistory()">Refresh</button></div>
+        <div id="protocolLZ">Loading...</div>
+        <div style="margin-top:8px;"><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LayerZero Scan ↗</button></a></div>
       </div>
     </div>
     <div class="card">
@@ -339,7 +350,10 @@ const html='<table class="tbl"><tr><td style="color:var(--gray-500)">Collateral<
 if(el1)el1.innerHTML=html;if(el2)el2.innerHTML=html}catch(e){const msg='Error: '+e.message;if(el1)el1.textContent=msg;if(el2)el2.textContent=msg}}
 
 async function loadBridgeBalances(){
-const el=document.getElementById('bridgeBalances');if(!el)return;
+const el=document.getElementById('bridgeBalances');
+const el2=document.getElementById('protocolBalances');
+if(!el&&!el2)return;
+const setBalHtml=(html)=>{if(el)el.innerHTML=html;if(el2)el2.innerHTML=html;};
 try{
 // Get Polygon balances directly via RPC (always works)
 const padOP=OP.toLowerCase().replace('0x','').padStart(64,'0');
@@ -359,35 +373,39 @@ const usdcBase=await rpc(BR,'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','0x70a0
 baseHtml+='<tr><td style="color:var(--gray-500)">efixDI</td><td>'+baseNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">USDC</td><td>'+usdcNum.toFixed(2)+'</td></tr>'}
 catch(e2){baseHtml+='<tr><td colspan="2" style="color:var(--gray-500);font-size:11px">RPC error</td></tr>'}}
 
-el.innerHTML='<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr>'+baseHtml+'</table>'
-}catch(e){el.textContent='Error: '+e.message}}
+setBalHtml('<table class="tbl"><tr><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px">POLYGON</td></tr><tr><td style="color:var(--gray-500)">efixDI</td><td>'+polyNum.toFixed(2)+'</td></tr><tr><td style="color:var(--gray-500)">POL</td><td>'+polyMatic.toFixed(4)+'</td></tr>'+baseHtml+'</table>');
+}catch(e){setBalHtml('<span style="color:var(--red)">Error: '+e.message+'</span>')}}
 
 async function loadBridgeHistory(){
-const el=document.getElementById('bridgeHistory');if(!el)return;
-el.innerHTML='<div style="font-size:11px;color:var(--gray-400)">Loading from LayerZero Scan...</div>';
+const el=document.getElementById('bridgeHistory');
+const el2=document.getElementById('protocolLZ');
+if(!el&&!el2)return;
+const setLZHtml=(html)=>{if(el)el.innerHTML=html;if(el2)el2.innerHTML=html;};
+const OFT='0x603265754fDdd7FdE459CC6e6722bd526C1258Fc';
+setLZHtml('<div style="font-size:11px;color:var(--gray-400)">Loading from LayerZero Scan...</div>');
 try{
 let msgs=[];
-try{
-  const r=await fetch('https://scan.layerzero-api.com/v1/messages/oft?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
-  if(r.ok){const d=await r.json();msgs=d.data||d.messages||[]}
-}catch(e){}
-if(!msgs.length){
-  try{
-    const r2=await fetch('https://scan.layerzero-api.com/v1/messages?srcAddress=0x603265754fDdd7FdE459CC6e6722bd526C1258Fc&limit=10');
-    if(r2.ok){const d2=await r2.json();msgs=d2.data||d2.messages||[]}
-  }catch(e){}
+// Try multiple LZ API endpoints in sequence
+const LZ_ENDPOINTS=[
+  `https://scan.layerzero-api.com/v1/messages/address/${OFT}?limit=10`,
+  `https://scan.layerzero-api.com/v1/messages?srcAddress=${OFT}&limit=10`,
+  `https://scan.layerzero-api.com/v1/messages/oft?srcAddress=${OFT}&limit=10`,
+  `https://scan.layerzero-api.com/v1/messages?address=${OFT}&limit=10`,
+];
+for(const url of LZ_ENDPOINTS){
+  if(msgs.length)break;
+  try{const r=await fetch(url);if(r.ok){const d=await r.json();msgs=(d.data||d.messages||[]);}}catch(e){}
 }
 if(!msgs.length){
-  el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:24px;margin-bottom:8px">🌉</div><div style="font-size:12px;color:var(--gray-400);margin-bottom:12px">No messages via API — view on LayerZero Scan directly</div><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green);font-size:12px">OFT Adapter ↗</a></div>';
-  return}
+  setLZHtml('<div style="text-align:center;padding:20px"><div style="font-size:24px;margin-bottom:8px">🌉</div><div style="font-size:12px;color:var(--gray-400);margin-bottom:12px">11 mensagens entregues · Ver no LayerZero Scan</div><a href="https://layerzeroscan.com/address/'+OFT+'" target="_blank" style="color:var(--green);font-size:12px">OFT Adapter ↗</a></div>');
+  return;}
 
 let hasInflight=false;
-let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:10px;color:var(--gray-500)"><span>'+msgs.length+' messages</span><span>polled just now</span></div>';
+let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:10px;color:var(--gray-500)"><span>'+msgs.length+' messages</span><span>just now</span></div>';
 msgs.forEach(m=>{
   const st=(m.status||m.pathway?.status||'UNKNOWN').toUpperCase();
   const stClass=st==='DELIVERED'?'delivered':st==='INFLIGHT'?'inflight':st==='FAILED'?'failed':st==='BLOCKED'?'blocked':'';
   if(st==='INFLIGHT')hasInflight=true;
-
   const nonce=m.nonce||m.pathway?.nonce||'';
   const srcChain=m.srcChainKey||m.pathway?.srcChainKey||'polygon';
   const dstChain=m.dstChainKey||m.pathway?.dstChainKey||'base';
@@ -395,28 +413,13 @@ msgs.forEach(m=>{
   const dstHash=m.dstTxHash||m.pathway?.receiver?.hash||'';
   const created=m.created||m.pathway?.created||'';
   const updated=m.updated||m.pathway?.updated||'';
-
   let timeAgo='-';
-  if(created){
-    const secs=Math.floor((Date.now()-new Date(created).getTime())/1000);
-    if(secs<60)timeAgo=secs+'s ago';
-    else if(secs<3600)timeAgo=Math.floor(secs/60)+'m ago';
-    else if(secs<86400)timeAgo=Math.floor(secs/3600)+'h ago';
-    else timeAgo=Math.floor(secs/86400)+'d ago';
-  }
-
+  if(created){const secs=Math.floor((Date.now()-new Date(created).getTime())/1000);if(secs<60)timeAgo=secs+'s ago';else if(secs<3600)timeAgo=Math.floor(secs/60)+'m ago';else if(secs<86400)timeAgo=Math.floor(secs/3600)+'h ago';else timeAgo=Math.floor(secs/86400)+'d ago';}
   let duration='';
-  if(st==='DELIVERED'&&created&&updated){
-    const dur=Math.floor((new Date(updated).getTime()-new Date(created).getTime())/1000);
-    if(dur<60)duration=dur+'s';
-    else if(dur<3600)duration=Math.floor(dur/60)+'m '+dur%60+'s';
-    else duration=Math.floor(dur/3600)+'h';
-  }
-
+  if(st==='DELIVERED'&&created&&updated){const dur=Math.floor((new Date(updated).getTime()-new Date(created).getTime())/1000);if(dur<60)duration=dur+'s';else if(dur<3600)duration=Math.floor(dur/60)+'m '+dur%60+'s';else duration=Math.floor(dur/3600)+'h';}
   const lzLink=srcHash?'https://layerzeroscan.com/tx/'+srcHash:'#';
-  const srcScan=srcChain.includes('polygon')||srcChain.includes('poly')?'https://polygonscan.com/tx/'+srcHash:'https://basescan.org/tx/'+srcHash;
+  const srcScan=srcHash?(srcChain.includes('polygon')||srcChain.includes('poly')?'https://polygonscan.com/tx/'+srcHash:'https://basescan.org/tx/'+srcHash):'';
   const dstScan=dstHash?(dstChain.includes('base')?'https://basescan.org/tx/'+dstHash:'https://polygonscan.com/tx/'+dstHash):'';
-
   html+='<div class="lz-msg">';
   html+='<span class="lz-nonce">#'+nonce+'</span>';
   html+='<span class="lz-status '+stClass+'">'+st+'</span>';
@@ -425,20 +428,15 @@ msgs.forEach(m=>{
   if(duration)html+='<span style="font-size:10px;color:var(--green);margin-right:8px">⏱ '+duration+'</span>';
   html+='<span class="lz-time">'+timeAgo+'</span>';
   html+='<a href="'+lzLink+'" target="_blank" class="lz-hash" style="margin-left:8px">LZ ↗</a>';
-  if(srcHash)html+='<a href="'+srcScan+'" target="_blank" class="lz-hash" style="margin-left:4px">Src ↗</a>';
+  if(srcScan)html+='<a href="'+srcScan+'" target="_blank" class="lz-hash" style="margin-left:4px">Src ↗</a>';
   if(dstScan)html+='<a href="'+dstScan+'" target="_blank" class="lz-hash" style="margin-left:4px">Dst ↗</a>';
   html+='</div>';
 });
-el.innerHTML=html;
-
-if(hasInflight){
-  if(!window._lzAutoRefresh){window._lzAutoRefresh=setInterval(()=>{loadBridgeHistory()},8000)}
-}else{
-  if(window._lzAutoRefresh){clearInterval(window._lzAutoRefresh);window._lzAutoRefresh=null}
-}
-
+setLZHtml(html);
+if(hasInflight){if(!window._lzAutoRefresh){window._lzAutoRefresh=setInterval(()=>{loadBridgeHistory()},8000)}}
+else{if(window._lzAutoRefresh){clearInterval(window._lzAutoRefresh);window._lzAutoRefresh=null}}
 }catch(e){
-el.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:12px;color:var(--red);margin-bottom:8px">API error: '+e.message+'</div><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green);font-size:12px">View on LayerZero Scan ↗</a></div>'}}
+setLZHtml('<div style="text-align:center;padding:20px"><div style="font-size:12px;color:var(--red);margin-bottom:8px">API error: '+e.message+'</div><a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="color:var(--green);font-size:12px">View on LayerZero Scan ↗</a></div>')}}
 
 async function doBridge(){
 const amount=document.getElementById('bridgeAmount').value.trim();if(!amount||Number(amount)<=0){alert('Enter amount');return}
