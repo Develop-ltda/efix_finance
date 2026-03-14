@@ -86,6 +86,425 @@
   [data-theme="light"] .theme-pill{background:#e5e7eb}
   .theme-pill button{background:none;border:none;width:26px;height:22px;border-radius:14px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);transition:background .15s}
   .theme-pill button.active{background:var(--card);color:var(--white)}
+
+/* ── ARCHITECTURE TAB ── */
+:root {
+  --bg: #f8f8f6;
+  --surface: #ffffff;
+  --border: #e8e8e4;
+  --green: #00875a;
+  --green-light: #e3f5ed;
+  --green-dim: rgba(0,135,90,0.08);
+  --blue: #1a56db;
+  --blue-light: #e8effe;
+  --yellow: #b45309;
+  --yellow-light: #fef3c7;
+  --red: #c81e1e;
+  --red-light: #fde8e8;
+  --purple: #6c2bd9;
+  --purple-light: #ede9fe;
+  --text: #111110;
+  --text2: #6b6b66;
+  --text3: #a8a8a0;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Syne', sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg: #0d0d0b;
+  --surface: #161614;
+  --border: #252520;
+  --green: #00c97a;
+  --green-light: rgba(0,201,122,0.08);
+  --green-dim: rgba(0,201,122,0.06);
+  --blue: #4d8ef0;
+  --blue-light: rgba(77,142,240,0.08);
+  --yellow: #f59e0b;
+  --yellow-light: rgba(245,158,11,0.08);
+  --red: #f87171;
+  --red-light: rgba(248,113,113,0.08);
+  --purple: #a78bfa;
+  --purple-light: rgba(167,139,250,0.08);
+  --text: #f0f0ec;
+  --text2: #888880;
+  --text3: #44443c;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  min-height: 100vh;
+  padding: 28px;
+}
+
+/* ── HEADER ── */
+.arch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.arch-title {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.arch-title span { color: var(--green); }
+
+.arch-sub {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+}
+
+.arch-badge {
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--green-light);
+  color: var(--green);
+  font-family: var(--mono);
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+/* ── FLOW ── */
+.flow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.flow-step {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.node {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  min-width: 140px;
+  max-width: 160px;
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+
+.node:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.node::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+
+.node.green::before, .node.blue::before, .node.yellow::before, .node.purple::before, .node.red::before { background: var(--text); }
+
+.node-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.node-chain {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 4px;
+}
+
+.node-title {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.node-val {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.node-val.green, .node-val.blue, .node-val.yellow, .node-val.purple, .node-val.red { color: var(--text); font-weight: 700; }
+
+.node-sub {
+  font-size: 9px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+
+.node-addr {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--text3);
+  margin-top: 6px;
+  word-break: break-all;
+}
+
+/* ── ARROW ── */
+.arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.arrow-line {
+  width: 32px;
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--border), var(--green));
+  position: relative;
+}
+
+.arrow-line::after {
+  content: '›';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--green);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.arrow-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--text3);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* ── BOTTOM PANELS ── */
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.panel-head {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-head-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.panel-head-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.panel-body { padding: 12px 14px; }
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.kv:last-child { border-bottom: none; }
+.kv-k { color: var(--text2); }
+.kv-v { font-weight: 500; font-family: var(--mono); }
+.kv-v.green, .kv-v.blue, .kv-v.yellow { color: var(--text); font-weight: 600; }
+
+/* ── YIELD MATH ── */
+.yield-box {
+  background: var(--green-light);
+  border: 1px solid rgba(0,135,90,0.2);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.yield-title {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 10px;
+  letter-spacing: -0.2px;
+}
+
+.yield-formula {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.yield-item {
+  text-align: center;
+}
+
+.yield-num {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.yield-lbl {
+  font-size: 9px;
+  color: var(--text2);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+  font-family: var(--mono);
+}
+
+.yield-op {
+  font-size: 18px;
+  color: var(--text3);
+  font-weight: 300;
+}
+
+.yield-result {
+  background: var(--green);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 16px;
+  text-align: center;
+}
+
+.yield-result .yield-num { font-size: 24px; }
+.yield-result .yield-lbl { color: rgba(255,255,255,0.7); }
+
+/* ── CONTRACTS TABLE ── */
+.contracts {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.contracts-head {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.contracts-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  font-size: 9px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+}
+td {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg); }
+.addr-cell {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text2);
+}
+.chain-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 8px;
+  font-family: var(--mono);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.chain-poly { background: var(--purple-light); color: var(--purple); }
+.chain-base { background: var(--blue-light); color: var(--blue); }
+.status-ok { color: var(--green); font-size: 9px; }
+
+/* ── ANIMATED PULSE ── */
+@keyframes flow-pulse {
+  0%, 100% { opacity: 0.4; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.05); }
+}
+
+.arrow-line { animation: flow-pulse 2s ease infinite; }
+.flow-step:nth-child(2) .arrow-line { animation-delay: 0.3s; }
+.flow-step:nth-child(3) .arrow-line { animation-delay: 0.6s; }
+.flow-step:nth-child(4) .arrow-line { animation-delay: 0.9s; }
+.flow-step:nth-child(5) .arrow-line { animation-delay: 1.2s; }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.node { animation: fade-in 0.4s ease both; }
+.flow-step:nth-child(1) .node { animation-delay: 0.0s; }
+.flow-step:nth-child(2) .node { animation-delay: 0.1s; }
+.flow-step:nth-child(3) .node { animation-delay: 0.2s; }
+.flow-step:nth-child(4) .node { animation-delay: 0.3s; }
+.flow-step:nth-child(5) .node { animation-delay: 0.4s; }
+.flow-step:nth-child(6) .node { animation-delay: 0.5s; }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
@@ -136,6 +555,7 @@
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
     
     <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
+    <button class="tab-btn" onclick="switchTab('architecture',this)">Arquitetura</button>
     <button class="tab-btn" onclick="switchTab('holders',this)">Holders</button>
     
     <button class="tab-btn active" onclick="switchTab('risk',this)">Protocolo</button>
@@ -210,6 +630,228 @@
           <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LayerZero Scan ↗</button></a>
         </div>
       </div>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-architecture">
+    <div style="padding:4px 0">
+<!-- HEADER -->
+<div class="arch-header">
+  <div>
+    <div class="arch-title">efixDI<span>+</span> Protocol Architecture</div>
+    <div class="arch-sub">Mode A — Admin-Managed Leverage · CVM Act 23.635/2025</div>
+  </div>
+  <div class="arch-badge">● LIVE</div>
+</div>
+
+<!-- YIELD BOX -->
+<div class="yield-box" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:24px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+    <div>
+      <div style="font-family:var(--display);font-size:14px;font-weight:800;letter-spacing:-0.3px">Yield Architecture — Structural Arbitrage</div>
+      <div style="font-size:10px;color:var(--text2);font-family:var(--mono);margin-top:2px">Mode A · Leveraged DI Fund Strategy</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:var(--display);font-size:28px;font-weight:800;line-height:1">25–35%</div>
+      <div style="font-size:9px;color:var(--text2);font-family:var(--mono);letter-spacing:1px">NET APY TARGET</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-family:var(--display);font-size:22px;font-weight:800">~15%</div>
+      <div style="font-size:9px;color:var(--text2);font-family:var(--mono);margin-top:2px">CDI BASE APY</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:4px">Brazilian sovereign rate</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-family:var(--display);font-size:22px;font-weight:800">3×</div>
+      <div style="font-size:9px;color:var(--text2);font-family:var(--mono);margin-top:2px">LEVERAGE</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:4px">Via Morpho Blue</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-family:var(--display);font-size:22px;font-weight:800">~5%</div>
+      <div style="font-size:9px;color:var(--text2);font-family:var(--mono);margin-top:2px">USDC BORROW COST</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:4px">Current market rate</div>
+    </div>
+    <div style="background:var(--text);border:1px solid var(--text);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-family:var(--display);font-size:22px;font-weight:800;color:var(--bg)">25–35%</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.6);font-family:var(--mono);margin-top:2px">NET APY</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:4px">(15% × 3) − 5%−10%</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px;color:var(--text2)">
+    <div style="display:flex;align-items:center;gap:6px"><span style="width:4px;height:4px;border-radius:50%;background:var(--text);display:inline-block;flex-shrink:0"></span>D+0 redemption at full NAV — eliminates FX hedge costs</div>
+    <div style="display:flex;align-items:center;gap:6px"><span style="width:4px;height:4px;border-radius:50%;background:var(--text);display:inline-block;flex-shrink:0"></span>Brazilian sovereign debt backing = guaranteed liquidation path</div>
+    <div style="display:flex;align-items:center;gap:6px"><span style="width:4px;height:4px;border-radius:50%;background:var(--text);display:inline-block;flex-shrink:0"></span>No impermanent loss · No oracle manipulation risk</div>
+  </div>
+</div>
+
+<!-- FLOW DIAGRAM -->
+<div class="flow">
+
+  <!-- PIX -->
+  <div class="flow-step">
+    <div class="node green">
+      <span class="node-icon">📱</span>
+      <div class="node-chain">User · Brazil</div>
+      <div class="node-title">PIX Payment</div>
+      <div class="node-val green" id="archReserve">R$ —</div>
+      <div class="node-sub">BRL via HausBank<br>iHold custodial acct</div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">detect<br>30s poll</div>
+    </div>
+    <!-- MINT -->
+    <div class="node green">
+      <span class="node-icon">🪙</span>
+      <div class="node-chain">Polygon · Mainnet</div>
+      <div class="node-title">efixDI Mint</div>
+      <div class="node-val green" id="archSupply">— efixDI</div>
+      <div class="node-sub">1 efixDI = R$1.00<br>Tracks CDI yield</div>
+      <div class="node-addr">0x04082b...6441</div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">depositFor()<br>custody</div>
+    </div>
+    <!-- VAULT -->
+    <div class="node blue">
+      <span class="node-icon">🔒</span>
+      <div class="node-chain">Polygon · Mainnet</div>
+      <div class="node-title">Collateral Vault</div>
+      <div class="node-val blue" id="archLocked">— efixDI</div>
+      <div class="node-sub">OZ audited custodial<br>H-01 mitigated</div>
+      <div class="node-addr">0xdE8286...ADE6B</div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">LZ V2 OFT<br>lock-and-mint</div>
+    </div>
+    <!-- BRIDGE -->
+    <div class="node yellow">
+      <span class="node-icon">🌉</span>
+      <div class="node-chain">Polygon → Base</div>
+      <div class="node-title">LayerZero V2</div>
+      <div class="node-val yellow" id="archBase">210 efixDI</div>
+      <div class="node-sub">11 msgs delivered<br>OFT cross-chain</div>
+      <div class="node-addr">0x603265...58Fc</div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">supply()<br>collateral</div>
+    </div>
+    <!-- MORPHO -->
+    <div class="node purple">
+      <span class="node-icon">🏦</span>
+      <div class="node-chain">Base · Mainnet</div>
+      <div class="node-title">Morpho Blue</div>
+      <div class="node-val purple" id="archMorpho">90 efixDI</div>
+      <div class="node-sub">77% LLTV · 50% LTV<br>USDC borrow market</div>
+      <div class="node-addr">0xBBBB...FFCb</div>
+    </div>
+  </div>
+
+  <div class="flow-step">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">borrow()<br>USDC</div>
+    </div>
+    <!-- CARD -->
+    <div class="node red">
+      <span class="node-icon">💳</span>
+      <div class="node-chain">Global · Visa</div>
+      <div class="node-title">EFIX Card</div>
+      <div class="node-val red" id="archUsdc">7.00 USDC</div>
+      <div class="node-sub">Bridge.xyz · Production<br>Spend anywhere</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PANELS -->
+<div class="panels">
+
+  <!-- Proof of Reserve -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-dot" style="background:var(--text)"></div>
+      <div class="panel-head-title">Proof of Reserve</div>
+    </div>
+    <div class="panel-body">
+      <div class="kv"><span class="kv-k">iHold BRL Balance</span><span class="kv-v green" id="archBrl">—</span></div>
+      <div class="kv"><span class="kv-k">efixDI Supply</span><span class="kv-v" id="archTvl">—</span></div>
+      <div class="kv"><span class="kv-k">Coverage Ratio</span><span class="kv-v green" id="archCoverage">—</span></div>
+      <div class="kv"><span class="kv-k">Invariant</span><span class="kv-v" style="font-size:9px;color:var(--text2)">iHold BRL ≥ supply (1:1)</span></div>
+      <div class="kv"><span class="kv-k">Redemption</span><span class="kv-v green">D+0 · Full NAV</span></div>
+    </div>
+  </div>
+
+  <!-- Morpho Position -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-dot" style="background:var(--text)"></div>
+      <div class="panel-head-title">Morpho Position</div>
+    </div>
+    <div class="panel-body">
+      <div class="kv"><span class="kv-k">Collateral</span><span class="kv-v purple" id="archMorphoCol">—</span></div>
+      <div class="kv"><span class="kv-k">Borrowed (USDC)</span><span class="kv-v" id="archMorphoBor">—</span></div>
+      <div class="kv"><span class="kv-k">Health Factor</span><span class="kv-v green" id="archHF">—</span></div>
+      <div class="kv"><span class="kv-k">LTV (current / max)</span><span class="kv-v" id="archLTV">— / 77%</span></div>
+      <div class="kv"><span class="kv-k">Market</span><span class="kv-v" style="font-size:9px;color:var(--text2)">efixDI/USDC Base</span></div>
+    </div>
+  </div>
+
+  <!-- Oracle -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-dot" style="background:var(--text)"></div>
+      <div class="panel-head-title">Oracle · Infrastructure</div>
+    </div>
+    <div class="panel-body">
+      <div class="kv"><span class="kv-k">BRL/USD (Chainlink)</span><span class="kv-v blue" id="archOracle">—</span></div>
+      <div class="kv"><span class="kv-k">Oracle keeper</span><span class="kv-v">Every 4h · Base</span></div>
+      <div class="kv"><span class="kv-k">RPC</span><span class="kv-v">Alchemy · Polygon+Base</span></div>
+      <div class="kv"><span class="kv-k">Regulatory</span><span class="kv-v green">CVM Act 23.635/2025</span></div>
+      <div class="kv"><span class="kv-k">Audit</span><span class="kv-v">OZ · Mar 2026 · 15 findings</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CONTRACTS TABLE -->
+<div class="contracts">
+  <div class="contracts-head">
+    <div class="contracts-title">Deployed Contracts</div>
+    <span style="font-size:9px;color:var(--text3);font-family:var(--mono)">All verified on-chain</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Contract</th><th>Chain</th><th>Address</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>EfixDIToken</td><td><span class="chain-badge chain-poly">Polygon</span></td><td class="addr-cell">0x04082b283818D9d0dd9Ee8742892eEe5CC396441</td><td class="status-ok">✓ Verified · OZ Audited</td></tr>
+      <tr><td>EfixCollateralVault V2</td><td><span class="chain-badge chain-poly">Polygon</span></td><td class="addr-cell">0xdE8286f7E369aA4cbD7F3de324f7D715165ADE6B</td><td class="status-ok">✓ Verified · Mar 13 2026</td></tr>
+      <tr><td>EfixOFTAdapter (LZ V2)</td><td><span class="chain-badge chain-poly">Polygon</span></td><td class="addr-cell">0x603265754fDdd7FdE459CC6e6722bd526C1258Fc</td><td class="status-ok">✓ Live · 11 msgs</td></tr>
+      <tr><td>EfixDIToken (Base)</td><td><span class="chain-badge chain-base">Base</span></td><td class="addr-cell">0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608</td><td class="status-ok">✓ Live</td></tr>
+      <tr><td>EfixMinterBurner</td><td><span class="chain-badge chain-base">Base</span></td><td class="addr-cell">0x400a8DE2bF8fc4A63000A7E77103eDAE897CB9a3</td><td class="status-ok">✓ Live</td></tr>
+      <tr><td>EfixBRLOracleV2</td><td><span class="chain-badge chain-base">Base</span></td><td class="addr-cell">0xFC6a6Af4B7F398F70103F2f4b76E81afefc6Ea86</td><td class="status-ok">✓ Active · 4h keeper</td></tr>
+      <tr><td>Morpho Vault V2</td><td><span class="chain-badge chain-base">Base</span></td><td class="addr-cell">0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5</td><td class="status-ok">✓ Live · DD active</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
     </div>
   </div>
   <div class="tab-content" id="tab-holders">
@@ -519,7 +1161,82 @@ const userAddress=(document.getElementById('bridgeUser')||{}).value?.trim()||nul
 if(!confirm('Bridge '+amount+' efixDI from '+(userAddress?'vault ('+sa(userAddress)+')':'operator pool')+' to Base?'))return;
 const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">'+(userAddress?'Releasing from vault → ':'')+'Bridging...</span>';
 try{const body={amount};if(userAddress)body.userAddress=userAddress;const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify(body)});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base'+(d.vaultBridgeTx?'<br>Vault TX: <a href="https://polygonscan.com/tx/'+d.vaultBridgeTx+'" target="_blank" style="color:var(--green)">'+d.vaultBridgeTx.slice(0,14)+'...</a>':'')+'<br>Bridge TX: <a href="https://polygonscan.com/tx/'+d.bridgeTx+'" target="_blank" style="color:var(--green)">'+d.bridgeTx.slice(0,14)+'...</a><br>Fee: '+d.fee+'</span>';toast('Bridge sent!');setTimeout(()=>{loadBridgeBalances();loadCollateral()},10000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
-function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=n==='risk'?'100%':'1100px'}
+function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=(n==='risk'||n==='architecture')?'100%':'1100px'}
+</script>
+<script>
+const B   = 'https://efixdi-backend-production.up.railway.app';
+const RPC = 'https://polygon-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf';
+const CL  = '0xB90DA3ff54C3ED09115abf6FbA0Ff4645586af2c';
+const TOK = '0x04082b283818D9d0dd9Ee8742892eEe5CC396441';
+
+function set(id, v) { const e = document.getElementById(id); if(e) e.textContent = v; }
+function fmt(n, d=2) { return n.toLocaleString('pt-BR', {minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+async function rpc(to, data) {
+  const r = await fetch(RPC, { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_call',params:[{to,data},'latest']}) });
+  return (await r.json()).result;
+}
+
+async function load() {
+  // Supply
+  try {
+    const s = await rpc(TOK, '0x18160ddd');
+    const supply = Number(BigInt(s)) / 1e18;
+    set('archSupply', fmt(supply,0) + ' efixDI');
+    set('archTvl', fmt(supply,2) + ' efixDI');
+  } catch {}
+
+  // Oracle BRL/USD
+  try {
+    const r = await rpc(CL, '0xfeae2995');
+    const price = Number(BigInt('0x' + r.slice(66,130))) / 1e8;
+    set('archOracle', '$' + price.toFixed(4));
+  } catch {}
+
+  // Reserve + Morpho from backend
+  try {
+    const hdr = {};
+    const t = localStorage.getItem('efixAdminToken');
+    const k = localStorage.getItem('efixAdminKey');
+    if(t) hdr['Authorization'] = 'Bearer ' + t;
+    else if(k) hdr['X-Admin-Key'] = k;
+
+    const [res, morpho] = await Promise.all([
+      fetch(B+'/api/admin/reserve', {headers:hdr}).then(r=>r.json()),
+      fetch(B+'/api/admin/morpho',  {headers:hdr}).then(r=>r.json()),
+    ]);
+
+    if(res.reserve?.account_brl !== null) {
+      set('archBrl', 'R$ ' + fmt(res.reserve.account_brl));
+      set('archReserve', 'R$ ' + fmt(res.reserve.account_brl));
+    }
+    if(res.proof_of_reserve?.coverage_ratio !== null)
+      set('archCoverage', fmt(res.proof_of_reserve.coverage_ratio,2) + '%');
+
+    if(morpho.morpho) {
+      const m = morpho.morpho;
+      set('archMorpho', m.collateral);
+      set('archMorphoCol', m.collateral);
+      set('archMorphoBor', m.borrowed);
+      set('archUsdc', m.borrowed);
+      set('archHF', m.healthFactor||'—');
+      set('archLTV', (m.ltv||'—') + ' / 77%');
+    }
+  } catch {}
+
+  // Base supply = bridged
+  try {
+    const BASE_RPC = 'https://mainnet.base.org';
+    const BASE_TOK = '0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608';
+    const r = await fetch(BASE_RPC, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_call',params:[{to:BASE_TOK,data:'0x18160ddd'},'latest']}) });
+    const base = Number(BigInt((await r.json()).result)) / 1e18;
+    set('archBase', fmt(base,0) + ' efixDI');
+  } catch {}
+}
+
+load();
 </script>
 </body>
 </html>
