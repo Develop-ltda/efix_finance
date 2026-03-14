@@ -865,7 +865,7 @@ body::before {
     <div class="metric-card green">
       <div class="metric-label">TVL (Polygon)</div>
       <div class="metric-value green" id="mTVL">—</div>
-      <div class="metric-sub"><span id="mTVLusd" style="font-weight:600;color:var(--text)">$—</span> · efixDI</div>
+      <div class="metric-sub" id="mTVLsub">efixDI tokens</div>
     </div>
     <div class="metric-card neutral">
       <div class="metric-label">Base Supply</div>
@@ -1071,6 +1071,19 @@ body::before {
             <span style="color:var(--yellow)">Due 16 Mar 2026</span>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">TVL IN USD</div>
+        <span style="font-size:9px;color:var(--text2)">Chainlink BRL/USD</span>
+      </div>
+      <div class="panel-body">
+        <div class="kv"><span class="kv-key">TVL (USD)</span><span class="kv-val green" id="mTVLusd">$—</span></div>
+        <div class="kv"><span class="kv-key">TVL (BRL)</span><span class="kv-val" id="mTVLbrl">R$—</span></div>
+        <div class="kv"><span class="kv-key">BRL/USD Rate</span><span class="kv-val" id="mTVLrate">—</span></div>
+        <div class="kv"><span class="kv-key">efixDI Supply</span><span class="kv-val green" id="mTVLsupply">—</span></div>
+        <div class="kv"><span class="kv-key">Onchain Mktcap</span><span class="kv-val"><a href="https://defillama.com/rwa/asset/efixdi" target="_blank" style="color:var(--blue);text-decoration:none">DefiLlama ↗</a></span></div>
       </div>
     </div>
   </div>
@@ -1580,11 +1593,16 @@ async function loadOracle() {
 
     set('oraclePrice', '$' + price.toFixed(4));
     set('mOracle', '$' + price.toFixed(4));
-    // Update TVL USD
+    // Update TVL USD panel
     try {
       const tvlEl = document.getElementById('mTVL');
       const tvlNum = tvlEl ? parseFloat(tvlEl.textContent.replace(/,/g,'').replace(/[^0-9.]/g,'')) : 0;
-      if(tvlNum > 0 && price > 0) set('mTVLusd', '$' + Math.round(tvlNum * price));
+      if(tvlNum > 0 && price > 0) {
+        document.getElementById('mTVLusd').textContent = '$' + Math.round(tvlNum * price).toLocaleString();
+        document.getElementById('mTVLbrl').textContent = 'R$ ' + tvlNum.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('mTVLrate').textContent = '$' + price.toFixed(4) + ' / R$1';
+        document.getElementById('mTVLsupply').textContent = tvlNum.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' efixDI';
+      }
     } catch(e) {}
     set('oracleAge', ageMin < 60 ? ageMin + 'm ago' : Math.floor(ageMin/60) + 'h ago');
     set('mOracleAge', ageMin < 60 ? ageMin + 'm' : Math.floor(ageMin/60) + 'h');
