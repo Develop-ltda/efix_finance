@@ -273,7 +273,7 @@ async function handleGoogleLogin(response){
     const d=await r.json();
     if(!r.ok||!d.success){errEl.textContent=d.error||'Access denied';errEl.style.color='var(--red)';return}
     adminToken=d.token;adminEmail=d.email;
-    sessionStorage.setItem('efixAdminToken',d.token);
+    sessionStorage.setItem('efixAdminToken',d.token);localStorage.setItem('efixAdminToken',d.token);localStorage.setItem('efixAdminEmail',d.email);
     sessionStorage.setItem('efixAdminEmail',d.email);
     sessionStorage.setItem('efixAdminName',d.name||'');
     sessionStorage.setItem('efixAdminPic',d.picture||'');
@@ -286,7 +286,7 @@ function loginLegacy(){
   if(!K)return;
   fetch(B+'/api/deposits',{headers:hdr()}).then(r=>{
     if(!r.ok)throw 0;
-    sessionStorage.setItem('efixAdminKey',K);
+    sessionStorage.setItem('efixAdminKey',K);localStorage.setItem('efixAdminKey',K);
     showApp('Admin','');
   }).catch(()=>alert('Invalid key'));
 }
@@ -301,7 +301,7 @@ function showApp(name,pic){
 
 function logout(){
   adminToken='';K='';adminEmail='';
-  sessionStorage.removeItem('efixAdminToken');
+  sessionStorage.removeItem('efixAdminToken');localStorage.removeItem('efixAdminToken');localStorage.removeItem('efixAdminKey');localStorage.removeItem('efixAdminEmail');
   sessionStorage.removeItem('efixAdminKey');
   sessionStorage.removeItem('efixAdminEmail');
   sessionStorage.removeItem('efixAdminName');
