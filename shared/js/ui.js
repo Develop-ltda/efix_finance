@@ -44,7 +44,7 @@ function copyText(text, opts) {
   if (!text) return;
   navigator.clipboard.writeText(text).catch(function() {});
   var o = opts || {};
-  if (o.toastMsg) uiToast(o.toastMsg);
+  if (o.toastMsg) uiuiToast(o.toastMsg);
   if (o.feedbackEl) {
     var el = typeof o.feedbackEl === 'string' ? document.getElementById(o.feedbackEl) : o.feedbackEl;
     if (el) {
