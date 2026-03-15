@@ -1652,7 +1652,7 @@
         const connectBtn = document.getElementById('connectBtn');
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
-        const toast = document.getElementById('toast');
+        const toastEl = document.getElementById('toast');
 
         // Initialize
         document.addEventListener('DOMContentLoaded', init);
@@ -2281,11 +2281,11 @@
         }
 
         function showToast(message, type = 'info') {
-            toast.textContent = message;
-            toast.className = 'toast show ' + type;
+            toastEl.textContent = message;
+            toastEl.className = 'toast show ' + type;
 
             setTimeout(() => {
-                toast.classList.remove('show');
+                toastEl.classList.remove('show');
             }, 3000);
         }
     </script>
