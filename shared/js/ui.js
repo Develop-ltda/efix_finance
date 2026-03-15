@@ -1,7 +1,7 @@
 // shared/js/ui.js — Shared DOM utilities
 // Consumed by: app/wallet/admin, card/app, app/wallet, protocol
 
-function toast(msg, ms) {
+function uiToast(msg, ms) {
   var el = document.getElementById('toast');
   if (!el) return;
   el.textContent = msg;
@@ -44,7 +44,7 @@ function copyText(text, opts) {
   if (!text) return;
   navigator.clipboard.writeText(text).catch(function() {});
   var o = opts || {};
-  if (o.toastMsg) toast(o.toastMsg);
+  if (o.toastMsg) uiToast(o.toastMsg);
   if (o.feedbackEl) {
     var el = typeof o.feedbackEl === 'string' ? document.getElementById(o.feedbackEl) : o.feedbackEl;
     if (el) {
