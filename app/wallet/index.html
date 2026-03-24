@@ -713,13 +713,24 @@
             const amount = parseFloat(document.getElementById('collateralInput').value);
             if (!amount || amount < 10) { alert('Mínimo 10 efixDI'); return; }
 
-            if (!confirm('Depositar ' + amount.toFixed(2) + ' efixDI como colateral?\n\nOs tokens serão bloqueados como garantia para crédito USDC.\nVocê não poderá sacar a parte bloqueada.')) return;
+            // Check on-chain balance before transferring
+            const bal = await EfixWallet.getBalance(userAddress);
+            const balNum = parseFloat(bal.formatted);
+            if (amount > balNum) { alert('Saldo insuficiente. Você tem ' + balNum.toFixed(2) + ' efixDI'); return; }
+
+            if (!confirm('Depositar ' + amount.toFixed(2) + ' efixDI como colateral?\n\nOs tokens serão transferidos para a carteira operadora e bloqueados como garantia para crédito USDC.\nVocê não poderá sacar a parte bloqueada.')) return;
 
             const btn = document.getElementById('btnCollateralize');
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span>Registrando colateral...';
 
             try {
+                // Step 1: On-chain transfer from user smart wallet → operator wallet
+                btn.innerHTML = '<span class="spinner"></span>Transferindo efixDI...';
+                const txResult = await EfixWallet.collateralize(amount);
+                console.log('[Collateral] Transfer to operator confirmed:', txResult.hash);
+
+                // Step 2: Notify backend to depositFor() into CollateralVault
+                btn.innerHTML = '<span class="spinner"></span>Registrando colateral...';
                 const data = await WalletLogic.lockCollateral(BACKEND_URL, userAddress, amount);
 
                 if (data.success) {
@@ -733,6 +744,9 @@
                 } else {
                     alert(data.error || 'Erro desconhecido');
                 }
+
+                // Refresh displayed balance after transfer
+                refreshBalance(userAddress);
             } catch (e) {
                 alert('Erro: ' + e.message);
             } finally {
