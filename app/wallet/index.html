@@ -713,9 +713,6 @@
             const amount = parseFloat(document.getElementById('collateralInput').value);
             if (!amount || amount < 10) { alert('Mínimo 10 efixDI'); return; }
 
-            const bal = parseFloat(document.getElementById('tokenBalance').textContent);
-            if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
-
             if (!confirm('Depositar ' + amount.toFixed(2) + ' efixDI como colateral?\n\nOs tokens serão bloqueados como garantia para crédito USDC.\nVocê não poderá sacar a parte bloqueada.')) return;
 
             const btn = document.getElementById('btnCollateralize');
