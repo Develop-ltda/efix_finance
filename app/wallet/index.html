@@ -454,6 +454,30 @@
         }
 
         // ═══ APP ═══
+        async function ensureAccountDeployed(address) {
+            try {
+                const res = await fetch('https://polygon-mainnet.g.alchemy.com/v2/' + EfixWallet.config.apiKey, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_getCode', params: [address, 'latest'], id: 1 })
+                });
+                const data = await res.json();
+                if (data.result && data.result.length > 2) {
+                    console.log('[EfixWallet] Account already deployed');
+                    return true;
+                }
+                console.log('[EfixWallet] Account not deployed, deploying...');
+                const client = await EfixWallet.getSmartClient();
+                const op = await client.sendUserOperation({ uo: { target: address, data: '0x', value: 0n } });
+                await client.waitForUserOperationTransaction(op);
+                console.log('[EfixWallet] Account deployed:', op.hash);
+                return true;
+            } catch (e) {
+                console.error('[EfixWallet] Account deployment failed:', e);
+                return false;
+            }
+        }
+
         async function showApp(address) {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
@@ -463,6 +487,8 @@
             document.getElementById('userPill').classList.add('active');
             await refreshBalance(address);
             loadHistory(address);
+            // Deploy smart account in background if needed
+            ensureAccountDeployed(address);
         }
 
         async function loadHistory(address) {
@@ -724,6 +750,11 @@
             btn.disabled = true;
 
             try {
+                // Step 0: Ensure smart account is deployed (first-time users)
+                btn.innerHTML = '<span class="spinner"></span>Preparando carteira...';
+                const deployed = await ensureAccountDeployed(userAddress);
+                if (!deployed) throw new Error('Falha ao ativar carteira. Tente novamente.');
+
                 // Step 1: On-chain transfer from user smart wallet → operator wallet
                 btn.innerHTML = '<span class="spinner"></span>Transferindo efixDI...';
                 const txResult = await EfixWallet.collateralize(amount);
