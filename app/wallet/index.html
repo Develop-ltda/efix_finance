@@ -379,20 +379,35 @@
         }
         function T(key) { return (i18n[currentLang] && i18n[currentLang][key]) || key; }
 
+        // Resolve smart account address (this is where tokens must live + where UserOps execute from)
+        async function getSmartAccountAddress() {
+            const client = await EfixWallet.getSmartClient();
+            const smartAddr = client.account.address;
+            console.log('[EfixWallet] Smart account address:', smartAddr);
+            return smartAddr;
+        }
+
         // ═══ INIT ═══
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 EfixWallet.init();
-                const addr = await EfixWallet.checkSession();
-                if (addr) { userAddress = addr; showApp(addr); }
+                const signerAddr = await EfixWallet.checkSession();
+                if (signerAddr) {
+                    userAddress = await getSmartAccountAddress();
+                    console.log('[EfixWallet] Signer:', signerAddr, '| Smart account:', userAddress);
+                    showApp(userAddress);
+                }
             } catch(e) { console.log('Init:', e.message); }
 
             document.getElementById('emailInput').addEventListener('keydown', e => { if(e.key==='Enter') handleSendOTP(); });
             document.getElementById('otpInput').addEventListener('keydown', e => { if(e.key==='Enter') handleVerifyOTP(); });
 
             // Callback if auth completes via background promise (magic link fallback)
-            window._efixAuthCallback = (addr) => {
-                if (!userAddress) { userAddress = addr; showApp(addr); }
+            window._efixAuthCallback = async (signerAddr) => {
+                if (!userAddress) {
+                    userAddress = await getSmartAccountAddress();
+                    showApp(userAddress);
+                }
             };
         });
 
@@ -433,10 +448,10 @@
             setStatus('');
 
             try {
-                const addr = await EfixWallet.verifyOTP(code);
-                userAddress = addr;
+                await EfixWallet.verifyOTP(code);
+                userAddress = await getSmartAccountAddress();
                 setStatus('');
-                showApp(addr);
+                showApp(userAddress);
             } catch(e) {
                 setStatus('Erro: ' + e.message, 'error');
                 console.error('OTP verify error:', e);
