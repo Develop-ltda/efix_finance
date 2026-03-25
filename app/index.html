@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="/shared/css/nav-syne.css">
     <link rel="stylesheet" href="/shared/css/lang-selector.css">
     <link rel="stylesheet" href="/shared/css/components.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="efix-auth.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
     <style>
         body {
@@ -1210,6 +1212,113 @@
         .hidden {
             display: none !important;
         }
+
+        /* ── Auth Gate ── */
+        .auth-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0,0,0,0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+        .auth-gate.hidden { display: none !important; }
+        .auth-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+        }
+        .auth-card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 0.6rem;
+            background: transparent;
+            color: #999;
+            border: none;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .auth-tab.active {
+            background: #22c55e;
+            color: #000;
+        }
+        .auth-card input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .auth-card input:focus { border-color: #22c55e; }
+        .auth-card input::placeholder { color: #666; }
+        .auth-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #22c55e;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .auth-btn:hover { opacity: 0.9; }
+        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .auth-error {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            min-height: 1.2rem;
+        }
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.25rem 0;
+            color: #666;
+            font-size: 0.8rem;
+        }
+        .auth-divider::before, .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #333;
+        }
+        .auth-google-wrap {
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -1242,6 +1351,45 @@
             </div>
         </div>
     </nav>
+
+    <!-- Auth Gate -->
+    <div id="authGate" class="auth-gate">
+        <div class="auth-card">
+            <img src="logo_efix_400x400.jpg" alt="Efix" style="height:48px;margin-bottom:0.5rem;border-radius:50%;">
+            <h2 id="authTitle">Entrar</h2>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthMode('login')">Entrar</button>
+                <button class="auth-tab" onclick="switchAuthMode('register')">Criar Conta</button>
+            </div>
+
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <input type="email" id="authEmail" placeholder="email@example.com" required>
+                <input type="password" id="authPassword" placeholder="Senha" required>
+                <input type="password" id="authPasswordConfirm" placeholder="Confirmar senha" style="display:none;">
+                <button type="submit" id="authSubmit" class="auth-btn">Entrar</button>
+                <div id="authError" class="auth-error"></div>
+            </form>
+
+            <div class="auth-divider"><span>ou</span></div>
+
+            <div class="auth-google-wrap">
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="filled_black"
+                     data-text="continue_with"
+                     data-shape="rectangular"
+                     data-width="300">
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero -->
     <section class="hero">
@@ -1639,6 +1787,105 @@
             'function approve(address spender, uint256 amount) external returns (bool)',
             'function allowance(address owner, address spender) view returns (uint256)'
         ];
+
+        // ═══ Auth Gate Logic ═══
+        let _authMode = 'login';
+        const BACKEND = EfixAuth.BACKEND;
+
+        function switchAuthMode(mode) {
+            _authMode = mode;
+            const tabs = document.querySelectorAll('.auth-tab');
+            tabs[0].classList.toggle('active', mode === 'login');
+            tabs[1].classList.toggle('active', mode === 'register');
+            document.getElementById('authTitle').textContent = mode === 'login' ? 'Entrar' : 'Criar Conta';
+            document.getElementById('authSubmit').textContent = mode === 'login' ? 'Entrar' : 'Criar Conta';
+            document.getElementById('authPasswordConfirm').style.display = mode === 'register' ? 'block' : 'none';
+            document.getElementById('authError').textContent = '';
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const errEl = document.getElementById('authError');
+            const btn = document.getElementById('authSubmit');
+            errEl.textContent = '';
+
+            if (!email || !password) { errEl.textContent = 'Preencha todos os campos'; return; }
+
+            if (_authMode === 'register') {
+                const confirm = document.getElementById('authPasswordConfirm').value;
+                if (password.length < 8) { errEl.textContent = 'Senha deve ter pelo menos 8 caracteres'; return; }
+                if (password !== confirm) { errEl.textContent = 'Senhas não coincidem'; return; }
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Aguarde...';
+
+            try {
+                const endpoint = _authMode === 'register' ? '/users/register' : '/users/login';
+                const res = await fetch(BACKEND + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Falha na autenticação');
+
+                // Store session
+                localStorage.setItem('efix_user_token', data.token);
+                localStorage.setItem('efix_user_data', JSON.stringify(data.user));
+                hideAuthGate();
+            } catch (err) {
+                errEl.textContent = err.message;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = _authMode === 'login' ? 'Entrar' : 'Criar Conta';
+            }
+        }
+
+        async function handleGoogleLogin(response) {
+            const errEl = document.getElementById('authError');
+            try {
+                const res = await fetch(BACKEND + '/users/google-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credential: response.credential }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Google login failed');
+
+                localStorage.setItem('efix_user_token', data.token);
+                localStorage.setItem('efix_user_data', JSON.stringify(data.user));
+                hideAuthGate();
+            } catch (err) {
+                errEl.textContent = err.message;
+            }
+        }
+
+        function hideAuthGate() {
+            document.getElementById('authGate').classList.add('hidden');
+        }
+
+        function showAuthGate() {
+            document.getElementById('authGate').classList.remove('hidden');
+        }
+
+        // Check session on load
+        (function checkAuthOnLoad() {
+            const token = localStorage.getItem('efix_user_token');
+            if (token) {
+                try {
+                    const parts = token.split('.');
+                    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                    if (payload.exp && payload.exp > Date.now() / 1000) {
+                        hideAuthGate();
+                        return;
+                    }
+                } catch {}
+            }
+            // No valid session — gate stays visible
+        })();
 
         // State
         let provider = null;
