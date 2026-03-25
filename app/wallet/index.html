@@ -290,6 +290,7 @@
         </div>
     </main>
     <script src="efix-wallet-bundle.js"></script>
+    <script src="efix-auth.js"></script>
     <script src="/shared/js/config.js"></script>
     <script src="/shared/js/formatters.js"></script>
     <script src="/shared/js/ui.js"></script>
@@ -391,6 +392,17 @@
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 EfixWallet.init();
+
+                // Try restore session from JWT first (fast)
+                const session = await EfixAuth.restore();
+                if (session) {
+                    userAddress = session.user.address;
+                    userEmail = session.user.email || '';
+                    showApp(userAddress);
+                    return;
+                }
+
+                // Fallback: check Alchemy session
                 const signerAddr = await EfixWallet.checkSession();
                 if (signerAddr) {
                     userAddress = await getSmartAccountAddress();
@@ -450,6 +462,15 @@
             try {
                 await EfixWallet.verifyOTP(code);
                 userAddress = await getSmartAccountAddress();
+
+                // Persist to backend
+                try {
+                    const session = await EfixAuth.login(userEmail, userAddress);
+                    console.log(session.isNew ? 'New user registered' : 'User logged in');
+                } catch(e) {
+                    console.warn('Backend login failed (continuing):', e.message);
+                }
+
                 setStatus('');
                 showApp(userAddress);
             } catch(e) {
@@ -504,6 +525,8 @@
             loadHistory(address);
             // Deploy smart account in background if needed
             ensureAccountDeployed(address);
+            // Sync balance to backend (async, non-blocking)
+            EfixAuth.syncBalance().catch(() => {});
         }
 
         async function loadHistory(address) {
@@ -817,8 +840,9 @@
         }
 
         async function handleDisconnect() {
-            await EfixWallet.disconnect();
+            await EfixAuth.logout();
             userAddress = null;
+            userEmail = '';
             document.getElementById('app-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = '';
             document.getElementById('userPill').classList.remove('active');
