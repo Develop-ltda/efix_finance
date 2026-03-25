@@ -71,6 +71,78 @@
         .prog-step.done{color:var(--green)}.prog-step.done .prog-icon{border-color:var(--green);background:var(--green);color:var(--black)}
         .prog-step.active{color:var(--white)}.prog-step.active .prog-icon{border-color:var(--white)}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+        /* ── Desktop responsive ── */
+        @media (min-width: 768px) {
+            main {
+                max-width: 860px;
+                padding: 48px 40px 80px;
+            }
+            #auth-screen {
+                min-height: 70vh;
+            }
+            #auth-screen h1 {
+                font-size: 44px;
+            }
+            .auth-box {
+                max-width: 420px;
+            }
+            #app-screen {
+                display: none; /* overridden by JS */
+            }
+            #app-screen[style*="display: block"], #app-screen[style*="display:block"] {
+                display: block !important;
+            }
+            .desktop-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+                align-items: start;
+            }
+            .desktop-grid .balance-card {
+                margin-bottom: 0;
+            }
+            .desktop-right {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+            .balance-card {
+                padding: 36px 32px;
+            }
+            .balance-value {
+                font-size: 48px;
+            }
+            .address-bar {
+                max-width: 320px;
+                margin: 0 auto 32px;
+            }
+            .action-card {
+                padding: 28px;
+            }
+            header {
+                padding: 16px 40px;
+            }
+            .app-footer {
+                margin-top: 60px;
+            }
+            #waitlist-box {
+                max-width: 420px !important;
+            }
+        }
+
+        @media (min-width: 1080px) {
+            main {
+                max-width: 960px;
+                padding: 56px 48px 80px;
+            }
+            .balance-value {
+                font-size: 52px;
+            }
+            header {
+                padding: 20px 60px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -144,12 +216,16 @@
                 <span style="color:var(--gray-700);">|</span>
                 <span id="shortAddr">0x...</span>
             </div>
+            <div class="desktop-grid">
+            <div class="desktop-left">
             <div class="balance-card">
                 <div class="balance-label" data-i18n="your_balance">Seu Saldo</div>
                 <div class="balance-value" id="balanceDisplay">R$ 0,00</div>
                 <div class="balance-sub" id="tokenBalance">0.00 efixDI</div>
                 <div class="apy-badge">~22% APY</div>
             </div>
+            </div>
+            <div class="desktop-right">
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('deposit', this)" data-i18n="tab_deposit">Depositar</button>
                 <button class="tab" onclick="switchTab('withdraw', this)" data-i18n="tab_withdraw">Sacar</button>
@@ -271,6 +347,8 @@
                     </div>
                 </div>
             </div>
+            </div><!-- /desktop-right -->
+            </div><!-- /desktop-grid -->
 
             <button class="btn btn-secondary" style="margin-top:24px;" onclick="handleDisconnect()" data-i18n="btn_disconnect">Desconectar</button>
 
