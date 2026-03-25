@@ -104,5 +104,53 @@ const WalletLogic = {
 
   async getBalance(walletLib, address) {
     return await walletLib.getBalance(address);
+  },
+
+  // ── Bridge.xyz (Send Money: ACH, Wire, SEPA → USDC) ──
+
+  async startBridgeKyc(backend) {
+    const res = await fetch(backend + '/bridge/kyc', {
+      method: 'POST', headers: EfixAuth.headers(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'KYC error');
+    return data;
+  },
+
+  async checkBridgeKycStatus(backend) {
+    const res = await fetch(backend + '/bridge/kyc-status', {
+      headers: EfixAuth.headers(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'KYC status error');
+    return data;
+  },
+
+  async createBridgeTransfer(backend, { amount, rail, currency }) {
+    const res = await fetch(backend + '/bridge/transfer', {
+      method: 'POST', headers: EfixAuth.headers(),
+      body: JSON.stringify({ amount, rail, currency }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Transfer error');
+    return data;
+  },
+
+  async getBridgeTransfer(backend, transferId) {
+    const res = await fetch(backend + '/bridge/transfer/' + transferId, {
+      headers: EfixAuth.headers(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Transfer status error');
+    return data;
+  },
+
+  async listBridgeTransfers(backend) {
+    const res = await fetch(backend + '/bridge/transfers', {
+      headers: EfixAuth.headers(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'List error');
+    return data.transfers || [];
   }
 };

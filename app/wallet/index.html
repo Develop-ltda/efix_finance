@@ -70,6 +70,8 @@
         .prog-step .prog-icon{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-700);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
         .prog-step.done{color:var(--green)}.prog-step.done .prog-icon{border-color:var(--green);background:var(--green);color:var(--black)}
         .prog-step.active{color:var(--white)}.prog-step.active .prog-icon{border-color:var(--white)}
+        .rail-btn.active{border-color:var(--green) !important;color:var(--white) !important;background:rgba(34,197,94,.08) !important}
+        .rail-btn.active span{color:var(--green) !important}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
         /* ── Desktop responsive ── */
@@ -229,6 +231,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('deposit', this)" data-i18n="tab_deposit">Depositar</button>
                 <button class="tab" onclick="switchTab('withdraw', this)" data-i18n="tab_withdraw">Sacar</button>
+                <button class="tab" onclick="switchTab('send', this); initSendTab();">Send</button>
                 <button class="tab" onclick="switchTab('card', this)">Card</button>
             </div>
             <div class="tab-panel active" id="panel-deposit">
@@ -271,6 +274,59 @@
                         <input type="text" id="pixKey" placeholder="Chave PIX (CPF, email, telefone)" data-i18n-placeholder="pix_key_placeholder">
                     </div>
                     <button class="btn btn-primary" onclick="handleWithdraw()" data-i18n="btn_withdraw">Solicitar Saque</button>
+                </div>
+            </div>
+
+            <!-- Send Panel (Bridge.xyz onramp) -->
+            <div class="tab-panel" id="panel-send">
+                <div class="action-card">
+                    <h3>Send Money → USDC</h3>
+                    <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;line-height:1.5;">
+                        Send fiat from your bank via ACH, Wire, or SEPA.<br>Bridge converts it to USDC and sends to your wallet.
+                    </p>
+
+                    <!-- Rail selector -->
+                    <div class="send-rails" style="display:flex;gap:6px;margin-bottom:20px;">
+                        <button class="rail-btn active" onclick="selectRail('ach')" id="rail-ach" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">ACH<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">USD</span></button>
+                        <button class="rail-btn" onclick="selectRail('wire')" id="rail-wire" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">Wire<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">USD</span></button>
+                        <button class="rail-btn" onclick="selectRail('sepa')" id="rail-sepa" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">SEPA<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">EUR</span></button>
+                    </div>
+
+                    <!-- KYC required state -->
+                    <div id="send-kyc-required">
+                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;text-align:center;">
+                            Identity verification required before sending money.
+                        </p>
+                        <button class="btn btn-primary" onclick="handleStartKyc()" id="btnStartKyc">Complete Verification</button>
+                        <button class="btn btn-secondary" style="margin-top:8px;" onclick="handleCheckKyc()" id="btnCheckKyc" style="display:none;">Check Status</button>
+                        <div id="kycStatus" style="margin-top:8px;font-size:12px;font-family:var(--font-mono);text-align:center;color:var(--gray-500);min-height:18px;"></div>
+                    </div>
+
+                    <!-- Transfer form (shown after KYC approved) -->
+                    <div id="send-form" style="display:none;">
+                        <div class="amount-input-wrap">
+                            <input type="number" id="sendAmount" placeholder="0.00" min="1" step="0.01">
+                            <span class="currency" id="sendCurrency">USD</span>
+                        </div>
+                        <button class="btn btn-primary" style="background:var(--green);color:var(--black);" onclick="handleSendTransfer()" id="btnSendTransfer">Get Deposit Instructions</button>
+                    </div>
+
+                    <!-- Deposit instructions (shown after transfer created) -->
+                    <div id="send-instructions" style="display:none;">
+                        <div style="background:var(--gray-800);border-radius:12px;padding:20px;margin-bottom:16px;">
+                            <p style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--white);" id="instrTitle">Send to:</p>
+                            <div id="instrDetails" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-300);line-height:2;"></div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;" id="sendSteps">
+                            <div class="prog-step active" id="ss-1"><span class="prog-icon">1</span> <span>Awaiting your payment</span></div>
+                            <div class="prog-step" id="ss-2"><span class="prog-icon">2</span> <span>Payment received</span></div>
+                            <div class="prog-step" id="ss-3"><span class="prog-icon">3</span> <span>Converting to USDC</span></div>
+                            <div class="prog-step" id="ss-4"><span class="prog-icon">4</span> <span>USDC sent to wallet</span></div>
+                        </div>
+                        <div id="send-msg" style="margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);text-align:center;min-height:20px;"></div>
+                        <button class="btn btn-secondary" style="margin-top:12px;" onclick="handleCheckTransfer()">Refresh Status</button>
+                        <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetSend()">New Transfer</button>
+                    </div>
                 </div>
             </div>
 
@@ -849,6 +905,181 @@
             } catch (e) {
                 alert('Erro: ' + e.message);
             }
+        }
+
+        // ═══ SEND MONEY (Bridge.xyz) ═══
+        let _selectedRail = 'ach';
+        let _currentTransferId = null;
+
+        function selectRail(rail) {
+            _selectedRail = rail;
+            document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('rail-' + rail).classList.add('active');
+            document.getElementById('sendCurrency').textContent = rail === 'sepa' ? 'EUR' : 'USD';
+        }
+
+        async function handleStartKyc() {
+            const btn = document.getElementById('btnStartKyc');
+            const statusEl = document.getElementById('kycStatus');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+            statusEl.textContent = '';
+
+            try {
+                const data = await WalletLogic.startBridgeKyc(BACKEND_URL);
+                if (data.status === 'approved') {
+                    showSendForm();
+                    return;
+                }
+                if (data.kyc_link) {
+                    window.open(data.kyc_link, '_blank');
+                    statusEl.textContent = 'Complete verification in the new tab, then click "Check Status"';
+                    statusEl.style.color = 'var(--green)';
+                    document.getElementById('btnCheckKyc').style.display = 'block';
+                }
+            } catch (e) {
+                statusEl.textContent = e.message;
+                statusEl.style.color = 'var(--red)';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Complete Verification';
+            }
+        }
+
+        async function handleCheckKyc() {
+            const statusEl = document.getElementById('kycStatus');
+            statusEl.textContent = 'Checking...';
+            statusEl.style.color = 'var(--gray-500)';
+
+            try {
+                const data = await WalletLogic.checkBridgeKycStatus(BACKEND_URL);
+                if (data.status === 'approved') {
+                    showSendForm();
+                } else if (data.status === 'rejected') {
+                    statusEl.textContent = 'Verification was rejected. Please contact support.';
+                    statusEl.style.color = 'var(--red)';
+                } else {
+                    statusEl.textContent = 'Verification still in progress. Try again in a few minutes.';
+                    statusEl.style.color = 'var(--gray-400)';
+                }
+            } catch (e) {
+                statusEl.textContent = e.message;
+                statusEl.style.color = 'var(--red)';
+            }
+        }
+
+        function showSendForm() {
+            document.getElementById('send-kyc-required').style.display = 'none';
+            document.getElementById('send-form').style.display = 'block';
+            document.getElementById('send-instructions').style.display = 'none';
+        }
+
+        async function handleSendTransfer() {
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+            if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
+
+            const currency = _selectedRail === 'sepa' ? 'eur' : 'usd';
+            const btn = document.getElementById('btnSendTransfer');
+            btn.disabled = true;
+            btn.textContent = 'Creating transfer...';
+
+            try {
+                const data = await WalletLogic.createBridgeTransfer(BACKEND_URL, {
+                    amount: String(amount),
+                    rail: _selectedRail,
+                    currency,
+                });
+
+                _currentTransferId = data.transfer_id;
+
+                // Show deposit instructions
+                const instr = data.deposit_instructions || {};
+                let html = '';
+                if (instr.bank_name) html += `<div>Bank: <strong>${instr.bank_name}</strong></div>`;
+                if (instr.bank_address) html += `<div>Address: ${instr.bank_address}</div>`;
+                if (instr.account_number) html += `<div>Account: <strong>${instr.account_number}</strong></div>`;
+                if (instr.routing_number) html += `<div>Routing: <strong>${instr.routing_number}</strong></div>`;
+                if (instr.iban) html += `<div>IBAN: <strong>${instr.iban}</strong></div>`;
+                if (instr.bic || instr.swift_code) html += `<div>BIC/SWIFT: <strong>${instr.bic || instr.swift_code}</strong></div>`;
+                if (instr.reference || instr.payment_reference) html += `<div>Reference: <strong style="color:var(--green)">${instr.reference || instr.payment_reference}</strong></div>`;
+                if (instr.beneficiary_name) html += `<div>Beneficiary: ${instr.beneficiary_name}</div>`;
+
+                // Fallback: show raw JSON if no known fields
+                if (!html) {
+                    Object.entries(instr).forEach(([k, v]) => {
+                        if (v && typeof v !== 'object') html += `<div>${k}: <strong>${v}</strong></div>`;
+                    });
+                }
+
+                const currLabel = currency.toUpperCase();
+                document.getElementById('instrTitle').textContent = `Send ${currLabel} ${amount.toFixed(2)} via ${_selectedRail.toUpperCase()} to:`;
+                document.getElementById('instrDetails').innerHTML = html || '<div style="color:var(--gray-500)">Deposit instructions will appear here</div>';
+
+                document.getElementById('send-form').style.display = 'none';
+                document.getElementById('send-instructions').style.display = 'block';
+
+                // Reset progress steps
+                document.querySelectorAll('#sendSteps .prog-step').forEach((el, i) => {
+                    el.classList.remove('done', 'active');
+                    if (i === 0) el.classList.add('active');
+                });
+
+            } catch (e) {
+                alert('Error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Get Deposit Instructions';
+            }
+        }
+
+        async function handleCheckTransfer() {
+            if (!_currentTransferId) return;
+            const msgEl = document.getElementById('send-msg');
+            msgEl.textContent = 'Checking...';
+
+            try {
+                const data = await WalletLogic.getBridgeTransfer(BACKEND_URL, _currentTransferId);
+                const state = data.status || 'awaiting_funds';
+                msgEl.textContent = 'Status: ' + state;
+
+                const steps = ['awaiting_funds', 'funds_received', 'payment_submitted', 'payment_processed'];
+                const stateIdx = steps.indexOf(state);
+                document.querySelectorAll('#sendSteps .prog-step').forEach((el, i) => {
+                    el.classList.remove('done', 'active');
+                    if (i < stateIdx || (i === stateIdx && state === 'payment_processed')) {
+                        el.classList.add('done');
+                        el.querySelector('.prog-icon').textContent = '✓';
+                    } else if (i === stateIdx) {
+                        el.classList.add('active');
+                    }
+                });
+
+                if (state === 'payment_processed') {
+                    msgEl.textContent = 'USDC has been sent to your wallet!';
+                    msgEl.style.color = 'var(--green)';
+                    refreshBalance(userAddress);
+                }
+            } catch (e) {
+                msgEl.textContent = e.message;
+                msgEl.style.color = 'var(--red)';
+            }
+        }
+
+        function resetSend() {
+            _currentTransferId = null;
+            document.getElementById('sendAmount').value = '';
+            document.getElementById('send-form').style.display = 'block';
+            document.getElementById('send-instructions').style.display = 'none';
+            document.getElementById('send-msg').textContent = '';
+        }
+
+        // Check KYC status when Send tab is opened
+        async function initSendTab() {
+            if (!EfixAuth.isLoggedIn()) return;
+            try {
+                const data = await WalletLogic.checkBridgeKycStatus(BACKEND_URL);
+                if (data.status === 'approved') showSendForm();
+            } catch {}
         }
 
         async function handleCollateralize() {
