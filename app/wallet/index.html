@@ -564,7 +564,8 @@
             setStatus('');
 
             try {
-                await EfixAuth.sendOTP(email);
+                // Use Alchemy OTP (authenticates wallet signer for transactions)
+                await EfixWallet.loginWithEmail(email);
                 // Show OTP step immediately
                 document.getElementById('step-email').classList.remove('active');
                 document.getElementById('step-otp').classList.add('active');
@@ -589,10 +590,18 @@
             setStatus('');
 
             try {
-                const session = await EfixAuth.verifyOTP(userEmail, code);
-                console.log(session.isNew ? 'New user registered' : 'User logged in');
+                // Complete Alchemy signer auth with OTP bundle
+                const address = await EfixWallet.completeAuth(code);
+                userAddress = address;
 
-                userAddress = session.user.address || null;
+                // Persist user to backend (get JWT for API calls)
+                try {
+                    const session = await EfixAuth.login(userEmail, userAddress);
+                    console.log(session.isNew ? 'New user registered' : 'User logged in');
+                } catch(e) {
+                    console.warn('Backend login failed (continuing):', e.message);
+                }
+
                 setStatus('');
                 showApp(userAddress);
             } catch(e) {
