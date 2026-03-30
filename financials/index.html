@@ -125,7 +125,7 @@ tr:hover{background:rgba(0,0,0,.015)}
 <div class="status-bar"><span class="status-dot" id="statusDot"></span><span id="statusText">Carregando...</span></div>
 
 <div class="legend-bar">
-  <div class="legend-item"><div class="legend-dot" style="background:var(--pag)"></div><span style="color:var(--pag)">Royalties Pagadoria</span> (Sawala + BSJ)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--pag)"></div><span style="color:var(--pag)">Royalties Pagadoria</span> (Sawala + Imob. 2)</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--rem)"></div><span style="color:var(--rem)">Remessas Internacionais</span> (Off-Ramp)</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div><span style="color:var(--red)">Despesas</span></div>
 </div>
@@ -164,8 +164,8 @@ tr:hover{background:rgba(0,0,0,.015)}
 <div class="card"><h3>Split Total</h3><div class="ch"><canvas id="cSplit"></canvas></div></div>
 </div>
 <div class="grid2">
-<div class="card pag-card"><h3><span class="tag tag-pag">Pagadoria</span> Sawala vs BSJ</h3><div class="ch"><canvas id="cPagSplit"></canvas></div></div>
-<div class="card pag-card"><h3><span class="tag tag-pag">BSJ/Lopes</span> Ramp-up</h3><div class="ch"><canvas id="cBSJ"></canvas></div></div>
+<div class="card pag-card"><h3><span class="tag tag-pag">Pagadoria</span> Sawala vs Imob. 2</h3><div class="ch"><canvas id="cPagSplit"></canvas></div></div>
+<div class="card pag-card"><h3><span class="tag tag-pag">Imobiliária 2</span> Ramp-up</h3><div class="ch"><canvas id="cBSJ"></canvas></div></div>
 </div>
 <div class="card" style="margin-bottom:32px"><h3>Royalties &mdash; <span class="tag tag-pag">Pagadoria</span> vs <span class="tag tag-rem">Remessas</span></h3><div class="tbl-wrap"><table><thead><tr id="royTH"><th>Tipo</th><th>Produto</th></tr></thead><tbody id="royB"></tbody></table></div></div>
 </div>
@@ -300,7 +300,7 @@ const FALLBACK = {
 let DATA=null;let FB_INFLOWS=null;const charts={};
 
 async function init(){
-  if(API_URL){try{setStatus('loading','Buscando dados das planilhas...');const r=await fetch(API_URL+'?t='+Date.now());DATA=await r.json();if(DATA.error)throw new Error(DATA.error);
+  if(API_URL){try{setStatus('loading','Buscando dados das planilhas...');const r=await fetch(API_URL+'?t='+Date.now());DATA=await r.json();if(DATA.error)throw new Error(DATA.error);if(DATA.totals&&DATA.totals.receita_bruta===0&&FALLBACK.length){DATA.months=FALLBACK;setStatus('live','Dados ao vivo (royalties: snapshot) &middot; '+new Date(DATA.updated).toLocaleString('pt-BR'))}
     if(!DATA.negociacoes)DATA.negociacoes={totals:{},deals:[],by_month:[]};
     setStatus('live','Dados ao vivo &middot; '+new Date(DATA.updated).toLocaleString('pt-BR'))}catch(e){console.warn('Fetch failed:',e);DATA=FALLBACK;setStatus('offline','Offline (snapshot) &middot; Configure API_URL')}}else{DATA=FALLBACK;setStatus('offline','Offline (snapshot) &middot; Configure API_URL para dados ao vivo')}
   render(DATA);
@@ -351,7 +351,7 @@ function render(D){
     '<div class="kpi"><div class="kpi-label">Despesas Totais</div><div class="kpi-val mono" style="color:var(--red)">'+ff(tDesp)+'</div><div class="kpi-sub">Extrato Bancário</div></div>'+
     '<div class="kpi"><div class="kpi-label">Saldo c/ Aportes ('+fk(tAporte)+')</div><div class="kpi-val mono" style="color:'+(resultado>=0?'var(--pag)':'var(--red)')+'">'+ff(resultado)+'</div><div class="kpi-sub">Consolidado</div></div>';
   document.getElementById('kpiRow2').innerHTML=
-    '<div class="kpi pag-bg"><div class="kpi-label"><span class="dot" style="background:var(--pag)"></span> Royalties Pagadoria</div><div class="kpi-val mono" style="color:var(--pag)">'+ff(tPag)+'</div><div class="kpi-sub">'+pct(tPag,tRev)+' &mdash; Sawala '+fk(tSaw)+' + BSJ '+fk(tBsj)+'</div></div>'+
+    '<div class="kpi pag-bg"><div class="kpi-label"><span class="dot" style="background:var(--pag)"></span> Royalties Pagadoria</div><div class="kpi-val mono" style="color:var(--pag)">'+ff(tPag)+'</div><div class="kpi-sub">'+pct(tPag,tRev)+' &mdash; Sawala '+fk(tSaw)+' + Imob. 2 '+fk(tBsj)+'</div></div>'+
     '<div class="kpi rem-bg"><div class="kpi-label"><span class="dot" style="background:var(--rem)"></span> Remessas Internacionais</div><div class="kpi-val mono" style="color:var(--rem)">'+ff(tRem)+'</div><div class="kpi-sub">'+pct(tRem,tRev)+' &mdash; Off-Ramp</div></div>'+
     '<div class="kpi"><div class="kpi-label">Negociações 2026</div><div class="kpi-val mono" style="color:var(--rem)">'+ff(neg.totals.valor_negociado||0)+'</div><div class="kpi-sub">'+((neg.totals.deals_count)||0)+' deals &middot; '+(neg.totals.clientes_unicos||0)+' clientes</div></div>';
 
@@ -371,7 +371,7 @@ function render(D){
   }
   ar('<span class="tag tag-pag">ROYALTIES PAGADORIA</span>',[],'hd');
   ar('&nbsp;&nbsp;Sawala Corretor',sawC,'pag');ar('&nbsp;&nbsp;Sawala Imob.',sawI,'pag');ar('&nbsp;&nbsp;(=) Sawala',saw,'sub');
-  ar('&nbsp;&nbsp;BSJ Corretor',bsjC,'pag');ar('&nbsp;&nbsp;BSJ Imob.',bsjI,'pag');ar('&nbsp;&nbsp;(=) BSJ/Lopes',bsj,'sub');
+  ar('&nbsp;&nbsp;Imob. 2 Corretor',bsjC,'pag');ar('&nbsp;&nbsp;Imob. 2',bsjI,'pag');ar('&nbsp;&nbsp;(=) Imobiliária 2',bsj,'sub');
   ar('(=) TOTAL PAGADORIA',pag,'pagtot');ar('','','sp');
   ar('<span class="tag tag-rem">REMESSAS INTERNACIONAIS</span>',[],'hd');ar('&nbsp;&nbsp;Efix Off-Ramp',rem,'rem');ar('(=) TOTAL REMESSAS',rem,'remtot');ar('','','sp');
   ar('(=) RECEITA BRUTA',rev,'tot');ar('(+) Aportes',aportes,'n');ar('(=) Receita Total',rev.map((r,i)=>r+aportes[i]),'sub');ar('','','sp');
@@ -389,14 +389,14 @@ function render(D){
     '<div style="margin-bottom:8px"><span class="tag tag-pag" style="font-size:12px;padding:5px 14px">&#9679; Royalties Pagadoria &mdash; '+ff(tPag)+' ('+pct(tPag,tRev)+')</span></div>'+
     '<div class="metrics"><div class="mc mc-pag"><div class="mc-label">Sawala Corr.</div><div class="mc-val mono" style="color:var(--pag)">'+ff(tSawC)+'</div><div class="pill pill-g">'+pct(tSawC,tRev)+'</div></div>'+
     '<div class="mc mc-pag"><div class="mc-label">Sawala Imob.</div><div class="mc-val mono" style="color:var(--pag)">'+ff(tSawI)+'</div><div class="pill pill-g">'+pct(tSawI,tRev)+'</div></div>'+
-    '<div class="mc mc-pag"><div class="mc-label">BSJ/Lopes</div><div class="mc-val mono" style="color:var(--pag)">'+ff(tBsj)+'</div><div class="pill pill-g">'+pct(tBsj,tRev)+'</div></div></div>'+
+    '<div class="mc mc-pag"><div class="mc-label">Imobiliária 2</div><div class="mc-val mono" style="color:var(--pag)">'+ff(tBsj)+'</div><div class="pill pill-g">'+pct(tBsj,tRev)+'</div></div></div>'+
     '<div style="margin:16px 0 8px"><span class="tag tag-rem" style="font-size:12px;padding:5px 14px">&#9679; Remessas Internacionais &mdash; '+ff(tRem)+' ('+pct(tRem,tRev)+')</span></div>'+
     '<div class="metrics"><div class="mc mc-rem"><div class="mc-label">Remessas Efix</div><div class="mc-val mono" style="color:var(--rem)">'+ff(tRem)+'</div><div class="pill pill-rem">'+pct(tRem,tRev)+'</div></div></div>';
 
   // Royalties table
   const rb=document.getElementById('royB');rb.innerHTML='';const royMs=ms.filter(m=>m.royalties.total>0);const rL=royMs.map(m=>m.label);
   document.getElementById('royTH').innerHTML='<th>Tipo</th><th>Produto</th>'+rL.map(l=>'<th>'+l+'</th>').join('')+'<th style="color:var(--pag)">Total</th>';
-  [{n:'Sawala Corr.',k:'sawala_corretor',p:'pag'},{n:'Sawala Imob.',k:'sawala_imobiliaria',p:'pag'},{n:'BSJ Corr.',k:'bsj_corretor',p:'pag'},{n:'BSJ Imob.',k:'bsj_imobiliaria',p:'pag'},{n:'Efix Off-Ramp',k:'remessas',p:'rem'}].forEach(r=>{
+  [{n:'Sawala Corr.',k:'sawala_corretor',p:'pag'},{n:'Sawala Imob.',k:'sawala_imobiliaria',p:'pag'},{n:'Imob. 2 Corr.',k:'bsj_corretor',p:'pag'},{n:'Imob. 2',k:'bsj_imobiliaria',p:'pag'},{n:'Efix Off-Ramp',k:'remessas',p:'rem'}].forEach(r=>{
     const ip=r.p==='pag',vals=royMs.map(m=>m.royalties[r.k]);let h='<td>'+r.n+'</td><td><span class="tag '+(ip?'tag-pag':'tag-rem')+'">'+(ip?'Pagadoria':'Remessas')+'</span></td>';
     vals.forEach(v=>h+='<td class="mono '+(v>0?(ip?'pos':'c-rem'):'')+'">'+(!v?'-':ff(v))+'</td>');h+='<td class="mono '+(ip?'pos':'c-rem')+'" style="font-weight:700">'+ff(sum(vals))+'</td>';
     rb.insertAdjacentHTML('beforeend','<tr class="'+(ip?'tr-pag':'tr-rem')+'">'+h+'</tr>')});
@@ -463,10 +463,10 @@ function render(D){
   db.insertAdjacentHTML('beforeend','<tr class="tr-total"><td style="text-align:left" colspan="2">Total ('+dealCount+' deals)</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.pgto_incorporador||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(nt.taxa_3pct||0)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(totalIOF)+'</td><td class="mono c-rem" style="font-weight:700">'+ff(totalVN)+'</td><td class="mono" style="font-weight:700">'+fd(nt.total_usd||0)+'</td><td></td><td class="mono" style="font-weight:700;color:#16a34a">'+(fbTotal>0?fd(fbTotal)+' <span style="font-size:9px;color:var(--muted)">('+fbMatched+'/'+dealCount+')</span>':'')+'</td><td></td><td class="mono c-rem" style="font-weight:700">'+ff(repTotal)+'</td><td></td></tr>');
 
   // ===== CHARTS =====
-  mc('cProd',{type:'bar',data:{labels,datasets:[{label:'Pag: Sawala',data:saw,backgroundColor:'rgba(22,163,74,.5)',borderRadius:3,barPercentage:.65},{label:'Pag: BSJ',data:bsj,backgroundColor:'rgba(22,163,74,.25)',borderRadius:3,barPercentage:.65},{label:'Remessas',data:rem,backgroundColor:'rgba(124,58,237,.4)',borderRadius:3,barPercentage:.65}]},options:STK});
-  mc('cSplit',{type:'doughnut',data:{labels:['Pag: Sawala','Pag: BSJ','Remessas'],datasets:[{data:[tSaw,tBsj,tRem],backgroundColor:[CL.pag,CL.pag2,CL.rem],borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#555',font:{size:11},padding:14,usePointStyle:true}},tooltip:{callbacks:{label:c=>c.label+': '+ff(c.parsed)}}}}});
-  mc('cPagSplit',{type:'bar',data:{labels,datasets:[{label:'Pag: Sawala',data:saw,backgroundColor:'rgba(22,163,74,.5)',borderRadius:3},{label:'Pag: BSJ',data:bsj,backgroundColor:'rgba(22,163,74,.25)',borderRadius:3}]},options:STK});
-  mc('cBSJ',{type:'bar',data:{labels,datasets:[{label:'BSJ Corr.',data:bsjC,backgroundColor:'rgba(22,163,74,.55)',borderRadius:3,barPercentage:.55},{label:'BSJ Imob.',data:bsjI,backgroundColor:'rgba(22,163,74,.2)',borderRadius:3,barPercentage:.55}]},options:STK});
+  mc('cProd',{type:'bar',data:{labels,datasets:[{label:'Pag: Sawala',data:saw,backgroundColor:'rgba(22,163,74,.5)',borderRadius:3,barPercentage:.65},{label:'Pag: Imob. 2',data:bsj,backgroundColor:'rgba(22,163,74,.25)',borderRadius:3,barPercentage:.65},{label:'Remessas',data:rem,backgroundColor:'rgba(124,58,237,.4)',borderRadius:3,barPercentage:.65}]},options:STK});
+  mc('cSplit',{type:'doughnut',data:{labels:['Pag: Sawala','Pag: Imob. 2','Remessas'],datasets:[{data:[tSaw,tBsj,tRem],backgroundColor:[CL.pag,CL.pag2,CL.rem],borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#555',font:{size:11},padding:14,usePointStyle:true}},tooltip:{callbacks:{label:c=>c.label+': '+ff(c.parsed)}}}}});
+  mc('cPagSplit',{type:'bar',data:{labels,datasets:[{label:'Pag: Sawala',data:saw,backgroundColor:'rgba(22,163,74,.5)',borderRadius:3},{label:'Pag: Imob. 2',data:bsj,backgroundColor:'rgba(22,163,74,.25)',borderRadius:3}]},options:STK});
+  mc('cBSJ',{type:'bar',data:{labels,datasets:[{label:'Imob. 2 Corr.',data:bsjC,backgroundColor:'rgba(22,163,74,.55)',borderRadius:3,barPercentage:.55},{label:'Imob. 2',data:bsjI,backgroundColor:'rgba(22,163,74,.2)',borderRadius:3,barPercentage:.55}]},options:STK});
   mc('c1',{type:'bar',data:{labels,datasets:[{label:'Pagadoria',data:pag,backgroundColor:'rgba(22,163,74,.45)',borderRadius:3,barPercentage:.6},{label:'Remessas',data:rem,backgroundColor:'rgba(124,58,237,.4)',borderRadius:3,barPercentage:.6},{label:'Saídas',data:desp.map(v=>Math.abs(v)),backgroundColor:'rgba(220,38,38,.25)',borderRadius:3,barPercentage:.6},{label:'Aportes',data:aportes,backgroundColor:'rgba(180,83,9,.15)',borderRadius:3,barPercentage:.6}]},options:BO});
   mc('c2',{type:'line',data:{labels,datasets:[{label:'Saldo',data:saldo,borderColor:CL.pag,backgroundColor:'rgba(22,163,74,.03)',fill:true,tension:.35,borderWidth:2.5,pointBackgroundColor:saldo.map(v=>v>=0?CL.pag:CL.red),pointRadius:5}]},options:BO});
   mc('c3',{type:'bar',data:{labels,datasets:[{label:'Burn',data:desp.map(v=>Math.abs(v)),backgroundColor:'rgba(220,38,38,.15)',borderRadius:3,yAxisID:'y',barPercentage:.5},{label:'%Cob',data:cov,type:'line',borderColor:CL.amber,backgroundColor:'transparent',yAxisID:'y1',tension:.3,pointRadius:4,pointBackgroundColor:CL.amber,borderWidth:2}]},options:{...BO,scales:{...BO.scales,y1:{position:'right',ticks:{color:CL.amber,font:{size:10,family:'Space Mono'},callback:v=>v.toFixed(0)+'%'},grid:{drawOnChartArea:false}}}}});
@@ -485,7 +485,7 @@ function render(D){
     '<div class="ic"><h4 style="color:var(--pag)">&#9679; <span class="tag tag-pag" style="font-size:9px">Pagadoria</span> Último Mês</h4><p><strong>'+ff(lastP)+'</strong> em '+last.label+'.</p></div>'+
     '<div class="ic"><h4 style="color:var(--rem)">&#9679; <span class="tag tag-rem" style="font-size:9px">Remessas</span> Último Mês</h4><p><strong>'+ff(lastR)+'</strong> em '+last.label+'.</p></div>'+
     '<div class="ic"><h4 style="color:var(--rem)">&#9679; <span class="tag tag-rem" style="font-size:9px">Negociações</span> Ticket Médio</h4><p>'+ff((nt.valor_negociado||0)/(nt.deals_count||1))+' por deal &middot; Taxa média: '+ff(negAvg)+'/mês.</p></div>'+
-    '<div class="ic"><h4 style="color:var(--pag)">&#9679; BSJ/Lopes Tração</h4><p>De R$0 (Out/25) a <strong>'+ff(bsjC[bsjC.length-1])+'</strong> em '+last.label+'. Ramp-up acelerado.</p></div>'+
+    '<div class="ic"><h4 style="color:var(--pag)">&#9679; Imobiliária 2 Tração</h4><p>De R$0 (Out/25) a <strong>'+ff(bsjC[bsjC.length-1])+'</strong> em '+last.label+'. Ramp-up acelerado.</p></div>'+
     '</div>';
 
   // Projection
@@ -889,4 +889,9 @@ init();
 </script>
 </body>
 </html>
+
+
+
+
+
 
