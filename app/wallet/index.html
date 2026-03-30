@@ -564,9 +564,14 @@
             setStatus('');
 
             try {
-                // Send Alchemy OTP email (returns quickly in OTP mode)
-                await EfixWallet.loginWithEmail(email);
-                // Show OTP step
+                // Fire Alchemy OTP (don't await — resolves after full auth even in OTP mode)
+                EfixWallet.loginWithEmail(email).catch(e => {
+                    console.warn('[Auth] Alchemy OTP send error:', e.message);
+                });
+
+                // Show OTP input immediately (Alchemy sends the email in background)
+                // Small delay to let the API call fire
+                await new Promise(r => setTimeout(r, 1500));
                 document.getElementById('step-email').classList.remove('active');
                 document.getElementById('step-otp').classList.add('active');
                 setStatus('Código enviado para ' + email, 'success');
