@@ -48,7 +48,7 @@ function init() {
 }
 
 /**
- * Authenticate user via email OTP (sends 6-digit code)
+ * Authenticate user via email OTP
  * @param {string} email - User's email address
  * @returns {Promise<object>} Authentication result
  */
