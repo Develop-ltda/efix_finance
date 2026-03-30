@@ -57,28 +57,28 @@ async function loginWithEmail(email) {
 
   const result = await _signer.authenticate({
     type: "email",
-    emailMode: "otp",
     email: email,
-  });
-
-  console.log("[EfixWallet] OTP sent to:", email);
-  return result;
-}
-
-/**
- * Complete email auth with OTP code
- * @param {string} otpCode - The 6-digit OTP code from email
- */
-async function completeAuth(otpCode) {
-  if (!_signer) throw new Error("Signer not initialized");
-
-  await _signer.authenticate({
-    type: "otp",
-    otpCode: otpCode,
   });
 
   _signerAddress = await _signer.getAddress();
   console.log("[EfixWallet] Authenticated. Address:", _signerAddress);
+  return _signerAddress;
+}
+
+/**
+ * Complete email auth with magic link bundle (from URL param)
+ * @param {string} bundle - The bundle from magic link redirect
+ */
+async function completeAuth(bundle) {
+  if (!_signer) throw new Error("Signer not initialized");
+
+  await _signer.authenticate({
+    type: "email",
+    bundle: bundle,
+  });
+
+  _signerAddress = await _signer.getAddress();
+  console.log("[EfixWallet] Authenticated via bundle. Address:", _signerAddress);
 
   return _signerAddress;
 }
