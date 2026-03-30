@@ -564,7 +564,7 @@
             setStatus('');
 
             try {
-                await EfixWallet.sendOTP(email);
+                await EfixAuth.sendOTP(email);
                 // Show OTP step immediately
                 document.getElementById('step-email').classList.remove('active');
                 document.getElementById('step-otp').classList.add('active');
@@ -589,17 +589,10 @@
             setStatus('');
 
             try {
-                await EfixWallet.verifyOTP(code);
-                userAddress = await getSmartAccountAddress();
+                const session = await EfixAuth.verifyOTP(userEmail, code);
+                console.log(session.isNew ? 'New user registered' : 'User logged in');
 
-                // Persist to backend
-                try {
-                    const session = await EfixAuth.login(userEmail, userAddress);
-                    console.log(session.isNew ? 'New user registered' : 'User logged in');
-                } catch(e) {
-                    console.warn('Backend login failed (continuing):', e.message);
-                }
-
+                userAddress = session.user.address || null;
                 setStatus('');
                 showApp(userAddress);
             } catch(e) {
