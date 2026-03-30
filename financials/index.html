@@ -300,7 +300,7 @@ const FALLBACK = {
 let DATA=null;let FB_INFLOWS=null;const charts={};
 
 async function init(){
-  if(API_URL){try{setStatus('loading','Buscando dados das planilhas...');const r=await fetch(API_URL+'?t='+Date.now());DATA=await r.json();if(DATA.error)throw new Error(DATA.error);if(DATA.totals&&DATA.totals.receita_bruta===0&&FALLBACK.length){DATA.months=FALLBACK;setStatus('live','Dados ao vivo (royalties: snapshot) &middot; '+new Date(DATA.updated).toLocaleString('pt-BR'))}
+  if(API_URL){try{setStatus('loading','Buscando dados das planilhas...');const r=await fetch(API_URL+'?t='+Date.now());DATA=await r.json();if(DATA.error)throw new Error(DATA.error);if(DATA.totals&&DATA.totals.receita_bruta===0&&FALLBACK.months){var fb=FALLBACK.months;DATA.months.forEach(function(m,i){if(fb[i]){m.royalties=fb[i].royalties}});DATA.totals=null}
     if(!DATA.negociacoes)DATA.negociacoes={totals:{},deals:[],by_month:[]};
     setStatus('live','Dados ao vivo &middot; '+new Date(DATA.updated).toLocaleString('pt-BR'))}catch(e){console.warn('Fetch failed:',e);DATA=FALLBACK;setStatus('offline','Offline (snapshot) &middot; Configure API_URL')}}else{DATA=FALLBACK;setStatus('offline','Offline (snapshot) &middot; Configure API_URL para dados ao vivo')}
   render(DATA);
@@ -889,6 +889,8 @@ init();
 </script>
 </body>
 </html>
+
+
 
 
 
