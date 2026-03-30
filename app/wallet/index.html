@@ -304,11 +304,10 @@
 
                     <!-- Transfer form (shown after KYC approved) -->
                     <div id="send-form" style="display:none;">
-                        <div class="amount-input-wrap">
-                            <input type="number" id="sendAmount" placeholder="0.00" min="1" step="0.01">
-                            <span class="currency" id="sendCurrency">USD</span>
-                        </div>
-                        <button class="btn btn-primary" style="background:var(--green);color:var(--black);" onclick="handleSendTransfer()" id="btnSendTransfer">Get Deposit Instructions</button>
+                        <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">
+                            Get your personal bank details. Send any amount via ACH or Wire — USDC will be sent to your wallet automatically.
+                        </p>
+                        <button class="btn btn-primary" style="background:var(--green);color:var(--black);" onclick="handleSendTransfer()" id="btnSendTransfer">Get Bank Details</button>
                     </div>
 
                     <!-- Deposit instructions (shown after transfer created) -->
@@ -317,15 +316,11 @@
                             <p style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--white);" id="instrTitle">Send to:</p>
                             <div id="instrDetails" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-300);line-height:2;"></div>
                         </div>
-                        <div style="display:flex;flex-direction:column;gap:8px;" id="sendSteps">
-                            <div class="prog-step active" id="ss-1"><span class="prog-icon">1</span> <span>Awaiting your payment</span></div>
-                            <div class="prog-step" id="ss-2"><span class="prog-icon">2</span> <span>Payment received</span></div>
-                            <div class="prog-step" id="ss-3"><span class="prog-icon">3</span> <span>Converting to USDC</span></div>
-                            <div class="prog-step" id="ss-4"><span class="prog-icon">4</span> <span>USDC sent to wallet</span></div>
-                        </div>
-                        <div id="send-msg" style="margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);text-align:center;min-height:20px;"></div>
-                        <button class="btn btn-secondary" style="margin-top:12px;" onclick="handleCheckTransfer()">Refresh Status</button>
-                        <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetSend()">New Transfer</button>
+                        <p style="margin-top:16px;font-size:12px;color:var(--gray-500);text-align:center;line-height:1.6;">
+                            Send any amount from your bank using the details above.<br>
+                            Bridge will auto-convert to USDC and send to your wallet on Base.<br>
+                            ACH: ~1 business day &nbsp;|&nbsp; Wire: ~2 hours
+                        </p>
                     </div>
                 </div>
             </div>
@@ -975,44 +970,39 @@
         }
 
         async function handleSendTransfer() {
-            const amount = parseFloat(document.getElementById('sendAmount').value);
-            if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
-
             const currency = _selectedRail === 'sepa' ? 'eur' : 'usd';
             const btn = document.getElementById('btnSendTransfer');
             btn.disabled = true;
-            btn.textContent = 'Creating transfer...';
+            btn.textContent = 'Loading...';
 
             try {
-                const data = await WalletLogic.createBridgeTransfer(BACKEND_URL, {
-                    amount: String(amount),
-                    rail: _selectedRail,
-                    currency,
-                });
+                const data = await WalletLogic.createBridgeTransfer(BACKEND_URL, { currency });
 
-                _currentTransferId = data.transfer_id;
+                _currentTransferId = data.virtual_account_id;
 
                 // Show deposit instructions
                 const instr = data.deposit_instructions || {};
                 let html = '';
+                // Bridge virtual account fields
                 if (instr.bank_name) html += `<div>Bank: <strong>${instr.bank_name}</strong></div>`;
-                if (instr.bank_address) html += `<div>Address: ${instr.bank_address}</div>`;
-                if (instr.account_number) html += `<div>Account: <strong>${instr.account_number}</strong></div>`;
-                if (instr.routing_number) html += `<div>Routing: <strong>${instr.routing_number}</strong></div>`;
+                if (instr.bank_address) html += `<div style="font-size:11px;color:var(--gray-500);margin-bottom:8px;">${instr.bank_address}</div>`;
+                if (instr.bank_routing_number || instr.routing_number) html += `<div>Routing: <strong>${instr.bank_routing_number || instr.routing_number}</strong></div>`;
+                if (instr.bank_account_number || instr.account_number) html += `<div>Account: <strong>${instr.bank_account_number || instr.account_number}</strong></div>`;
+                if (instr.bank_beneficiary_name || instr.beneficiary_name) html += `<div>Beneficiary: <strong>${instr.bank_beneficiary_name || instr.beneficiary_name}</strong></div>`;
+                if (instr.bank_beneficiary_address) html += `<div style="font-size:11px;color:var(--gray-500);">${instr.bank_beneficiary_address}</div>`;
                 if (instr.iban) html += `<div>IBAN: <strong>${instr.iban}</strong></div>`;
                 if (instr.bic || instr.swift_code) html += `<div>BIC/SWIFT: <strong>${instr.bic || instr.swift_code}</strong></div>`;
-                if (instr.reference || instr.payment_reference) html += `<div>Reference: <strong style="color:var(--green)">${instr.reference || instr.payment_reference}</strong></div>`;
-                if (instr.beneficiary_name) html += `<div>Beneficiary: ${instr.beneficiary_name}</div>`;
+                if (instr.payment_rails) html += `<div style="margin-top:8px;font-size:11px;color:var(--green);">Accepted: ${Array.isArray(instr.payment_rails) ? instr.payment_rails.join(', ').toUpperCase() : instr.payment_rails}</div>`;
 
-                // Fallback: show raw JSON if no known fields
+                // Fallback: show all fields if no known ones matched
                 if (!html) {
                     Object.entries(instr).forEach(([k, v]) => {
-                        if (v && typeof v !== 'object') html += `<div>${k}: <strong>${v}</strong></div>`;
+                        if (v && typeof v !== 'object') html += `<div>${k.replace(/_/g,' ')}: <strong>${v}</strong></div>`;
                     });
                 }
 
                 const currLabel = currency.toUpperCase();
-                document.getElementById('instrTitle').textContent = `Send ${currLabel} ${amount.toFixed(2)} via ${_selectedRail.toUpperCase()} to:`;
+                document.getElementById('instrTitle').textContent = `Send ${currLabel} via ACH or Wire to:`;
                 document.getElementById('instrDetails').innerHTML = html || '<div style="color:var(--gray-500)">Deposit instructions will appear here</div>';
 
                 document.getElementById('send-form').style.display = 'none';
