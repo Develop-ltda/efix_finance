@@ -166,8 +166,44 @@ const EfixAuth = (() => {
     return h;
   }
 
+  // ── Send OTP to email ──
+  async function sendOTP(email) {
+    const res = await fetch(`${BACKEND}/auth/send-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+    return data;
+  }
+
+  // ── Verify OTP and log in ──
+  async function verifyOTP(email, code) {
+    const res = await fetch(`${BACKEND}/auth/verify-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), code }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Verification failed");
+    if (!data.success || !data.token) throw new Error("No token received");
+
+    _token = data.token;
+    _user = data.user || { email };
+
+    try {
+      localStorage.setItem(TOKEN_KEY, _token);
+      localStorage.setItem(USER_KEY, JSON.stringify(_user));
+    } catch {}
+
+    return { token: _token, user: _user, isNew: data.isNew };
+  }
+
   return {
     login,
+    sendOTP,
+    verifyOTP,
     restore,
     syncBalance,
     logout,
