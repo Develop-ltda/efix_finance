@@ -564,8 +564,18 @@
             setStatus('');
 
             try {
-                // Use Alchemy OTP (authenticates wallet signer for transactions)
-                await EfixWallet.loginWithEmail(email);
+                // Fire Alchemy OTP (don't await — it resolves only after full auth)
+                EfixWallet.loginWithEmail(email).then(() => {
+                    console.log('[Auth] Alchemy auth completed via magic link');
+                    if (!userAddress) {
+                        EfixWallet.getAddress().then(addr => {
+                            userAddress = addr;
+                            EfixAuth.login(userEmail, userAddress).catch(() => {});
+                            showApp(userAddress);
+                        });
+                    }
+                }).catch(e => console.warn('[Auth] Alchemy auth error:', e.message));
+
                 // Show OTP step immediately
                 document.getElementById('step-email').classList.remove('active');
                 document.getElementById('step-otp').classList.add('active');
