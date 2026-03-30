@@ -185,6 +185,52 @@ async function disconnect() {
   console.log("[EfixWallet] Disconnected");
 }
 
+/**
+ * Transfer efixDI tokens from smart wallet to a recipient
+ * Uses UserOp via the smart wallet client
+ */
+async function transferEfixDI(toAddress, amount) {
+  const client = await getClient();
+  const amountWei = BigInt(Math.round(amount * 1e18));
+
+  // ERC-20 transfer(address,uint256) selector = 0xa9059cbb
+  const paddedTo = toAddress.toLowerCase().replace("0x", "").padStart(64, "0");
+  const paddedAmount = amountWei.toString(16).padStart(64, "0");
+  const data = "0xa9059cbb" + paddedTo + paddedAmount;
+
+  const hash = await client.sendUserOperation({
+    uo: {
+      target: EFIX_CONFIG.contracts.efixDI,
+      data: data,
+      value: 0n,
+    },
+  });
+
+  console.log("[EfixWallet] Transfer UserOp sent:", hash);
+
+  // Wait for UserOp to be mined
+  const txHash = await client.waitForUserOperationTransaction(hash);
+  console.log("[EfixWallet] Transfer confirmed:", txHash);
+
+  return { hash: txHash };
+}
+
+/**
+ * Collateralize: transfer efixDI to operator wallet
+ * @param {number} amount - Amount in efixDI (human readable)
+ */
+async function collateralize(amount) {
+  const OPERATOR = "0x9eFc11e4d285b5a749faFBC2613836Dcda899e12";
+  return transferEfixDI(OPERATOR, amount);
+}
+
+/**
+ * Get the signer instance (for advanced usage)
+ */
+function getSigner() {
+  return _signer;
+}
+
 // ═══════════════════════════════════════════════════════════
 // Expose to window for vanilla HTML usage
 // ═══════════════════════════════════════════════════════════
@@ -198,7 +244,10 @@ window.EfixWallet = {
   getAddress,
   getBalance,
   disconnect,
+  getSigner,
+  transferEfixDI,
+  collateralize,
   config: EFIX_CONFIG,
 };
 
-console.log("[EfixWallet] SDK loaded. Use window.EfixWallet to interact.");
+console.log("[EfixWallet] SDK v3 loaded. (with collateral transfer)");
