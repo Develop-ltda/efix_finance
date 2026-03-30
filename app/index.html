@@ -1912,7 +1912,7 @@
 
             // Tabs
             document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+                tab.addEventListener('click', function() { switchTab(this.dataset.tab, this); });
             });
 
             // Leverage slider
