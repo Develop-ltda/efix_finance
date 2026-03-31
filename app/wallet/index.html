@@ -989,7 +989,7 @@
                 if (instr.bank_routing_number || instr.routing_number) html += `<div>Routing: <strong>${instr.bank_routing_number || instr.routing_number}</strong></div>`;
                 if (instr.bank_account_number || instr.account_number) html += `<div>Account: <strong>${instr.bank_account_number || instr.account_number}</strong></div>`;
                 if (instr.bank_beneficiary_name || instr.beneficiary_name) html += `<div>Beneficiary: <strong>${instr.bank_beneficiary_name || instr.beneficiary_name}</strong></div>`;
-                if (instr.bank_beneficiary_address) html += `<div style="font-size:11px;color:var(--gray-500);">${instr.bank_beneficiary_address}</div>`;
+                // bank_beneficiary_address is the user's residential address (compliance) — don't show in UI
                 if (instr.iban) html += `<div>IBAN: <strong>${instr.iban}</strong></div>`;
                 if (instr.bic || instr.swift_code) html += `<div>BIC/SWIFT: <strong>${instr.bic || instr.swift_code}</strong></div>`;
                 if (instr.payment_rails) html += `<div style="margin-top:8px;font-size:11px;color:var(--green);">Accepted: ${Array.isArray(instr.payment_rails) ? instr.payment_rails.join(', ').toUpperCase() : instr.payment_rails}</div>`;
