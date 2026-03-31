@@ -77,6 +77,24 @@ const WalletLogic = {
     return data;
   },
 
+  async requestInvestment(backend, address, amount) {
+    const res = await fetch(backend + '/invest/request', {
+      method: 'POST',
+      headers: EfixAuth.headers(),
+      body: JSON.stringify({ address, amount }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
+    return data;
+  },
+
+  async getInvestmentPosition(backend, address) {
+    const res = await fetch(backend + '/invest/position/' + address);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Backend error');
+    return data;
+  },
+
   async lockCollateral(backend, address, amount) {
     const res = await fetch(backend + '/deposit/collateralize', {
       method: 'POST',
