@@ -337,53 +337,87 @@
 
                         <!-- APY Highlight -->
                         <div style="text-align:center;margin-bottom:24px;">
-                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Estimated Net APY</div>
-                            <div style="font-family:var(--font-mono);font-size:36px;font-weight:700;color:var(--green);" id="investAPY">~25%</div>
-                            <div style="font-size:11px;color:var(--gray-500);margin-top:4px;">with 3x leverage loop</div>
+                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Target Net APY</div>
+                            <div style="font-family:var(--font-mono);font-size:36px;font-weight:700;color:var(--green);" id="investAPY">~29%</div>
+                            <div style="font-size:11px;color:var(--gray-500);margin-top:4px;">at 60% LTV (2.5x leverage) &bull; actively managed</div>
                         </div>
 
-                        <!-- Strategy Breakdown -->
+                        <!-- Protocol Parameters -->
                         <div style="background:var(--gray-900);border-radius:12px;padding:16px;margin-bottom:16px;">
-                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">How it works</div>
+                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Protocol parameters</div>
                             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
-                                <span style="font-size:12px;color:var(--gray-400);">1. efixDI CDI yield</span>
-                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);">+14.9% a.a.</span>
+                                <span style="font-size:12px;color:var(--gray-400);">CDI/SELIC rate</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);">14.90%</span>
                             </div>
                             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
-                                <span style="font-size:12px;color:var(--gray-400);">2. Collateral on Morpho Blue</span>
-                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--gray-300);">50% LTV</span>
+                                <span style="font-size:12px;color:var(--gray-400);">Morpho borrow rate</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--red);">0.67%</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
+                                <span style="font-size:12px;color:var(--gray-400);">Performance fee</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--gray-300);">20%</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                                <span style="font-size:12px;color:var(--gray-400);">Liquidation LTV (LLTV)</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--gray-300);">77%</span>
+                            </div>
+                        </div>
+
+                        <!-- APY by Leverage Scenario -->
+                        <div style="background:var(--gray-900);border-radius:12px;padding:16px;">
+                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">APY by leverage scenario (R$100K/yr)</div>
+                            <!-- Header -->
+                            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:6px 0;font-size:10px;color:var(--gray-600);border-bottom:1px solid var(--gray-800);">
+                                <span>Scenario</span><span>LTV</span><span>Net APY</span><span>HF</span><span>Risk</span>
+                            </div>
+                            <!-- Hold -->
+                            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:7px 0;font-size:11px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
+                                <span style="font-family:var(--font-display);">Hold</span><span>0%</span><span>11.9%</span><span style="color:var(--gray-600);">-</span><span style="color:var(--gray-500);">SAFE</span>
+                            </div>
+                            <!-- Conservative -->
+                            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:7px 0;font-size:11px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
+                                <span style="font-family:var(--font-display);color:var(--green);">Conservative</span><span>30%</span><span>16.8%</span><span>2.57</span><span style="color:var(--green);">SAFE</span>
+                            </div>
+                            <!-- Moderate -->
+                            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:7px 0;font-size:11px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
+                                <span style="font-family:var(--font-display);color:#f59e0b;">Moderate</span><span>50%</span><span>23.3%</span><span>1.54</span><span style="color:#f59e0b;">SAFE</span>
+                            </div>
+                            <!-- Target Range (highlighted) -->
+                            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:8px 4px;font-size:11px;font-family:var(--font-mono);color:var(--white);font-weight:600;background:rgba(34,197,94,0.08);border-radius:6px;border:1px solid rgba(34,197,94,0.2);margin:4px -4px;border-bottom:none;">
+                                <span style="font-family:var(--font-display);color:var(--green);">Target</span><span>60%</span><span style="color:var(--green);">29.0%</span><span>1.28</span><span style="color:var(--green);">TARGET</span>
+                            </div>
+                            <!-- Aggressive -->
+                            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:7px 0;font-size:11px;font-family:var(--font-mono);color:var(--gray-500);border-bottom:1px solid var(--gray-800);margin-top:4px;">
+                                <span style="font-family:var(--font-display);color:#f97316;">Aggressive</span><span>70%</span><span>38.5%</span><span style="color:#f97316;">1.10</span><span style="color:#f97316;">AUTO-DLV</span>
+                            </div>
+                            <!-- Max -->
+                            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:7px 0;font-size:11px;font-family:var(--font-mono);color:var(--gray-600);">
+                                <span style="font-family:var(--font-display);color:var(--red);">Max</span><span>75%</span><span>46.1%</span><span style="color:var(--red);">1.03</span><span style="color:var(--red);">AUTO-DLV</span>
+                            </div>
+                        </div>
+
+                        <!-- How it works -->
+                        <div style="background:var(--gray-900);border-radius:12px;padding:16px;margin-top:16px;">
+                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">How efixDI+ works</div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
+                                <span style="font-size:12px;color:var(--gray-400);">1. Deposit efixDI (CDI yield)</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);">+14.9%</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
+                                <span style="font-size:12px;color:var(--gray-400);">2. Supply as collateral (Morpho)</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--gray-300);">60% LTV</span>
                             </div>
                             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
                                 <span style="font-size:12px;color:var(--gray-400);">3. Borrow USDC</span>
-                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--red);">-5% a.a.</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--red);">-0.67%</span>
                             </div>
                             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
-                                <span style="font-size:12px;color:var(--gray-400);">4. Convert → mint more efixDI</span>
-                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);">loop 3x</span>
+                                <span style="font-size:12px;color:var(--gray-400);">4. Convert USDC → mint efixDI</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);">loop</span>
                             </div>
                             <div style="display:flex;justify-content:space-between;padding:8px 0;">
-                                <span style="font-size:12px;color:var(--white);font-weight:600;">Net carry per loop</span>
-                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);font-weight:700;">+9.9%</span>
-                            </div>
-                        </div>
-
-                        <!-- Leverage Simulation -->
-                        <div style="background:var(--gray-900);border-radius:12px;padding:16px;">
-                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Leverage simulation (R$1,000 deposit)</div>
-                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:11px;color:var(--gray-600);border-bottom:1px solid var(--gray-800);">
-                                <span>Loops</span><span>Effective Capital</span><span>Net APY</span><span>HF</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
-                                <span>0</span><span>R$ 1,000</span><span style="color:var(--gray-300);">14.9%</span><span>-</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
-                                <span>1</span><span>R$ 1,500</span><span style="color:var(--gray-300);">19.9%</span><span>2.0</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
-                                <span>2</span><span>R$ 1,750</span><span style="color:var(--gray-300);">22.4%</span><span>1.7</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-family:var(--font-mono);color:var(--white);font-weight:600;background:rgba(34,197,94,0.05);border-radius:6px;padding:8px 6px;">
-                                <span>3</span><span>R$ 1,875</span><span style="color:var(--green);">~25%</span><span>1.5</span>
+                                <span style="font-size:12px;color:var(--white);font-weight:600;">D+0 redemption at NAV</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);font-weight:700;">no liquidation risk</span>
                             </div>
                         </div>
                     </div>
