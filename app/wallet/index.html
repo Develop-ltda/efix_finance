@@ -287,9 +287,8 @@
 
                     <!-- Rail selector -->
                     <div class="send-rails" style="display:flex;gap:6px;margin-bottom:20px;">
-                        <button class="rail-btn active" onclick="selectRail('ach')" id="rail-ach" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">ACH<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">USD</span></button>
-                        <button class="rail-btn" onclick="selectRail('wire')" id="rail-wire" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">Wire<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">USD</span></button>
-                        <button class="rail-btn" onclick="selectRail('sepa')" id="rail-sepa" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">SEPA<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">EUR</span></button>
+                        <button class="rail-btn active" onclick="selectRail('usd')" id="rail-usd" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">ACH / Wire<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">USD</span></button>
+                        <button class="rail-btn" onclick="selectRail('eur')" id="rail-eur" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">SEPA<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">EUR</span></button>
                     </div>
 
                     <!-- KYC required state -->
@@ -304,8 +303,8 @@
 
                     <!-- Transfer form (shown after KYC approved) -->
                     <div id="send-form" style="display:none;">
-                        <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">
-                            Get your personal bank details. Send any amount via ACH or Wire — USDC will be sent to your wallet automatically.
+                        <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;" id="sendFormDesc">
+                            Get your personal bank details. Send any amount — USDC will be sent to your wallet automatically.
                         </p>
                         <button class="btn btn-primary" style="background:var(--green);color:var(--black);" onclick="handleSendTransfer()" id="btnSendTransfer">Get Bank Details</button>
                     </div>
@@ -319,7 +318,7 @@
                         <p style="margin-top:16px;font-size:12px;color:var(--gray-500);text-align:center;line-height:1.6;">
                             Send any amount from your bank using the details above.<br>
                             Bridge will auto-convert to USDC and send to your wallet on Base.<br>
-                            ACH: ~1 business day &nbsp;|&nbsp; Wire: ~2 hours
+                            <span id="instrTimeline">ACH: ~1 business day &nbsp;|&nbsp; Wire: ~2 hours</span>
                         </p>
                     </div>
                 </div>
@@ -910,7 +909,9 @@
             _selectedRail = rail;
             document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('rail-' + rail).classList.add('active');
-            const currEl = document.getElementById('sendCurrency'); if (currEl) currEl.textContent = rail === 'sepa' ? 'EUR' : 'USD';
+            // Reset instructions when switching rails
+            document.getElementById('send-instructions').style.display = 'none';
+            document.getElementById('send-form').style.display = document.getElementById('send-kyc-required').style.display === 'none' ? 'block' : 'none';
         }
 
         async function handleStartKyc() {
@@ -970,7 +971,7 @@
         }
 
         async function handleSendTransfer() {
-            const currency = _selectedRail === 'sepa' ? 'eur' : 'usd';
+            const currency = _selectedRail === 'eur' ? 'eur' : 'usd';
             const btn = document.getElementById('btnSendTransfer');
             btn.disabled = true;
             btn.textContent = 'Loading...';
@@ -983,26 +984,36 @@
                 // Show deposit instructions
                 const instr = data.deposit_instructions || {};
                 let html = '';
-                // Bridge virtual account fields
-                if (instr.bank_name) html += `<div>Bank: <strong>${instr.bank_name}</strong></div>`;
-                if (instr.bank_address) html += `<div style="font-size:11px;color:var(--gray-500);margin-bottom:8px;">${instr.bank_address}</div>`;
-                if (instr.bank_routing_number || instr.routing_number) html += `<div>Routing: <strong>${instr.bank_routing_number || instr.routing_number}</strong></div>`;
-                if (instr.bank_account_number || instr.account_number) html += `<div>Account: <strong>${instr.bank_account_number || instr.account_number}</strong></div>`;
-                if (instr.bank_beneficiary_name || instr.beneficiary_name) html += `<div>Beneficiary: <strong>${instr.bank_beneficiary_name || instr.beneficiary_name}</strong></div>`;
-                // bank_beneficiary_address is the user's residential address (compliance) — don't show in UI
-                if (instr.iban) html += `<div>IBAN: <strong>${instr.iban}</strong></div>`;
-                if (instr.bic || instr.swift_code) html += `<div>BIC/SWIFT: <strong>${instr.bic || instr.swift_code}</strong></div>`;
-                if (instr.payment_rails) html += `<div style="margin-top:8px;font-size:11px;color:var(--green);">Accepted: ${Array.isArray(instr.payment_rails) ? instr.payment_rails.join(', ').toUpperCase() : instr.payment_rails}</div>`;
 
-                // Fallback: show all fields if no known ones matched
+                if (currency === 'eur') {
+                    // SEPA instructions
+                    if (instr.bank_name) html += `<div>Bank: <strong>${instr.bank_name}</strong></div>`;
+                    if (instr.bank_address) html += `<div style="font-size:11px;color:var(--gray-500);margin-bottom:8px;">${instr.bank_address}</div>`;
+                    if (instr.iban) html += `<div>IBAN: <strong>${instr.iban}</strong></div>`;
+                    if (instr.bic) html += `<div>BIC: <strong>${instr.bic}</strong></div>`;
+                    if (instr.account_holder_name || instr.bank_beneficiary_name) html += `<div>Beneficiary: <strong>${instr.account_holder_name || instr.bank_beneficiary_name}</strong></div>`;
+                } else {
+                    // ACH / Wire instructions
+                    if (instr.bank_name) html += `<div>Bank: <strong>${instr.bank_name}</strong></div>`;
+                    if (instr.bank_address) html += `<div style="font-size:11px;color:var(--gray-500);margin-bottom:8px;">${instr.bank_address}</div>`;
+                    if (instr.bank_routing_number || instr.routing_number) html += `<div>Routing: <strong>${instr.bank_routing_number || instr.routing_number}</strong></div>`;
+                    if (instr.bank_account_number || instr.account_number) html += `<div>Account: <strong>${instr.bank_account_number || instr.account_number}</strong></div>`;
+                    if (instr.bank_beneficiary_name || instr.beneficiary_name) html += `<div>Beneficiary: <strong>${instr.bank_beneficiary_name || instr.beneficiary_name}</strong></div>`;
+                }
+
+                // Fallback
                 if (!html) {
                     Object.entries(instr).forEach(([k, v]) => {
-                        if (v && typeof v !== 'object') html += `<div>${k.replace(/_/g,' ')}: <strong>${v}</strong></div>`;
+                        if (v && typeof v !== 'object' && !k.includes('beneficiary_address')) html += `<div>${k.replace(/_/g,' ')}: <strong>${v}</strong></div>`;
                     });
                 }
 
-                const currLabel = currency.toUpperCase();
-                document.getElementById('instrTitle').textContent = `Send ${currLabel} via ACH or Wire to:`;
+                const title = currency === 'eur' ? 'Send EUR via SEPA to:' : 'Send USD via ACH or Wire to:';
+                document.getElementById('instrTitle').textContent = title;
+
+                // Update timeline text
+                const timeline = document.getElementById('instrTimeline');
+                if (timeline) timeline.textContent = currency === 'eur' ? 'SEPA Instant: ~5 min  |  SEPA Credit: 1-3 business days' : 'ACH: ~1 business day  |  Wire: ~2 hours';
                 document.getElementById('instrDetails').innerHTML = html || '<div style="color:var(--gray-500)">Deposit instructions will appear here</div>';
 
                 document.getElementById('send-form').style.display = 'none';
