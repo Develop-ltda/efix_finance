@@ -910,7 +910,7 @@
             _selectedRail = rail;
             document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('rail-' + rail).classList.add('active');
-            document.getElementById('sendCurrency').textContent = rail === 'sepa' ? 'EUR' : 'USD';
+            const currEl = document.getElementById('sendCurrency'); if (currEl) currEl.textContent = rail === 'sepa' ? 'EUR' : 'USD';
         }
 
         async function handleStartKyc() {
