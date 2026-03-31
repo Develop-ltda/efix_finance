@@ -541,8 +541,8 @@
                 }
             } catch(e) { console.log('Init:', e.message); }
 
-            document.getElementById('emailInput').addEventListener('keydown', e => { if(e.key==='Enter') handleSendOTP(); });
-            document.getElementById('otpInput').addEventListener('keydown', e => { if(e.key==='Enter') handleVerifyOTP(); });
+            document.getElementById('emailInput')?.addEventListener('keydown', e => { if(e.key==='Enter') handleSendOTP(); });
+            document.getElementById('otpInput')?.addEventListener('keydown', e => { if(e.key==='Enter') handleVerifyOTP(); });
 
             // Callback if auth completes via background promise (magic link fallback)
             window._efixAuthCallback = async (signerAddr) => {
@@ -604,7 +604,7 @@
         function resetAuth() {
             document.getElementById('step-otp').classList.remove('active');
             document.getElementById('step-email').classList.add('active');
-            document.getElementById('otpInput').value = '';
+            const otpEl = document.getElementById('otpInput'); if (otpEl) otpEl.value = '';
             setStatus('');
         }
 
