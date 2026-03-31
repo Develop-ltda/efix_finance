@@ -74,6 +74,16 @@
         .rail-btn.active span{color:var(--green) !important}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
+        /* ── Invest tab grid ── */
+        @media (min-width: 768px) {
+            .invest-top-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                align-items: start;
+            }
+        }
+
         /* ── Desktop responsive ── */
         @media (min-width: 768px) {
             main {
@@ -327,29 +337,66 @@
 
             <!-- Invest Panel -->
             <div class="tab-panel" id="panel-invest">
+                <!-- Global Balance + Invest Form side by side on desktop -->
+                <div class="invest-top-grid">
+
                 <!-- Global Balance -->
                 <div class="action-card" style="margin-bottom:16px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                         <h3 style="margin:0;">Global Balance</h3>
                         <span style="font-size:11px;font-family:var(--font-mono);padding:3px 10px;border-radius:20px;" id="investStatus"></span>
                     </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                        <span style="font-size:13px;color:var(--gray-500);">Wallet (efixDI)</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);" id="investWalletBal">0.00</span>
+                    <!-- efixDI (unleveraged) -->
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-800);">
+                        <div>
+                            <div style="font-size:13px;color:var(--white);font-weight:600;">efixDI</div>
+                            <div style="font-size:11px;color:var(--gray-500);">CDI ~14.9% a.a.</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:14px;font-family:var(--font-mono);color:var(--white);font-weight:700;" id="investWalletBal">0.00</div>
+                            <div style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);" id="investWalletBRL">R$ 0,00</div>
+                        </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                        <span style="font-size:13px;color:var(--gray-500);">Invested (efixDI+)</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);" id="investedAmount">0.00</span>
+                    <!-- efixDI+ (leveraged) -->
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-800);">
+                        <div>
+                            <div style="font-size:13px;color:var(--green);font-weight:600;">efixDI+</div>
+                            <div style="font-size:11px;color:var(--gray-500);">Leveraged ~29% a.a.</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:14px;font-family:var(--font-mono);color:var(--green);font-weight:700;" id="investedAmount">0.00</div>
+                            <div style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);" id="investedBRL">R$ 0,00</div>
+                        </div>
                     </div>
+                    <!-- USDC Credit -->
                     <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                        <span style="font-size:13px;color:var(--gray-500);">USDC Credit</span>
+                        <span style="font-size:13px;color:var(--gray-500);">USDC Credit (from Morpho)</span>
                         <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);" id="investCredit">$0.00</span>
                     </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;">
-                        <span style="font-size:13px;color:var(--white);font-weight:600;">Total (BRL equiv.)</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);font-weight:700;" id="investTotalBRL">R$ 0,00</span>
+                    <!-- Total -->
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;">
+                        <span style="font-size:14px;color:var(--white);font-weight:700;">Total</span>
+                        <span style="font-size:14px;font-family:var(--font-mono);color:var(--green);font-weight:700;" id="investTotalBRL">R$ 0,00</span>
                     </div>
                 </div>
+
+                <!-- Invest Form -->
+                <div class="action-card" style="margin-bottom:16px;">
+                    <h3>Invest in efixDI+</h3>
+                    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;line-height:1.5;">
+                        Convert your efixDI into the leveraged efixDI+ product.<br>
+                        Target ~29% APY. Actively managed. D+0 redemption.
+                    </p>
+                    <div class="amount-input-wrap">
+                        <input type="number" id="investAmount" placeholder="0.00" min="10" step="0.01">
+                        <span class="currency">efixDI</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;font-family:var(--font-mono);" id="investPreview"></div>
+                    <button class="btn btn-primary" style="background:var(--green);color:var(--black);" id="btnInvest" onclick="handleInvestRequest()">Invest in efixDI+</button>
+                    <div id="investMsg" style="margin-top:8px;font-size:12px;font-family:var(--font-mono);text-align:center;min-height:18px;"></div>
+                </div>
+
+                </div><!-- /invest-top-grid -->
 
                 <!-- Leverage Strategy Overview -->
                 <div class="action-card" style="margin-bottom:16px;padding:0;overflow:hidden;">
@@ -443,21 +490,6 @@
 
                 </div>
 
-                <!-- Invest Form -->
-                <div class="action-card">
-                    <h3>Invest in efixDI+</h3>
-                    <div class="amount-input-wrap">
-                        <input type="number" id="investAmount" placeholder="0.00" min="10" step="0.01">
-                        <span class="currency">efixDI</span>
-                    </div>
-                    <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;font-family:var(--font-mono);" id="investPreview"></div>
-                    <button class="btn btn-primary" style="background:var(--green);color:var(--black);" id="btnInvest" onclick="handleInvestRequest()">Invest in efixDI+</button>
-                    <div id="investMsg" style="margin-top:8px;font-size:12px;font-family:var(--font-mono);text-align:center;min-height:18px;"></div>
-                    <p style="font-size:11px;color:var(--gray-600);text-align:center;margin-top:12px;line-height:1.5;">
-                        D+0 redemption at NAV eliminates liquidation risk.<br>
-                        Actively managed by EFIX operator.
-                    </p>
-                </div>
             </div>
 
             <!-- Card Panel -->
@@ -1246,7 +1278,9 @@
 
                 // Global Balance card
                 document.getElementById('investWalletBal').textContent = walletBal.toFixed(2);
+                document.getElementById('investWalletBRL').textContent = 'R$ ' + walletBal.toFixed(2).replace('.', ',');
                 document.getElementById('investedAmount').textContent = invested.toFixed(2);
+                document.getElementById('investedBRL').textContent = 'R$ ' + invested.toFixed(2).replace('.', ',');
                 document.getElementById('investCredit').textContent = '$' + credit.toFixed(2);
                 document.getElementById('investTotalBRL').textContent = 'R$ ' + totalBRL.toFixed(2).replace('.', ',');
                 updateSpendingPower(invested);
