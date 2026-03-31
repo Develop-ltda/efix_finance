@@ -190,12 +190,11 @@
                 </div>
                 <!-- Step 2: OTP Code -->
                 <div class="auth-step" id="step-otp">
-                    <div class="input-group" style="text-align:center;">
-                        <p style="font-size:14px;color:var(--gray-400);margin-bottom:16px;">Enviamos um link de acesso para o seu email.</p>
-                        <p style="font-size:14px;color:var(--gray-400);margin-bottom:16px;">Clique no link para entrar automaticamente.</p>
-                        <div style="margin:24px 0;"><span class="spinner" style="display:inline-block;"></span></div>
-                        <p style="font-size:12px;color:var(--gray-500);">Aguardando confirmação...</p>
-                        <button class="btn btn-secondary" onclick="resetAuth()" style="margin-top:16px;" data-i18n="btn_back">Voltar</button>
+                    <div class="input-group">
+                        <p style="font-size:14px;color:var(--gray-400);margin-bottom:8px;" data-i18n="otp_prompt">Verifique seu email e insira o código de 6 dígitos:</p>
+                        <input type="text" id="otpInput" placeholder="000000" autocomplete="one-time-code" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px;">
+                        <button class="btn btn-primary" id="btnVerifyOTP" onclick="handleVerifyOTP()" data-i18n="btn_verify">Verificar Código</button>
+                        <button class="btn btn-secondary" onclick="resetAuth()" data-i18n="btn_back">Voltar</button>
                     </div>
                 </div>
                 <div class="status-msg" id="authStatus"></div>
@@ -542,9 +541,9 @@
             } catch(e) { console.log('Init:', e.message); }
 
             document.getElementById('emailInput')?.addEventListener('keydown', e => { if(e.key==='Enter') handleSendOTP(); });
-            document.getElementById('otpInput')?.addEventListener('keydown', e => { if(e.key==='Enter') handleVerifyOTP(); });
+            document.getElementById('otpInput').addEventListener('keydown', e => { if(e.key==='Enter') handleVerifyOTP(); });
 
-            // Callback if auth completes via background promise (magic link fallback)
+            // Callback if auth completes via background promise
             window._efixAuthCallback = async (signerAddr) => {
                 if (!userAddress) {
                     userAddress = await getSmartAccountAddress();
@@ -565,16 +564,35 @@
             setStatus('');
 
             try {
-                // Show waiting screen immediately
+                await EfixWallet.sendOTP(email);
                 document.getElementById('step-email').classList.remove('active');
                 document.getElementById('step-otp').classList.add('active');
-                setStatus('Verifique seu email e clique no link para entrar', 'success');
+                setStatus('Código enviado! Verifique seu email.', 'success');
+                document.getElementById('otpInput').focus();
+            } catch(e) {
+                setStatus('Erro: ' + e.message, 'error');
+                console.error('OTP send error:', e);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar com Email';
+            }
+        }
 
-                // Alchemy magic link — resolves when user clicks the link
-                const address = await EfixWallet.loginWithEmail(email);
-                userAddress = address;
+        // ═══ STEP 2: Verify OTP ═══
+        async function handleVerifyOTP() {
+            const code = document.getElementById('otpInput').value.trim();
+            if (!code || code.length < 6) { setStatus('Insira o código de 6 dígitos','error'); return; }
 
-                // Persist user to backend
+            const btn = document.getElementById('btnVerifyOTP');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Verificando...';
+            setStatus('');
+
+            try {
+                await EfixWallet.verifyOTP(code);
+                userAddress = await getSmartAccountAddress();
+
+                // Persist to backend
                 try {
                     const session = await EfixAuth.login(userEmail, userAddress);
                     console.log(session.isNew ? 'New user registered' : 'User logged in');
@@ -586,25 +604,17 @@
                 showApp(userAddress);
             } catch(e) {
                 setStatus('Erro: ' + e.message, 'error');
-                console.error('Auth error:', e);
-                // Go back to email step on error
-                document.getElementById('step-otp').classList.remove('active');
-                document.getElementById('step-email').classList.add('active');
+                console.error('OTP verify error:', e);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Entrar com Email';
+                btn.textContent = 'Verificar Código';
             }
-        }
-
-        // handleVerifyOTP kept for backward compat but no longer primary flow
-        async function handleVerifyOTP() {
-            // Not used — auth completes via magic link
         }
 
         function resetAuth() {
             document.getElementById('step-otp').classList.remove('active');
             document.getElementById('step-email').classList.add('active');
-            const otpEl = document.getElementById('otpInput'); if (otpEl) otpEl.value = '';
+            document.getElementById('otpInput').value = '';
             setStatus('');
         }
 
