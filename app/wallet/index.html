@@ -233,6 +233,7 @@
                 <button class="tab" onclick="switchTab('withdraw', this)" data-i18n="tab_withdraw">Sacar</button>
                 <button class="tab" onclick="switchTab('send', this); initSendTab();">Deposit USD/EUR</button>
                 <button class="tab" onclick="switchTab('invest', this); loadInvestPosition();">Invest</button>
+                <button class="tab" onclick="switchTab('card', this)">Card</button>
             </div>
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">
@@ -324,48 +325,85 @@
                 </div>
             </div>
 
-            <!-- Card Panel -->
             <!-- Invest Panel -->
             <div class="tab-panel" id="panel-invest">
-                <!-- Position Summary -->
-                <div class="action-card" style="margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                        <h3 style="margin:0;">efixDI+ Position</h3>
-                        <span style="font-size:11px;font-family:var(--font-mono);padding:3px 10px;border-radius:20px;" id="investStatus"></span>
+                <!-- Leverage Strategy Overview -->
+                <div class="action-card" style="margin-bottom:16px;padding:0;overflow:hidden;">
+                    <div style="background:linear-gradient(135deg, rgba(34,197,94,0.05) 0%, transparent 100%);padding:24px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <h3 style="margin:0;">efixDI+ Leveraged Yield</h3>
+                            <span style="font-size:11px;font-family:var(--font-mono);padding:3px 10px;border-radius:20px;" id="investStatus"></span>
+                        </div>
+
+                        <!-- APY Highlight -->
+                        <div style="text-align:center;margin-bottom:24px;">
+                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Estimated Net APY</div>
+                            <div style="font-family:var(--font-mono);font-size:36px;font-weight:700;color:var(--green);" id="investAPY">~25%</div>
+                            <div style="font-size:11px;color:var(--gray-500);margin-top:4px;">with 3x leverage loop</div>
+                        </div>
+
+                        <!-- Strategy Breakdown -->
+                        <div style="background:var(--gray-900);border-radius:12px;padding:16px;margin-bottom:16px;">
+                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">How it works</div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
+                                <span style="font-size:12px;color:var(--gray-400);">1. efixDI CDI yield</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);">+14.9% a.a.</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
+                                <span style="font-size:12px;color:var(--gray-400);">2. Collateral on Morpho Blue</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--gray-300);">50% LTV</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
+                                <span style="font-size:12px;color:var(--gray-400);">3. Borrow USDC</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--red);">-5% a.a.</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
+                                <span style="font-size:12px;color:var(--gray-400);">4. Convert → mint more efixDI</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);">loop 3x</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                                <span style="font-size:12px;color:var(--white);font-weight:600;">Net carry per loop</span>
+                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--green);font-weight:700;">+9.9%</span>
+                            </div>
+                        </div>
+
+                        <!-- Leverage Simulation -->
+                        <div style="background:var(--gray-900);border-radius:12px;padding:16px;">
+                            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Leverage simulation (R$1,000 deposit)</div>
+                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:11px;color:var(--gray-600);border-bottom:1px solid var(--gray-800);">
+                                <span>Loops</span><span>Effective Capital</span><span>Net APY</span><span>HF</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
+                                <span>0</span><span>R$ 1,000</span><span style="color:var(--gray-300);">14.9%</span><span>-</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
+                                <span>1</span><span>R$ 1,500</span><span style="color:var(--gray-300);">19.9%</span><span>2.0</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-family:var(--font-mono);color:var(--gray-400);border-bottom:1px solid var(--gray-800);">
+                                <span>2</span><span>R$ 1,750</span><span style="color:var(--gray-300);">22.4%</span><span>1.7</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;font-family:var(--font-mono);color:var(--white);font-weight:600;background:rgba(34,197,94,0.05);border-radius:6px;padding:8px 6px;">
+                                <span>3</span><span>R$ 1,875</span><span style="color:var(--green);">~25%</span><span>1.5</span>
+                            </div>
+                        </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                        <span style="font-size:13px;color:var(--gray-500);">Invested</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);font-weight:700;" id="investedAmount">0.00 efixDI</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                        <span style="font-size:13px;color:var(--gray-500);">Yield (CDI)</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);" id="investYield">+15% a.a.</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                        <span style="font-size:13px;color:var(--gray-500);">Borrow Cost</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--red);">-5% a.a.</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                        <span style="font-size:13px;color:var(--gray-500);">Net Carry</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);font-weight:700;">+10% a.a.</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
-                        <span style="font-size:13px;color:var(--gray-500);">LTV</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);">50%</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:10px 0;">
-                        <span style="font-size:13px;color:var(--gray-500);">USDC Credit</span>
-                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);font-weight:700;" id="investCredit">$0.00</span>
+
+                    <!-- Current Position -->
+                    <div style="padding:16px 24px;border-top:1px solid var(--gray-800);">
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
+                            <span style="font-size:13px;color:var(--gray-500);">Your investment</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);font-weight:700;" id="investedAmount">0.00 efixDI</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                            <span style="font-size:13px;color:var(--gray-500);">Est. USDC credit</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);font-weight:700;" id="investCredit">$0.00</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Invest Form -->
-                <div class="action-card" style="margin-bottom:16px;">
+                <div class="action-card">
                     <h3>Invest in efixDI+</h3>
-                    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;line-height:1.5;">
-                        Your efixDI earns ~15% CDI as collateral on Morpho Blue.<br>
-                        Borrow USDC at ~5% for the EFIX Card. Net carry: +10% a.a.
-                    </p>
                     <div class="amount-input-wrap">
                         <input type="number" id="investAmount" placeholder="0.00" min="10" step="0.01">
                         <span class="currency">efixDI</span>
@@ -373,17 +411,61 @@
                     <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;font-family:var(--font-mono);" id="investPreview"></div>
                     <button class="btn btn-primary" style="background:var(--green);color:var(--black);" id="btnInvest" onclick="handleInvestRequest()">Invest in efixDI+</button>
                     <div id="investMsg" style="margin-top:8px;font-size:12px;font-family:var(--font-mono);text-align:center;min-height:18px;"></div>
+                    <p style="font-size:11px;color:var(--gray-600);text-align:center;margin-top:12px;line-height:1.5;">
+                        D+0 redemption at NAV eliminates liquidation risk.<br>
+                        Actively managed by EFIX operator.
+                    </p>
                 </div>
+            </div>
 
-                <!-- Card Teaser -->
-                <div style="background:linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);border-radius:16px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                        <span style="font-family:var(--font-display);font-size:14px;font-weight:700;">EFIX<span style="color:var(--green);">+</span> Card</span>
-                        <span style="font-size:11px;color:var(--gray-500);margin-left:8px;">Coming Soon</span>
+            <!-- Card Panel -->
+            <div class="tab-panel" id="panel-card">
+                <div class="action-card" style="padding:0;overflow:hidden;">
+                    <div style="background:linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);padding:28px 24px;position:relative;min-height:200px;">
+                        <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 80% 20%, rgba(34,197,94,0.08) 0%, transparent 50%);"></div>
+                        <div style="position:relative;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+                                <span style="font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:-0.5px;">EFIX<span style="color:var(--green);">+</span></span>
+                                <span style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);background:var(--gray-800);padding:3px 10px;border-radius:20px;">COMING SOON</span>
+                            </div>
+                            <div style="font-family:var(--font-mono);font-size:18px;letter-spacing:3px;color:var(--gray-400);margin-bottom:24px;">
+                                &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; ----
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                                <div>
+                                    <div style="font-size:10px;color:var(--gray-600);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Spending Power</div>
+                                    <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--white);" id="spendingPower">$0.00</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <svg width="48" height="16" viewBox="0 0 48 16" fill="none"><circle cx="16" cy="8" r="8" fill="#EB001B" opacity="0.8"/><circle cx="32" cy="8" r="8" fill="#F79E1B" opacity="0.8"/><path d="M24 2.5a7.5 7.5 0 010 11 7.5 7.5 0 010-11z" fill="#FF5F00" opacity="0.8"/></svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:10px;color:var(--gray-600);text-transform:uppercase;">Spending Power</div>
-                        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;" id="spendingPower">$0.00</div>
+                    <div style="padding:20px 24px;">
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                            <span style="font-size:13px;color:var(--gray-500);">Collateral efixDI</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);" id="collateralAmount">0.00</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                            <span style="font-size:13px;color:var(--gray-500);">Credit rate</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--red);">-5% a.a.</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                            <span style="font-size:13px;color:var(--gray-500);">Collateral yield</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);">+15% CDI</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:10px 0;">
+                            <span style="font-size:13px;color:var(--gray-500);">Net carry</span>
+                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);font-weight:700;">+10% a.a.</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:16px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:16px;padding:20px 24px;text-align:center;">
+                    <p style="font-size:13px;color:var(--gray-400);margin-bottom:8px;">EFIX Card is in production.</p>
+                    <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
+                        <div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;"></div>
+                        <span style="font-size:12px;color:var(--green);font-family:var(--font-mono);">Waitlist active</span>
                     </div>
                 </div>
             </div>
