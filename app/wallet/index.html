@@ -327,12 +327,35 @@
 
             <!-- Invest Panel -->
             <div class="tab-panel" id="panel-invest">
+                <!-- Global Balance -->
+                <div class="action-card" style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;">Global Balance</h3>
+                        <span style="font-size:11px;font-family:var(--font-mono);padding:3px 10px;border-radius:20px;" id="investStatus"></span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                        <span style="font-size:13px;color:var(--gray-500);">Wallet (efixDI)</span>
+                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);" id="investWalletBal">0.00</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                        <span style="font-size:13px;color:var(--gray-500);">Invested (efixDI+)</span>
+                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);" id="investedAmount">0.00</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-800);">
+                        <span style="font-size:13px;color:var(--gray-500);">USDC Credit</span>
+                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);" id="investCredit">$0.00</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;">
+                        <span style="font-size:13px;color:var(--white);font-weight:600;">Total (BRL equiv.)</span>
+                        <span style="font-size:13px;font-family:var(--font-mono);color:var(--green);font-weight:700;" id="investTotalBRL">R$ 0,00</span>
+                    </div>
+                </div>
+
                 <!-- Leverage Strategy Overview -->
                 <div class="action-card" style="margin-bottom:16px;padding:0;overflow:hidden;">
                     <div style="background:linear-gradient(135deg, rgba(34,197,94,0.05) 0%, transparent 100%);padding:24px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                             <h3 style="margin:0;">efixDI+ Leveraged Yield</h3>
-                            <span style="font-size:11px;font-family:var(--font-mono);padding:3px 10px;border-radius:20px;" id="investStatus"></span>
                         </div>
 
                         <!-- APY Highlight -->
@@ -352,10 +375,6 @@
                             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
                                 <span style="font-size:12px;color:var(--gray-400);">Morpho borrow rate</span>
                                 <span style="font-size:12px;font-family:var(--font-mono);color:var(--red);">0.67%</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
-                                <span style="font-size:12px;color:var(--gray-400);">Performance fee</span>
-                                <span style="font-size:12px;font-family:var(--font-mono);color:var(--gray-300);">20%</span>
                             </div>
                             <div style="display:flex;justify-content:space-between;padding:8px 0;">
                                 <span style="font-size:12px;color:var(--gray-400);">Liquidation LTV (LLTV)</span>
@@ -422,17 +441,6 @@
                         </div>
                     </div>
 
-                    <!-- Current Position -->
-                    <div style="padding:16px 24px;border-top:1px solid var(--gray-800);">
-                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-800);">
-                            <span style="font-size:13px;color:var(--gray-500);">Your investment</span>
-                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);font-weight:700;" id="investedAmount">0.00 efixDI</span>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;padding:8px 0;">
-                            <span style="font-size:13px;color:var(--gray-500);">Est. USDC credit</span>
-                            <span style="font-size:13px;font-family:var(--font-mono);color:var(--white);font-weight:700;" id="investCredit">$0.00</span>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Invest Form -->
@@ -1225,12 +1233,25 @@
         async function loadInvestPosition() {
             if (!userAddress) return;
             try {
-                const pos = await WalletLogic.getInvestmentPosition(BACKEND_URL, userAddress);
+                // Fetch wallet balance + investment position in parallel
+                const [bal, pos] = await Promise.all([
+                    EfixWallet.getBalance(userAddress),
+                    WalletLogic.getInvestmentPosition(BACKEND_URL, userAddress),
+                ]);
+
+                const walletBal = parseFloat(bal.formatted || 0);
                 const invested = parseFloat(pos.invested || 0);
-                document.getElementById('investedAmount').textContent = invested.toFixed(2) + ' efixDI';
-                document.getElementById('investCredit').textContent = '$' + (parseFloat(pos.estimatedCredit) || 0).toFixed(2);
+                const credit = parseFloat(pos.estimatedCredit || 0);
+                const totalBRL = walletBal + invested;
+
+                // Global Balance card
+                document.getElementById('investWalletBal').textContent = walletBal.toFixed(2);
+                document.getElementById('investedAmount').textContent = invested.toFixed(2);
+                document.getElementById('investCredit').textContent = '$' + credit.toFixed(2);
+                document.getElementById('investTotalBRL').textContent = 'R$ ' + totalBRL.toFixed(2).replace('.', ',');
                 updateSpendingPower(invested);
 
+                // Status badge
                 const statusEl = document.getElementById('investStatus');
                 const s = pos.status || 'none';
                 if (s === 'none') {
