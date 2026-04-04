@@ -310,7 +310,7 @@
   </div>
 </main>
 
-<script src="/app/wallet/efix-wallet-bundle.js"></script>
+<script src="/brle/brle-wallet-bundle.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
 <script src="/shared/js/config.js"></script>
 <script>
@@ -334,7 +334,7 @@ async function loginEmail() {
   if (!email) return;
   setAuthStatus('Enviando codigo...');
   try {
-    await EfixWallet.loginWithEmail(email);
+    await BRLEWallet.loginWithEmail(email);
     document.getElementById('step-email').style.display = 'none';
     document.getElementById('step-otp').style.display = 'block';
     setAuthStatus('Codigo enviado para ' + email);
@@ -346,12 +346,14 @@ async function loginEmail() {
 async function verifyOtp() {
   setAuthStatus('Verificando...');
   try {
-    const addr = await EfixWallet.getAddress();
-    enterApp(addr);
+    const addr = await BRLEWallet.getAddress();
+    enterApp(addr, 'alchemy');
   } catch (e) {
     setAuthStatus('Codigo invalido', true);
   }
 }
+
+let walletMode = null; // 'alchemy' or 'metamask'
 
 async function loginMetaMask() {
   if (!window.ethereum) return setAuthStatus('MetaMask nao encontrado', true);
@@ -367,7 +369,7 @@ async function loginMetaMask() {
     }
     metamaskSigner = await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     const addr = await metamaskSigner.getAddress();
-    enterApp(addr);
+    enterApp(addr, 'metamask');
   } catch (e) {
     setAuthStatus('Erro: ' + e.message, true);
   }
@@ -382,31 +384,33 @@ function setAuthStatus(msg, isError) {
 // Check for existing session on load
 (async () => {
   try {
-    if (window.EfixWallet) {
-      EfixWallet.init();
-      const addr = await EfixWallet.checkSession();
-      if (addr) enterApp(addr);
+    if (window.BRLEWallet) {
+      BRLEWallet.init();
+      const addr = await BRLEWallet.checkSession();
+      if (addr) enterApp(addr, 'alchemy');
     }
   } catch (e) { /* no session */ }
 
   // Handle magic link bundle
   const params = new URLSearchParams(window.location.search);
   const bundle = params.get('bundle');
-  if (bundle && window.EfixWallet) {
+  if (bundle && window.BRLEWallet) {
     try {
-      const addr = await EfixWallet.completeAuth(bundle);
-      enterApp(addr);
+      const addr = await BRLEWallet.completeAuth(bundle);
+      enterApp(addr, 'alchemy');
       window.history.replaceState({}, '', window.location.pathname);
     } catch (e) { setAuthStatus('Link expirado', true); }
   }
 })();
 
-function enterApp(addr) {
+function enterApp(addr, mode) {
   userAddress = addr;
+  walletMode = mode || 'metamask';
   document.getElementById('auth').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('userPill').style.display = 'flex';
-  document.getElementById('userAddr').textContent = addr.slice(0, 6) + '...' + addr.slice(-4);
+  const modeLabel = walletMode === 'alchemy' ? ' (gasless)' : ' (MetaMask)';
+  document.getElementById('userAddr').textContent = addr.slice(0, 6) + '...' + addr.slice(-4) + modeLabel;
   document.getElementById('fullAddr').textContent = addr;
   loadBalances();
 }
@@ -460,7 +464,16 @@ async function loadBalances() {
     const efixB = Number(efixBase) / 1e18;
     const efixP = Number(efixPoly) / 1e18;
     const usdc = Number(usdcBal) / 1e6;
-    const total = brle + sbrleInBrl + efixB + efixP;
+
+    // Get BRL/USD rate from BRLESwap contract for USDC conversion
+    let brlRate = 5.16;
+    try {
+      const rateRaw = await rpcCall(SWAP_ADDR, '0xa4b0d8fb'); // brlUsdRate()
+      brlRate = Number(rateRaw) / 1e6;
+      if (brlRate < 1) brlRate = 5.16; // fallback if not set
+    } catch {}
+    const usdcInBrl = usdc * brlRate;
+    const total = brle + sbrleInBrl + efixB + efixP + usdcInBrl;
     const apy = Number(apyBps) / 100;
 
     document.getElementById('brleBalance').textContent = brle.toFixed(2);
@@ -745,26 +758,25 @@ document.getElementById('swapAmount').addEventListener('input', async function (
 async function swapUsdcToBrle() {
   const amt = Number(document.getElementById('swapAmount').value);
   if (!amt || amt <= 0) return setStatus('swapStatus', 'Informe um valor', true);
-  if (!metamaskSigner) return setStatus('swapStatus', 'Conecte via MetaMask para swap', true);
 
   try {
-    const usdcWei = BigInt(Math.floor(amt * 1e6));
-
-    // Step 1: Approve USDC to swap contract
-    setStatus('swapStatus', 'Aprovando USDC...');
-    const usdcContract = new ethers.Contract(USDC_BASE, [
-      'function approve(address,uint256) returns (bool)'
-    ], metamaskSigner);
-    const tx1 = await usdcContract.approve(SWAP_ADDR, usdcWei);
-    await tx1.wait();
-
-    // Step 2: Execute swap
-    setStatus('swapStatus', 'Executando swap...');
-    const swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, metamaskSigner);
-    const tx2 = await swapContract.swap(usdcWei);
-    await tx2.wait();
-
-    setStatus('swapStatus', 'Swap concluido!', false, true);
+    if (walletMode === 'alchemy') {
+      setStatus('swapStatus', 'Executando swap (gasless)...');
+      const result = await BRLEWallet.swapUsdcToBrle(amt);
+      setStatus('swapStatus', 'Swap concluido!', false, true);
+    } else {
+      if (!metamaskSigner) return setStatus('swapStatus', 'Conecte via MetaMask', true);
+      const usdcWei = BigInt(Math.floor(amt * 1e6));
+      setStatus('swapStatus', 'Aprovando USDC...');
+      const usdcContract = new ethers.Contract(USDC_BASE, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
+      const tx1 = await usdcContract.approve(SWAP_ADDR, usdcWei);
+      await tx1.wait();
+      setStatus('swapStatus', 'Executando swap...');
+      const swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, metamaskSigner);
+      const tx2 = await swapContract.swap(usdcWei);
+      await tx2.wait();
+      setStatus('swapStatus', 'Swap concluido!', false, true);
+    }
     toast('BRLE recebido!');
     document.getElementById('swapAmount').value = '';
     loadBalances();
@@ -787,23 +799,28 @@ function resetBridge() {
 async function stakeDeposit() {
   const amount = Number(document.getElementById('stakeAmount').value);
   if (!amount || amount <= 0) return setStatus('stakeStatus', 'Informe um valor', true);
-  if (!metamaskSigner) return setStatus('stakeStatus', 'Conecte via MetaMask para investir', true);
 
   try {
-    const amountWei = ethers.parseEther(amount.toString());
-    setStatus('stakeStatus', 'Aprovando BRLE...');
-
-    const brle = new ethers.Contract(C.brle, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
-    const tx1 = await brle.approve(C.sbrle, amountWei);
-    await tx1.wait();
-
-    setStatus('stakeStatus', 'Depositando no vault...');
-    const sbrle = new ethers.Contract(C.sbrle, ['function deposit(uint256,address) returns (uint256)'], metamaskSigner);
-    const tx2 = await sbrle.deposit(amountWei, userAddress);
-    await tx2.wait();
-
-    setStatus('stakeStatus', 'Deposito confirmado!', false, true);
-    toast('sBRLE recebido!');
+    if (walletMode === 'alchemy') {
+      setStatus('stakeStatus', 'Depositando no vault (gasless)...');
+      const result = await BRLEWallet.stakeBrle(amount);
+      setStatus('stakeStatus', 'Deposito confirmado!', false, true);
+      toast('sBRLE recebido!');
+    } else {
+      if (!metamaskSigner) return setStatus('stakeStatus', 'Conecte via MetaMask', true);
+      const amountWei = ethers.parseEther(amount.toString());
+      setStatus('stakeStatus', 'Aprovando BRLE...');
+      const brle = new ethers.Contract(C.brle, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
+      const tx1 = await brle.approve(C.sbrle, amountWei);
+      await tx1.wait();
+      setStatus('stakeStatus', 'Depositando no vault...');
+      const sbrle = new ethers.Contract(C.sbrle, ['function deposit(uint256,address) returns (uint256)'], metamaskSigner);
+      const tx2 = await sbrle.deposit(amountWei, userAddress);
+      await tx2.wait();
+      setStatus('stakeStatus', 'Deposito confirmado!', false, true);
+      toast('sBRLE recebido!');
+    }
+    document.getElementById('stakeAmount').value = '';
     loadBalances();
   } catch (e) {
     setStatus('stakeStatus', 'Erro: ' + (e.reason || e.message), true);
@@ -825,23 +842,47 @@ async function sellRedeem() {
   const pixKey = document.getElementById('sellPixKey').value.trim();
   if (!amount || amount <= 0) return setStatus('sellStatus', 'Informe um valor', true);
   if (!pixKey) return setStatus('sellStatus', 'Informe a chave PIX', true);
-  if (!metamaskSigner) return setStatus('sellStatus', 'Conecte via MetaMask para resgatar', true);
 
   try {
+    // Redeem requires on-chain tx (approve + requestRedeem) — MetaMask for now
+    // Alchemy UserOps need dynamic ABI encoding for string params (pixKey)
+    if (!metamaskSigner && walletMode !== 'alchemy') {
+      return setStatus('sellStatus', 'Conecte via MetaMask para resgatar', true);
+    }
+
     const amountWei = ethers.parseEther(amount.toString());
     setStatus('sellStatus', 'Aprovando BRLE...');
 
-    const brle = new ethers.Contract(C.brle, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
-    const tx1 = await brle.approve(C.psm, amountWei);
-    await tx1.wait();
+    if (walletMode === 'metamask' && metamaskSigner) {
+      const brle = new ethers.Contract(C.brle, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
+      const tx1 = await brle.approve(C.psm, amountWei);
+      await tx1.wait();
 
-    setStatus('sellStatus', 'Enviando resgate...');
-    const psm = new ethers.Contract(C.psm, ['function requestRedeem(uint256,string) returns (bytes32)'], metamaskSigner);
-    const tx2 = await psm.requestRedeem(amountWei, pixKey);
-    await tx2.wait();
+      setStatus('sellStatus', 'Enviando resgate...');
+      const psm = new ethers.Contract(C.psm, ['function requestRedeem(uint256,string) returns (bytes32)'], metamaskSigner);
+      const tx2 = await psm.requestRedeem(amountWei, pixKey);
+      await tx2.wait();
+    } else {
+      // Alchemy: use ethers Interface to encode the calldata
+      setStatus('sellStatus', 'Enviando resgate (gasless)...');
+      const iface = new ethers.Interface(['function approve(address,uint256)', 'function requestRedeem(uint256,string)']);
+      const approveData = iface.encodeFunctionData('approve', [C.psm, amountWei]);
+      const redeemData = iface.encodeFunctionData('requestRedeem', [amountWei, pixKey]);
+
+      const client = await BRLEWallet.getClient();
+      const hash = await client.sendUserOperation({
+        uo: [
+          { target: C.brle, data: approveData, value: 0n },
+          { target: C.psm, data: redeemData, value: 0n },
+        ],
+      });
+      await client.waitForUserOperationTransaction(hash);
+    }
 
     setStatus('sellStatus', 'Resgate enviado! PIX sera processado em breve.', false, true);
     toast('BRLE queimado, PIX a caminho!');
+    document.getElementById('sellAmount').value = '';
+    document.getElementById('sellPixKey').value = '';
     loadBalances();
   } catch (e) {
     setStatus('sellStatus', 'Erro: ' + (e.reason || e.message), true);

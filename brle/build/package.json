@@ -1,0 +1,14 @@
+{
+  "name": "brle-wallet-build",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "build": "npx esbuild entry.js --bundle --format=iife --outfile=../brle-wallet-bundle.js --minify"
+  },
+  "dependencies": {
+    "@account-kit/infra": "^4.86.1",
+    "@account-kit/signer": "^4.86.1",
+    "@account-kit/wallet-client": "^4.86.1",
+    "esbuild": "^0.27.4"
+  }
+}
