@@ -159,6 +159,7 @@
       <button class="tab" onclick="showTab('usd')">USD/EUR</button>
       <button class="tab" onclick="showTab('stake')">Investir</button>
       <button class="tab" onclick="showTab('sell')">Resgatar</button>
+      <button class="tab" onclick="showTab('history')">Historico</button>
     </div>
 
     <!-- BUY TAB -->
@@ -290,6 +291,14 @@
         <div class="fee-line" id="sellFee">Taxa: 0.10% | Voce recebe: R$ 0,00 via PIX</div>
         <button class="btn btn-primary" onclick="sellRedeem()" id="btnSell">Resgatar</button>
         <div id="sellStatus" class="status-msg"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tab-history" class="tab-panel">
+      <div class="action-card">
+        <h3>Historico de Transacoes</h3>
+        <div id="historyList"><div class="empty" style="color:var(--gray-500);padding:20px;text-align:center">Carregando...</div></div>
       </div>
     </div>
 
@@ -839,6 +848,64 @@ async function sellRedeem() {
   }
 }
 
+// ═══ HISTORY ═══
+
+async function loadHistory() {
+  const el = document.getElementById('historyList');
+  try {
+    const res = await fetch(BACKEND + '/api/history/' + userAddress);
+    const data = await res.json();
+    const txs = data.transactions || [];
+
+    if (txs.length === 0) {
+      el.innerHTML = '<div style="color:var(--gray-500);padding:20px;text-align:center">Nenhuma transacao encontrada</div>';
+      return;
+    }
+
+    const icons = {
+      pix_mint: '💵', swap: '🔄', vault_deposit: '📈', vault_withdraw: '📤',
+      pix_redeem: '💸', mint_confirmed: '✅',
+    };
+    const colors = {
+      confirmed: 'var(--green)', mint_confirmed: 'var(--green)', completed: 'var(--green)',
+      pending: 'var(--gray-400)', mint_requested: 'var(--blue)', pix_received: 'var(--blue)',
+      failed: 'var(--red)',
+    };
+
+    let html = '';
+    for (const tx of txs) {
+      const icon = icons[tx.type] || '📋';
+      const color = colors[tx.status] || 'var(--gray-400)';
+      const amount = tx.amountOut
+        ? `${tx.amountIn} ${tx.currency} → ${tx.amountOut.toFixed(2)} BRLE`
+        : `${tx.amount} ${tx.currency || 'BRL'}`;
+      const date = new Date(tx.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const badge = tx.source === 'web3' ? 'on-chain' : 'off-chain';
+      const badgeColor = tx.source === 'web3' ? 'var(--blue)' : 'var(--gray-500)';
+      const hashLink = tx.txHash
+        ? `<a href="https://basescan.org/tx/${tx.txHash}" target="_blank" style="color:var(--gray-500);font-size:10px;text-decoration:none">${tx.txHash.slice(0,10)}...</a>`
+        : '';
+
+      html += `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-800)">
+          <span style="font-size:20px">${icon}</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${tx.label}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${date} · <span style="color:${badgeColor}">${badge}</span> ${hashLink}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--font-mono);font-size:13px;font-weight:700">${amount}</div>
+            <div style="font-size:10px;color:${color};text-transform:uppercase;font-weight:700">${tx.status.replace('_',' ')}</div>
+          </div>
+        </div>`;
+    }
+
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = '<div style="color:var(--red);padding:20px;text-align:center">Erro: ' + e.message + '</div>';
+  }
+}
+
 // ═══ UTILS ═══
 
 function showTab(name) {
@@ -846,6 +913,7 @@ function showTab(name) {
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   event.target.classList.add('active');
+  if (name === 'history') loadHistory();
 }
 
 function copyAddress() {
