@@ -146,6 +146,11 @@
         <div class="balance-item"><div class="val" id="sbrleBalance">0.00</div><div class="lbl">sBRLE</div></div>
         <div class="balance-item"><div class="val" id="sbrleValue">0.00</div><div class="lbl">sBRLE em BRL</div></div>
       </div>
+      <div class="balance-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-800)">
+        <div class="balance-item"><div class="val" id="efixdiBaseBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">efixDI (Base)</div></div>
+        <div class="balance-item"><div class="val" id="efixdiPolyBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">efixDI (Polygon)</div></div>
+        <div class="balance-item"><div class="val" id="usdcBaseBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">USDC (Base)</div></div>
+      </div>
       <div class="apy-badge" id="apyBadge">CDI ~14.4% a.a.</div>
     </div>
 
@@ -413,25 +418,48 @@ function encodeBal(addr) {
   return '0x70a08231' + addr.toLowerCase().replace('0x', '').padStart(64, '0');
 }
 
+const EFIX_BASE = '0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608';
+const EFIX_POLY = '0x04082b283818D9d0dd9Ee8742892eEe5CC396441';
+const RPC_POLY = EFIX_CONFIG.rpc.polygon;
+
+async function rpcCallChain(rpc, to, data) {
+  const res = await fetch(rpc, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to, data }, 'latest'], id: 1 }),
+  });
+  const json = await res.json();
+  return BigInt(json.result || '0x0');
+}
+
 async function loadBalances() {
   try {
-    const [brleBal, sbrleBal, sharePrice, apyBps] = await Promise.all([
+    const [brleBal, sbrleBal, sharePrice, apyBps, efixBase, efixPoly, usdcBal] = await Promise.all([
       rpcCall(C.brle, encodeBal(userAddress)),
       rpcCall(C.sbrle, encodeBal(userAddress)),
       rpcCall(C.sbrle, '0xe6aa216c'), // sharePrice()
       rpcCall(C.sbrle, '0xd4c3eea0'), // estimatedAPY()
+      rpcCall(EFIX_BASE, encodeBal(userAddress)),
+      rpcCallChain(RPC_POLY, EFIX_POLY, encodeBal(userAddress)),
+      rpcCall(USDC_BASE, encodeBal(userAddress)),
     ]);
 
     const brle = Number(brleBal) / 1e18;
     const sbrle = Number(sbrleBal) / 1e18;
     const price = Number(sharePrice) / 1e18;
     const sbrleInBrl = sbrle * price;
-    const total = brle + sbrleInBrl;
+    const efixB = Number(efixBase) / 1e18;
+    const efixP = Number(efixPoly) / 1e18;
+    const usdc = Number(usdcBal) / 1e6;
+    const total = brle + sbrleInBrl + efixB + efixP;
     const apy = Number(apyBps) / 100;
 
     document.getElementById('brleBalance').textContent = brle.toFixed(2);
     document.getElementById('sbrleBalance').textContent = sbrle.toFixed(2);
     document.getElementById('sbrleValue').textContent = sbrleInBrl.toFixed(2);
+    document.getElementById('efixdiBaseBalance').textContent = efixB.toFixed(2);
+    document.getElementById('efixdiPolyBalance').textContent = efixP.toFixed(2);
+    document.getElementById('usdcBaseBalance').textContent = usdc.toFixed(2);
     document.getElementById('totalBrl').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
     document.getElementById('apyBadge').textContent = 'CDI ~' + apy.toFixed(1) + '% a.a.';
   } catch (e) {
@@ -469,12 +497,14 @@ async function initiateMint() {
       `Envie exatamente R$ ${data.amount} via PIX. Inclua "${data.orderId}" na descricao.`;
 
     const pixCode = data.pixCode || '';
-    document.getElementById('buyPixCode').textContent = pixCode;
+    document.getElementById('buyPixCode').textContent = pixCode || 'Chave PIX nao disponivel';
 
-    // Generate QR code image from EMV string
-    if (pixCode) {
+    // QR code image (from backend or generated)
+    if (data.qrImageUrl) {
+      document.getElementById('qrImage').src = data.qrImageUrl;
+    } else if (pixCode) {
       document.getElementById('qrImage').src =
-        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(pixCode);
+        'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(pixCode);
     }
 
     document.getElementById('buyMsg').textContent = 'Pague o PIX e clique em "Ja paguei o PIX"';
