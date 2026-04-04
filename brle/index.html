@@ -151,6 +151,7 @@
 
     <div class="tabs">
       <button class="tab active" onclick="showTab('buy')">Comprar</button>
+      <button class="tab" onclick="showTab('usd')">USD/EUR</button>
       <button class="tab" onclick="showTab('stake')">Investir</button>
       <button class="tab" onclick="showTab('sell')">Resgatar</button>
     </div>
@@ -180,6 +181,53 @@
             <div class="prog-step" id="pStep4"><span class="prog-icon">4</span>BRLE creditado!</div>
           </div>
           <button class="btn btn-secondary" onclick="resetBuy()" style="margin-top:16px">Nova compra</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USD/EUR TAB -->
+    <div id="tab-usd" class="tab-panel">
+      <div class="action-card">
+        <h3>USD/EUR Onramp / Offramp</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
+          Deposite USD (ACH/Wire) ou EUR (SEPA) e receba USDC na Base.
+          Powered by Bridge.xyz.
+        </p>
+
+        <!-- Step 1: Email + KYC -->
+        <div id="bridgeStep1">
+          <div class="form-group" style="margin-bottom:12px">
+            <input type="email" id="bridgeEmail" placeholder="Email para verificacao KYC">
+          </div>
+          <button class="btn btn-primary" onclick="startBridgeKyc()">Iniciar Verificacao</button>
+          <div id="bridgeKycStatus" class="status-msg"></div>
+        </div>
+
+        <!-- Step 2: Currency selection + deposit -->
+        <div id="bridgeStep2" style="display:none">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-secondary btn-sm" id="btnUsd" onclick="selectCurrency('usd')" style="flex:1;border-color:var(--green);color:var(--white)">USD (ACH/Wire)</button>
+            <button class="btn btn-secondary btn-sm" id="btnEur" onclick="selectCurrency('eur')" style="flex:1">EUR (SEPA)</button>
+          </div>
+          <button class="btn btn-primary" onclick="createBridgeTransfer()">Obter Dados Bancarios</button>
+          <div id="bridgeTransferStatus" class="status-msg"></div>
+        </div>
+
+        <!-- Step 3: Deposit instructions -->
+        <div id="bridgeStep3" style="display:none">
+          <div style="background:var(--gray-800);border-radius:12px;padding:20px;margin-bottom:16px">
+            <div style="font-size:14px;font-weight:700;margin-bottom:12px">Dados para deposito</div>
+            <div id="bridgeInstructions" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-400);line-height:1.8"></div>
+          </div>
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:16px">
+            Apos o deposito, Bridge.xyz converte automaticamente para USDC na Base.
+            O USDC aparecera no seu saldo abaixo.
+          </div>
+          <div style="background:var(--gray-800);border-radius:12px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Saldo USDC (Base)</div>
+            <div style="font-family:var(--font-mono);font-size:24px;font-weight:700" id="usdcBalance">0.00</div>
+          </div>
+          <button class="btn btn-secondary" onclick="resetBridge()" style="margin-top:16px">Novo deposito</button>
         </div>
       </div>
     </div>
@@ -450,6 +498,134 @@ function copyPix() {
     navigator.clipboard.writeText(currentOrder.pixCode);
     toast('Codigo PIX copiado!');
   }
+}
+
+// ═══ USD/EUR BRIDGE ═══
+
+const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+let bridgeCurrency = 'usd';
+
+async function startBridgeKyc() {
+  const email = document.getElementById('bridgeEmail').value.trim();
+  if (!email) return setStatus('bridgeKycStatus', 'Informe seu email', true);
+
+  try {
+    setStatus('bridgeKycStatus', 'Iniciando verificacao...');
+    const res = await fetch(BACKEND + '/api/bridge/kyc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, walletAddress: userAddress }),
+    });
+    const data = await res.json();
+
+    if (data.status === 'approved') {
+      setStatus('bridgeKycStatus', 'KYC aprovado!', false, true);
+      document.getElementById('bridgeStep1').style.display = 'none';
+      document.getElementById('bridgeStep2').style.display = 'block';
+    } else if (data.kycLink) {
+      window.open(data.kycLink, '_blank');
+      setStatus('bridgeKycStatus', 'Complete a verificacao na janela aberta. Depois clique abaixo.');
+      // Add a check button
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-secondary';
+      btn.style.marginTop = '12px';
+      btn.textContent = 'Ja completei o KYC';
+      btn.onclick = () => checkBridgeKyc(email);
+      document.getElementById('bridgeKycStatus').after(btn);
+    } else {
+      setStatus('bridgeKycStatus', 'Erro: ' + (data.error || 'Tente novamente'), true);
+    }
+  } catch (e) {
+    setStatus('bridgeKycStatus', 'Erro: ' + e.message, true);
+  }
+}
+
+async function checkBridgeKyc(email) {
+  try {
+    const res = await fetch(BACKEND + '/api/bridge/kyc-status?email=' + encodeURIComponent(email));
+    const data = await res.json();
+    if (data.status === 'approved') {
+      setStatus('bridgeKycStatus', 'KYC aprovado!', false, true);
+      document.getElementById('bridgeStep1').style.display = 'none';
+      document.getElementById('bridgeStep2').style.display = 'block';
+    } else {
+      setStatus('bridgeKycStatus', 'KYC ainda pendente. Status: ' + data.status);
+    }
+  } catch (e) {
+    setStatus('bridgeKycStatus', 'Erro: ' + e.message, true);
+  }
+}
+
+function selectCurrency(cur) {
+  bridgeCurrency = cur;
+  document.getElementById('btnUsd').style.borderColor = cur === 'usd' ? 'var(--green)' : 'var(--gray-700)';
+  document.getElementById('btnUsd').style.color = cur === 'usd' ? 'var(--white)' : 'var(--gray-400)';
+  document.getElementById('btnEur').style.borderColor = cur === 'eur' ? 'var(--green)' : 'var(--gray-700)';
+  document.getElementById('btnEur').style.color = cur === 'eur' ? 'var(--white)' : 'var(--gray-400)';
+}
+
+async function createBridgeTransfer() {
+  const email = document.getElementById('bridgeEmail').value.trim();
+  try {
+    setStatus('bridgeTransferStatus', 'Gerando dados bancarios...');
+    const res = await fetch(BACKEND + '/api/bridge/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, currency: bridgeCurrency }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    // Display deposit instructions
+    const instr = data.depositInstructions || {};
+    let html = '';
+    if (bridgeCurrency === 'usd') {
+      html = `
+        <div><strong>Bank:</strong> ${instr.bank_name || 'Bridge Financial'}</div>
+        <div><strong>Account:</strong> ${instr.account_number || '—'}</div>
+        <div><strong>Routing:</strong> ${instr.routing_number || '—'}</div>
+        <div><strong>Type:</strong> ${data.rail}</div>
+      `;
+    } else {
+      html = `
+        <div><strong>IBAN:</strong> ${instr.iban || '—'}</div>
+        <div><strong>BIC/SWIFT:</strong> ${instr.bic || instr.swift || '—'}</div>
+        <div><strong>Bank:</strong> ${instr.bank_name || 'Bridge Financial'}</div>
+        <div><strong>Type:</strong> ${data.rail}</div>
+      `;
+    }
+    // Show any additional fields
+    for (const [k, v] of Object.entries(instr)) {
+      if (!['bank_name', 'account_number', 'routing_number', 'iban', 'bic', 'swift'].includes(k) && v) {
+        html += `<div><strong>${k}:</strong> ${v}</div>`;
+      }
+    }
+    document.getElementById('bridgeInstructions').innerHTML = html;
+    document.getElementById('bridgeStep2').style.display = 'none';
+    document.getElementById('bridgeStep3').style.display = 'block';
+    loadUsdcBalance();
+  } catch (e) {
+    setStatus('bridgeTransferStatus', 'Erro: ' + e.message, true);
+  }
+}
+
+async function loadUsdcBalance() {
+  try {
+    // USDC has 6 decimals
+    const bal = await rpcCall(USDC_BASE, encodeBal(userAddress));
+    const usdc = Number(bal) / 1e6;
+    document.getElementById('usdcBalance').textContent = usdc.toFixed(2) + ' USDC';
+  } catch (e) {
+    document.getElementById('usdcBalance').textContent = '—';
+  }
+}
+
+function resetBridge() {
+  document.getElementById('bridgeStep1').style.display = 'block';
+  document.getElementById('bridgeStep2').style.display = 'none';
+  document.getElementById('bridgeStep3').style.display = 'none';
+  setStatus('bridgeKycStatus', '');
+  setStatus('bridgeTransferStatus', '');
 }
 
 // ═══ STAKE ═══
