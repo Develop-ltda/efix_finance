@@ -169,18 +169,22 @@
           <button class="btn btn-primary" onclick="initiateMint()">Gerar PIX</button>
         </div>
         <div id="buyProgress" style="display:none">
-          <div class="pix-box">
-            <div style="font-size:14px;font-weight:700;margin-bottom:8px">Pague via PIX</div>
-            <div style="font-size:12px;color:var(--gray-400)" id="buyInstructions"></div>
-            <div class="code" id="buyPixCode" onclick="copyPix()">Clique para copiar o codigo PIX</div>
+          <div style="background:var(--white);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
+            <p style="color:var(--black);font-size:14px;font-weight:600;margin-bottom:12px">Escaneie com seu app bancario</p>
+            <img id="qrImage" src="" alt="QR Code PIX" style="width:200px;height:200px;border-radius:8px">
+            <p style="color:var(--gray-600);font-size:11px;font-family:var(--font-mono);margin-top:12px;word-break:break-all;max-height:60px;overflow:hidden;cursor:pointer" id="buyPixCode" onclick="copyPix()"></p>
+            <button class="btn-sm" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;padding:8px 20px;font-size:13px;border-radius:8px;cursor:pointer" onclick="copyPix()">Copiar codigo PIX</button>
           </div>
+          <div style="font-size:12px;color:var(--gray-500);text-align:center;margin-bottom:12px" id="buyInstructions"></div>
+          <button class="btn btn-primary" id="btnIPaid" onclick="handleIPaid()" style="background:var(--green);color:var(--black);width:100%;margin-bottom:16px">Ja paguei o PIX</button>
           <div id="buySteps">
-            <div class="prog-step active" id="pStep1"><span class="prog-icon">1</span>Aguardando pagamento PIX</div>
-            <div class="prog-step" id="pStep2"><span class="prog-icon">2</span>PIX recebido, processando</div>
-            <div class="prog-step" id="pStep3"><span class="prog-icon">3</span>Confirmando investimento BTG</div>
+            <div class="prog-step done" id="pStep1"><span class="prog-icon">✓</span>QR Code gerado</div>
+            <div class="prog-step" id="pStep2"><span class="prog-icon">2</span>Pagamento PIX confirmado</div>
+            <div class="prog-step" id="pStep3"><span class="prog-icon">3</span>Mintando BRLE</div>
             <div class="prog-step" id="pStep4"><span class="prog-icon">4</span>BRLE creditado!</div>
           </div>
-          <button class="btn btn-secondary" onclick="resetBuy()" style="margin-top:16px">Nova compra</button>
+          <div id="buyMsg" class="status-msg" style="text-align:center;margin-top:12px"></div>
+          <button class="btn btn-secondary" onclick="resetBuy()" style="margin-top:12px;width:100%">Cancelar</button>
         </div>
       </div>
     </div>
@@ -461,13 +465,31 @@ async function initiateMint() {
     currentOrder = data;
     document.getElementById('buyForm').style.display = 'none';
     document.getElementById('buyProgress').style.display = 'block';
-    document.getElementById('buyInstructions').textContent = data.instructions;
-    document.getElementById('buyPixCode').textContent = data.pixCode || 'PIX gerado — copie o codigo';
+    document.getElementById('buyInstructions').textContent =
+      `Envie exatamente R$ ${data.amount} via PIX. Inclua "${data.orderId}" na descricao.`;
 
-    startPolling(data.orderId);
+    const pixCode = data.pixCode || '';
+    document.getElementById('buyPixCode').textContent = pixCode;
+
+    // Generate QR code image from EMV string
+    if (pixCode) {
+      document.getElementById('qrImage').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(pixCode);
+    }
+
+    document.getElementById('buyMsg').textContent = 'Pague o PIX e clique em "Ja paguei o PIX"';
   } catch (e) {
     toast('Erro: ' + e.message, true);
   }
+}
+
+function handleIPaid() {
+  if (!currentOrder) return;
+  const btn = document.getElementById('btnIPaid');
+  btn.disabled = true;
+  btn.textContent = 'Verificando pagamento...';
+  document.getElementById('buyMsg').textContent = 'Consultando... aguarde';
+  startPolling(currentOrder.orderId);
 }
 
 function startPolling(orderId) {
@@ -494,9 +516,29 @@ function startPolling(orderId) {
 function updateProgress(status) {
   const steps = { pending: 1, pix_received: 2, mint_requested: 3, mint_confirmed: 4 };
   const current = steps[status] || 1;
+  const icons = ['✓', '✓', '✓', '✓'];
   for (let i = 1; i <= 4; i++) {
     const el = document.getElementById('pStep' + i);
-    el.className = 'prog-step' + (i < current ? ' done' : i === current ? ' active' : '');
+    const icon = el.querySelector('.prog-icon');
+    if (i < current) {
+      el.className = 'prog-step done';
+      icon.textContent = '✓';
+    } else if (i === current) {
+      el.className = 'prog-step active';
+      icon.textContent = i;
+    } else {
+      el.className = 'prog-step';
+      icon.textContent = i;
+    }
+  }
+
+  if (status === 'pix_received') {
+    document.getElementById('buyMsg').textContent = 'PIX detectado! Processando...';
+  } else if (status === 'mint_requested') {
+    document.getElementById('buyMsg').textContent = 'Aguardando confirmacao do operador...';
+  } else if (status === 'mint_confirmed') {
+    document.getElementById('buyMsg').textContent = 'BRLE creditado na sua carteira!';
+    document.getElementById('btnIPaid').style.display = 'none';
   }
 }
 
