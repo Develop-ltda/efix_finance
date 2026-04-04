@@ -229,6 +229,21 @@
           </div>
           <button class="btn btn-secondary" onclick="resetBridge()" style="margin-top:16px">Novo deposito</button>
         </div>
+
+        <!-- Swap USDC → BRLE (always visible if user has USDC) -->
+        <div id="swapSection" style="margin-top:20px;padding-top:20px;border-top:1px solid var(--gray-800)">
+          <h3 style="font-size:14px;color:var(--gray-400);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Swap USDC → BRLE</h3>
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">
+            Rate: <span id="swapRate">5.70</span> BRL/USD | Fee: 0.30%
+          </div>
+          <div class="amount-wrap">
+            <span class="cur">USDC</span>
+            <input type="number" id="swapAmount" placeholder="0.00" min="1">
+          </div>
+          <div class="fee-line" id="swapQuote">Voce recebe: 0.00 BRLE</div>
+          <button class="btn btn-primary" onclick="swapUsdcToBrle()" id="btnSwap">Swap para BRLE</button>
+          <div id="swapStatus" class="status-msg"></div>
+        </div>
       </div>
     </div>
 
@@ -617,6 +632,64 @@ async function loadUsdcBalance() {
     document.getElementById('usdcBalance').textContent = usdc.toFixed(2) + ' USDC';
   } catch (e) {
     document.getElementById('usdcBalance').textContent = '—';
+  }
+}
+
+// ═══ USDC → BRLE SWAP ═══
+
+const SWAP_ADDR = '0xDac75EC3f9d0294d4a48BcE5d0d7A2b0693D7AD1';
+const SWAP_ABI = [
+  'function swap(uint256 _usdcAmount) external returns (uint256)',
+  'function quote(uint256 _usdcAmount) external view returns (uint256 brleOut, uint256 feeAmount)',
+  'function brlUsdRate() external view returns (uint256)',
+];
+
+document.getElementById('swapAmount').addEventListener('input', async function () {
+  const amt = Number(this.value) || 0;
+  if (amt <= 0) { document.getElementById('swapQuote').textContent = 'Voce recebe: 0.00 BRLE'; return; }
+  try {
+    const provider = new ethers.JsonRpcProvider(RPC);
+    const swap = new ethers.Contract(SWAP_ADDR, SWAP_ABI, provider);
+    const usdcWei = BigInt(Math.floor(amt * 1e6));
+    const [brleOut, fee] = await swap.quote(usdcWei);
+    const rate = await swap.brlUsdRate();
+    document.getElementById('swapRate').textContent = (Number(rate) / 1e6).toFixed(2);
+    document.getElementById('swapQuote').textContent =
+      `Voce recebe: ${Number(ethers.formatEther(brleOut)).toFixed(2)} BRLE (taxa: ${Number(ethers.formatEther(fee)).toFixed(2)})`;
+  } catch (e) {
+    document.getElementById('swapQuote').textContent = 'Erro ao calcular';
+  }
+});
+
+async function swapUsdcToBrle() {
+  const amt = Number(document.getElementById('swapAmount').value);
+  if (!amt || amt <= 0) return setStatus('swapStatus', 'Informe um valor', true);
+  if (!metamaskSigner) return setStatus('swapStatus', 'Conecte via MetaMask para swap', true);
+
+  try {
+    const usdcWei = BigInt(Math.floor(amt * 1e6));
+
+    // Step 1: Approve USDC to swap contract
+    setStatus('swapStatus', 'Aprovando USDC...');
+    const usdcContract = new ethers.Contract(USDC_BASE, [
+      'function approve(address,uint256) returns (bool)'
+    ], metamaskSigner);
+    const tx1 = await usdcContract.approve(SWAP_ADDR, usdcWei);
+    await tx1.wait();
+
+    // Step 2: Execute swap
+    setStatus('swapStatus', 'Executando swap...');
+    const swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, metamaskSigner);
+    const tx2 = await swapContract.swap(usdcWei);
+    await tx2.wait();
+
+    setStatus('swapStatus', 'Swap concluido!', false, true);
+    toast('BRLE recebido!');
+    document.getElementById('swapAmount').value = '';
+    loadBalances();
+    loadUsdcBalance();
+  } catch (e) {
+    setStatus('swapStatus', 'Erro: ' + (e.reason || e.message), true);
   }
 }
 

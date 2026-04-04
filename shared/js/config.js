@@ -19,6 +19,7 @@ const EFIX_CONFIG = {
     token: '0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6',
     psm: '0xB89A62c2B1d006A2fB472B6445a52ABA2F70E6Ab',
     sbrle: '0xC65069694e32ef72CD94649BC5174DF9D18475D0',
+    swap: '0xDac75EC3f9d0294d4a48BcE5d0d7A2b0693D7AD1',
     backend: 'https://brle-protocol-production.up.railway.app',
   },
 };
