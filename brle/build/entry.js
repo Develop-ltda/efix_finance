@@ -7,7 +7,7 @@ import { alchemy, base } from "@account-kit/infra";
 
 const BRLE_CONFIG = {
   apiKey: "5QrXWREEtmi4gITNoJsJf",
-  gasPolicyId: "", // TODO: create Base gas policy on Alchemy dashboard
+  gasPolicyId: "7b22b464-38cd-4e6f-bccb-00f1280ac14c",
   chain: base,
   contracts: {
     brle: "0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6",
@@ -71,6 +71,9 @@ async function getClient() {
       transport: alchemy({ apiKey: BRLE_CONFIG.apiKey }),
       chain: BRLE_CONFIG.chain,
       signer: _signer,
+      gasManagerConfig: {
+        policyId: BRLE_CONFIG.gasPolicyId,
+      },
     });
   }
   return _client;
