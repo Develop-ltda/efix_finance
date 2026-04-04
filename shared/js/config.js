@@ -14,5 +14,11 @@ const EFIX_CONFIG = {
     morpho: '0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb',
     morphoMarketId: '0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a',
     operator: '0x9eFc11e4d285b5a749faFBC2613836Dcda899e12',
-  }
+  },
+  brle: {
+    token: '0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6',
+    psm: '0xB89A62c2B1d006A2fB472B6445a52ABA2F70E6Ab',
+    sbrle: '0xC65069694e32ef72CD94649BC5174DF9D18475D0',
+    backend: 'https://brle-protocol-production.up.railway.app',
+  },
 };

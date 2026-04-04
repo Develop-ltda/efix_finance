@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRLE Operator Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--black:#0a0a0a;--white:#fff;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--card:#111;--border:#1f1f1f;--gray-600:#666;--gray-500:#888;--gray-400:#aaa;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--black);color:var(--white);font-family:var(--font-mono);font-size:13px}
+  .container{max-width:1100px;margin:0 auto;padding:20px}
+  h1{font-family:var(--font-display);font-size:22px}
+  h2{font-size:13px;color:var(--green);margin:0 0 12px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+  .login{max-width:400px;margin:120px auto;text-align:center}
+  .login h1{margin-bottom:8px}
+  .login p{color:var(--gray-500);margin-bottom:24px;font-size:12px}
+  input{background:#1a1a1a;border:1px solid var(--border);color:var(--white);padding:10px 14px;border-radius:8px;font-family:var(--font-mono);font-size:13px;width:100%}
+  input:focus{outline:none;border-color:var(--green)}
+  button{background:var(--green);color:var(--black);border:none;padding:10px 20px;border-radius:8px;font-family:var(--font-mono);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s}
+  button:hover{opacity:0.85}
+  button:disabled{opacity:0.4;cursor:not-allowed}
+  button.danger{background:var(--red);color:var(--white)}
+  button.secondary{background:#222;color:var(--gray-400)}
+  button.sm{padding:6px 14px;font-size:11px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+  .header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .wallet-badge{font-size:11px;color:var(--gray-400);background:#1a1a1a;padding:6px 12px;border-radius:8px}
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+  .stat .num{font-size:16px;font-weight:700;color:var(--green);line-height:1.2}
+  .stat .lbl{font-size:10px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+  @media(max-width:768px){.stats{grid-template-columns:repeat(3,1fr)}}
+  .tab-bar{display:flex;gap:2px;margin-bottom:20px;background:#111;border-radius:10px;padding:3px;border:1px solid var(--border)}
+  .tab-btn{background:none;border:none;color:var(--gray-500);font-family:var(--font-mono);font-size:12px;padding:8px 16px;cursor:pointer;border-radius:8px;font-weight:400}
+  .tab-btn.active{color:var(--white);background:#222;font-weight:700}
+  .tab-content{display:none}.tab-content.active{display:block}
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+  .tbl td{padding:8px 10px;border-bottom:1px solid #1a1a1a;font-size:12px}
+  .tbl tr:hover td{background:#1a1a1a}
+  .addr{color:var(--gray-400);font-size:11px}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+  .badge.pending{background:rgba(234,179,8,0.15);color:#eab308}
+  .badge.mint_requested{background:rgba(59,130,246,0.15);color:#3b82f6}
+  .badge.pix_received{background:rgba(59,130,246,0.15);color:#3b82f6}
+  .badge.mint_confirmed{background:rgba(34,197,94,0.15);color:#22c55e}
+  .badge.completed{background:rgba(34,197,94,0.15);color:#22c55e}
+  .badge.failed{background:rgba(239,68,68,0.15);color:#ef4444}
+  .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;display:none}
+  .toast.ok{background:var(--green);color:var(--black)}
+  .toast.err{background:var(--red);color:var(--white)}
+  .empty{color:var(--gray-600);font-size:12px;text-align:center;padding:40px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .form-group{margin-bottom:12px}
+  .form-group label{display:block;font-size:10px;color:var(--gray-500);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+  #app{display:none}
+  .dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px}
+  .dot.green{background:var(--green)}.dot.yellow{background:var(--yellow)}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- LOGIN -->
+<div id="login" class="login">
+  <h1>BRLE Operator</h1>
+  <p>Connect your wallet to manage the PSM</p>
+  <button onclick="connectWallet()" style="width:100%">Connect MetaMask</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="container">
+  <div class="header">
+    <div>
+      <h1>BRLE Operator</h1>
+      <span style="font-size:11px;color:var(--gray-500)">PSM Management Panel</span>
+    </div>
+    <div class="header-right">
+      <span class="wallet-badge" id="walletAddr"></span>
+      <button class="sm secondary" onclick="refresh()">Refresh</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><div class="num" id="sMintUsed">—</div><div class="lbl">Mint Today</div></div>
+    <div class="stat"><div class="num" id="sMintCap">—</div><div class="lbl">Mint Cap</div></div>
+    <div class="stat"><div class="num" id="sTotalSupply">—</div><div class="lbl">BRLE Supply</div></div>
+    <div class="stat"><div class="num" id="sVaultTVL">—</div><div class="lbl">sBRLE TVL</div></div>
+    <div class="stat"><div class="num" id="sSharePrice">—</div><div class="lbl">Share Price</div></div>
+    <div class="stat"><div class="num" id="sYieldTotal">—</div><div class="lbl">Total Yield</div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('mints')">Pending Mints</button>
+    <button class="tab-btn" onclick="showTab('redeems')">Redeems</button>
+    <button class="tab-btn" onclick="showTab('yield')">Yield</button>
+  </div>
+
+  <!-- PENDING MINTS -->
+  <div id="tab-mints" class="tab-content active">
+    <div class="card">
+      <h2>Mint Requests Awaiting Confirmation</h2>
+      <div id="mintsTable"></div>
+    </div>
+  </div>
+
+  <!-- REDEEMS -->
+  <div id="tab-redeems" class="tab-content">
+    <div class="card">
+      <h2>Pending Redeems</h2>
+      <div id="redeemsTable"></div>
+    </div>
+  </div>
+
+  <!-- YIELD -->
+  <div id="tab-yield" class="tab-content">
+    <div class="card">
+      <h2>Distribute Monthly Yield</h2>
+      <p style="color:var(--gray-500);font-size:12px;margin-bottom:16px">
+        Mint BRLE into the sBRLE vault to increase the share price. Call after BTG DI fund yield is confirmed.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Yield Amount (BRL)</label>
+          <input type="number" id="yieldAmount" placeholder="e.g. 1200">
+        </div>
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button onclick="distributeYield()" style="width:100%">Distribute Yield</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<script>
+const BACKEND = 'https://brle-protocol-production.up.railway.app';
+const API_KEY = 'brle-admin-2026';
+const CHAIN_ID = 8453; // Base mainnet
+
+const CONTRACTS = {
+  psm: '0xB89A62c2B1d006A2fB472B6445a52ABA2F70E6Ab',
+  brle: '0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6',
+  sbrle: '0xC65069694e32ef72CD94649BC5174DF9D18475D0',
+};
+
+const PSM_ABI = [
+  'function confirmMint(bytes32 _requestId) external',
+  'function remainingDailyMint() view returns (uint256)',
+  'function remainingDailyRedeem() view returns (uint256)',
+  'function dailyMintUsed() view returns (uint256)',
+  'function dailyMintCap() view returns (uint256)',
+  'function totalMinted() view returns (uint256)',
+  'function totalRedeemed() view returns (uint256)',
+];
+
+const SBRLE_ABI = [
+  'function distributeYield(uint256 _amount) external',
+  'function totalAssets() view returns (uint256)',
+  'function totalSupply() view returns (uint256)',
+  'function sharePrice() view returns (uint256)',
+  'function totalYieldDistributed() view returns (uint256)',
+];
+
+const BRLE_ABI = [
+  'function totalSupply() view returns (uint256)',
+];
+
+let provider, signer, psm, sbrle, brle;
+
+async function connectWallet() {
+  if (!window.ethereum) return toast('MetaMask not found', true);
+
+  provider = new ethers.BrowserProvider(window.ethereum);
+  const network = await provider.getNetwork();
+  if (Number(network.chainId) !== CHAIN_ID) {
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x' + CHAIN_ID.toString(16) }],
+      });
+      provider = new ethers.BrowserProvider(window.ethereum);
+    } catch (e) {
+      return toast('Switch to Base network', true);
+    }
+  }
+
+  signer = await provider.getSigner();
+  const addr = await signer.getAddress();
+
+  psm = new ethers.Contract(CONTRACTS.psm, PSM_ABI, signer);
+  sbrle = new ethers.Contract(CONTRACTS.sbrle, SBRLE_ABI, signer);
+  brle = new ethers.Contract(CONTRACTS.brle, BRLE_ABI, provider);
+
+  document.getElementById('walletAddr').textContent = addr.slice(0, 6) + '...' + addr.slice(-4);
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  refresh();
+}
+
+async function refresh() {
+  await Promise.all([loadStats(), loadMints(), loadRedeems()]);
+}
+
+// ═══ STATS ═══
+async function loadStats() {
+  try {
+    const [mintUsed, mintCap, totalSupply, vaultAssets, sharePrice, yieldTotal] = await Promise.all([
+      psm.dailyMintUsed(),
+      psm.dailyMintCap(),
+      brle.totalSupply(),
+      sbrle.totalAssets(),
+      sbrle.sharePrice(),
+      sbrle.totalYieldDistributed(),
+    ]);
+
+    const fmt = (v) => 'R$ ' + Number(ethers.formatEther(v)).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+    document.getElementById('sMintUsed').textContent = fmt(mintUsed);
+    document.getElementById('sMintCap').textContent = fmt(mintCap);
+    document.getElementById('sTotalSupply').textContent = fmt(totalSupply);
+    document.getElementById('sVaultTVL').textContent = fmt(vaultAssets);
+    document.getElementById('sSharePrice').textContent = Number(ethers.formatEther(sharePrice)).toFixed(4);
+    document.getElementById('sYieldTotal').textContent = fmt(yieldTotal);
+  } catch (e) {
+    console.error('Stats error:', e);
+  }
+}
+
+// ═══ MINTS ═══
+async function loadMints() {
+  const el = document.getElementById('mintsTable');
+  try {
+    const res = await fetch(BACKEND + '/api/mint/pending', {
+      headers: { 'X-API-Key': API_KEY },
+    });
+    const data = await res.json();
+    const orders = data.orders || [];
+
+    if (orders.length === 0) {
+      el.innerHTML = '<div class="empty">No pending mint requests</div>';
+      return;
+    }
+
+    let html = `<table class="tbl"><thead><tr>
+      <th>Order</th><th>Wallet</th><th>Amount</th><th>Status</th><th>Request ID</th><th>Action</th>
+    </tr></thead><tbody>`;
+
+    for (const o of orders) {
+      const canConfirm = o.status === 'mint_requested' && o.request_id;
+      html += `<tr>
+        <td>${o.order_id}</td>
+        <td class="addr">${o.wallet_address.slice(0, 6)}...${o.wallet_address.slice(-4)}</td>
+        <td>R$ ${Number(o.amount_brl).toLocaleString('pt-BR')}</td>
+        <td><span class="badge ${o.status}">${o.status.replace('_', ' ')}</span></td>
+        <td class="addr">${o.request_id ? o.request_id.slice(0, 10) + '...' : '—'}</td>
+        <td>${canConfirm
+          ? `<button class="sm" onclick="confirmMint('${o.request_id}', '${o.order_id}')">Confirm</button>`
+          : '—'}</td>
+      </tr>`;
+    }
+
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Error loading mints: ' + e.message + '</div>';
+  }
+}
+
+async function confirmMint(requestId, orderId) {
+  try {
+    toast('Sending confirmMint...');
+    const tx = await psm.confirmMint(requestId);
+    toast('TX sent: ' + tx.hash.slice(0, 12) + '... waiting...');
+    await tx.wait();
+    toast('Confirmed! ' + orderId);
+    refresh();
+  } catch (e) {
+    toast('confirmMint failed: ' + (e.reason || e.message), true);
+  }
+}
+
+// ═══ REDEEMS ═══
+async function loadRedeems() {
+  const el = document.getElementById('redeemsTable');
+  try {
+    const res = await fetch(BACKEND + '/api/redeem/pending', {
+      headers: { 'X-API-Key': API_KEY },
+    });
+    const data = await res.json();
+    const redeems = data.pendingRedeems || [];
+
+    if (redeems.length === 0) {
+      el.innerHTML = '<div class="empty">No pending redeems</div>';
+      return;
+    }
+
+    let html = `<table class="tbl"><thead><tr>
+      <th>Request ID</th><th>Sender</th><th>Amount</th><th>Net BRL</th><th>PIX Key</th><th>Status</th>
+    </tr></thead><tbody>`;
+
+    for (const r of redeems) {
+      html += `<tr>
+        <td class="addr">${r.request_id.slice(0, 12)}...</td>
+        <td class="addr">${r.sender_address.slice(0, 6)}...${r.sender_address.slice(-4)}</td>
+        <td>${r.amount_brle}</td>
+        <td>R$ ${Number(r.net_amount_brl).toLocaleString('pt-BR')}</td>
+        <td class="addr">${r.pix_key}</td>
+        <td><span class="badge ${r.status}">${r.status.replace('_', ' ')}</span></td>
+      </tr>`;
+    }
+
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Error loading redeems: ' + e.message + '</div>';
+  }
+}
+
+// ═══ YIELD ═══
+async function distributeYield() {
+  const amount = document.getElementById('yieldAmount').value;
+  if (!amount || isNaN(amount) || Number(amount) <= 0) {
+    return toast('Enter a valid yield amount', true);
+  }
+
+  try {
+    const amountWei = ethers.parseEther(amount);
+    toast('Sending distributeYield...');
+    const tx = await sbrle.distributeYield(amountWei);
+    toast('TX sent: ' + tx.hash.slice(0, 12) + '... waiting...');
+    await tx.wait();
+    toast('Yield distributed: R$ ' + amount);
+    document.getElementById('yieldAmount').value = '';
+    refresh();
+  } catch (e) {
+    toast('distributeYield failed: ' + (e.reason || e.message), true);
+  }
+}
+
+// ═══ TABS ═══
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ═══ TOAST ═══
+function toast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (isError ? 'err' : 'ok');
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.display = 'none', 4000);
+}
+
+// Auto-refresh every 30s
+setInterval(() => { if (signer) refresh(); }, 30000);
+</script>
+</body>
+</html>
