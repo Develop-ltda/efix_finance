@@ -90,7 +90,9 @@
   .footer{margin-top:48px;text-align:center;font-size:11px;color:var(--gray-600);font-family:var(--font-mono)}
   .footer a{color:var(--gray-500);text-decoration:none}.footer a:hover{color:var(--white)}
 
-  #alchemy-signer-iframe-container{position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden}
+  #alchemy-signer-iframe-container{display:none;width:100%;max-width:380px;margin:16px auto;min-height:80px;border-radius:12px;overflow:hidden}
+  #alchemy-signer-iframe-container.show{display:block}
+  #alchemy-signer-iframe-container iframe{width:100%;min-height:80px;border:none}
 </style>
 </head>
 <body>
@@ -120,10 +122,7 @@
         <input type="email" id="emailInput" placeholder="seu@email.com">
         <button class="btn btn-primary" onclick="loginEmail()" id="btnEmail">Entrar com Email</button>
       </div>
-      <div id="step-otp" style="display:none">
-        <input type="text" id="otpInput" placeholder="Codigo de 6 digitos" maxlength="6">
-        <button class="btn btn-primary" onclick="verifyOtp()">Verificar</button>
-      </div>
+      <!-- OTP is handled by Alchemy iframe below -->
       <div class="divider">ou</div>
       <button class="btn btn-secondary" onclick="loginMetaMask()">Conectar MetaMask</button>
       <div id="authStatus" class="status-msg"></div>
@@ -334,19 +333,20 @@ async function loginEmail() {
   if (!email) return;
   setAuthStatus('Enviando codigo... verifique seu email');
   try {
-    // loginWithEmail sends OTP and waits for full auth (user enters code in Alchemy iframe)
-    // We run it in background and poll for completion
+    // loginWithEmail sends OTP and waits for user to enter it in the Alchemy iframe
+    // Show the iframe so user can enter the OTP there
+    document.getElementById('alchemy-signer-iframe-container').classList.add('show');
+    document.getElementById('step-email').style.display = 'none';
+    setAuthStatus('Digite o codigo recebido por email abaixo:');
+
     BRLEWallet.loginWithEmail(email).then(addr => {
+      document.getElementById('alchemy-signer-iframe-container').classList.remove('show');
       enterApp(addr, 'alchemy');
     }).catch(e => {
+      document.getElementById('alchemy-signer-iframe-container').classList.remove('show');
+      document.getElementById('step-email').style.display = 'block';
       setAuthStatus('Erro: ' + e.message, true);
     });
-
-    // Show OTP step — Alchemy signer handles OTP via iframe,
-    // but we also provide manual entry as fallback
-    document.getElementById('step-email').style.display = 'none';
-    document.getElementById('step-otp').style.display = 'block';
-    setAuthStatus('Codigo enviado! Digite o codigo recebido por email.');
   } catch (e) {
     setAuthStatus('Erro: ' + e.message, true);
   }
