@@ -1,984 +1,396 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
+<script src="/shared/js/ga4.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BRLE | Stablecoin com Rendimento</title>
+<title>BRLE — BRL Yield Stablecoin on Base</title>
+<meta name="description" content="BRLE is a BRL-pegged yield stablecoin backed by DI fund shares at BTG Pactual. Earn ~14.4% APY with same-day redemption. CVM-regulated.">
+<meta property="og:title" content="BRLE — BRL Yield Stablecoin">
+<meta property="og:description" content="Buy BRL stablecoins with PIX or USD/EUR. Earn CDI yield automatically. CVM-regulated, on Base.">
+<meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shared/css/reset.css">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
-  :root{--black:#0a0a0a;--white:#fafafa;--gray-100:#f5f5f5;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--gray-700:#404040;--gray-800:#262626;--gray-900:#171717;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
-  body{font-family:var(--font-display);background:var(--black);color:var(--white);min-height:100vh;-webkit-font-smoothing:antialiased}
-  header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--gray-800)}
-  .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-  .logo span{font-weight:700;font-size:18px;color:var(--white);letter-spacing:-0.5px}
-  .logo .accent{color:var(--green);font-weight:800}
-  .nav-right{display:flex;align-items:center;gap:12px}
-  .user-pill{display:flex;align-items:center;gap:8px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:100px;padding:6px 14px 6px 10px;font-size:12px;color:var(--gray-400);font-family:var(--font-mono)}
-  .user-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
-  main{max-width:520px;margin:0 auto;padding:40px 20px 80px}
-  @media(min-width:768px){main{max-width:580px;padding:48px 40px 80px}}
+html{scroll-behavior:smooth}
+body{font-family:'Syne',-apple-system,sans-serif;background:#fff;color:#0a0a0a;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:#0a0a0a;color:#fff}
 
-  /* Auth */
-  #auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center}
-  #auth h1{font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
-  @media(min-width:768px){#auth h1{font-size:44px}}
-  #auth .sub{color:var(--gray-400);font-size:15px;margin-bottom:40px;line-height:1.5}
-  .auth-box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
-  input{width:100%;padding:14px 16px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:12px;color:var(--white);font-family:var(--font-mono);font-size:14px;outline:none;transition:border-color .2s}
-  input:focus{border-color:var(--gray-400)}
-  input::placeholder{color:var(--gray-600)}
-  .btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:var(--font-display);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:-0.3px}
-  .btn-primary{background:var(--white);color:var(--black)}
-  .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
-  .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
-  .btn-secondary{background:transparent;color:var(--gray-400);border:1px solid var(--gray-700)}
-  .btn-secondary:hover{border-color:var(--gray-400);color:var(--white)}
-  .btn-sm{width:auto;padding:8px 16px;font-size:13px;border-radius:10px}
-  .divider{display:flex;align-items:center;gap:12px;color:var(--gray-600);font-size:12px}
-  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--gray-800)}
-  .status-msg{margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);min-height:20px}
-  .status-msg.error{color:var(--red)}.status-msg.success{color:var(--green)}
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(0,0,0,0.06);padding:0 2rem;height:56px}
+.nav-content{max-width:1200px;margin:0 auto;height:100%;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-weight:800;font-size:20px;text-decoration:none;color:#0a0a0a;letter-spacing:-0.5px}
+.nav-logo .dot{color:#22c55e}
+.nav-links{display:flex;gap:20px;align-items:center;list-style:none}
+.nav-links a{color:#737373;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;transition:color .3s}
+.nav-links a:hover{color:#0a0a0a}
+.nav-cta{padding:0.5rem 1.25rem;border-radius:6px;font-size:0.8rem;letter-spacing:0.01em;font-weight:600;text-decoration:none;transition:all .3s}
+.nav-cta-outline{background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4}
+.nav-cta-outline:hover{border-color:#0a0a0a;transform:translateY(-1px)}
+.nav-cta-primary{background:#0a0a0a;color:#fff;border:none}
+.nav-cta-primary:hover{background:#262626;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
 
-  /* App */
-  #app{display:none}
-  .balance-card{background:var(--gray-900);border:1px solid var(--gray-800);border-radius:20px;padding:32px 28px;margin-bottom:24px;text-align:center}
-  .balance-label{font-size:12px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px}
-  .balance-value{font-family:var(--font-mono);font-size:38px;font-weight:700;letter-spacing:-2px;margin-bottom:4px}
-  .balance-sub{font-size:13px;color:var(--gray-500);font-family:var(--font-mono)}
-  .apy-badge{display:inline-block;margin-top:16px;padding:6px 14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:100px;color:var(--green);font-size:13px;font-weight:700;font-family:var(--font-mono)}
-  .balance-row{display:flex;justify-content:center;gap:32px;margin-top:16px}
-  .balance-item{text-align:center}
-  .balance-item .val{font-family:var(--font-mono);font-size:16px;font-weight:700}
-  .balance-item .lbl{font-size:11px;color:var(--gray-500);margin-top:2px}
-  .address-bar{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:24px;padding:10px 16px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:12px;font-family:var(--font-mono);font-size:12px;color:var(--gray-500);cursor:pointer}
-  .address-bar:hover{border-color:var(--gray-600)}
-  .address-bar .chain-dot{width:8px;height:8px;border-radius:50%;background:#0052ff}
+/* Hero */
+.hero{padding:10rem 2rem 3rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%)}
+.hero-content{position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:2.5rem}
+.hero-tag .dot{width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+h1{font-size:clamp(1.75rem,3.5vw,2.75rem);font-weight:700;color:#0a0a0a;margin-bottom:1.25rem;letter-spacing:-0.025em;line-height:1.2}
+h1 span{background:linear-gradient(to right,#a3a3a3,#22c55e,#a3a3a3);background-size:200% auto;color:transparent;-webkit-background-clip:text;background-clip:text;animation:shine 4s linear infinite}
+@keyframes shine{to{background-position:200% center}}
+.subtitle{color:#737373;font-size:0.95rem;font-weight:400;max-width:520px;margin:0 auto 2.5rem;line-height:1.75}
+.hero-actions{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap}
+.btn{padding:0.75rem 1.75rem;border-radius:8px;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all .3s;font-family:inherit;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem}
+.btn-primary{background:#0a0a0a;color:#fff}
+.btn-primary:hover{background:#262626;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.btn-secondary{background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4}
+.btn-secondary:hover{border-color:#0a0a0a;transform:translateY(-1px)}
+.container{max-width:1100px;margin:0 auto;padding:0 2rem}
 
-  /* Tabs */
-  .tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--gray-900);border-radius:12px;padding:4px}
-  .tab{flex:1;padding:10px;text-align:center;border-radius:10px;font-size:14px;font-weight:600;color:var(--gray-500);cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:var(--font-display)}
-  .tab.active{background:var(--gray-800);color:var(--white)}
-  .tab-panel{display:none}.tab-panel.active{display:block}
+/* Stats */
+.stats-strip{border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.stat-item{padding:1.75rem 2rem;border-right:1px solid #e5e5e5;transition:background .3s}
+.stat-item:last-child{border-right:none}
+.stat-item:hover{background:#f5f5f5}
+.stat-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem}
+.stat-value{font-family:'Space Mono',monospace;font-size:1.35rem;font-weight:700;color:#0a0a0a}
 
-  /* Action cards */
-  .action-card{background:var(--gray-900);border:1px solid var(--gray-800);border-radius:16px;padding:24px}
-  .action-card h3{font-size:14px;color:var(--gray-400);font-weight:600;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
-  .amount-wrap{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-  .amount-wrap input{flex:1;font-size:20px;font-weight:700;padding:14px 16px;background:var(--gray-800);border:1px solid var(--gray-700)}
-  .amount-wrap input:focus{border-color:var(--gray-500)}
-  .amount-wrap .cur{font-size:14px;color:var(--gray-500);font-weight:700;white-space:nowrap}
-  .fee-line{font-size:12px;color:var(--gray-500);font-family:var(--font-mono);margin-bottom:16px}
+/* Sections */
+.section{padding:5rem 0}
+.section-border{border-top:1px solid #e5e5e5}
+.section-gray{background:#f5f5f5}
+.section-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem}
+.section-title{font-size:clamp(1.5rem,2.5vw,2rem);font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:0.75rem}
+.section-desc{color:#737373;font-size:0.92rem;max-width:540px;margin-bottom:2.5rem;line-height:1.7}
 
-  /* Progress */
-  .prog-step{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--gray-600);font-family:var(--font-mono)}
-  .prog-icon{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-700);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
-  .prog-step.done{color:var(--green)}.prog-step.done .prog-icon{border-color:var(--green);background:var(--green);color:var(--black)}
-  .prog-step.active{color:var(--white)}.prog-step.active .prog-icon{border-color:var(--white)}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-  .prog-step.active .prog-icon{animation:pulse 1.5s infinite}
+/* Flow Grid */
+.flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.flow-step{padding:2rem 1.75rem;border-right:1px solid #e5e5e5;transition:background .3s}
+.flow-step:last-child{border-right:none}
+.flow-step:hover{background:#f5f5f5}
+.flow-number{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.25rem}
+.flow-icon{font-size:1.5rem;margin-bottom:0.75rem}
+.flow-title{font-weight:700;font-size:0.92rem;margin-bottom:0.4rem}
+.flow-desc{font-size:0.8rem;color:#737373;line-height:1.7}
 
-  /* PIX QR */
-  .pix-box{background:var(--gray-800);border-radius:12px;padding:20px;text-align:center;margin:16px 0}
-  .pix-box .code{font-family:var(--font-mono);font-size:11px;color:var(--gray-400);word-break:break-all;margin:12px 0;padding:12px;background:var(--gray-900);border-radius:8px;cursor:pointer}
-  .pix-box .code:hover{color:var(--white)}
+/* Card Grid */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.card{background:#fff;padding:2rem 1.75rem;transition:background .3s;position:relative}
+.card:hover{background:#f5f5f5}
+.card-icon{font-size:1.25rem;margin-bottom:1rem}
+.card-title{font-size:0.95rem;font-weight:700;margin-bottom:0.4rem}
+.card-desc{font-size:0.82rem;color:#737373;line-height:1.75}
 
-  /* Toast */
-  .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;font-family:var(--font-mono);z-index:999;display:none}
-  .toast.ok{background:var(--green);color:var(--black)}.toast.err{background:var(--red);color:var(--white)}
+/* Contracts */
+.chain-card{border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;transition:all .3s;max-width:600px}
+.chain-card:hover{border-color:#a3a3a3}
+.chain-header{padding:1rem 1.25rem;background:#f5f5f5;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;gap:0.6rem}
+.chain-name{font-weight:700;font-size:0.9rem}
+.chain-id{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;margin-left:auto}
+.contract-row{display:flex;justify-content:space-between;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e5e5e5;transition:background .2s}
+.contract-row:last-child{border-bottom:none}
+.contract-row:hover{background:#f5f5f5}
+.contract-label{font-size:0.8rem;color:#525252}
+.contract-addr{font-family:'Space Mono',monospace;font-size:0.7rem;color:#0a0a0a;text-decoration:none;transition:color .2s}
+.contract-addr:hover{color:#737373}
 
-  .footer{margin-top:48px;text-align:center;font-size:11px;color:var(--gray-600);font-family:var(--font-mono)}
-  .footer a{color:var(--gray-500);text-decoration:none}.footer a:hover{color:var(--white)}
+/* Reg Grid */
+.reg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.reg-item{background:#fff;padding:1.5rem;transition:background .2s}
+.reg-item:hover{background:#f5f5f5}
+.reg-label{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.35rem}
+.reg-value{font-size:0.9rem;font-weight:700}
+.reg-value.mono{font-family:'Space Mono',monospace;font-size:0.8rem}
 
-  #alchemy-signer-iframe-container{position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden}
+/* CTA */
+.cta-section{padding:5rem 0;text-align:center;border-top:1px solid #e5e5e5}
+.cta-desc{color:#737373;font-size:0.92rem;margin:0 auto 2rem;max-width:420px}
+
+/* Footer */
+footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:start;gap:2rem;flex-wrap:wrap}
+.footer-brand-text{font-size:0.8rem;color:#737373;margin-top:0.75rem;max-width:280px;line-height:1.7}
+.footer-links{display:flex;gap:3rem}
+.footer-col h4{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem}
+.footer-col a{display:block;color:#525252;text-decoration:none;font-size:0.8rem;padding:0.3rem 0;transition:color .2s}
+.footer-col a:hover{color:#0a0a0a}
+.footer-bottom{max-width:1100px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid #e5e5e5;font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;display:flex;justify-content:space-between}
+
+/* Animations */
+.fade-up{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.stagger-1{transition-delay:.05s}.stagger-2{transition-delay:.1s}.stagger-3{transition-delay:.15s}.stagger-4{transition-delay:.2s}
+
+/* Mobile */
+@media(max-width:900px){
+  .nav-links{display:none}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .flow-grid{grid-template-columns:repeat(2,1fr)}
+  .flow-step:nth-child(2){border-right:none}
+  .flow-step:nth-child(1),.flow-step:nth-child(2){border-bottom:1px solid #e5e5e5}
+  .card-grid{grid-template-columns:1fr}
+  .reg-grid{grid-template-columns:1fr}
+  .footer-inner{flex-direction:column}
+  .footer-bottom{flex-direction:column;gap:0.5rem}
+}
 </style>
 </head>
 <body>
 
-<div id="toast" class="toast"></div>
-<div id="alchemy-signer-iframe-container"></div>
+<!-- NAV -->
+<nav>
+  <div class="nav-content">
+    <a href="/brle/" class="nav-logo">BRLE<span class="dot">.</span></a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <ul class="nav-links">
+        <li><a href="#how">How it Works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#contracts">Contracts</a></li>
+        <li><a href="#compliance">Compliance</a></li>
+        <li><a href="/">efixDI+</a></li>
+      </ul>
+      <a href="/brle/app/" class="nav-cta nav-cta-primary">Launch App</a>
+    </div>
+  </div>
+</nav>
 
-<header>
-  <a href="/brle/" class="logo">
-    <span>BRLE<span class="accent">.</span></span>
-  </a>
-  <div class="nav-right">
-    <div id="userPill" class="user-pill" style="display:none">
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-tag fade-up">
       <span class="dot"></span>
-      <span id="userAddr"></span>
+      Live on Base Mainnet
+    </div>
+    <h1 class="fade-up stagger-1">BRL Stablecoin with<br><span>Built-in Yield</span></h1>
+    <p class="subtitle fade-up stagger-2">
+      BRLE is pegged 1:1 to BRL and backed by DI fund shares at BTG Pactual.
+      Earn CDI yield automatically. Buy with PIX or USD/EUR. Gasless transactions.
+    </p>
+    <div class="hero-actions fade-up stagger-3">
+      <a href="/brle/app/" class="btn btn-primary">Buy BRLE</a>
+      <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank" class="btn btn-secondary">View on Basescan</a>
     </div>
   </div>
-</header>
+</section>
 
-<main>
-  <!-- AUTH SCREEN -->
-  <div id="auth">
-    <h1>BRLE</h1>
-    <p class="sub">Stablecoin BRL com rendimento DI.<br>Compre com PIX, ganhe CDI automaticamente.</p>
-    <div class="auth-box">
-      <div id="step-email">
-        <input type="email" id="emailInput" placeholder="seu@email.com">
-        <button class="btn btn-primary" onclick="loginEmail()" id="btnEmail">Entrar com Email</button>
-      </div>
-      <div id="step-otp" style="display:none">
-        <input type="text" id="otpInput" placeholder="Codigo de 6 digitos" maxlength="6">
-        <button class="btn btn-primary" onclick="verifyOtp()">Verificar</button>
-      </div>
-      <div class="divider">ou</div>
-      <button class="btn btn-secondary" onclick="loginMetaMask()">Conectar MetaMask</button>
-      <div id="authStatus" class="status-msg"></div>
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-label">CDI Base Rate</div>
+      <div class="stat-value">~14.4%</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Redemption</div>
+      <div class="stat-value">D+0</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Mint/Redeem Fee</div>
+      <div class="stat-value">0.10%</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Network</div>
+      <div class="stat-value">Base</div>
     </div>
   </div>
+</div>
 
-  <!-- APP SCREEN -->
-  <div id="app">
-    <div class="address-bar" onclick="copyAddress()">
-      <span class="chain-dot"></span>
-      <span id="fullAddr"></span>
-      <span style="color:var(--gray-600)">Base</span>
-    </div>
-
-    <div class="balance-card">
-      <div class="balance-label">Saldo Total (BRL)</div>
-      <div class="balance-value" id="totalBrl">R$ 0,00</div>
-      <div class="balance-row">
-        <div class="balance-item"><div class="val" id="brleBalance">0.00</div><div class="lbl">BRLE</div></div>
-        <div class="balance-item"><div class="val" id="sbrleBalance">0.00</div><div class="lbl">sBRLE</div></div>
-        <div class="balance-item"><div class="val" id="sbrleValue">0.00</div><div class="lbl">sBRLE em BRL</div></div>
+<!-- HOW IT WORKS -->
+<section class="section section-border" id="how">
+  <div class="container">
+    <div class="section-label">How it works</div>
+    <div class="section-title">From PIX to yield in 4 steps</div>
+    <div class="section-desc">The PSM (Peg Stability Module) replaces AMM pools. The DI fund IS the reserve — no idle liquidity needed.</div>
+    <div class="flow-grid">
+      <div class="flow-step fade-up">
+        <div class="flow-number">Step 01</div>
+        <div class="flow-icon">R$</div>
+        <div class="flow-title">Send PIX</div>
+        <div class="flow-desc">Deposit BRL via PIX instantly. Or send USD/EUR via ACH, Wire, or SEPA through Bridge.xyz.</div>
       </div>
-      <div class="balance-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-800)">
-        <div class="balance-item"><div class="val" id="efixdiBaseBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">efixDI (Base)</div></div>
-        <div class="balance-item"><div class="val" id="efixdiPolyBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">efixDI (Polygon)</div></div>
-        <div class="balance-item"><div class="val" id="usdcBaseBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">USDC (Base)</div></div>
+      <div class="flow-step fade-up stagger-1">
+        <div class="flow-number">Step 02</div>
+        <div class="flow-icon">BRLE</div>
+        <div class="flow-title">Receive BRLE</div>
+        <div class="flow-desc">BRLE is minted 1:1 after the operator confirms the DI fund application at BTG Pactual.</div>
       </div>
-      <div class="apy-badge" id="apyBadge">CDI ~14.4% a.a.</div>
-    </div>
-
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('buy')">Comprar</button>
-      <button class="tab" onclick="showTab('usd')">USD/EUR</button>
-      <button class="tab" onclick="showTab('stake')">Investir</button>
-      <button class="tab" onclick="showTab('sell')">Resgatar</button>
-      <button class="tab" onclick="showTab('history')">Historico</button>
-    </div>
-
-    <!-- BUY TAB -->
-    <div id="tab-buy" class="tab-panel active">
-      <div class="action-card">
-        <h3>Comprar BRLE com PIX</h3>
-        <div id="buyForm">
-          <div class="amount-wrap">
-            <span class="cur">R$</span>
-            <input type="number" id="buyAmount" placeholder="0,00" min="10">
-          </div>
-          <div class="fee-line" id="buyFee">Taxa: 0.10% | Voce recebe: R$ 0,00 BRLE</div>
-          <button class="btn btn-primary" onclick="initiateMint()">Gerar PIX</button>
-        </div>
-        <div id="buyProgress" style="display:none">
-          <div style="background:var(--white);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
-            <p style="color:var(--black);font-size:14px;font-weight:600;margin-bottom:12px">Escaneie com seu app bancario</p>
-            <img id="qrImage" src="" alt="QR Code PIX" style="width:200px;height:200px;border-radius:8px">
-            <p style="color:var(--gray-600);font-size:11px;font-family:var(--font-mono);margin-top:12px;word-break:break-all;max-height:60px;overflow:hidden;cursor:pointer" id="buyPixCode" onclick="copyPix()"></p>
-            <button class="btn-sm" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;padding:8px 20px;font-size:13px;border-radius:8px;cursor:pointer" onclick="copyPix()">Copiar codigo PIX</button>
-          </div>
-          <div style="font-size:12px;color:var(--gray-500);text-align:center;margin-bottom:12px" id="buyInstructions"></div>
-          <button class="btn btn-primary" id="btnIPaid" onclick="handleIPaid()" style="background:var(--green);color:var(--black);width:100%;margin-bottom:16px">Ja paguei o PIX</button>
-          <div id="buySteps">
-            <div class="prog-step done" id="pStep1"><span class="prog-icon">✓</span>QR Code gerado</div>
-            <div class="prog-step" id="pStep2"><span class="prog-icon">2</span>Pagamento PIX confirmado</div>
-            <div class="prog-step" id="pStep3"><span class="prog-icon">3</span>Mintando BRLE</div>
-            <div class="prog-step" id="pStep4"><span class="prog-icon">4</span>BRLE creditado!</div>
-          </div>
-          <div id="buyMsg" class="status-msg" style="text-align:center;margin-top:12px"></div>
-          <button class="btn btn-secondary" onclick="resetBuy()" style="margin-top:12px;width:100%">Cancelar</button>
-        </div>
+      <div class="flow-step fade-up stagger-2">
+        <div class="flow-number">Step 03</div>
+        <div class="flow-icon">sBRLE</div>
+        <div class="flow-title">Stake for Yield</div>
+        <div class="flow-desc">Deposit BRLE into the sBRLE vault (ERC-4626). The share price increases monthly with DI fund yield.</div>
       </div>
-    </div>
-
-    <!-- USD/EUR TAB -->
-    <div id="tab-usd" class="tab-panel">
-      <div class="action-card">
-        <h3>USD/EUR Onramp / Offramp</h3>
-        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
-          Deposite USD (ACH/Wire) ou EUR (SEPA) e receba USDC na Base.
-          Powered by Bridge.xyz.
-        </p>
-
-        <!-- Step 1: Email + KYC -->
-        <div id="bridgeStep1">
-          <div class="form-group" style="margin-bottom:12px">
-            <input type="email" id="bridgeEmail" placeholder="Email para verificacao KYC">
-          </div>
-          <button class="btn btn-primary" onclick="startBridgeKyc()">Iniciar Verificacao</button>
-          <div id="bridgeKycStatus" class="status-msg"></div>
-        </div>
-
-        <!-- Step 2: Currency selection + deposit -->
-        <div id="bridgeStep2" style="display:none">
-          <div style="display:flex;gap:8px;margin-bottom:16px">
-            <button class="btn btn-secondary btn-sm" id="btnUsd" onclick="selectCurrency('usd')" style="flex:1;border-color:var(--green);color:var(--white)">USD (ACH/Wire)</button>
-            <button class="btn btn-secondary btn-sm" id="btnEur" onclick="selectCurrency('eur')" style="flex:1">EUR (SEPA)</button>
-          </div>
-          <button class="btn btn-primary" onclick="createBridgeTransfer()">Obter Dados Bancarios</button>
-          <div id="bridgeTransferStatus" class="status-msg"></div>
-        </div>
-
-        <!-- Step 3: Deposit instructions -->
-        <div id="bridgeStep3" style="display:none">
-          <div style="background:var(--gray-800);border-radius:12px;padding:20px;margin-bottom:16px">
-            <div style="font-size:14px;font-weight:700;margin-bottom:12px">Dados para deposito</div>
-            <div id="bridgeInstructions" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-400);line-height:1.8"></div>
-          </div>
-          <div style="font-size:12px;color:var(--gray-500);margin-bottom:16px">
-            Apos o deposito, Bridge.xyz converte automaticamente para USDC na Base.
-            O USDC aparecera no seu saldo abaixo.
-          </div>
-          <div style="background:var(--gray-800);border-radius:12px;padding:16px;text-align:center">
-            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Saldo USDC (Base)</div>
-            <div style="font-family:var(--font-mono);font-size:24px;font-weight:700" id="usdcBalance">0.00</div>
-          </div>
-          <button class="btn btn-secondary" onclick="resetBridge()" style="margin-top:16px">Novo deposito</button>
-        </div>
-
-        <!-- Swap USDC → BRLE (always visible if user has USDC) -->
-        <div id="swapSection" style="margin-top:20px;padding-top:20px;border-top:1px solid var(--gray-800)">
-          <h3 style="font-size:14px;color:var(--gray-400);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Swap USDC → BRLE</h3>
-          <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">
-            Rate: <span id="swapRate">5.70</span> BRL/USD | Fee: 0.30%
-          </div>
-          <div class="amount-wrap">
-            <span class="cur">USDC</span>
-            <input type="number" id="swapAmount" placeholder="0.00" min="1">
-          </div>
-          <div class="fee-line" id="swapQuote">Voce recebe: 0.00 BRLE</div>
-          <button class="btn btn-primary" onclick="swapUsdcToBrle()" id="btnSwap">Swap para BRLE</button>
-          <div id="swapStatus" class="status-msg"></div>
-        </div>
+      <div class="flow-step fade-up stagger-3">
+        <div class="flow-number">Step 04</div>
+        <div class="flow-icon">PIX</div>
+        <div class="flow-title">Redeem Anytime</div>
+        <div class="flow-desc">Burn BRLE to receive BRL via PIX same-day (D+0). No lockup, no exit fees beyond 0.10%.</div>
       </div>
-    </div>
-
-    <!-- STAKE TAB -->
-    <div id="tab-stake" class="tab-panel">
-      <div class="action-card">
-        <h3>Investir BRLE no Vault (sBRLE)</h3>
-        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
-          Deposite BRLE no vault sBRLE para receber rendimento DI automaticamente.
-          O valor do sBRLE aumenta todo mes.
-        </p>
-        <div class="amount-wrap">
-          <input type="number" id="stakeAmount" placeholder="0,00">
-          <span class="cur">BRLE</span>
-        </div>
-        <button class="btn btn-primary" onclick="stakeDeposit()" id="btnStake">Depositar no Vault</button>
-        <div id="stakeStatus" class="status-msg"></div>
-      </div>
-    </div>
-
-    <!-- SELL TAB -->
-    <div id="tab-sell" class="tab-panel">
-      <div class="action-card">
-        <h3>Resgatar BRLE via PIX</h3>
-        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
-          Queime BRLE e receba BRL na sua conta via PIX.
-        </p>
-        <div class="amount-wrap">
-          <input type="number" id="sellAmount" placeholder="0,00">
-          <span class="cur">BRLE</span>
-        </div>
-        <div style="margin-bottom:16px">
-          <input type="text" id="sellPixKey" placeholder="Chave PIX (CPF, email, telefone ou aleatoria)">
-        </div>
-        <div class="fee-line" id="sellFee">Taxa: 0.10% | Voce recebe: R$ 0,00 via PIX</div>
-        <button class="btn btn-primary" onclick="sellRedeem()" id="btnSell">Resgatar</button>
-        <div id="sellStatus" class="status-msg"></div>
-      </div>
-    </div>
-
-    <!-- HISTORY TAB -->
-    <div id="tab-history" class="tab-panel">
-      <div class="action-card">
-        <h3>Historico de Transacoes</h3>
-        <div id="historyList"><div class="empty" style="color:var(--gray-500);padding:20px;text-align:center">Carregando...</div></div>
-      </div>
-    </div>
-
-    <div class="footer">
-      <a href="/brle/operator/">Operator Panel</a> &middot;
-      <a href="https://basescan.org/address/0xB89A62c2B1d006A2fB472B6445a52ABA2F70E6Ab" target="_blank">PSM Contract</a> &middot;
-      EFIX Securitizadora S.A. &mdash; CVM Act 23.635/2025
     </div>
   </div>
-</main>
+</section>
 
-<script src="/brle/brle-wallet-bundle.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
-<script src="/shared/js/config.js"></script>
+<!-- FEATURES -->
+<section class="section section-gray" id="features">
+  <div class="container">
+    <div class="section-label">Features</div>
+    <div class="section-title">Built for DeFi composability</div>
+    <div class="section-desc">BRLE is designed for AI agents, x402 micropayments, and DeFi integration on Base.</div>
+    <div class="card-grid">
+      <div class="card fade-up">
+        <div class="card-icon">ERC-4626</div>
+        <div class="card-title">Standard Yield Vault</div>
+        <div class="card-desc">sBRLE implements the ERC-4626 standard. Any protocol or agent can query yield via convertToAssets(), sharePrice(), and estimatedAPY().</div>
+      </div>
+      <div class="card fade-up stagger-1">
+        <div class="card-icon">0 Gas</div>
+        <div class="card-title">Gasless Transactions</div>
+        <div class="card-desc">Login with email. All transactions sponsored by EFIX via Alchemy Account Kit (ERC-4337). No MetaMask, no gas tokens needed.</div>
+      </div>
+      <div class="card fade-up stagger-2">
+        <div class="card-icon">PSM</div>
+        <div class="card-title">Capital-Efficient Peg</div>
+        <div class="card-desc">The Peg Stability Module mints/burns BRLE directly against DI fund shares. No AMM liquidity pools — the fund IS the reserve.</div>
+      </div>
+      <div class="card fade-up stagger-3">
+        <div class="card-icon">USD</div>
+        <div class="card-title">USD/EUR Onramp</div>
+        <div class="card-desc">Deposit USD (ACH/Wire) or EUR (SEPA) via Bridge.xyz. Receive USDC on Base, swap to BRLE at live Chainlink BRL/USD rate.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTRACTS -->
+<section class="section section-border" id="contracts">
+  <div class="container">
+    <div class="section-label">Smart Contracts</div>
+    <div class="section-title">Fully verified on Basescan</div>
+    <div class="section-desc">All contracts use OpenZeppelin v5.4 with audit findings applied. Solidity 0.8.20, optimizer 200 runs.</div>
+    <div class="chain-card">
+      <div class="chain-header">
+        <span style="font-size:18px">Base</span>
+        <span class="chain-name">Base Mainnet</span>
+        <span class="chain-id">Chain 8453</span>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">BRLEToken</span>
+        <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank" class="contract-addr">0x7D12...82F6</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">BRLEPSM</span>
+        <a href="https://basescan.org/address/0xB89A62c2B1d006A2fB472B6445a52ABA2F70E6Ab#code" target="_blank" class="contract-addr">0xB89A...E6Ab</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">sBRLE Vault</span>
+        <a href="https://basescan.org/address/0xC65069694e32ef72CD94649BC5174DF9D18475D0#code" target="_blank" class="contract-addr">0xC650...75D0</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">BRLESwap</span>
+        <a href="https://basescan.org/address/0xDac75EC3f9d0294d4a48BcE5d0d7A2b0693D7AD1#code" target="_blank" class="contract-addr">0xDac7...7AD1</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">Chainlink BRL/USD</span>
+        <a href="https://basescan.org/address/0x0b0E64c05083FdF9ED7C5D3d8262c4216eFc9394" target="_blank" class="contract-addr">0x0b0E...9394</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section class="section section-gray" id="compliance">
+  <div class="container">
+    <div class="section-label">Compliance</div>
+    <div class="section-title">CVM-regulated infrastructure</div>
+    <div class="section-desc">EFIX Securitizadora operates under Brazilian securities regulation, with custody at BTG Pactual.</div>
+    <div class="reg-grid">
+      <div class="reg-item fade-up">
+        <div class="reg-label">Issuer</div>
+        <div class="reg-value">EFIX Securitizadora S.A.</div>
+      </div>
+      <div class="reg-item fade-up stagger-1">
+        <div class="reg-label">Regulation</div>
+        <div class="reg-value">CVM Act 23.635/2025</div>
+      </div>
+      <div class="reg-item fade-up stagger-2">
+        <div class="reg-label">Custody</div>
+        <div class="reg-value">BTG Pactual</div>
+      </div>
+      <div class="reg-item fade-up stagger-3">
+        <div class="reg-label">Backing</div>
+        <div class="reg-value">DI Fund Shares</div>
+      </div>
+      <div class="reg-item fade-up stagger-4">
+        <div class="reg-label">Oracle</div>
+        <div class="reg-value mono">Chainlink BRL/USD</div>
+      </div>
+      <div class="reg-item fade-up">
+        <div class="reg-label">Redemption</div>
+        <div class="reg-value">D+0 (Same Day)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2 class="section-title fade-up">Start earning CDI yield today</h2>
+    <p class="cta-desc fade-up stagger-1">Buy BRLE with PIX in seconds. No KYC for small amounts. Gasless, no MetaMask needed.</p>
+    <div class="hero-actions fade-up stagger-2">
+      <a href="/brle/app/" class="btn btn-primary">Launch App</a>
+      <a href="https://github.com/Develop-ltda/brle-protocol" target="_blank" class="btn btn-secondary">GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="nav-logo" style="margin-bottom:0.5rem">BRLE<span class="dot">.</span></div>
+      <p class="footer-brand-text">BRL yield stablecoin backed by DI fund shares. Built by EFIX Securitizadora on Base.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Protocol</h4>
+        <a href="/brle/app/">App</a>
+        <a href="/brle/operator/">Operator</a>
+        <a href="https://github.com/Develop-ltda/brle-protocol" target="_blank">GitHub</a>
+        <a href="https://defillama.com" target="_blank">DeFiLlama</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contracts</h4>
+        <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank">BRLEToken</a>
+        <a href="https://basescan.org/address/0xB89A62c2B1d006A2fB472B6445a52ABA2F70E6Ab#code" target="_blank">BRLEPSM</a>
+        <a href="https://basescan.org/address/0xC65069694e32ef72CD94649BC5174DF9D18475D0#code" target="_blank">sBRLE</a>
+        <a href="https://basescan.org/address/0xDac75EC3f9d0294d4a48BcE5d0d7A2b0693D7AD1#code" target="_blank">BRLESwap</a>
+      </div>
+      <div class="footer-col">
+        <h4>EFIX</h4>
+        <a href="/">efixDI+</a>
+        <a href="https://x.com/efix_finance" target="_blank">Twitter</a>
+        <a href="/app/wallet/">Wallet</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>EFIX Securitizadora S.A. — CVM Act 23.635/2025</span>
+    <span>CNPJ 00.000.000/0001-00</span>
+  </div>
+</footer>
+
 <script>
-const BACKEND = EFIX_CONFIG.brle.backend;
-const RPC = EFIX_CONFIG.rpc.base;
-const C = {
-  brle: EFIX_CONFIG.brle.token,
-  psm: EFIX_CONFIG.brle.psm,
-  sbrle: EFIX_CONFIG.brle.sbrle,
-};
-
-let userAddress = null;
-let metamaskSigner = null;
-let currentOrder = null;
-let pollTimer = null;
-
-// ═══ AUTH ═══
-
-async function loginEmail() {
-  const email = document.getElementById('emailInput').value.trim();
-  if (!email) return;
-  setAuthStatus('Enviando codigo...');
-  try {
-    await BRLEWallet.loginWithEmail(email);
-    document.getElementById('step-email').style.display = 'none';
-    document.getElementById('step-otp').style.display = 'block';
-    setAuthStatus('Codigo enviado para ' + email);
-  } catch (e) {
-    setAuthStatus('Erro: ' + e.message, true);
-  }
-}
-
-async function verifyOtp() {
-  setAuthStatus('Verificando...');
-  try {
-    const addr = await BRLEWallet.getAddress();
-    enterApp(addr, 'alchemy');
-  } catch (e) {
-    setAuthStatus('Codigo invalido', true);
-  }
-}
-
-let walletMode = null; // 'alchemy' or 'metamask'
-
-async function loginMetaMask() {
-  if (!window.ethereum) return setAuthStatus('MetaMask nao encontrado', true);
-  try {
-    setAuthStatus('Conectando...');
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const network = await provider.getNetwork();
-    if (Number(network.chainId) !== 8453) {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x2105' }],
-      });
-    }
-    metamaskSigner = await (new ethers.BrowserProvider(window.ethereum)).getSigner();
-    const addr = await metamaskSigner.getAddress();
-    enterApp(addr, 'metamask');
-  } catch (e) {
-    setAuthStatus('Erro: ' + e.message, true);
-  }
-}
-
-function setAuthStatus(msg, isError) {
-  const el = document.getElementById('authStatus');
-  el.textContent = msg;
-  el.className = 'status-msg' + (isError ? ' error' : '');
-}
-
-// Check for existing session on load
-(async () => {
-  try {
-    if (window.BRLEWallet) {
-      BRLEWallet.init();
-      const addr = await BRLEWallet.checkSession();
-      if (addr) enterApp(addr, 'alchemy');
-    }
-  } catch (e) { /* no session */ }
-
-  // Handle magic link bundle
-  const params = new URLSearchParams(window.location.search);
-  const bundle = params.get('bundle');
-  if (bundle && window.BRLEWallet) {
-    try {
-      const addr = await BRLEWallet.completeAuth(bundle);
-      enterApp(addr, 'alchemy');
-      window.history.replaceState({}, '', window.location.pathname);
-    } catch (e) { setAuthStatus('Link expirado', true); }
-  }
-})();
-
-function enterApp(addr, mode) {
-  userAddress = addr;
-  walletMode = mode || 'metamask';
-  document.getElementById('auth').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('userPill').style.display = 'flex';
-  const modeLabel = walletMode === 'alchemy' ? ' (gasless)' : ' (MetaMask)';
-  document.getElementById('userAddr').textContent = addr.slice(0, 6) + '...' + addr.slice(-4) + modeLabel;
-  document.getElementById('fullAddr').textContent = addr;
-  loadBalances();
-}
-
-// ═══ BALANCES ═══
-
-async function rpcCall(to, data) {
-  const res = await fetch(RPC, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to, data }, 'latest'], id: 1 }),
-  });
-  const json = await res.json();
-  return BigInt(json.result || '0x0');
-}
-
-function encodeBal(addr) {
-  return '0x70a08231' + addr.toLowerCase().replace('0x', '').padStart(64, '0');
-}
-
-const EFIX_BASE = '0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608';
-const EFIX_POLY = '0x04082b283818D9d0dd9Ee8742892eEe5CC396441';
-const RPC_POLY = EFIX_CONFIG.rpc.polygon;
-
-async function rpcCallChain(rpc, to, data) {
-  const res = await fetch(rpc, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to, data }, 'latest'], id: 1 }),
-  });
-  const json = await res.json();
-  return BigInt(json.result || '0x0');
-}
-
-async function loadBalances() {
-  try {
-    const [brleBal, sbrleBal, sharePrice, apyBps, efixBase, efixPoly, usdcBal] = await Promise.all([
-      rpcCall(C.brle, encodeBal(userAddress)),
-      rpcCall(C.sbrle, encodeBal(userAddress)),
-      rpcCall(C.sbrle, '0xe6aa216c'), // sharePrice()
-      rpcCall(C.sbrle, '0xd4c3eea0'), // estimatedAPY()
-      rpcCall(EFIX_BASE, encodeBal(userAddress)),
-      rpcCallChain(RPC_POLY, EFIX_POLY, encodeBal(userAddress)),
-      rpcCall(USDC_BASE, encodeBal(userAddress)),
-    ]);
-
-    const brle = Number(brleBal) / 1e18;
-    const sbrle = Number(sbrleBal) / 1e18;
-    const price = Number(sharePrice) / 1e18;
-    const sbrleInBrl = sbrle * price;
-    const efixB = Number(efixBase) / 1e18;
-    const efixP = Number(efixPoly) / 1e18;
-    const usdc = Number(usdcBal) / 1e6;
-
-    // Get BRL/USD rate from BRLESwap contract for USDC conversion
-    let brlRate = 5.16;
-    try {
-      const rateRaw = await rpcCall(SWAP_ADDR, '0xa4b0d8fb'); // brlUsdRate()
-      brlRate = Number(rateRaw) / 1e6;
-      if (brlRate < 1) brlRate = 5.16; // fallback if not set
-    } catch {}
-    const usdcInBrl = usdc * brlRate;
-    const total = brle + sbrleInBrl + efixB + efixP + usdcInBrl;
-    const apy = Number(apyBps) / 100;
-
-    document.getElementById('brleBalance').textContent = brle.toFixed(2);
-    document.getElementById('sbrleBalance').textContent = sbrle.toFixed(2);
-    document.getElementById('sbrleValue').textContent = sbrleInBrl.toFixed(2);
-    document.getElementById('efixdiBaseBalance').textContent = efixB.toFixed(2);
-    document.getElementById('efixdiPolyBalance').textContent = efixP.toFixed(2);
-    document.getElementById('usdcBaseBalance').textContent = usdc.toFixed(2);
-    document.getElementById('totalBrl').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    document.getElementById('apyBadge').textContent = 'CDI ~' + apy.toFixed(1) + '% a.a.';
-  } catch (e) {
-    console.error('Balance error:', e);
-  }
-}
-
-// ═══ BUY ═══
-
-document.getElementById('buyAmount').addEventListener('input', function () {
-  const amt = Number(this.value) || 0;
-  const fee = amt * 0.001;
-  const net = amt - fee;
-  document.getElementById('buyFee').textContent =
-    `Taxa: 0.10% (R$ ${fee.toFixed(2)}) | Voce recebe: R$ ${net.toFixed(2)} BRLE`;
-});
-
-async function initiateMint() {
-  const amount = Number(document.getElementById('buyAmount').value);
-  if (!amount || amount < 10) return toast('Minimo R$ 10', true);
-
-  try {
-    const res = await fetch(BACKEND + '/api/mint/initiate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, walletAddress: userAddress }),
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-
-    currentOrder = data;
-    document.getElementById('buyForm').style.display = 'none';
-    document.getElementById('buyProgress').style.display = 'block';
-    document.getElementById('buyInstructions').textContent =
-      `Envie exatamente R$ ${data.amount} via PIX. Inclua "${data.orderId}" na descricao.`;
-
-    const pixCode = data.pixCode || '';
-    document.getElementById('buyPixCode').textContent = pixCode || 'Chave PIX nao disponivel';
-
-    // QR code image (from backend or generated)
-    if (data.qrImageUrl) {
-      document.getElementById('qrImage').src = data.qrImageUrl;
-    } else if (pixCode) {
-      document.getElementById('qrImage').src =
-        'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(pixCode);
-    }
-
-    document.getElementById('buyMsg').textContent = 'Pague o PIX e clique em "Ja paguei o PIX"';
-  } catch (e) {
-    toast('Erro: ' + e.message, true);
-  }
-}
-
-function handleIPaid() {
-  if (!currentOrder) return;
-  const btn = document.getElementById('btnIPaid');
-  btn.disabled = true;
-  btn.textContent = 'Verificando pagamento...';
-  document.getElementById('buyMsg').textContent = 'Consultando... aguarde';
-  startPolling(currentOrder.orderId);
-}
-
-function startPolling(orderId) {
-  if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(async () => {
-    try {
-      const res = await fetch(BACKEND + '/api/mint/' + orderId + '/status');
-      const data = await res.json();
-      updateProgress(data.status);
-      if (data.status === 'mint_confirmed' || data.status === 'failed') {
-        clearInterval(pollTimer);
-        pollTimer = null;
-        if (data.status === 'mint_confirmed') {
-          toast('BRLE creditado!');
-          loadBalances();
-        } else {
-          toast('Erro no processamento', true);
-        }
-      }
-    } catch (e) { /* keep polling */ }
-  }, 3000);
-}
-
-function updateProgress(status) {
-  const steps = { pending: 1, pix_received: 2, mint_requested: 3, mint_confirmed: 4 };
-  const current = steps[status] || 1;
-  const icons = ['✓', '✓', '✓', '✓'];
-  for (let i = 1; i <= 4; i++) {
-    const el = document.getElementById('pStep' + i);
-    const icon = el.querySelector('.prog-icon');
-    if (i < current) {
-      el.className = 'prog-step done';
-      icon.textContent = '✓';
-    } else if (i === current) {
-      el.className = 'prog-step active';
-      icon.textContent = i;
-    } else {
-      el.className = 'prog-step';
-      icon.textContent = i;
-    }
-  }
-
-  if (status === 'pix_received') {
-    document.getElementById('buyMsg').textContent = 'PIX detectado! Processando...';
-  } else if (status === 'mint_requested') {
-    document.getElementById('buyMsg').textContent = 'Aguardando confirmacao do operador...';
-  } else if (status === 'mint_confirmed') {
-    document.getElementById('buyMsg').textContent = 'BRLE creditado na sua carteira!';
-    document.getElementById('btnIPaid').style.display = 'none';
-  }
-}
-
-function resetBuy() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-  document.getElementById('buyForm').style.display = 'block';
-  document.getElementById('buyProgress').style.display = 'none';
-  document.getElementById('buyAmount').value = '';
-  currentOrder = null;
-}
-
-function copyPix() {
-  if (currentOrder?.pixCode) {
-    navigator.clipboard.writeText(currentOrder.pixCode);
-    toast('Codigo PIX copiado!');
-  }
-}
-
-// ═══ USD/EUR BRIDGE ═══
-
-const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-let bridgeCurrency = 'usd';
-
-async function startBridgeKyc() {
-  const email = document.getElementById('bridgeEmail').value.trim();
-  if (!email) return setStatus('bridgeKycStatus', 'Informe seu email', true);
-
-  try {
-    setStatus('bridgeKycStatus', 'Iniciando verificacao...');
-    const res = await fetch(BACKEND + '/api/bridge/kyc', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, walletAddress: userAddress }),
-    });
-    const data = await res.json();
-
-    if (data.status === 'approved') {
-      setStatus('bridgeKycStatus', 'KYC aprovado!', false, true);
-      document.getElementById('bridgeStep1').style.display = 'none';
-      document.getElementById('bridgeStep2').style.display = 'block';
-    } else if (data.kycLink) {
-      window.open(data.kycLink, '_blank');
-      setStatus('bridgeKycStatus', 'Complete a verificacao na janela aberta. Depois clique abaixo.');
-      // Add a check button
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-secondary';
-      btn.style.marginTop = '12px';
-      btn.textContent = 'Ja completei o KYC';
-      btn.onclick = () => checkBridgeKyc(email);
-      document.getElementById('bridgeKycStatus').after(btn);
-    } else {
-      setStatus('bridgeKycStatus', 'Erro: ' + (data.error || 'Tente novamente'), true);
-    }
-  } catch (e) {
-    setStatus('bridgeKycStatus', 'Erro: ' + e.message, true);
-  }
-}
-
-async function checkBridgeKyc(email) {
-  try {
-    const res = await fetch(BACKEND + '/api/bridge/kyc-status?email=' + encodeURIComponent(email));
-    const data = await res.json();
-    if (data.status === 'approved') {
-      setStatus('bridgeKycStatus', 'KYC aprovado!', false, true);
-      document.getElementById('bridgeStep1').style.display = 'none';
-      document.getElementById('bridgeStep2').style.display = 'block';
-    } else {
-      setStatus('bridgeKycStatus', 'KYC ainda pendente. Status: ' + data.status);
-    }
-  } catch (e) {
-    setStatus('bridgeKycStatus', 'Erro: ' + e.message, true);
-  }
-}
-
-function selectCurrency(cur) {
-  bridgeCurrency = cur;
-  document.getElementById('btnUsd').style.borderColor = cur === 'usd' ? 'var(--green)' : 'var(--gray-700)';
-  document.getElementById('btnUsd').style.color = cur === 'usd' ? 'var(--white)' : 'var(--gray-400)';
-  document.getElementById('btnEur').style.borderColor = cur === 'eur' ? 'var(--green)' : 'var(--gray-700)';
-  document.getElementById('btnEur').style.color = cur === 'eur' ? 'var(--white)' : 'var(--gray-400)';
-}
-
-async function createBridgeTransfer() {
-  const email = document.getElementById('bridgeEmail').value.trim();
-  try {
-    setStatus('bridgeTransferStatus', 'Gerando dados bancarios...');
-    const res = await fetch(BACKEND + '/api/bridge/transfer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, currency: bridgeCurrency }),
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-
-    // Display deposit instructions
-    const instr = data.depositInstructions || {};
-    let html = '';
-    if (bridgeCurrency === 'usd') {
-      html = `
-        <div><strong>Bank:</strong> ${instr.bank_name || 'Bridge Financial'}</div>
-        <div><strong>Account:</strong> ${instr.account_number || '—'}</div>
-        <div><strong>Routing:</strong> ${instr.routing_number || '—'}</div>
-        <div><strong>Type:</strong> ${data.rail}</div>
-      `;
-    } else {
-      html = `
-        <div><strong>IBAN:</strong> ${instr.iban || '—'}</div>
-        <div><strong>BIC/SWIFT:</strong> ${instr.bic || instr.swift || '—'}</div>
-        <div><strong>Bank:</strong> ${instr.bank_name || 'Bridge Financial'}</div>
-        <div><strong>Type:</strong> ${data.rail}</div>
-      `;
-    }
-    // Show any additional fields
-    for (const [k, v] of Object.entries(instr)) {
-      if (!['bank_name', 'account_number', 'routing_number', 'iban', 'bic', 'swift'].includes(k) && v) {
-        html += `<div><strong>${k}:</strong> ${v}</div>`;
-      }
-    }
-    document.getElementById('bridgeInstructions').innerHTML = html;
-    document.getElementById('bridgeStep2').style.display = 'none';
-    document.getElementById('bridgeStep3').style.display = 'block';
-    loadUsdcBalance();
-  } catch (e) {
-    setStatus('bridgeTransferStatus', 'Erro: ' + e.message, true);
-  }
-}
-
-async function loadUsdcBalance() {
-  try {
-    // USDC has 6 decimals
-    const bal = await rpcCall(USDC_BASE, encodeBal(userAddress));
-    const usdc = Number(bal) / 1e6;
-    document.getElementById('usdcBalance').textContent = usdc.toFixed(2) + ' USDC';
-  } catch (e) {
-    document.getElementById('usdcBalance').textContent = '—';
-  }
-}
-
-// ═══ USDC → BRLE SWAP ═══
-
-const SWAP_ADDR = '0xDac75EC3f9d0294d4a48BcE5d0d7A2b0693D7AD1';
-const SWAP_ABI = [
-  'function swap(uint256 _usdcAmount) external returns (uint256)',
-  'function quote(uint256 _usdcAmount) external view returns (uint256 brleOut, uint256 feeAmount)',
-  'function brlUsdRate() external view returns (uint256)',
-];
-
-document.getElementById('swapAmount').addEventListener('input', async function () {
-  const amt = Number(this.value) || 0;
-  if (amt <= 0) { document.getElementById('swapQuote').textContent = 'Voce recebe: 0.00 BRLE'; return; }
-  try {
-    const provider = new ethers.JsonRpcProvider(RPC);
-    const swap = new ethers.Contract(SWAP_ADDR, SWAP_ABI, provider);
-    const usdcWei = BigInt(Math.floor(amt * 1e6));
-    const [brleOut, fee] = await swap.quote(usdcWei);
-    const rate = await swap.brlUsdRate();
-    document.getElementById('swapRate').textContent = (Number(rate) / 1e6).toFixed(2);
-    document.getElementById('swapQuote').textContent =
-      `Voce recebe: ${Number(ethers.formatEther(brleOut)).toFixed(2)} BRLE (taxa: ${Number(ethers.formatEther(fee)).toFixed(2)})`;
-  } catch (e) {
-    document.getElementById('swapQuote').textContent = 'Erro ao calcular';
-  }
-});
-
-async function swapUsdcToBrle() {
-  const amt = Number(document.getElementById('swapAmount').value);
-  if (!amt || amt <= 0) return setStatus('swapStatus', 'Informe um valor', true);
-
-  try {
-    if (walletMode === 'alchemy') {
-      setStatus('swapStatus', 'Executando swap (gasless)...');
-      const result = await BRLEWallet.swapUsdcToBrle(amt);
-      setStatus('swapStatus', 'Swap concluido!', false, true);
-    } else {
-      if (!metamaskSigner) return setStatus('swapStatus', 'Conecte via MetaMask', true);
-      const usdcWei = BigInt(Math.floor(amt * 1e6));
-      setStatus('swapStatus', 'Aprovando USDC...');
-      const usdcContract = new ethers.Contract(USDC_BASE, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
-      const tx1 = await usdcContract.approve(SWAP_ADDR, usdcWei);
-      await tx1.wait();
-      setStatus('swapStatus', 'Executando swap...');
-      const swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, metamaskSigner);
-      const tx2 = await swapContract.swap(usdcWei);
-      await tx2.wait();
-      setStatus('swapStatus', 'Swap concluido!', false, true);
-    }
-    toast('BRLE recebido!');
-    document.getElementById('swapAmount').value = '';
-    loadBalances();
-    loadUsdcBalance();
-  } catch (e) {
-    setStatus('swapStatus', 'Erro: ' + (e.reason || e.message), true);
-  }
-}
-
-function resetBridge() {
-  document.getElementById('bridgeStep1').style.display = 'block';
-  document.getElementById('bridgeStep2').style.display = 'none';
-  document.getElementById('bridgeStep3').style.display = 'none';
-  setStatus('bridgeKycStatus', '');
-  setStatus('bridgeTransferStatus', '');
-}
-
-// ═══ STAKE ═══
-
-async function stakeDeposit() {
-  const amount = Number(document.getElementById('stakeAmount').value);
-  if (!amount || amount <= 0) return setStatus('stakeStatus', 'Informe um valor', true);
-
-  try {
-    if (walletMode === 'alchemy') {
-      setStatus('stakeStatus', 'Depositando no vault (gasless)...');
-      const result = await BRLEWallet.stakeBrle(amount);
-      setStatus('stakeStatus', 'Deposito confirmado!', false, true);
-      toast('sBRLE recebido!');
-    } else {
-      if (!metamaskSigner) return setStatus('stakeStatus', 'Conecte via MetaMask', true);
-      const amountWei = ethers.parseEther(amount.toString());
-      setStatus('stakeStatus', 'Aprovando BRLE...');
-      const brle = new ethers.Contract(C.brle, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
-      const tx1 = await brle.approve(C.sbrle, amountWei);
-      await tx1.wait();
-      setStatus('stakeStatus', 'Depositando no vault...');
-      const sbrle = new ethers.Contract(C.sbrle, ['function deposit(uint256,address) returns (uint256)'], metamaskSigner);
-      const tx2 = await sbrle.deposit(amountWei, userAddress);
-      await tx2.wait();
-      setStatus('stakeStatus', 'Deposito confirmado!', false, true);
-      toast('sBRLE recebido!');
-    }
-    document.getElementById('stakeAmount').value = '';
-    loadBalances();
-  } catch (e) {
-    setStatus('stakeStatus', 'Erro: ' + (e.reason || e.message), true);
-  }
-}
-
-// ═══ SELL ═══
-
-document.getElementById('sellAmount').addEventListener('input', function () {
-  const amt = Number(this.value) || 0;
-  const fee = amt * 0.001;
-  const net = amt - fee;
-  document.getElementById('sellFee').textContent =
-    `Taxa: 0.10% (R$ ${fee.toFixed(2)}) | Voce recebe: R$ ${net.toFixed(2)} via PIX`;
-});
-
-async function sellRedeem() {
-  const amount = Number(document.getElementById('sellAmount').value);
-  const pixKey = document.getElementById('sellPixKey').value.trim();
-  if (!amount || amount <= 0) return setStatus('sellStatus', 'Informe um valor', true);
-  if (!pixKey) return setStatus('sellStatus', 'Informe a chave PIX', true);
-
-  try {
-    // Redeem requires on-chain tx (approve + requestRedeem) — MetaMask for now
-    // Alchemy UserOps need dynamic ABI encoding for string params (pixKey)
-    if (!metamaskSigner && walletMode !== 'alchemy') {
-      return setStatus('sellStatus', 'Conecte via MetaMask para resgatar', true);
-    }
-
-    const amountWei = ethers.parseEther(amount.toString());
-    setStatus('sellStatus', 'Aprovando BRLE...');
-
-    if (walletMode === 'metamask' && metamaskSigner) {
-      const brle = new ethers.Contract(C.brle, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
-      const tx1 = await brle.approve(C.psm, amountWei);
-      await tx1.wait();
-
-      setStatus('sellStatus', 'Enviando resgate...');
-      const psm = new ethers.Contract(C.psm, ['function requestRedeem(uint256,string) returns (bytes32)'], metamaskSigner);
-      const tx2 = await psm.requestRedeem(amountWei, pixKey);
-      await tx2.wait();
-    } else {
-      // Alchemy: use ethers Interface to encode the calldata
-      setStatus('sellStatus', 'Enviando resgate (gasless)...');
-      const iface = new ethers.Interface(['function approve(address,uint256)', 'function requestRedeem(uint256,string)']);
-      const approveData = iface.encodeFunctionData('approve', [C.psm, amountWei]);
-      const redeemData = iface.encodeFunctionData('requestRedeem', [amountWei, pixKey]);
-
-      const client = await BRLEWallet.getClient();
-      const hash = await client.sendUserOperation({
-        uo: [
-          { target: C.brle, data: approveData, value: 0n },
-          { target: C.psm, data: redeemData, value: 0n },
-        ],
-      });
-      await client.waitForUserOperationTransaction(hash);
-    }
-
-    setStatus('sellStatus', 'Resgate enviado! PIX sera processado em breve.', false, true);
-    toast('BRLE queimado, PIX a caminho!');
-    document.getElementById('sellAmount').value = '';
-    document.getElementById('sellPixKey').value = '';
-    loadBalances();
-  } catch (e) {
-    setStatus('sellStatus', 'Erro: ' + (e.reason || e.message), true);
-  }
-}
-
-// ═══ HISTORY ═══
-
-async function loadHistory() {
-  const el = document.getElementById('historyList');
-  try {
-    const res = await fetch(BACKEND + '/api/history/' + userAddress);
-    const data = await res.json();
-    const txs = data.transactions || [];
-
-    if (txs.length === 0) {
-      el.innerHTML = '<div style="color:var(--gray-500);padding:20px;text-align:center">Nenhuma transacao encontrada</div>';
-      return;
-    }
-
-    const icons = {
-      pix_mint: '💵', swap: '🔄', vault_deposit: '📈', vault_withdraw: '📤',
-      pix_redeem: '💸', mint_confirmed: '✅',
-    };
-    const colors = {
-      confirmed: 'var(--green)', mint_confirmed: 'var(--green)', completed: 'var(--green)',
-      pending: 'var(--gray-400)', mint_requested: 'var(--blue)', pix_received: 'var(--blue)',
-      failed: 'var(--red)',
-    };
-
-    let html = '';
-    for (const tx of txs) {
-      const icon = icons[tx.type] || '📋';
-      const color = colors[tx.status] || 'var(--gray-400)';
-      const amount = tx.amountOut
-        ? `${tx.amountIn} ${tx.currency} → ${tx.amountOut.toFixed(2)} BRLE`
-        : `${tx.amount} ${tx.currency || 'BRL'}`;
-      const date = new Date(tx.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-      const badge = tx.source === 'web3' ? 'on-chain' : 'off-chain';
-      const badgeColor = tx.source === 'web3' ? 'var(--blue)' : 'var(--gray-500)';
-      const hashLink = tx.txHash
-        ? `<a href="https://basescan.org/tx/${tx.txHash}" target="_blank" style="color:var(--gray-500);font-size:10px;text-decoration:none">${tx.txHash.slice(0,10)}...</a>`
-        : '';
-
-      html += `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-800)">
-          <span style="font-size:20px">${icon}</span>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:600">${tx.label}</div>
-            <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${date} · <span style="color:${badgeColor}">${badge}</span> ${hashLink}</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-family:var(--font-mono);font-size:13px;font-weight:700">${amount}</div>
-            <div style="font-size:10px;color:${color};text-transform:uppercase;font-weight:700">${tx.status.replace('_',' ')}</div>
-          </div>
-        </div>`;
-    }
-
-    el.innerHTML = html;
-  } catch (e) {
-    el.innerHTML = '<div style="color:var(--red);padding:20px;text-align:center">Erro: ' + e.message + '</div>';
-  }
-}
-
-// ═══ UTILS ═══
-
-function showTab(name) {
-  document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  event.target.classList.add('active');
-  if (name === 'history') loadHistory();
-}
-
-function copyAddress() {
-  navigator.clipboard.writeText(userAddress);
-  toast('Endereco copiado!');
-}
-
-function toast(msg, isError) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast ' + (isError ? 'err' : 'ok');
-  el.style.display = 'block';
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.style.display = 'none', 4000);
-}
-
-function setStatus(id, msg, isError, isSuccess) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.className = 'status-msg' + (isError ? ' error' : isSuccess ? ' success' : '');
-}
-
-// Refresh balances every 30s
-setInterval(() => { if (userAddress) loadBalances(); }, 30000);
+// Fade-in on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 </script>
 </body>
 </html>

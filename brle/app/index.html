@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRLE | Stablecoin com Rendimento</title>
+<link rel="stylesheet" href="/shared/css/reset.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+  :root{--black:#0a0a0a;--white:#fafafa;--gray-100:#f5f5f5;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--gray-700:#404040;--gray-800:#262626;--gray-900:#171717;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
+  body{font-family:var(--font-display);background:var(--black);color:var(--white);min-height:100vh;-webkit-font-smoothing:antialiased}
+  header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--gray-800)}
+  .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+  .logo span{font-weight:700;font-size:18px;color:var(--white);letter-spacing:-0.5px}
+  .logo .accent{color:var(--green);font-weight:800}
+  .nav-right{display:flex;align-items:center;gap:12px}
+  .user-pill{display:flex;align-items:center;gap:8px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:100px;padding:6px 14px 6px 10px;font-size:12px;color:var(--gray-400);font-family:var(--font-mono)}
+  .user-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+  main{max-width:520px;margin:0 auto;padding:40px 20px 80px}
+  @media(min-width:768px){main{max-width:580px;padding:48px 40px 80px}}
+
+  /* Auth */
+  #auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center}
+  #auth h1{font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+  @media(min-width:768px){#auth h1{font-size:44px}}
+  #auth .sub{color:var(--gray-400);font-size:15px;margin-bottom:40px;line-height:1.5}
+  .auth-box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
+  input{width:100%;padding:14px 16px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:12px;color:var(--white);font-family:var(--font-mono);font-size:14px;outline:none;transition:border-color .2s}
+  input:focus{border-color:var(--gray-400)}
+  input::placeholder{color:var(--gray-600)}
+  .btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:var(--font-display);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:-0.3px}
+  .btn-primary{background:var(--white);color:var(--black)}
+  .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btn-secondary{background:transparent;color:var(--gray-400);border:1px solid var(--gray-700)}
+  .btn-secondary:hover{border-color:var(--gray-400);color:var(--white)}
+  .btn-sm{width:auto;padding:8px 16px;font-size:13px;border-radius:10px}
+  .divider{display:flex;align-items:center;gap:12px;color:var(--gray-600);font-size:12px}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--gray-800)}
+  .status-msg{margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);min-height:20px}
+  .status-msg.error{color:var(--red)}.status-msg.success{color:var(--green)}
+
+  /* App */
+  #app{display:none}
+  .balance-card{background:var(--gray-900);border:1px solid var(--gray-800);border-radius:20px;padding:32px 28px;margin-bottom:24px;text-align:center}
+  .balance-label{font-size:12px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px}
+  .balance-value{font-family:var(--font-mono);font-size:38px;font-weight:700;letter-spacing:-2px;margin-bottom:4px}
+  .balance-sub{font-size:13px;color:var(--gray-500);font-family:var(--font-mono)}
+  .apy-badge{display:inline-block;margin-top:16px;padding:6px 14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:100px;color:var(--green);font-size:13px;font-weight:700;font-family:var(--font-mono)}
+  .balance-row{display:flex;justify-content:center;gap:32px;margin-top:16px}
+  .balance-item{text-align:center}
+  .balance-item .val{font-family:var(--font-mono);font-size:16px;font-weight:700}
+  .balance-item .lbl{font-size:11px;color:var(--gray-500);margin-top:2px}
+  .address-bar{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:24px;padding:10px 16px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:12px;font-family:var(--font-mono);font-size:12px;color:var(--gray-500);cursor:pointer}
+  .address-bar:hover{border-color:var(--gray-600)}
+  .address-bar .chain-dot{width:8px;height:8px;border-radius:50%;background:#0052ff}
+
+  /* Tabs */
+  .tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--gray-900);border-radius:12px;padding:4px}
+  .tab{flex:1;padding:10px;text-align:center;border-radius:10px;font-size:14px;font-weight:600;color:var(--gray-500);cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:var(--font-display)}
+  .tab.active{background:var(--gray-800);color:var(--white)}
+  .tab-panel{display:none}.tab-panel.active{display:block}
+
+  /* Action cards */
+  .action-card{background:var(--gray-900);border:1px solid var(--gray-800);border-radius:16px;padding:24px}
+  .action-card h3{font-size:14px;color:var(--gray-400);font-weight:600;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
+  .amount-wrap{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .amount-wrap input{flex:1;font-size:20px;font-weight:700;padding:14px 16px;background:var(--gray-800);border:1px solid var(--gray-700)}
+  .amount-wrap input:focus{border-color:var(--gray-500)}
+  .amount-wrap .cur{font-size:14px;color:var(--gray-500);font-weight:700;white-space:nowrap}
+  .fee-line{font-size:12px;color:var(--gray-500);font-family:var(--font-mono);margin-bottom:16px}
+
+  /* Progress */
+  .prog-step{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--gray-600);font-family:var(--font-mono)}
+  .prog-icon{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-700);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+  .prog-step.done{color:var(--green)}.prog-step.done .prog-icon{border-color:var(--green);background:var(--green);color:var(--black)}
+  .prog-step.active{color:var(--white)}.prog-step.active .prog-icon{border-color:var(--white)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .prog-step.active .prog-icon{animation:pulse 1.5s infinite}
+
+  /* PIX QR */
+  .pix-box{background:var(--gray-800);border-radius:12px;padding:20px;text-align:center;margin:16px 0}
+  .pix-box .code{font-family:var(--font-mono);font-size:11px;color:var(--gray-400);word-break:break-all;margin:12px 0;padding:12px;background:var(--gray-900);border-radius:8px;cursor:pointer}
+  .pix-box .code:hover{color:var(--white)}
+
+  /* Toast */
+  .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;font-family:var(--font-mono);z-index:999;display:none}
+  .toast.ok{background:var(--green);color:var(--black)}.toast.err{background:var(--red);color:var(--white)}
+
+  .footer{margin-top:48px;text-align:center;font-size:11px;color:var(--gray-600);font-family:var(--font-mono)}
+  .footer a{color:var(--gray-500);text-decoration:none}.footer a:hover{color:var(--white)}
+
+  #alchemy-signer-iframe-container{position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+<div id="alchemy-signer-iframe-container"></div>
+
+<header>
+  <a href="/brle/" class="logo">
+    <span>BRLE<span class="accent">.</span></span>
+  </a>
+  <div class="nav-right">
+    <div id="userPill" class="user-pill" style="display:none">
+      <span class="dot"></span>
+      <span id="userAddr"></span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- AUTH SCREEN -->
+  <div id="auth">
+    <h1>BRLE</h1>
+    <p class="sub">Stablecoin BRL com rendimento DI.<br>Compre com PIX, ganhe CDI automaticamente.</p>
+    <div class="auth-box">
+      <div id="step-email">
+        <input type="email" id="emailInput" placeholder="seu@email.com">
+        <button class="btn btn-primary" onclick="loginEmail()" id="btnEmail">Entrar com Email</button>
+      </div>
+      <div id="step-otp" style="display:none">
+        <input type="text" id="otpInput" placeholder="Codigo de 6 digitos" maxlength="6">
+        <button class="btn btn-primary" onclick="verifyOtp()">Verificar</button>
+      </div>
+      <div class="divider">ou</div>
+      <button class="btn btn-secondary" onclick="loginMetaMask()">Conectar MetaMask</button>
+      <div id="authStatus" class="status-msg"></div>
+    </div>
+  </div>
+
+  <!-- APP SCREEN -->
+  <div id="app">
+    <div class="address-bar" onclick="copyAddress()">
+      <span class="chain-dot"></span>
+      <span id="fullAddr"></span>
+      <span style="color:var(--gray-600)">Base</span>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-label">Saldo Total (BRL)</div>
+      <div class="balance-value" id="totalBrl">R$ 0,00</div>
+      <div class="balance-row">
+        <div class="balance-item"><div class="val" id="brleBalance">0.00</div><div class="lbl">BRLE</div></div>
+        <div class="balance-item"><div class="val" id="sbrleBalance">0.00</div><div class="lbl">sBRLE</div></div>
+        <div class="balance-item"><div class="val" id="sbrleValue">0.00</div><div class="lbl">sBRLE em BRL</div></div>
+      </div>
+      <div class="balance-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-800)">
+        <div class="balance-item"><div class="val" id="efixdiBaseBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">efixDI (Base)</div></div>
+        <div class="balance-item"><div class="val" id="efixdiPolyBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">efixDI (Polygon)</div></div>
+        <div class="balance-item"><div class="val" id="usdcBaseBalance" style="color:var(--gray-400)">0.00</div><div class="lbl">USDC (Base)</div></div>
+      </div>
+      <div class="apy-badge" id="apyBadge">CDI ~14.4% a.a.</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('buy')">Comprar</button>
+      <button class="tab" onclick="showTab('usd')">USD/EUR</button>
+      <button class="tab" onclick="showTab('stake')">Investir</button>
+      <button class="tab" onclick="showTab('sell')">Resgatar</button>
+      <button class="tab" onclick="showTab('history')">Historico</button>
+    </div>
+
+    <!-- BUY TAB -->
+    <div id="tab-buy" class="tab-panel active">
+      <div class="action-card">
+        <h3>Comprar BRLE com PIX</h3>
+        <div id="buyForm">
+          <div class="amount-wrap">
+            <span class="cur">R$</span>
+            <input type="number" id="buyAmount" placeholder="0,00" min="10">
+          </div>
+          <div class="fee-line" id="buyFee">Taxa: 0.10% | Voce recebe: R$ 0,00 BRLE</div>
+          <button class="btn btn-primary" onclick="initiateMint()">Gerar PIX</button>
+        </div>
+        <div id="buyProgress" style="display:none">
+          <div style="background:var(--white);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
+            <p style="color:var(--black);font-size:14px;font-weight:600;margin-bottom:12px">Escaneie com seu app bancario</p>
+            <img id="qrImage" src="" alt="QR Code PIX" style="width:200px;height:200px;border-radius:8px">
+            <p style="color:var(--gray-600);font-size:11px;font-family:var(--font-mono);margin-top:12px;word-break:break-all;max-height:60px;overflow:hidden;cursor:pointer" id="buyPixCode" onclick="copyPix()"></p>
+            <button class="btn-sm" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;padding:8px 20px;font-size:13px;border-radius:8px;cursor:pointer" onclick="copyPix()">Copiar codigo PIX</button>
+          </div>
+          <div style="font-size:12px;color:var(--gray-500);text-align:center;margin-bottom:12px" id="buyInstructions"></div>
+          <button class="btn btn-primary" id="btnIPaid" onclick="handleIPaid()" style="background:var(--green);color:var(--black);width:100%;margin-bottom:16px">Ja paguei o PIX</button>
+          <div id="buySteps">
+            <div class="prog-step done" id="pStep1"><span class="prog-icon">✓</span>QR Code gerado</div>
+            <div class="prog-step" id="pStep2"><span class="prog-icon">2</span>Pagamento PIX confirmado</div>
+            <div class="prog-step" id="pStep3"><span class="prog-icon">3</span>Mintando BRLE</div>
+            <div class="prog-step" id="pStep4"><span class="prog-icon">4</span>BRLE creditado!</div>
+          </div>
+          <div id="buyMsg" class="status-msg" style="text-align:center;margin-top:12px"></div>
+          <button class="btn btn-secondary" onclick="resetBuy()" style="margin-top:12px;width:100%">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USD/EUR TAB -->
+    <div id="tab-usd" class="tab-panel">
+      <div class="action-card">
+        <h3>USD/EUR Onramp / Offramp</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
+          Deposite USD (ACH/Wire) ou EUR (SEPA) e receba USDC na Base.
+          Powered by Bridge.xyz.
+        </p>
+
+        <!-- Step 1: Email + KYC -->
+        <div id="bridgeStep1">
+          <div class="form-group" style="margin-bottom:12px">
+            <input type="email" id="bridgeEmail" placeholder="Email para verificacao KYC">
+          </div>
+          <button class="btn btn-primary" onclick="startBridgeKyc()">Iniciar Verificacao</button>
+          <div id="bridgeKycStatus" class="status-msg"></div>
+        </div>
+
+        <!-- Step 2: Currency selection + deposit -->
+        <div id="bridgeStep2" style="display:none">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-secondary btn-sm" id="btnUsd" onclick="selectCurrency('usd')" style="flex:1;border-color:var(--green);color:var(--white)">USD (ACH/Wire)</button>
+            <button class="btn btn-secondary btn-sm" id="btnEur" onclick="selectCurrency('eur')" style="flex:1">EUR (SEPA)</button>
+          </div>
+          <button class="btn btn-primary" onclick="createBridgeTransfer()">Obter Dados Bancarios</button>
+          <div id="bridgeTransferStatus" class="status-msg"></div>
+        </div>
+
+        <!-- Step 3: Deposit instructions -->
+        <div id="bridgeStep3" style="display:none">
+          <div style="background:var(--gray-800);border-radius:12px;padding:20px;margin-bottom:16px">
+            <div style="font-size:14px;font-weight:700;margin-bottom:12px">Dados para deposito</div>
+            <div id="bridgeInstructions" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-400);line-height:1.8"></div>
+          </div>
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:16px">
+            Apos o deposito, Bridge.xyz converte automaticamente para USDC na Base.
+            O USDC aparecera no seu saldo abaixo.
+          </div>
+          <div style="background:var(--gray-800);border-radius:12px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Saldo USDC (Base)</div>
+            <div style="font-family:var(--font-mono);font-size:24px;font-weight:700" id="usdcBalance">0.00</div>
+          </div>
+          <button class="btn btn-secondary" onclick="resetBridge()" style="margin-top:16px">Novo deposito</button>
+        </div>
+
+        <!-- Swap USDC → BRLE (always visible if user has USDC) -->
+        <div id="swapSection" style="margin-top:20px;padding-top:20px;border-top:1px solid var(--gray-800)">
+          <h3 style="font-size:14px;color:var(--gray-400);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Swap USDC → BRLE</h3>
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">
+            Rate: <span id="swapRate">5.70</span> BRL/USD | Fee: 0.30%
+          </div>
+          <div class="amount-wrap">
+            <span class="cur">USDC</span>
+            <input type="number" id="swapAmount" placeholder="0.00" min="1">
+          </div>
+          <div class="fee-line" id="swapQuote">Voce recebe: 0.00 BRLE</div>
+          <button class="btn btn-primary" onclick="swapUsdcToBrle()" id="btnSwap">Swap para BRLE</button>
+          <div id="swapStatus" class="status-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAKE TAB -->
+    <div id="tab-stake" class="tab-panel">
+      <div class="action-card">
+        <h3>Investir BRLE no Vault (sBRLE)</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
+          Deposite BRLE no vault sBRLE para receber rendimento DI automaticamente.
+          O valor do sBRLE aumenta todo mes.
+        </p>
+        <div class="amount-wrap">
+          <input type="number" id="stakeAmount" placeholder="0,00">
+          <span class="cur">BRLE</span>
+        </div>
+        <button class="btn btn-primary" onclick="stakeDeposit()" id="btnStake">Depositar no Vault</button>
+        <div id="stakeStatus" class="status-msg"></div>
+      </div>
+    </div>
+
+    <!-- SELL TAB -->
+    <div id="tab-sell" class="tab-panel">
+      <div class="action-card">
+        <h3>Resgatar BRLE via PIX</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
+          Queime BRLE e receba BRL na sua conta via PIX.
+        </p>
+        <div class="amount-wrap">
+          <input type="number" id="sellAmount" placeholder="0,00">
+          <span class="cur">BRLE</span>
+        </div>
+        <div style="margin-bottom:16px">
+          <input type="text" id="sellPixKey" placeholder="Chave PIX (CPF, email, telefone ou aleatoria)">
+        </div>
+        <div class="fee-line" id="sellFee">Taxa: 0.10% | Voce recebe: R$ 0,00 via PIX</div>
+        <button class="btn btn-primary" onclick="sellRedeem()" id="btnSell">Resgatar</button>
+        <div id="sellStatus" class="status-msg"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tab-history" class="tab-panel">
+      <div class="action-card">
+        <h3>Historico de Transacoes</h3>
+        <div id="historyList"><div class="empty" style="color:var(--gray-500);padding:20px;text-align:center">Carregando...</div></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="/brle/operator/">Operator Panel</a> &middot;
+      <a href="https://basescan.org/address/0xB89A62c2B1d006A2fB472B6445a52ABA2F70E6Ab" target="_blank">PSM Contract</a> &middot;
+      EFIX Securitizadora S.A. &mdash; CVM Act 23.635/2025
+    </div>
+  </div>
+</main>
+
+<script src="/brle/brle-wallet-bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<script src="/shared/js/config.js"></script>
+<script>
+const BACKEND = EFIX_CONFIG.brle.backend;
+const RPC = EFIX_CONFIG.rpc.base;
+const C = {
+  brle: EFIX_CONFIG.brle.token,
+  psm: EFIX_CONFIG.brle.psm,
+  sbrle: EFIX_CONFIG.brle.sbrle,
+};
+
+let userAddress = null;
+let metamaskSigner = null;
+let currentOrder = null;
+let pollTimer = null;
+
+// ═══ AUTH ═══
+
+async function loginEmail() {
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email) return;
+  setAuthStatus('Enviando codigo... verifique seu email');
+  try {
+    // loginWithEmail sends OTP and waits for full auth (user enters code in Alchemy iframe)
+    // We run it in background and poll for completion
+    BRLEWallet.loginWithEmail(email).then(addr => {
+      enterApp(addr, 'alchemy');
+    }).catch(e => {
+      setAuthStatus('Erro: ' + e.message, true);
+    });
+
+    // Show OTP step — Alchemy signer handles OTP via iframe,
+    // but we also provide manual entry as fallback
+    document.getElementById('step-email').style.display = 'none';
+    document.getElementById('step-otp').style.display = 'block';
+    setAuthStatus('Codigo enviado! Digite o codigo recebido por email.');
+  } catch (e) {
+    setAuthStatus('Erro: ' + e.message, true);
+  }
+}
+
+async function verifyOtp() {
+  // The Alchemy signer handles OTP internally via the iframe.
+  // If user entered OTP, the loginWithEmail promise should resolve.
+  // Check if already authenticated:
+  setAuthStatus('Verificando...');
+  try {
+    const addr = await BRLEWallet.getAddress();
+    if (addr) {
+      enterApp(addr, 'alchemy');
+    } else {
+      setAuthStatus('Aguarde... o codigo esta sendo verificado');
+    }
+  } catch (e) {
+    setAuthStatus('Aguarde a verificacao completar', false);
+  }
+}
+
+let walletMode = null; // 'alchemy' or 'metamask'
+
+async function loginMetaMask() {
+  if (!window.ethereum) return setAuthStatus('MetaMask nao encontrado', true);
+  try {
+    setAuthStatus('Conectando...');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const network = await provider.getNetwork();
+    if (Number(network.chainId) !== 8453) {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x2105' }],
+      });
+    }
+    metamaskSigner = await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    const addr = await metamaskSigner.getAddress();
+    enterApp(addr, 'metamask');
+  } catch (e) {
+    setAuthStatus('Erro: ' + e.message, true);
+  }
+}
+
+function setAuthStatus(msg, isError) {
+  const el = document.getElementById('authStatus');
+  el.textContent = msg;
+  el.className = 'status-msg' + (isError ? ' error' : '');
+}
+
+// Check for existing session on load
+(async () => {
+  try {
+    if (window.BRLEWallet) {
+      BRLEWallet.init();
+      const addr = await BRLEWallet.checkSession();
+      if (addr) enterApp(addr, 'alchemy');
+    }
+  } catch (e) { /* no session */ }
+
+  // Handle magic link bundle
+  const params = new URLSearchParams(window.location.search);
+  const bundle = params.get('bundle');
+  if (bundle && window.BRLEWallet) {
+    try {
+      const addr = await BRLEWallet.completeAuth(bundle);
+      enterApp(addr, 'alchemy');
+      window.history.replaceState({}, '', window.location.pathname);
+    } catch (e) { setAuthStatus('Link expirado', true); }
+  }
+})();
+
+function enterApp(addr, mode) {
+  userAddress = addr;
+  walletMode = mode || 'metamask';
+  document.getElementById('auth').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('userPill').style.display = 'flex';
+  const modeLabel = walletMode === 'alchemy' ? ' (gasless)' : ' (MetaMask)';
+  document.getElementById('userAddr').textContent = addr.slice(0, 6) + '...' + addr.slice(-4) + modeLabel;
+  document.getElementById('fullAddr').textContent = addr;
+  loadBalances();
+}
+
+// ═══ BALANCES ═══
+
+async function rpcCall(to, data) {
+  const res = await fetch(RPC, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to, data }, 'latest'], id: 1 }),
+  });
+  const json = await res.json();
+  return BigInt(json.result || '0x0');
+}
+
+function encodeBal(addr) {
+  return '0x70a08231' + addr.toLowerCase().replace('0x', '').padStart(64, '0');
+}
+
+const EFIX_BASE = '0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608';
+const EFIX_POLY = '0x04082b283818D9d0dd9Ee8742892eEe5CC396441';
+const RPC_POLY = EFIX_CONFIG.rpc.polygon;
+
+async function rpcCallChain(rpc, to, data) {
+  const res = await fetch(rpc, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to, data }, 'latest'], id: 1 }),
+  });
+  const json = await res.json();
+  return BigInt(json.result || '0x0');
+}
+
+async function loadBalances() {
+  try {
+    const [brleBal, sbrleBal, sharePrice, apyBps, efixBase, efixPoly, usdcBal] = await Promise.all([
+      rpcCall(C.brle, encodeBal(userAddress)),
+      rpcCall(C.sbrle, encodeBal(userAddress)),
+      rpcCall(C.sbrle, '0xe6aa216c'), // sharePrice()
+      rpcCall(C.sbrle, '0xd4c3eea0'), // estimatedAPY()
+      rpcCall(EFIX_BASE, encodeBal(userAddress)),
+      rpcCallChain(RPC_POLY, EFIX_POLY, encodeBal(userAddress)),
+      rpcCall(USDC_BASE, encodeBal(userAddress)),
+    ]);
+
+    const brle = Number(brleBal) / 1e18;
+    const sbrle = Number(sbrleBal) / 1e18;
+    const price = Number(sharePrice) / 1e18;
+    const sbrleInBrl = sbrle * price;
+    const efixB = Number(efixBase) / 1e18;
+    const efixP = Number(efixPoly) / 1e18;
+    const usdc = Number(usdcBal) / 1e6;
+
+    // Get BRL/USD rate from BRLESwap contract for USDC conversion
+    let brlRate = 5.16;
+    try {
+      const rateRaw = await rpcCall(SWAP_ADDR, '0xa4b0d8fb'); // brlUsdRate()
+      brlRate = Number(rateRaw) / 1e6;
+      if (brlRate < 1) brlRate = 5.16; // fallback if not set
+    } catch {}
+    const usdcInBrl = usdc * brlRate;
+    const total = brle + sbrleInBrl + efixB + efixP + usdcInBrl;
+    const apy = Number(apyBps) / 100;
+
+    document.getElementById('brleBalance').textContent = brle.toFixed(2);
+    document.getElementById('sbrleBalance').textContent = sbrle.toFixed(2);
+    document.getElementById('sbrleValue').textContent = sbrleInBrl.toFixed(2);
+    document.getElementById('efixdiBaseBalance').textContent = efixB.toFixed(2);
+    document.getElementById('efixdiPolyBalance').textContent = efixP.toFixed(2);
+    document.getElementById('usdcBaseBalance').textContent = usdc.toFixed(2);
+    document.getElementById('totalBrl').textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('apyBadge').textContent = 'CDI ~' + apy.toFixed(1) + '% a.a.';
+  } catch (e) {
+    console.error('Balance error:', e);
+  }
+}
+
+// ═══ BUY ═══
+
+document.getElementById('buyAmount').addEventListener('input', function () {
+  const amt = Number(this.value) || 0;
+  const fee = amt * 0.001;
+  const net = amt - fee;
+  document.getElementById('buyFee').textContent =
+    `Taxa: 0.10% (R$ ${fee.toFixed(2)}) | Voce recebe: R$ ${net.toFixed(2)} BRLE`;
+});
+
+async function initiateMint() {
+  const amount = Number(document.getElementById('buyAmount').value);
+  if (!amount || amount < 10) return toast('Minimo R$ 10', true);
+
+  try {
+    const res = await fetch(BACKEND + '/api/mint/initiate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, walletAddress: userAddress }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    currentOrder = data;
+    document.getElementById('buyForm').style.display = 'none';
+    document.getElementById('buyProgress').style.display = 'block';
+    document.getElementById('buyInstructions').textContent =
+      `Envie exatamente R$ ${data.amount} via PIX. Inclua "${data.orderId}" na descricao.`;
+
+    const pixCode = data.pixCode || '';
+    document.getElementById('buyPixCode').textContent = pixCode || 'Chave PIX nao disponivel';
+
+    // QR code image (from backend or generated)
+    if (data.qrImageUrl) {
+      document.getElementById('qrImage').src = data.qrImageUrl;
+    } else if (pixCode) {
+      document.getElementById('qrImage').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(pixCode);
+    }
+
+    document.getElementById('buyMsg').textContent = 'Pague o PIX e clique em "Ja paguei o PIX"';
+  } catch (e) {
+    toast('Erro: ' + e.message, true);
+  }
+}
+
+function handleIPaid() {
+  if (!currentOrder) return;
+  const btn = document.getElementById('btnIPaid');
+  btn.disabled = true;
+  btn.textContent = 'Verificando pagamento...';
+  document.getElementById('buyMsg').textContent = 'Consultando... aguarde';
+  startPolling(currentOrder.orderId);
+}
+
+function startPolling(orderId) {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(BACKEND + '/api/mint/' + orderId + '/status');
+      const data = await res.json();
+      updateProgress(data.status);
+      if (data.status === 'mint_confirmed' || data.status === 'failed') {
+        clearInterval(pollTimer);
+        pollTimer = null;
+        if (data.status === 'mint_confirmed') {
+          toast('BRLE creditado!');
+          loadBalances();
+        } else {
+          toast('Erro no processamento', true);
+        }
+      }
+    } catch (e) { /* keep polling */ }
+  }, 3000);
+}
+
+function updateProgress(status) {
+  const steps = { pending: 1, pix_received: 2, mint_requested: 3, mint_confirmed: 4 };
+  const current = steps[status] || 1;
+  const icons = ['✓', '✓', '✓', '✓'];
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('pStep' + i);
+    const icon = el.querySelector('.prog-icon');
+    if (i < current) {
+      el.className = 'prog-step done';
+      icon.textContent = '✓';
+    } else if (i === current) {
+      el.className = 'prog-step active';
+      icon.textContent = i;
+    } else {
+      el.className = 'prog-step';
+      icon.textContent = i;
+    }
+  }
+
+  if (status === 'pix_received') {
+    document.getElementById('buyMsg').textContent = 'PIX detectado! Processando...';
+  } else if (status === 'mint_requested') {
+    document.getElementById('buyMsg').textContent = 'Aguardando confirmacao do operador...';
+  } else if (status === 'mint_confirmed') {
+    document.getElementById('buyMsg').textContent = 'BRLE creditado na sua carteira!';
+    document.getElementById('btnIPaid').style.display = 'none';
+  }
+}
+
+function resetBuy() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  document.getElementById('buyForm').style.display = 'block';
+  document.getElementById('buyProgress').style.display = 'none';
+  document.getElementById('buyAmount').value = '';
+  currentOrder = null;
+}
+
+function copyPix() {
+  if (currentOrder?.pixCode) {
+    navigator.clipboard.writeText(currentOrder.pixCode);
+    toast('Codigo PIX copiado!');
+  }
+}
+
+// ═══ USD/EUR BRIDGE ═══
+
+const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+let bridgeCurrency = 'usd';
+
+async function startBridgeKyc() {
+  const email = document.getElementById('bridgeEmail').value.trim();
+  if (!email) return setStatus('bridgeKycStatus', 'Informe seu email', true);
+
+  try {
+    setStatus('bridgeKycStatus', 'Iniciando verificacao...');
+    const res = await fetch(BACKEND + '/api/bridge/kyc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, walletAddress: userAddress }),
+    });
+    const data = await res.json();
+
+    if (data.status === 'approved') {
+      setStatus('bridgeKycStatus', 'KYC aprovado!', false, true);
+      document.getElementById('bridgeStep1').style.display = 'none';
+      document.getElementById('bridgeStep2').style.display = 'block';
+    } else if (data.kycLink) {
+      window.open(data.kycLink, '_blank');
+      setStatus('bridgeKycStatus', 'Complete a verificacao na janela aberta. Depois clique abaixo.');
+      // Add a check button
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-secondary';
+      btn.style.marginTop = '12px';
+      btn.textContent = 'Ja completei o KYC';
+      btn.onclick = () => checkBridgeKyc(email);
+      document.getElementById('bridgeKycStatus').after(btn);
+    } else {
+      setStatus('bridgeKycStatus', 'Erro: ' + (data.error || 'Tente novamente'), true);
+    }
+  } catch (e) {
+    setStatus('bridgeKycStatus', 'Erro: ' + e.message, true);
+  }
+}
+
+async function checkBridgeKyc(email) {
+  try {
+    const res = await fetch(BACKEND + '/api/bridge/kyc-status?email=' + encodeURIComponent(email));
+    const data = await res.json();
+    if (data.status === 'approved') {
+      setStatus('bridgeKycStatus', 'KYC aprovado!', false, true);
+      document.getElementById('bridgeStep1').style.display = 'none';
+      document.getElementById('bridgeStep2').style.display = 'block';
+    } else {
+      setStatus('bridgeKycStatus', 'KYC ainda pendente. Status: ' + data.status);
+    }
+  } catch (e) {
+    setStatus('bridgeKycStatus', 'Erro: ' + e.message, true);
+  }
+}
+
+function selectCurrency(cur) {
+  bridgeCurrency = cur;
+  document.getElementById('btnUsd').style.borderColor = cur === 'usd' ? 'var(--green)' : 'var(--gray-700)';
+  document.getElementById('btnUsd').style.color = cur === 'usd' ? 'var(--white)' : 'var(--gray-400)';
+  document.getElementById('btnEur').style.borderColor = cur === 'eur' ? 'var(--green)' : 'var(--gray-700)';
+  document.getElementById('btnEur').style.color = cur === 'eur' ? 'var(--white)' : 'var(--gray-400)';
+}
+
+async function createBridgeTransfer() {
+  const email = document.getElementById('bridgeEmail').value.trim();
+  try {
+    setStatus('bridgeTransferStatus', 'Gerando dados bancarios...');
+    const res = await fetch(BACKEND + '/api/bridge/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, currency: bridgeCurrency }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    // Display deposit instructions
+    const instr = data.depositInstructions || {};
+    let html = '';
+    if (bridgeCurrency === 'usd') {
+      html = `
+        <div><strong>Bank:</strong> ${instr.bank_name || 'Bridge Financial'}</div>
+        <div><strong>Account:</strong> ${instr.account_number || '—'}</div>
+        <div><strong>Routing:</strong> ${instr.routing_number || '—'}</div>
+        <div><strong>Type:</strong> ${data.rail}</div>
+      `;
+    } else {
+      html = `
+        <div><strong>IBAN:</strong> ${instr.iban || '—'}</div>
+        <div><strong>BIC/SWIFT:</strong> ${instr.bic || instr.swift || '—'}</div>
+        <div><strong>Bank:</strong> ${instr.bank_name || 'Bridge Financial'}</div>
+        <div><strong>Type:</strong> ${data.rail}</div>
+      `;
+    }
+    // Show any additional fields
+    for (const [k, v] of Object.entries(instr)) {
+      if (!['bank_name', 'account_number', 'routing_number', 'iban', 'bic', 'swift'].includes(k) && v) {
+        html += `<div><strong>${k}:</strong> ${v}</div>`;
+      }
+    }
+    document.getElementById('bridgeInstructions').innerHTML = html;
+    document.getElementById('bridgeStep2').style.display = 'none';
+    document.getElementById('bridgeStep3').style.display = 'block';
+    loadUsdcBalance();
+  } catch (e) {
+    setStatus('bridgeTransferStatus', 'Erro: ' + e.message, true);
+  }
+}
+
+async function loadUsdcBalance() {
+  try {
+    // USDC has 6 decimals
+    const bal = await rpcCall(USDC_BASE, encodeBal(userAddress));
+    const usdc = Number(bal) / 1e6;
+    document.getElementById('usdcBalance').textContent = usdc.toFixed(2) + ' USDC';
+  } catch (e) {
+    document.getElementById('usdcBalance').textContent = '—';
+  }
+}
+
+// ═══ USDC → BRLE SWAP ═══
+
+const SWAP_ADDR = '0xDac75EC3f9d0294d4a48BcE5d0d7A2b0693D7AD1';
+const SWAP_ABI = [
+  'function swap(uint256 _usdcAmount) external returns (uint256)',
+  'function quote(uint256 _usdcAmount) external view returns (uint256 brleOut, uint256 feeAmount)',
+  'function brlUsdRate() external view returns (uint256)',
+];
+
+document.getElementById('swapAmount').addEventListener('input', async function () {
+  const amt = Number(this.value) || 0;
+  if (amt <= 0) { document.getElementById('swapQuote').textContent = 'Voce recebe: 0.00 BRLE'; return; }
+  try {
+    const provider = new ethers.JsonRpcProvider(RPC);
+    const swap = new ethers.Contract(SWAP_ADDR, SWAP_ABI, provider);
+    const usdcWei = BigInt(Math.floor(amt * 1e6));
+    const [brleOut, fee] = await swap.quote(usdcWei);
+    const rate = await swap.brlUsdRate();
+    document.getElementById('swapRate').textContent = (Number(rate) / 1e6).toFixed(2);
+    document.getElementById('swapQuote').textContent =
+      `Voce recebe: ${Number(ethers.formatEther(brleOut)).toFixed(2)} BRLE (taxa: ${Number(ethers.formatEther(fee)).toFixed(2)})`;
+  } catch (e) {
+    document.getElementById('swapQuote').textContent = 'Erro ao calcular';
+  }
+});
+
+async function swapUsdcToBrle() {
+  const amt = Number(document.getElementById('swapAmount').value);
+  if (!amt || amt <= 0) return setStatus('swapStatus', 'Informe um valor', true);
+
+  try {
+    if (walletMode === 'alchemy') {
+      setStatus('swapStatus', 'Executando swap (gasless)...');
+      const result = await BRLEWallet.swapUsdcToBrle(amt);
+      setStatus('swapStatus', 'Swap concluido!', false, true);
+    } else {
+      if (!metamaskSigner) return setStatus('swapStatus', 'Conecte via MetaMask', true);
+      const usdcWei = BigInt(Math.floor(amt * 1e6));
+      setStatus('swapStatus', 'Aprovando USDC...');
+      const usdcContract = new ethers.Contract(USDC_BASE, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
+      const tx1 = await usdcContract.approve(SWAP_ADDR, usdcWei);
+      await tx1.wait();
+      setStatus('swapStatus', 'Executando swap...');
+      const swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, metamaskSigner);
+      const tx2 = await swapContract.swap(usdcWei);
+      await tx2.wait();
+      setStatus('swapStatus', 'Swap concluido!', false, true);
+    }
+    toast('BRLE recebido!');
+    document.getElementById('swapAmount').value = '';
+    loadBalances();
+    loadUsdcBalance();
+  } catch (e) {
+    setStatus('swapStatus', 'Erro: ' + (e.reason || e.message), true);
+  }
+}
+
+function resetBridge() {
+  document.getElementById('bridgeStep1').style.display = 'block';
+  document.getElementById('bridgeStep2').style.display = 'none';
+  document.getElementById('bridgeStep3').style.display = 'none';
+  setStatus('bridgeKycStatus', '');
+  setStatus('bridgeTransferStatus', '');
+}
+
+// ═══ STAKE ═══
+
+async function stakeDeposit() {
+  const amount = Number(document.getElementById('stakeAmount').value);
+  if (!amount || amount <= 0) return setStatus('stakeStatus', 'Informe um valor', true);
+
+  try {
+    if (walletMode === 'alchemy') {
+      setStatus('stakeStatus', 'Depositando no vault (gasless)...');
+      const result = await BRLEWallet.stakeBrle(amount);
+      setStatus('stakeStatus', 'Deposito confirmado!', false, true);
+      toast('sBRLE recebido!');
+    } else {
+      if (!metamaskSigner) return setStatus('stakeStatus', 'Conecte via MetaMask', true);
+      const amountWei = ethers.parseEther(amount.toString());
+      setStatus('stakeStatus', 'Aprovando BRLE...');
+      const brle = new ethers.Contract(C.brle, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
+      const tx1 = await brle.approve(C.sbrle, amountWei);
+      await tx1.wait();
+      setStatus('stakeStatus', 'Depositando no vault...');
+      const sbrle = new ethers.Contract(C.sbrle, ['function deposit(uint256,address) returns (uint256)'], metamaskSigner);
+      const tx2 = await sbrle.deposit(amountWei, userAddress);
+      await tx2.wait();
+      setStatus('stakeStatus', 'Deposito confirmado!', false, true);
+      toast('sBRLE recebido!');
+    }
+    document.getElementById('stakeAmount').value = '';
+    loadBalances();
+  } catch (e) {
+    setStatus('stakeStatus', 'Erro: ' + (e.reason || e.message), true);
+  }
+}
+
+// ═══ SELL ═══
+
+document.getElementById('sellAmount').addEventListener('input', function () {
+  const amt = Number(this.value) || 0;
+  const fee = amt * 0.001;
+  const net = amt - fee;
+  document.getElementById('sellFee').textContent =
+    `Taxa: 0.10% (R$ ${fee.toFixed(2)}) | Voce recebe: R$ ${net.toFixed(2)} via PIX`;
+});
+
+async function sellRedeem() {
+  const amount = Number(document.getElementById('sellAmount').value);
+  const pixKey = document.getElementById('sellPixKey').value.trim();
+  if (!amount || amount <= 0) return setStatus('sellStatus', 'Informe um valor', true);
+  if (!pixKey) return setStatus('sellStatus', 'Informe a chave PIX', true);
+
+  try {
+    // Redeem requires on-chain tx (approve + requestRedeem) — MetaMask for now
+    // Alchemy UserOps need dynamic ABI encoding for string params (pixKey)
+    if (!metamaskSigner && walletMode !== 'alchemy') {
+      return setStatus('sellStatus', 'Conecte via MetaMask para resgatar', true);
+    }
+
+    const amountWei = ethers.parseEther(amount.toString());
+    setStatus('sellStatus', 'Aprovando BRLE...');
+
+    if (walletMode === 'metamask' && metamaskSigner) {
+      const brle = new ethers.Contract(C.brle, ['function approve(address,uint256) returns (bool)'], metamaskSigner);
+      const tx1 = await brle.approve(C.psm, amountWei);
+      await tx1.wait();
+
+      setStatus('sellStatus', 'Enviando resgate...');
+      const psm = new ethers.Contract(C.psm, ['function requestRedeem(uint256,string) returns (bytes32)'], metamaskSigner);
+      const tx2 = await psm.requestRedeem(amountWei, pixKey);
+      await tx2.wait();
+    } else {
+      // Alchemy: use ethers Interface to encode the calldata
+      setStatus('sellStatus', 'Enviando resgate (gasless)...');
+      const iface = new ethers.Interface(['function approve(address,uint256)', 'function requestRedeem(uint256,string)']);
+      const approveData = iface.encodeFunctionData('approve', [C.psm, amountWei]);
+      const redeemData = iface.encodeFunctionData('requestRedeem', [amountWei, pixKey]);
+
+      const client = await BRLEWallet.getClient();
+      const hash = await client.sendUserOperation({
+        uo: [
+          { target: C.brle, data: approveData, value: 0n },
+          { target: C.psm, data: redeemData, value: 0n },
+        ],
+      });
+      await client.waitForUserOperationTransaction(hash);
+    }
+
+    setStatus('sellStatus', 'Resgate enviado! PIX sera processado em breve.', false, true);
+    toast('BRLE queimado, PIX a caminho!');
+    document.getElementById('sellAmount').value = '';
+    document.getElementById('sellPixKey').value = '';
+    loadBalances();
+  } catch (e) {
+    setStatus('sellStatus', 'Erro: ' + (e.reason || e.message), true);
+  }
+}
+
+// ═══ HISTORY ═══
+
+async function loadHistory() {
+  const el = document.getElementById('historyList');
+  try {
+    const res = await fetch(BACKEND + '/api/history/' + userAddress);
+    const data = await res.json();
+    const txs = data.transactions || [];
+
+    if (txs.length === 0) {
+      el.innerHTML = '<div style="color:var(--gray-500);padding:20px;text-align:center">Nenhuma transacao encontrada</div>';
+      return;
+    }
+
+    const icons = {
+      pix_mint: '💵', swap: '🔄', vault_deposit: '📈', vault_withdraw: '📤',
+      pix_redeem: '💸', mint_confirmed: '✅',
+    };
+    const colors = {
+      confirmed: 'var(--green)', mint_confirmed: 'var(--green)', completed: 'var(--green)',
+      pending: 'var(--gray-400)', mint_requested: 'var(--blue)', pix_received: 'var(--blue)',
+      failed: 'var(--red)',
+    };
+
+    let html = '';
+    for (const tx of txs) {
+      const icon = icons[tx.type] || '📋';
+      const color = colors[tx.status] || 'var(--gray-400)';
+      const amount = tx.amountOut
+        ? `${tx.amountIn} ${tx.currency} → ${tx.amountOut.toFixed(2)} BRLE`
+        : `${tx.amount} ${tx.currency || 'BRL'}`;
+      const date = new Date(tx.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const badge = tx.source === 'web3' ? 'on-chain' : 'off-chain';
+      const badgeColor = tx.source === 'web3' ? 'var(--blue)' : 'var(--gray-500)';
+      const hashLink = tx.txHash
+        ? `<a href="https://basescan.org/tx/${tx.txHash}" target="_blank" style="color:var(--gray-500);font-size:10px;text-decoration:none">${tx.txHash.slice(0,10)}...</a>`
+        : '';
+
+      html += `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-800)">
+          <span style="font-size:20px">${icon}</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${tx.label}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${date} · <span style="color:${badgeColor}">${badge}</span> ${hashLink}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--font-mono);font-size:13px;font-weight:700">${amount}</div>
+            <div style="font-size:10px;color:${color};text-transform:uppercase;font-weight:700">${tx.status.replace('_',' ')}</div>
+          </div>
+        </div>`;
+    }
+
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = '<div style="color:var(--red);padding:20px;text-align:center">Erro: ' + e.message + '</div>';
+  }
+}
+
+// ═══ UTILS ═══
+
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'history') loadHistory();
+}
+
+function copyAddress() {
+  navigator.clipboard.writeText(userAddress);
+  toast('Endereco copiado!');
+}
+
+function toast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (isError ? 'err' : 'ok');
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function setStatus(id, msg, isError, isSuccess) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status-msg' + (isError ? ' error' : isSuccess ? ' success' : '');
+}
+
+// Refresh balances every 30s
+setInterval(() => { if (userAddress) loadBalances(); }, 30000);
+</script>
+</body>
+</html>
