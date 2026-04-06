@@ -21,7 +21,12 @@
   .hdr-pill.on{display:flex}
 
   /* Layout */
-  main{max-width:440px;margin:0 auto;padding:24px 16px 60px}
+  main{max-width:1200px;margin:0 auto;padding:24px 20px 60px}
+  .app-grid{display:grid;grid-template-columns:1fr;gap:24px}
+  @media(min-width:768px){
+    .app-grid{grid-template-columns:1fr 420px}
+    .app-left{position:sticky;top:80px;align-self:start}
+  }
 
   /* Auth */
   #auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center}
@@ -48,6 +53,7 @@
 
   /* Balance */
   .bal{text-align:center;padding:28px 0 20px}
+  @media(min-width:768px){.bal{text-align:left;padding:40px 0 28px}.bal-total{font-size:52px}}
   .bal-total{font-family:var(--mono);font-size:42px;font-weight:700;letter-spacing:-2px;margin-bottom:2px}
   .bal-tokens{font-size:12px;color:var(--g500);font-family:var(--mono);line-height:1.8}
   .bal-tokens span{color:var(--g400)}
@@ -85,6 +91,10 @@
   .quick button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;background:var(--g900);border:1px solid var(--g800);border-radius:12px;color:var(--g400);font-size:10px;font-family:var(--font);font-weight:600;cursor:pointer;border:none;transition:background .15s}
   .quick button:hover{background:var(--g800);color:var(--white)}
   .quick button .qi{font-size:18px}
+
+  /* Right column */
+  .app-right{display:flex;flex-direction:column;gap:16px}
+  @media(min-width:768px){.app-right{padding-top:20px;border-left:1px solid var(--g800);padding-left:24px}}
 
   /* Recent txs */
   .recent{margin-top:4px}
@@ -147,6 +157,9 @@
   <!-- APP -->
   <div id="app">
     <div id="fullAddr" style="display:none"></div>
+    <div class="app-grid">
+    <!-- LEFT COLUMN: Balance + Actions -->
+    <div class="app-left">
 
     <!-- Balance -->
     <div class="bal">
@@ -293,11 +306,19 @@
       <button onclick="copyAddress()"><span class="qi">📎</span>Copiar</button>
     </div>
 
+    </div><!-- end app-left -->
+
+    <!-- RIGHT COLUMN: Recent Transactions -->
+    <div class="app-right">
+
     <!-- Recent Transactions -->
     <div class="recent">
       <h4>Transacoes recentes</h4>
       <div id="recentTxs" style="font-size:12px;color:var(--g500)">Carregando...</div>
     </div>
+
+    </div><!-- end app-right -->
+    </div><!-- end app-grid -->
 
     <div class="ftr">
       <a href="/brle/operator/">Operador</a> &middot;
