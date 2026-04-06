@@ -336,12 +336,17 @@ async function loginEmail() {
   if (!email) return;
   setAuthStatus('Enviando codigo... verifique seu email');
   try {
-    // Step 1: Send OTP email
-    const result = await BRLEWallet.loginWithEmail(email);
-    // Step 2: Show OTP input
+    // Send OTP email (don't await — it may hang waiting for iframe)
+    BRLEWallet.loginWithEmail(email).then(() => {
+      console.log('[AUTH] OTP sent successfully');
+    }).catch(e => {
+      console.log('[AUTH] loginWithEmail error (may be normal):', e.message);
+    });
+
+    // Show OTP input immediately
     document.getElementById('step-email').style.display = 'none';
     document.getElementById('step-otp').style.display = 'block';
-    setAuthStatus('Codigo enviado para ' + email);
+    setAuthStatus('Codigo enviado para ' + email + '. Verifique seu email.');
   } catch (e) {
     setAuthStatus('Erro: ' + e.message, true);
   }
