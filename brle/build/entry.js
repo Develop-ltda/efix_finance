@@ -38,8 +38,16 @@ function init() {
 async function loginWithEmail(email) {
   if (!_signer) init();
   await _signer.authenticate({ type: "email", email });
+  // After this, OTP has been sent. User must call verifyOtp() next.
+  console.log("[BRLEWallet] OTP sent to:", email);
+  return "otp_sent";
+}
+
+async function verifyOtp(otpCode) {
+  if (!_signer) throw new Error("Call loginWithEmail first");
+  await _signer.authenticate({ type: "otp", otpCode });
   _signerAddress = await _signer.getAddress();
-  console.log("[BRLEWallet] Authenticated:", _signerAddress);
+  console.log("[BRLEWallet] OTP verified. Address:", _signerAddress);
   return _signerAddress;
 }
 
@@ -205,6 +213,7 @@ async function disconnect() {
 window.BRLEWallet = {
   init,
   loginWithEmail,
+  verifyOtp,
   completeAuth,
   checkSession,
   getClient,
