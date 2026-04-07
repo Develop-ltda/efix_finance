@@ -526,10 +526,11 @@ async function swapUsdcToBrle() {
 async function startBridgeKyc() {
   const email=document.getElementById('bridgeEmail').value.trim(); if(!email) return setStatus('bridgeKycStatus','Informe email',true);
   try { setStatus('bridgeKycStatus','Verificando...');
-    const r=await fetch(BACKEND+'/api/bridge/kyc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,walletAddress:userAddress})}),d=await r.json();
+    const r=await fetch(BACKEND+'/api/bridge/kyc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,walletAddress:userAddress,fullName:'BRLE User'})}),d=await r.json();
     if(d.status==='approved'){setStatus('bridgeKycStatus','KYC OK!',false,true);document.getElementById('bridgeStep1').style.display='none';document.getElementById('bridgeStep2').style.display='block';}
-    else if(d.kycLink){window.open(d.kycLink,'_blank');setStatus('bridgeKycStatus','Complete na janela aberta');}
-    else setStatus('bridgeKycStatus','Erro',true);
+    else if(d.kycLink){window.open(d.kycLink,'_blank');setStatus('bridgeKycStatus','Complete a verificacao na janela aberta. Volte aqui depois.');}
+    else if(d.error){setStatus('bridgeKycStatus','Erro: '+(d.details||d.error),true);}
+    else setStatus('bridgeKycStatus','Erro desconhecido',true);
   } catch(e){setStatus('bridgeKycStatus','Erro: '+e.message,true);}
 }
 async function checkBridgeKyc(email) { try{const r=await fetch(BACKEND+'/api/bridge/kyc-status?email='+encodeURIComponent(email)),d=await r.json();if(d.status==='approved'){setStatus('bridgeKycStatus','OK!',false,true);document.getElementById('bridgeStep1').style.display='none';document.getElementById('bridgeStep2').style.display='block';}else setStatus('bridgeKycStatus','Pendente: '+d.status);}catch(e){setStatus('bridgeKycStatus','Erro',true);} }
