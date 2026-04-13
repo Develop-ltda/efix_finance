@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
+<script src="/shared/js/ga4.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lobie Units — On-Chain Rental Cash Flow Registry</title>
+<meta name="description" content="Every Lobie rental unit is one NFT with audited monthly financial data on Base. Gordon Growth NPV. Harris & Trotter attested. CVM-regulated.">
+<meta property="og:title" content="Lobie Units — On-Chain Rental Cash Flow Registry">
+<meta property="og:description" content="509 rental units. 18,000+ monthly observations. Audited cash flows on Base. Gordon Growth NPV on-chain.">
+<meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/reset.css">
+<style>
+html{scroll-behavior:smooth}
+body{font-family:'Syne',-apple-system,sans-serif;background:#fff;color:#0a0a0a;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:#0a0a0a;color:#fff}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(0,0,0,0.06);padding:0 2rem;height:56px}
+.nav-content{max-width:1200px;margin:0 auto;height:100%;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-weight:800;font-size:20px;text-decoration:none;color:#0a0a0a;letter-spacing:-0.5px}
+.nav-logo .dot{color:#7c3aed}
+.nav-links{display:flex;gap:20px;align-items:center;list-style:none}
+.nav-links a{color:#737373;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;transition:color .3s}
+.nav-links a:hover{color:#0a0a0a}
+.nav-cta{padding:0.5rem 1.25rem;border-radius:6px;font-size:0.8rem;font-weight:600;text-decoration:none;transition:all .3s;background:#0a0a0a;color:#fff;border:none}
+.nav-cta:hover{background:#262626;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+
+.hero{padding:10rem 2rem 3rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%)}
+.hero-content{position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:2.5rem}
+.hero-tag .dot{width:6px;height:6px;background:#7c3aed;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+h1{font-size:clamp(1.75rem,3.5vw,2.75rem);font-weight:700;color:#0a0a0a;margin-bottom:1.25rem;letter-spacing:-0.025em;line-height:1.2}
+h1 span{background:linear-gradient(to right,#a3a3a3,#7c3aed,#a3a3a3);background-size:200% auto;color:transparent;-webkit-background-clip:text;background-clip:text;animation:shine 4s linear infinite}
+@keyframes shine{to{background-position:200% center}}
+.subtitle{color:#737373;font-size:0.95rem;max-width:560px;margin:0 auto 2.5rem;line-height:1.75}
+.hero-actions{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap}
+.btn{padding:0.75rem 1.75rem;border-radius:8px;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all .3s;font-family:inherit;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem}
+.btn-primary{background:#0a0a0a;color:#fff}
+.btn-primary:hover{background:#262626;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.btn-secondary{background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4}
+.btn-secondary:hover{border-color:#0a0a0a;transform:translateY(-1px)}
+.container{max-width:1100px;margin:0 auto;padding:0 2rem}
+
+.stats-strip{border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.stat-item{padding:1.75rem 2rem;border-right:1px solid #e5e5e5;transition:background .3s}
+.stat-item:last-child{border-right:none}
+.stat-item:hover{background:#f5f5f5}
+.stat-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem}
+.stat-value{font-family:'Space Mono',monospace;font-size:1.35rem;font-weight:700;color:#0a0a0a}
+
+.section{padding:5rem 0}
+.section-border{border-top:1px solid #e5e5e5}
+.section-gray{background:#f5f5f5}
+.section-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem}
+.section-title{font-size:clamp(1.5rem,2.5vw,2rem);font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:0.75rem}
+.section-desc{color:#737373;font-size:0.92rem;max-width:540px;margin-bottom:2.5rem;line-height:1.7}
+
+.flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.flow-step{padding:2rem 1.75rem;border-right:1px solid #e5e5e5;transition:background .3s}
+.flow-step:last-child{border-right:none}
+.flow-step:hover{background:#f5f5f5}
+.flow-number{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.25rem}
+.flow-icon{font-size:1.5rem;margin-bottom:0.75rem}
+.flow-title{font-weight:700;font-size:0.92rem;margin-bottom:0.4rem}
+.flow-desc{font-size:0.8rem;color:#737373;line-height:1.7}
+
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.card{background:#fff;padding:2rem 1.75rem;transition:background .3s;position:relative}
+.card:hover{background:#f5f5f5}
+.card-icon{font-size:1.25rem;margin-bottom:1rem}
+.card-title{font-size:0.95rem;font-weight:700;margin-bottom:0.4rem}
+.card-desc{font-size:0.82rem;color:#737373;line-height:1.75}
+
+.chain-card{border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;transition:all .3s;max-width:600px}
+.chain-card:hover{border-color:#a3a3a3}
+.chain-header{padding:1rem 1.25rem;background:#f5f5f5;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;gap:0.6rem}
+.chain-name{font-weight:700;font-size:0.9rem}
+.chain-id{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;margin-left:auto}
+.contract-row{display:flex;justify-content:space-between;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e5e5e5;transition:background .2s}
+.contract-row:last-child{border-bottom:none}
+.contract-row:hover{background:#f5f5f5}
+.contract-label{font-size:0.8rem;color:#525252}
+.contract-addr{font-family:'Space Mono',monospace;font-size:0.7rem;color:#0a0a0a;text-decoration:none;transition:color .2s}
+.contract-addr:hover{color:#737373}
+
+.reg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.reg-item{background:#fff;padding:1.5rem;transition:background .2s}
+.reg-item:hover{background:#f5f5f5}
+.reg-label{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.35rem}
+.reg-value{font-size:0.9rem;font-weight:700}
+.reg-value.mono{font-family:'Space Mono',monospace;font-size:0.8rem}
+
+.cta-section{padding:5rem 0;text-align:center;border-top:1px solid #e5e5e5}
+.cta-desc{color:#737373;font-size:0.92rem;margin:0 auto 2rem;max-width:460px}
+
+footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:start;gap:2rem;flex-wrap:wrap}
+.footer-brand-text{font-size:0.8rem;color:#737373;margin-top:0.75rem;max-width:280px;line-height:1.7}
+.footer-links{display:flex;gap:3rem}
+.footer-col h4{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem}
+.footer-col a{display:block;color:#525252;text-decoration:none;font-size:0.8rem;padding:0.3rem 0;transition:color .2s}
+.footer-col a:hover{color:#0a0a0a}
+.footer-bottom{max-width:1100px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid #e5e5e5;font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;display:flex;justify-content:space-between}
+
+.fade-up{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.stagger-1{transition-delay:.05s}.stagger-2{transition-delay:.1s}.stagger-3{transition-delay:.15s}.stagger-4{transition-delay:.2s}
+
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.15);padding:4px 12px;border-radius:100px;font-family:'Space Mono',monospace;font-size:0.7rem;color:#7c3aed;font-weight:700}
+.live-badge .dot{width:6px;height:6px;background:#7c3aed;border-radius:50%;animation:pulse 2s infinite}
+
+@media(max-width:900px){
+  .nav-links{display:none}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .flow-grid{grid-template-columns:repeat(2,1fr)}
+  .flow-step:nth-child(2){border-right:none}
+  .flow-step:nth-child(1),.flow-step:nth-child(2){border-bottom:1px solid #e5e5e5}
+  .card-grid{grid-template-columns:1fr}
+  .reg-grid{grid-template-columns:1fr}
+  .footer-inner{flex-direction:column}
+  .footer-bottom{flex-direction:column;gap:0.5rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-content">
+    <a href="/lobie/" class="nav-logo">Lobie<span class="dot">.</span></a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <ul class="nav-links">
+        <li><a href="#how">How it Works</a></li>
+        <li><a href="#data">On-Chain Data</a></li>
+        <li><a href="#contract">Contract</a></li>
+        <li><a href="#compliance">Compliance</a></li>
+        <li><a href="/">efixDI+</a></li>
+        <li><a href="/brle/">BRLE</a></li>
+      </ul>
+      <a href="https://basescan.org/address/0xA1C5378C41114C493DA54592317051af0cB5Ca5D#code" target="_blank" class="nav-cta">View on Basescan</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-tag fade-up">
+      <span class="dot"></span>
+      Backfill in Progress on Base Mainnet
+    </div>
+    <h1 class="fade-up stagger-1">Every Rental Unit.<br><span>One NFT. Audited Cash Flows.</span></h1>
+    <p class="subtitle fade-up stagger-2">
+      Lobie Units is an on-chain registry where each short-term rental unit is one ERC-721 NFT
+      that publishes its audited monthly financial series. Gordon Growth NPV computed on-chain.
+      Harris & Trotter attested. No PII. Ever.
+    </p>
+    <div class="hero-actions fade-up stagger-3">
+      <a href="https://basescan.org/address/0xA1C5378C41114C493DA54592317051af0cB5Ca5D#code" target="_blank" class="btn btn-primary">Explore Contract</a>
+      <a href="https://github.com/Develop-ltda/lobie-unit-registry" target="_blank" class="btn btn-secondary">GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-label">Rental Units</div>
+      <div class="stat-value" id="sUnits">509</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Monthly Observations</div>
+      <div class="stat-value" id="sObs">18,664</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Buildings</div>
+      <div class="stat-value">17</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Data Range</div>
+      <div class="stat-value">Jan 2023 — Mar 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section section-border" id="how">
+  <div class="container">
+    <div class="section-label">How it works</div>
+    <div class="section-title">From SQL to on-chain in 4 steps</div>
+    <div class="section-desc">The protocol does ONE thing: publish audited per-unit cash flows. Every economic layer is built on top.</div>
+    <div class="flow-grid">
+      <div class="flow-step fade-up">
+        <div class="flow-number">Step 01</div>
+        <div class="flow-icon">SQL</div>
+        <div class="flow-title">Source Data</div>
+        <div class="flow-desc">Lobie's property management system records monthly revenue, expenses, and owner payouts for each unit in a GCP SQL database.</div>
+      </div>
+      <div class="flow-step fade-up stagger-1">
+        <div class="flow-number">Step 02</div>
+        <div class="flow-icon">NFT</div>
+        <div class="flow-title">Mint Unit</div>
+        <div class="flow-desc">Each unit gets one ERC-721 NFT with a deterministic tokenId derived from building + unit code. No PII on-chain (LGPD compliant).</div>
+      </div>
+      <div class="flow-step fade-up stagger-2">
+        <div class="flow-number">Step 03</div>
+        <div class="flow-icon">R$</div>
+        <div class="flow-title">Post Observations</div>
+        <div class="flow-desc">Monthly financial data posted on-chain: gross revenue, 11 expense categories, net result, owner payout. Each observation has a canonical row hash.</div>
+      </div>
+      <div class="flow-step fade-up stagger-3">
+        <div class="flow-number">Step 04</div>
+        <div class="flow-icon">HT</div>
+        <div class="flow-title">Auditor Attests</div>
+        <div class="flow-desc">Harris & Trotter reconciles on-chain data against bank movements, then attaches an EAS attestation UID to each verified observation.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ON-CHAIN DATA -->
+<section class="section section-gray" id="data">
+  <div class="container">
+    <div class="section-label">On-Chain Data</div>
+    <div class="section-title">Full expense decomposition per unit</div>
+    <div class="section-desc">Every monthly observation contains 11 expense categories plus revenue and payout — the same granularity as the internal accounting system.</div>
+    <div class="card-grid">
+      <div class="card fade-up">
+        <div class="card-icon">R$</div>
+        <div class="card-title">Revenue & Payout</div>
+        <div class="card-desc">grossRevenue (valor_bruto_reservas), netResult (resultado_liquido), and ownerPayout (repasse_unidade) — the valuation-relevant line.</div>
+      </div>
+      <div class="card fade-up stagger-1">
+        <div class="card-icon">11</div>
+        <div class="card-title">Expense Categories</div>
+        <div class="card-desc">OTA fees, taxes, cleaning, Lobie fee, condominio, energia, IPTU, manutencao, enxoval, and other expenses — all on-chain.</div>
+      </div>
+      <div class="card fade-up stagger-2">
+        <div class="card-icon">NPV</div>
+        <div class="card-title">Gordon Growth Valuation</div>
+        <div class="card-desc">npvOf(tokenId, r, g) computes on-chain NPV using trailing 12-month average payout. Default: r=6%, g=3%. Any protocol can call it.</div>
+      </div>
+      <div class="card fade-up stagger-3">
+        <div class="card-icon">#</div>
+        <div class="card-title">Canonical Row Hash</div>
+        <div class="card-desc">Each observation includes keccak256 of the canonical row (excluding PII). Auditors verify the hash matches source data — full audit trail.</div>
+      </div>
+      <div class="card fade-up">
+        <div class="card-icon">EAS</div>
+        <div class="card-title">Auditor Attestation</div>
+        <div class="card-desc">Harris & Trotter attaches EAS attestation UIDs after bank reconciliation. Corrections reset the attestation — HT must re-attest.</div>
+      </div>
+      <div class="card fade-up stagger-1">
+        <div class="card-icon">0</div>
+        <div class="card-title">Zero PII On-Chain</div>
+        <div class="card-desc">No names, emails, CPFs, or personal data ever touch the blockchain. LGPD compliant by design. Only financial data and hashes.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTRACT -->
+<section class="section section-border" id="contract">
+  <div class="container">
+    <div class="section-label">Smart Contract</div>
+    <div class="section-title">Verified on Basescan</div>
+    <div class="section-desc">Single immutable contract. ERC-721 + AccessControl. Solidity 0.8.27, OpenZeppelin v5.4.0, Cancun EVM target.</div>
+    <div class="chain-card">
+      <div class="chain-header">
+        <span style="font-size:18px">Base</span>
+        <span class="chain-name">Base Mainnet</span>
+        <span class="chain-id">Chain 8453</span>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">LobieUnitRegistry</span>
+        <a href="https://basescan.org/address/0xA1C5378C41114C493DA54592317051af0cB5Ca5D#code" target="_blank" class="contract-addr">0xA1C5...Ca5D</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">Standard</span>
+        <span class="contract-addr">ERC-721 (Lobie Units / LOBIE)</span>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">Valuation</span>
+        <span class="contract-addr">npvOf(tokenId, r, g) — Gordon Growth</span>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">EAS (Base)</span>
+        <a href="https://basescan.org/address/0x4200000000000000000000000000000000000021" target="_blank" class="contract-addr">0x4200...0021</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section class="section section-gray" id="compliance">
+  <div class="container">
+    <div class="section-label">Compliance & Audit</div>
+    <div class="section-title">Institutional-grade data pipeline</div>
+    <div class="section-desc">Every observation is reconcilable to source accounting data. Auditor-attested. Correction history preserved.</div>
+    <div class="reg-grid">
+      <div class="reg-item fade-up">
+        <div class="reg-label">Issuer</div>
+        <div class="reg-value">EFIX Securitizadora S.A.</div>
+      </div>
+      <div class="reg-item fade-up stagger-1">
+        <div class="reg-label">Regulation</div>
+        <div class="reg-value">CVM Act 23.635/2025</div>
+      </div>
+      <div class="reg-item fade-up stagger-2">
+        <div class="reg-label">Auditor</div>
+        <div class="reg-value">Harris & Trotter</div>
+      </div>
+      <div class="reg-item fade-up stagger-3">
+        <div class="reg-label">Attestation</div>
+        <div class="reg-value mono">EAS on Base</div>
+      </div>
+      <div class="reg-item fade-up">
+        <div class="reg-label">Privacy</div>
+        <div class="reg-value">LGPD — Zero PII on-chain</div>
+      </div>
+      <div class="reg-item fade-up stagger-1">
+        <div class="reg-label">Data Source</div>
+        <div class="reg-value mono">repasse_v2_unidades</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPOSABILITY -->
+<section class="section section-border">
+  <div class="container">
+    <div class="section-label">Composability</div>
+    <div class="section-title">Built to be composed on</div>
+    <div class="section-desc">The registry publishes data. Everything else is built on top by other protocols.</div>
+    <div class="card-grid">
+      <div class="card fade-up">
+        <div class="card-icon">Morpho</div>
+        <div class="card-title">NPV-Priced Collateral</div>
+        <div class="card-desc">Wrap unit NFT, use npvOf() as price feed. Borrow against audited rental cash flows on Morpho Blue.</div>
+      </div>
+      <div class="card fade-up stagger-1">
+        <div class="card-icon">BRLE</div>
+        <div class="card-title">BRLE + Lobie Yield</div>
+        <div class="card-desc">Combine DI fixed income (BRLE ~14.4% APY) with real rental yield (Lobie units). Two yield sources, one platform.</div>
+      </div>
+      <div class="card fade-up stagger-2">
+        <div class="card-icon">Index</div>
+        <div class="card-title">Lobie Index Token</div>
+        <div class="card-desc">Fungible token tracking volume-weighted NPV of the unit basket. Passive exposure to the entire Lobie portfolio.</div>
+      </div>
+      <div class="card fade-up stagger-3">
+        <div class="card-icon">AI</div>
+        <div class="card-title">Agent-Queryable</div>
+        <div class="card-desc">AI agents can call npvOf(), observationsOf(), and units() to evaluate rental assets programmatically. Standard ERC-721 interface.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2 class="section-title fade-up">Audited cash flows. On-chain. Composable.</h2>
+    <p class="cta-desc fade-up stagger-1">509 rental units across 17 buildings in Rio de Janeiro. Every month, every expense category, every payout — verified and immutable.</p>
+    <div class="hero-actions fade-up stagger-2">
+      <a href="https://basescan.org/address/0xA1C5378C41114C493DA54592317051af0cB5Ca5D#code" target="_blank" class="btn btn-primary">View Contract</a>
+      <a href="https://github.com/Develop-ltda/lobie-unit-registry" target="_blank" class="btn btn-secondary">GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="nav-logo" style="margin-bottom:0.5rem">Lobie<span class="dot">.</span></div>
+      <p class="footer-brand-text">On-chain registry of audited rental cash flows. Built by EFIX Securitizadora on Base. Audited by Harris & Trotter.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Protocol</h4>
+        <a href="https://basescan.org/address/0xA1C5378C41114C493DA54592317051af0cB5Ca5D#code" target="_blank">Contract</a>
+        <a href="https://github.com/Develop-ltda/lobie-unit-registry" target="_blank">GitHub</a>
+      </div>
+      <div class="footer-col">
+        <h4>EFIX Ecosystem</h4>
+        <a href="/">efixDI+</a>
+        <a href="/brle/">BRLE</a>
+        <a href="https://x.com/efix_finance" target="_blank">Twitter</a>
+      </div>
+      <div class="footer-col">
+        <h4>Audit</h4>
+        <a href="https://ht.digital" target="_blank">Harris & Trotter</a>
+        <a href="https://basescan.org/address/0x4200000000000000000000000000000000000021" target="_blank">EAS on Base</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>EFIX Securitizadora S.A. — CVM Act 23.635/2025</span>
+    <span>Lobie Units Registry on Base (Chain 8453)</span>
+  </div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
