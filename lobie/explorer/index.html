@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lobie Units Explorer — On-Chain Rental Cash Flows</title>
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Syne',sans-serif;background:#0a0a0a;color:#fafafa;min-height:100vh;-webkit-font-smoothing:antialiased}
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid #1f1f1f}
+  .hdr a{color:#fafafa;text-decoration:none;font-weight:800;font-size:20px;letter-spacing:-0.5px}
+  .hdr a .dot{color:#7c3aed}
+  .hdr-right{display:flex;gap:16px;align-items:center}
+  .hdr-right a{font-size:12px;color:#737373;text-decoration:none;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .hdr-right a:hover{color:#fafafa}
+
+  main{max-width:1400px;margin:0 auto;padding:24px 20px 60px}
+
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+  .top h1{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+  .top .stats{display:flex;gap:20px}
+  .top .stat{text-align:center}
+  .top .stat .num{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:#7c3aed}
+  .top .stat .lbl{font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:.5px}
+
+  .filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .filters input,.filters select{padding:10px 14px;background:#171717;border:1px solid #262626;border-radius:8px;color:#fafafa;font-family:'Space Mono',monospace;font-size:12px;outline:none}
+  .filters input:focus,.filters select:focus{border-color:#7c3aed}
+  .filters input{flex:1;min-width:200px}
+  .filters select{min-width:160px}
+
+  /* View toggle */
+  .view-toggle{display:flex;gap:2px;background:#171717;border-radius:8px;padding:2px}
+  .view-btn{padding:8px 16px;border:none;background:transparent;color:#737373;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border-radius:6px}
+  .view-btn.on{background:#262626;color:#fafafa}
+
+  /* Table view */
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:10px 12px;border-bottom:1px solid #1f1f1f;font-family:'Space Mono',monospace;font-weight:400;position:sticky;top:0;background:#0a0a0a;cursor:pointer}
+  .tbl th:hover{color:#fafafa}
+  .tbl td{padding:10px 12px;border-bottom:1px solid #141414;font-size:12px;font-family:'Space Mono',monospace}
+  .tbl tr:hover td{background:#141414}
+  .tbl .unit-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#fafafa}
+  .tbl .building{color:#7c3aed;font-size:10px}
+  .tbl .payout{color:#22c55e;font-weight:700}
+  .tbl .payout.neg{color:#ef4444}
+  .tbl .obs-count{color:#a78bfa}
+  .tbl .token-id{color:#525252;font-size:9px;cursor:pointer}
+  .tbl .token-id:hover{color:#a78bfa}
+
+  /* Grid view */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .nft-card{background:#171717;border:1px solid #262626;border-radius:12px;overflow:hidden;transition:border-color .2s;cursor:pointer}
+  .nft-card:hover{border-color:#7c3aed}
+  .nft-card .svg-wrap{width:100%;aspect-ratio:4/5;overflow:hidden}
+  .nft-card .svg-wrap img{width:100%;height:100%}
+  .nft-card .info{padding:12px 14px}
+  .nft-card .info .name{font-weight:700;font-size:13px;margin-bottom:4px}
+  .nft-card .info .meta{font-size:10px;color:#737373;font-family:'Space Mono',monospace}
+
+  /* Detail modal */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center}
+  .modal-bg.on{display:flex}
+  .modal{background:#171717;border:1px solid #262626;border-radius:16px;max-width:800px;width:95%;max-height:90vh;overflow-y:auto;padding:24px}
+  .modal .close{float:right;background:none;border:none;color:#737373;font-size:20px;cursor:pointer}
+  .modal .close:hover{color:#fafafa}
+  .modal h2{font-size:18px;font-weight:800;margin-bottom:4px}
+  .modal .sub{font-size:11px;color:#737373;font-family:'Space Mono',monospace;margin-bottom:16px}
+  .modal .obs-table{width:100%;border-collapse:collapse;margin-top:12px}
+  .modal .obs-table th{font-size:9px;color:#737373;text-transform:uppercase;text-align:left;padding:6px 8px;border-bottom:1px solid #262626;font-family:'Space Mono',monospace}
+  .modal .obs-table td{padding:6px 8px;border-bottom:1px solid #1f1f1f;font-size:11px;font-family:'Space Mono',monospace}
+
+  .loading{text-align:center;padding:60px;color:#737373;font-family:'Space Mono',monospace;font-size:13px}
+  .loading .spin{display:inline-block;width:20px;height:20px;border:2px solid #262626;border-top-color:#7c3aed;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(max-width:768px){
+    .tbl{font-size:10px}
+    .tbl td,.tbl th{padding:8px 6px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="/lobie/">Lobie<span class="dot">.</span> Explorer</a>
+  <div class="hdr-right">
+    <a href="/lobie/">Home</a>
+    <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank">Basescan</a>
+    <a href="/brle/">BRLE</a>
+  </div>
+</div>
+
+<main>
+  <div class="top">
+    <h1>Lobie Units On-Chain</h1>
+    <div class="stats">
+      <div class="stat"><div class="num" id="sUnits">—</div><div class="lbl">Units</div></div>
+      <div class="stat"><div class="num" id="sObs">—</div><div class="lbl">Observations</div></div>
+      <div class="stat"><div class="num" id="sBuildings">—</div><div class="lbl">Buildings</div></div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="search" placeholder="Search unit or building...">
+    <select id="buildingFilter"><option value="">All Buildings</option></select>
+    <div class="view-toggle">
+      <button class="view-btn on" onclick="setView('table',this)">Table</button>
+      <button class="view-btn" onclick="setView('grid',this)">Cards</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="loading"><div class="spin"></div><br>Loading units from Base mainnet...</div>
+  </div>
+</main>
+
+<!-- Detail Modal -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="close" onclick="closeModal()">&times;</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<script>
+const RPC = 'https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf';
+const REGISTRY = '0xd8C32a417B5317D34f783CE4e959850465AD4638';
+const ABI = [
+  'function totalUnits() view returns (uint256)',
+  'function unitDisplayName(uint256) view returns (string)',
+  'function units(uint256) view returns (uint64 buildingId, bytes32 unitCodeHash, bytes32 metadataURI, uint32 observationCount, int128 ttmAveragePayout, uint64 lastObservedYearMonth, uint64 lastUpdateTimestamp, bytes32 historyMerkleRoot)',
+  'function observationsOf(uint256) view returns (tuple(uint16 year, uint8 month, int128 grossRevenue, int128 otaFees, int128 taxes, int128 cleaning, int128 lobieFee, int128 condominio, int128 energia, int128 iptu, int128 manutencao, int128 enxoval, int128 otherExpenses, int128 netResult, int128 ownerPayout, bytes32 sourceRowHash, bytes32 attestationId)[12])',
+  'function tokenURI(uint256) view returns (string)',
+  'event UnitMinted(uint256 indexed tokenId, uint64 indexed buildingId, bytes32 unitCodeHash)',
+];
+
+let allUnits = [];
+let currentView = 'table';
+const provider = new ethers.JsonRpcProvider(RPC);
+const registry = new ethers.Contract(REGISTRY, ABI, provider);
+
+async function loadUnits() {
+  // Get all UnitMinted events
+  const filter = registry.filters.UnitMinted();
+  const block = await provider.getBlockNumber();
+  const fromBlock = Math.max(0, block - 500000);
+  const events = await registry.queryFilter(filter, fromBlock);
+
+  const buildings = new Set();
+
+  for (const e of events) {
+    const tokenId = e.args[0];
+    try {
+      const [unit, name] = await Promise.all([
+        registry.units(tokenId),
+        registry.unitDisplayName(tokenId),
+      ]);
+
+      const buildingId = Number(unit.buildingId);
+      const obsCount = Number(unit.observationCount);
+      const ttm = Number(ethers.formatEther(unit.ttmAveragePayout));
+      const lastYM = Number(unit.lastObservedYearMonth);
+      const lastYear = Math.floor(lastYM / 12);
+      const lastMonth = lastYM % 12;
+
+      // Extract building name from display name (before ::)
+      const parts = name.split('::');
+      const building = parts[0] || 'Unknown';
+      const unitCode = parts[1] || name;
+
+      buildings.add(building);
+
+      allUnits.push({
+        tokenId: tokenId.toString(),
+        name,
+        building,
+        unitCode,
+        buildingId,
+        obsCount,
+        ttmAvg: ttm,
+        lastPeriod: lastYear > 0 ? `${lastYear}-${String(lastMonth).padStart(2,'0')}` : '—',
+      });
+    } catch (err) {
+      console.log('Skip token', tokenId.toString().slice(0,10), err.message.slice(0,50));
+    }
+  }
+
+  // Sort by building then unit
+  allUnits.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Update stats
+  document.getElementById('sUnits').textContent = allUnits.length;
+  document.getElementById('sObs').textContent = allUnits.reduce((s, u) => s + u.obsCount, 0).toLocaleString();
+  document.getElementById('sBuildings').textContent = buildings.size;
+
+  // Populate building filter
+  const sel = document.getElementById('buildingFilter');
+  [...buildings].sort().forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b; opt.textContent = b;
+    sel.appendChild(opt);
+  });
+
+  render();
+}
+
+function render() {
+  const query = document.getElementById('search').value.toLowerCase();
+  const bFilter = document.getElementById('buildingFilter').value;
+  const filtered = allUnits.filter(u => {
+    if (query && !u.name.toLowerCase().includes(query)) return false;
+    if (bFilter && u.building !== bFilter) return false;
+    return true;
+  });
+
+  if (currentView === 'table') renderTable(filtered);
+  else renderGrid(filtered);
+}
+
+function renderTable(units) {
+  const el = document.getElementById('content');
+  if (units.length === 0) { el.innerHTML = '<div class="loading">No units found</div>'; return; }
+
+  let html = `<table class="tbl"><thead><tr>
+    <th>Unit</th><th>Building</th><th>Observations</th>
+    <th>TTM Avg Payout</th><th>Last Period</th><th>Token ID</th>
+  </tr></thead><tbody>`;
+
+  for (const u of units) {
+    const payClass = u.ttmAvg < 0 ? 'payout neg' : 'payout';
+    html += `<tr onclick="showDetail('${u.tokenId}')" style="cursor:pointer">
+      <td class="unit-name">${u.unitCode}</td>
+      <td class="building">${u.building}</td>
+      <td class="obs-count">${u.obsCount}</td>
+      <td class="${payClass}">R$ ${u.ttmAvg.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+      <td>${u.lastPeriod}</td>
+      <td class="token-id" title="${u.tokenId}">${u.tokenId.slice(0,8)}...</td>
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function renderGrid(units) {
+  const el = document.getElementById('content');
+  if (units.length === 0) { el.innerHTML = '<div class="loading">No units found</div>'; return; }
+
+  let html = '<div class="grid">';
+  for (const u of units) {
+    html += `<div class="nft-card" onclick="showDetail('${u.tokenId}')">
+      <div class="svg-wrap" id="svg-${u.tokenId.slice(0,10)}"></div>
+      <div class="info">
+        <div class="name">${u.name}</div>
+        <div class="meta">${u.obsCount} obs · R$ ${u.ttmAvg.toFixed(0)}/mo avg</div>
+      </div>
+    </div>`;
+  }
+  html += '</div>';
+  el.innerHTML = html;
+
+  // Load SVGs for visible cards
+  for (const u of units.slice(0, 20)) {
+    loadSvg(u.tokenId);
+  }
+}
+
+async function loadSvg(tokenId) {
+  try {
+    const uri = await registry.tokenURI(tokenId);
+    const json = JSON.parse(atob(uri.split(',')[1]));
+    const svgData = json.image; // data:image/svg+xml;base64,...
+    const el = document.getElementById('svg-' + tokenId.slice(0,10));
+    if (el) el.innerHTML = `<img src="${svgData}" alt="NFT">`;
+  } catch {}
+}
+
+async function showDetail(tokenId) {
+  const modal = document.getElementById('modal');
+  const content = document.getElementById('modalContent');
+  modal.classList.add('on');
+
+  const unit = allUnits.find(u => u.tokenId === tokenId);
+  if (!unit) return;
+
+  content.innerHTML = `<h2>${unit.name}</h2>
+    <div class="sub">Building #${unit.buildingId} · ${unit.obsCount} observations · Token: ${tokenId.slice(0,12)}...</div>
+    <div style="margin-bottom:16px">
+      <span style="color:#7c3aed;font-weight:700;font-family:'Space Mono',monospace;font-size:18px">R$ ${unit.ttmAvg.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+      <span style="color:#737373;font-size:11px"> TTM avg monthly payout</span>
+    </div>
+    <div style="color:#737373;font-size:11px;font-family:'Space Mono',monospace">Loading observations...</div>`;
+
+  try {
+    const obs = await registry.observationsOf(BigInt(tokenId));
+    let obsHtml = `<table class="obs-table"><thead><tr>
+      <th>Period</th><th>Gross Rev</th><th>OTA Fees</th><th>Cleaning</th><th>Lobie Fee</th>
+      <th>Condo</th><th>Net Result</th><th>Owner Payout</th><th>Attested</th>
+    </tr></thead><tbody>`;
+
+    for (const o of obs) {
+      if (Number(o.year) === 0) continue;
+      const fmt = v => { const n = Number(ethers.formatEther(v)); return n === 0 ? '—' : n.toLocaleString('pt-BR',{minimumFractionDigits:0}); };
+      const attested = o.attestationId !== ethers.ZeroHash ? '✓' : '—';
+      obsHtml += `<tr>
+        <td>${o.year}-${String(o.month).padStart(2,'0')}</td>
+        <td>${fmt(o.grossRevenue)}</td>
+        <td>${fmt(o.otaFees)}</td>
+        <td>${fmt(o.cleaning)}</td>
+        <td>${fmt(o.lobieFee)}</td>
+        <td>${fmt(o.condominio)}</td>
+        <td>${fmt(o.netResult)}</td>
+        <td style="color:#22c55e;font-weight:700">${fmt(o.ownerPayout)}</td>
+        <td>${attested}</td>
+      </tr>`;
+    }
+
+    obsHtml += '</tbody></table>';
+
+    content.innerHTML = `<h2>${unit.name}</h2>
+      <div class="sub">Building #${unit.buildingId} · ${unit.obsCount} observations · Token: ${tokenId.slice(0,12)}...
+        · <a href="https://basescan.org/nft/0xd8C32a417B5317D34f783CE4e959850465AD4638/${tokenId}" target="_blank" style="color:#7c3aed">Basescan</a></div>
+      <div style="margin-bottom:16px">
+        <span style="color:#7c3aed;font-weight:700;font-family:'Space Mono',monospace;font-size:18px">R$ ${unit.ttmAvg.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+        <span style="color:#737373;font-size:11px"> TTM avg monthly payout</span>
+      </div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px">Trailing 12 Observations</div>
+      ${obsHtml}`;
+
+  } catch (err) {
+    content.innerHTML += `<div style="color:#ef4444;font-size:11px">Error loading observations: ${err.message}</div>`;
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('on');
+}
+
+function setView(view, btn) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  render();
+}
+
+// Search & filter
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('buildingFilter').addEventListener('change', render);
+
+// Load
+loadUnits().catch(e => {
+  document.getElementById('content').innerHTML = `<div class="loading" style="color:#ef4444">Error: ${e.message}</div>`;
+});
+</script>
+</body>
+</html>
