@@ -15,28 +15,21 @@
   .hdr-right{display:flex;gap:16px;align-items:center}
   .hdr-right a{font-size:12px;color:#737373;text-decoration:none;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
   .hdr-right a:hover{color:#0a0a0a}
-
   main{max-width:1400px;margin:0 auto;padding:24px 20px 60px}
-
   .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:16px}
   .top h1{font-size:24px;font-weight:800;letter-spacing:-0.5px}
   .top .stats{display:flex;gap:20px}
   .top .stat{text-align:center}
   .top .stat .num{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:#7c3aed}
   .top .stat .lbl{font-size:10px;color:#a3a3a3;text-transform:uppercase;letter-spacing:.5px}
-
   .filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
   .filters input,.filters select{padding:10px 14px;background:#fff;border:1px solid #e5e5e5;border-radius:8px;color:#0a0a0a;font-family:'Space Mono',monospace;font-size:12px;outline:none}
   .filters input:focus,.filters select:focus{border-color:#7c3aed}
   .filters input{flex:1;min-width:200px}
   .filters select{min-width:160px}
-
-  /* View toggle */
   .view-toggle{display:flex;gap:2px;background:#f5f5f5;border-radius:8px;padding:2px}
   .view-btn{padding:8px 16px;border:none;background:transparent;color:#737373;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border-radius:6px}
   .view-btn.on{background:#fff;color:#0a0a0a;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
-
-  /* Table view */
   .tbl{width:100%;border-collapse:collapse}
   .tbl th{font-size:10px;color:#a3a3a3;text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:10px 12px;border-bottom:1px solid #e5e5e5;font-family:'Space Mono',monospace;font-weight:400;position:sticky;top:0;background:#fff;cursor:pointer}
   .tbl th:hover{color:#0a0a0a}
@@ -46,41 +39,43 @@
   .tbl .building{color:#7c3aed;font-size:10px}
   .tbl .payout{color:#16a34a;font-weight:700}
   .tbl .payout.neg{color:#ef4444}
-  .tbl .obs-count{color:#7c3aed}
+  .tbl .npv{color:#7c3aed;font-weight:700}
+  .tbl .obs-count{color:#525252}
   .tbl .token-id{color:#a3a3a3;font-size:9px;cursor:pointer}
   .tbl .token-id:hover{color:#7c3aed}
-
-  /* Grid view */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-  .nft-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;transition:border-color .2s;cursor:pointer}
-  .nft-card:hover{border-color:#7c3aed}
-  .nft-card .svg-wrap{width:100%;aspect-ratio:4/5;overflow:hidden}
-  .nft-card .svg-wrap img{width:100%;height:100%}
-  .nft-card .info{padding:12px 14px}
-  .nft-card .info .name{font-weight:700;font-size:13px;margin-bottom:4px}
-  .nft-card .info .meta{font-size:10px;color:#737373;font-family:'Space Mono',monospace}
-
-  /* Detail modal */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .nft-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:20px;transition:all .2s;cursor:pointer}
+  .nft-card:hover{border-color:#7c3aed;box-shadow:0 4px 20px rgba(124,58,237,0.08)}
+  .nft-card .name{font-weight:700;font-size:14px;margin-bottom:2px}
+  .nft-card .building-tag{color:#7c3aed;font-size:10px;font-weight:600;margin-bottom:12px}
+  .nft-card .metric{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px}
+  .nft-card .metric:last-child{border-bottom:none}
+  .nft-card .metric .lbl{color:#a3a3a3}
+  .nft-card .metric .val{font-family:'Space Mono',monospace;font-weight:700}
+  .nft-card .metric .val.green{color:#16a34a}
+  .nft-card .metric .val.purple{color:#7c3aed}
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center}
   .modal-bg.on{display:flex}
-  .modal{background:#fff;border:1px solid #e5e5e5;border-radius:16px;max-width:800px;width:95%;max-height:90vh;overflow-y:auto;padding:24px}
+  .modal{background:#fff;border:1px solid #e5e5e5;border-radius:16px;max-width:900px;width:95%;max-height:90vh;overflow-y:auto;padding:24px}
   .modal .close{float:right;background:none;border:none;color:#a3a3a3;font-size:20px;cursor:pointer}
   .modal .close:hover{color:#0a0a0a}
   .modal h2{font-size:18px;font-weight:800;margin-bottom:4px}
   .modal .sub{font-size:11px;color:#737373;font-family:'Space Mono',monospace;margin-bottom:16px}
+  .modal .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .modal .kpi{background:#f9f9fb;border:1px solid #e5e5e5;border-radius:10px;padding:14px;text-align:center}
+  .modal .kpi .val{font-family:'Space Mono',monospace;font-size:18px;font-weight:700}
+  .modal .kpi .val.purple{color:#7c3aed}
+  .modal .kpi .val.green{color:#16a34a}
+  .modal .kpi .lbl{font-size:9px;color:#a3a3a3;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
   .modal .obs-table{width:100%;border-collapse:collapse;margin-top:12px}
   .modal .obs-table th{font-size:9px;color:#a3a3a3;text-transform:uppercase;text-align:left;padding:6px 8px;border-bottom:1px solid #e5e5e5;font-family:'Space Mono',monospace}
   .modal .obs-table td{padding:6px 8px;border-bottom:1px solid #f5f5f5;font-size:11px;font-family:'Space Mono',monospace}
-
-  .loading{text-align:center;padding:60px;color:#a3a3a3;font-family:'Space Mono',monospace;font-size:13px}
-  .loading .spin{display:inline-block;width:20px;height:20px;border:2px solid #e5e5e5;border-top-color:#7c3aed;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
+  .progress{text-align:center;padding:40px;color:#a3a3a3;font-family:'Space Mono',monospace;font-size:13px}
+  .progress .bar{width:300px;height:4px;background:#e5e5e5;border-radius:2px;margin:12px auto;overflow:hidden}
+  .progress .bar .fill{height:100%;background:#7c3aed;border-radius:2px;transition:width .3s}
+  .spin{display:inline-block;width:20px;height:20px;border:2px solid #e5e5e5;border-top-color:#7c3aed;border-radius:50%;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-
-  @media(max-width:768px){
-    .tbl{font-size:10px}
-    .tbl td,.tbl th{padding:8px 6px}
-    .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
-  }
+  @media(max-width:768px){.tbl{font-size:10px}.tbl td,.tbl th{padding:8px 6px}.grid{grid-template-columns:1fr}.modal .kpis{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -100,7 +95,7 @@
     <div class="stats">
       <div class="stat"><div class="num" id="sUnits">—</div><div class="lbl">Units</div></div>
       <div class="stat"><div class="num" id="sObs">—</div><div class="lbl">Observations</div></div>
-      <div class="stat"><div class="num" id="sBuildings">—</div><div class="lbl">Buildings</div></div>
+      <div class="stat"><div class="num" id="sPortNPV">—</div><div class="lbl">Portfolio NPV</div></div>
     </div>
   </div>
 
@@ -114,11 +109,10 @@
   </div>
 
   <div id="content">
-    <div class="loading"><div class="spin"></div><br>Loading units from Base mainnet...</div>
+    <div class="progress"><div class="spin"></div><br>Loading from Base mainnet...<div class="bar"><div class="fill" id="loadBar" style="width:0%"></div></div><div id="loadStatus">Scanning events...</div></div>
   </div>
 </main>
 
-<!-- Detail Modal -->
 <div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <button class="close" onclick="closeModal()">&times;</button>
@@ -135,226 +129,241 @@ const ABI = [
   'function unitDisplayName(uint256) view returns (string)',
   'function units(uint256) view returns (uint64 buildingId, bytes32 unitCodeHash, bytes32 metadataURI, uint32 observationCount, int128 ttmAveragePayout, uint64 lastObservedYearMonth, uint64 lastUpdateTimestamp, bytes32 historyMerkleRoot)',
   'function observationsOf(uint256) view returns (tuple(uint16 year, uint8 month, int128 grossRevenue, int128 otaFees, int128 taxes, int128 cleaning, int128 lobieFee, int128 condominio, int128 energia, int128 iptu, int128 manutencao, int128 enxoval, int128 otherExpenses, int128 netResult, int128 ownerPayout, bytes32 sourceRowHash, bytes32 attestationId)[12])',
-  'function tokenURI(uint256) view returns (string)',
+  'function defaultR() view returns (uint256)',
+  'function defaultG() view returns (uint256)',
   'event UnitMinted(uint256 indexed tokenId, uint64 indexed buildingId, bytes32 unitCodeHash)',
 ];
 
 let allUnits = [];
 let currentView = 'table';
+let defaultR = 0.06, defaultG = 0.03;
 const provider = new ethers.JsonRpcProvider(RPC);
 const registry = new ethers.Contract(REGISTRY, ABI, provider);
 
+function gordonNPV(ttmAvg, r, g) {
+  if (ttmAvg <= 0 || r <= g) return 0;
+  const annual = ttmAvg * 12;
+  const d1 = annual * (1 + g);
+  return d1 / (r - g);
+}
+
 async function loadUnits() {
-  // Get all UnitMinted events
-  const filter = registry.filters.UnitMinted();
+  // Get default rates
+  try {
+    const [r, g] = await Promise.all([registry.defaultR(), registry.defaultG()]);
+    defaultR = Number(ethers.formatEther(r));
+    defaultG = Number(ethers.formatEther(g));
+  } catch {}
+
+  // Get events in chunks to avoid timeout
   const block = await provider.getBlockNumber();
-  const fromBlock = Math.max(0, block - 500000);
-  const events = await registry.queryFilter(filter, fromBlock);
+  document.getElementById('loadStatus').textContent = 'Scanning events...';
 
+  let events = [];
+  const chunkSize = 100000;
+  for (let from = Math.max(0, block - 500000); from <= block; from += chunkSize) {
+    const to = Math.min(from + chunkSize - 1, block);
+    const chunk = await registry.queryFilter(registry.filters.UnitMinted(), from, to);
+    events = events.concat(chunk);
+  }
+
+  document.getElementById('loadStatus').textContent = `Found ${events.length} units. Loading data...`;
+  document.getElementById('loadBar').style.width = '20%';
+
+  // Batch load unit data (10 at a time for speed)
   const buildings = new Set();
+  const BATCH = 10;
 
-  for (const e of events) {
-    const tokenId = e.args[0];
-    try {
-      const [unit, name] = await Promise.all([
-        registry.units(tokenId),
-        registry.unitDisplayName(tokenId),
-      ]);
+  for (let i = 0; i < events.length; i += BATCH) {
+    const batch = events.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(async (e) => {
+      const tokenId = e.args[0];
+      try {
+        const [unit, name] = await Promise.all([
+          registry.units(tokenId),
+          registry.unitDisplayName(tokenId),
+        ]);
+        return { tokenId, unit, name };
+      } catch { return null; }
+    }));
 
-      const buildingId = Number(unit.buildingId);
+    for (const r of results) {
+      if (!r) continue;
+      const { tokenId, unit, name } = r;
       const obsCount = Number(unit.observationCount);
       const ttm = Number(ethers.formatEther(unit.ttmAveragePayout));
       const lastYM = Number(unit.lastObservedYearMonth);
-      const lastYear = Math.floor(lastYM / 12);
-      const lastMonth = lastYM % 12;
-
-      // Extract building name from display name (before ::)
       const parts = name.split('::');
       const building = parts[0] || 'Unknown';
       const unitCode = parts[1] || name;
-
       buildings.add(building);
 
+      const npv = obsCount >= 12 ? gordonNPV(ttm, defaultR, defaultG) : 0;
+
       allUnits.push({
-        tokenId: tokenId.toString(),
-        name,
-        building,
-        unitCode,
-        buildingId,
-        obsCount,
-        ttmAvg: ttm,
-        lastPeriod: lastYear > 0 ? `${lastYear}-${String(lastMonth).padStart(2,'0')}` : '—',
+        tokenId: tokenId.toString(), name, building, unitCode,
+        buildingId: Number(unit.buildingId), obsCount, ttmAvg: ttm,
+        lastPeriod: lastYM > 0 ? `${Math.floor(lastYM/12)}-${String(lastYM%12).padStart(2,'0')}` : '—',
+        npv,
       });
-    } catch (err) {
-      console.log('Skip token', tokenId.toString().slice(0,10), err.message.slice(0,50));
+    }
+
+    // Progressive update
+    const pct = 20 + Math.floor((i / events.length) * 80);
+    document.getElementById('loadBar').style.width = pct + '%';
+    document.getElementById('loadStatus').textContent = `Loaded ${allUnits.length} of ${events.length} units...`;
+
+    // Render progressively every 50 units
+    if (allUnits.length % 50 === 0 || i + BATCH >= events.length) {
+      updateStats(buildings);
+      render();
     }
   }
 
-  // Sort by building then unit
-  allUnits.sort((a, b) => a.name.localeCompare(b.name));
+  allUnits.sort((a, b) => b.npv - a.npv); // Sort by NPV descending
+  updateStats(buildings);
+  populateBuildingFilter(buildings);
+  render();
+  document.getElementById('loadBar').style.width = '100%';
+  document.getElementById('loadStatus').textContent = '';
+}
 
-  // Update stats
+function updateStats(buildings) {
   document.getElementById('sUnits').textContent = allUnits.length;
   document.getElementById('sObs').textContent = allUnits.reduce((s, u) => s + u.obsCount, 0).toLocaleString();
-  document.getElementById('sBuildings').textContent = buildings.size;
+  const totalNPV = allUnits.reduce((s, u) => s + u.npv, 0);
+  document.getElementById('sPortNPV').textContent = totalNPV > 0 ? 'R$ ' + (totalNPV / 1e6).toFixed(1) + 'M' : '—';
+}
 
-  // Populate building filter
+function populateBuildingFilter(buildings) {
   const sel = document.getElementById('buildingFilter');
+  sel.innerHTML = '<option value="">All Buildings</option>';
   [...buildings].sort().forEach(b => {
     const opt = document.createElement('option');
     opt.value = b; opt.textContent = b;
     sel.appendChild(opt);
   });
-
-  render();
 }
 
 function render() {
-  const query = document.getElementById('search').value.toLowerCase();
-  const bFilter = document.getElementById('buildingFilter').value;
+  const q = document.getElementById('search').value.toLowerCase();
+  const bf = document.getElementById('buildingFilter').value;
   const filtered = allUnits.filter(u => {
-    if (query && !u.name.toLowerCase().includes(query)) return false;
-    if (bFilter && u.building !== bFilter) return false;
+    if (q && !u.name.toLowerCase().includes(q)) return false;
+    if (bf && u.building !== bf) return false;
     return true;
   });
-
   if (currentView === 'table') renderTable(filtered);
   else renderGrid(filtered);
 }
 
 function renderTable(units) {
   const el = document.getElementById('content');
-  if (units.length === 0) { el.innerHTML = '<div class="loading">No units found</div>'; return; }
+  if (!units.length) { el.innerHTML = '<div class="progress">No units found</div>'; return; }
 
   let html = `<table class="tbl"><thead><tr>
-    <th>Unit</th><th>Building</th><th>Observations</th>
-    <th>TTM Avg Payout</th><th>Last Period</th><th>Token ID</th>
+    <th>Unit</th><th>Building</th><th>Obs</th>
+    <th>TTM Avg Payout</th><th>Gordon NPV (r=${(defaultR*100).toFixed(0)}% g=${(defaultG*100).toFixed(0)}%)</th><th>Last Period</th>
   </tr></thead><tbody>`;
 
   for (const u of units) {
     const payClass = u.ttmAvg < 0 ? 'payout neg' : 'payout';
+    const npvStr = u.npv > 0 ? 'R$ ' + u.npv.toLocaleString('pt-BR', {maximumFractionDigits: 0}) : '—';
     html += `<tr onclick="showDetail('${u.tokenId}')" style="cursor:pointer">
       <td class="unit-name">${u.unitCode}</td>
       <td class="building">${u.building}</td>
       <td class="obs-count">${u.obsCount}</td>
-      <td class="${payClass}">R$ ${u.ttmAvg.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+      <td class="${payClass}">R$ ${u.ttmAvg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+      <td class="npv">${npvStr}</td>
       <td>${u.lastPeriod}</td>
-      <td class="token-id" title="${u.tokenId}">${u.tokenId.slice(0,8)}...</td>
     </tr>`;
   }
-
   html += '</tbody></table>';
   el.innerHTML = html;
 }
 
 function renderGrid(units) {
   const el = document.getElementById('content');
-  if (units.length === 0) { el.innerHTML = '<div class="loading">No units found</div>'; return; }
+  if (!units.length) { el.innerHTML = '<div class="progress">No units found</div>'; return; }
 
   let html = '<div class="grid">';
   for (const u of units) {
+    const npvStr = u.npv > 0 ? 'R$ ' + (u.npv / 1000).toFixed(0) + 'k' : '—';
+    const payStr = 'R$ ' + u.ttmAvg.toLocaleString('pt-BR', {minimumFractionDigits: 0});
     html += `<div class="nft-card" onclick="showDetail('${u.tokenId}')">
-      <div class="svg-wrap" id="svg-${u.tokenId.slice(0,10)}"></div>
-      <div class="info">
-        <div class="name">${u.name}</div>
-        <div class="meta">${u.obsCount} obs · R$ ${u.ttmAvg.toFixed(0)}/mo avg</div>
-      </div>
+      <div class="name">${u.unitCode}</div>
+      <div class="building-tag">${u.building}</div>
+      <div class="metric"><span class="lbl">Observations</span><span class="val">${u.obsCount}</span></div>
+      <div class="metric"><span class="lbl">TTM Avg Payout</span><span class="val green">${payStr}</span></div>
+      <div class="metric"><span class="lbl">Gordon NPV</span><span class="val purple">${npvStr}</span></div>
+      <div class="metric"><span class="lbl">Last Period</span><span class="val">${u.lastPeriod}</span></div>
     </div>`;
   }
   html += '</div>';
   el.innerHTML = html;
-
-  // Load SVGs for visible cards
-  for (const u of units.slice(0, 20)) {
-    loadSvg(u.tokenId);
-  }
-}
-
-async function loadSvg(tokenId) {
-  try {
-    const uri = await registry.tokenURI(tokenId);
-    const json = JSON.parse(atob(uri.split(',')[1]));
-    const svgData = json.image; // data:image/svg+xml;base64,...
-    const el = document.getElementById('svg-' + tokenId.slice(0,10));
-    if (el) el.innerHTML = `<img src="${svgData}" alt="NFT">`;
-  } catch {}
 }
 
 async function showDetail(tokenId) {
-  const modal = document.getElementById('modal');
+  document.getElementById('modal').classList.add('on');
   const content = document.getElementById('modalContent');
-  modal.classList.add('on');
-
   const unit = allUnits.find(u => u.tokenId === tokenId);
   if (!unit) return;
 
+  const npvStr = unit.npv > 0 ? 'R$ ' + unit.npv.toLocaleString('pt-BR', {maximumFractionDigits: 0}) : '—';
+
   content.innerHTML = `<h2>${unit.name}</h2>
-    <div class="sub">Building #${unit.buildingId} · ${unit.obsCount} observations · Token: ${tokenId.slice(0,12)}...</div>
-    <div style="margin-bottom:16px">
-      <span style="color:#7c3aed;font-weight:700;font-family:'Space Mono',monospace;font-size:18px">R$ ${unit.ttmAvg.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-      <span style="color:#737373;font-size:11px"> TTM avg monthly payout</span>
+    <div class="sub">Building #${unit.buildingId} · ${unit.obsCount} observations
+      · <a href="https://basescan.org/token/0xd8C32a417B5317D34f783CE4e959850465AD4638?a=${tokenId}" target="_blank" style="color:#7c3aed">Basescan</a></div>
+    <div class="kpis">
+      <div class="kpi"><div class="val green">R$ ${unit.ttmAvg.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div><div class="lbl">TTM Avg Payout/mo</div></div>
+      <div class="kpi"><div class="val purple">${npvStr}</div><div class="lbl">Gordon NPV (r=${(defaultR*100)}% g=${(defaultG*100)}%)</div></div>
+      <div class="kpi"><div class="val">${unit.obsCount}</div><div class="lbl">Observations</div></div>
     </div>
-    <div style="color:#737373;font-size:11px;font-family:'Space Mono',monospace">Loading observations...</div>`;
+    <div style="color:#a3a3a3;font-size:11px;font-family:'Space Mono',monospace">Loading observations...</div>`;
 
   try {
     const obs = await registry.observationsOf(BigInt(tokenId));
     let obsHtml = `<table class="obs-table"><thead><tr>
-      <th>Period</th><th>Gross Rev</th><th>OTA Fees</th><th>Cleaning</th><th>Lobie Fee</th>
+      <th>Period</th><th>Gross Rev</th><th>OTA Fee</th><th>Cleaning</th><th>Lobie Fee</th>
       <th>Condo</th><th>Net Result</th><th>Owner Payout</th><th>Attested</th>
     </tr></thead><tbody>`;
 
     for (const o of obs) {
       if (Number(o.year) === 0) continue;
-      const fmt = v => { const n = Number(ethers.formatEther(v)); return n === 0 ? '—' : n.toLocaleString('pt-BR',{minimumFractionDigits:0}); };
+      const fmt = v => { const n = Number(ethers.formatEther(v)); return n === 0 ? '—' : n.toLocaleString('pt-BR',{maximumFractionDigits:0}); };
       const attested = o.attestationId !== ethers.ZeroHash ? '✓' : '—';
       obsHtml += `<tr>
         <td>${o.year}-${String(o.month).padStart(2,'0')}</td>
-        <td>${fmt(o.grossRevenue)}</td>
-        <td>${fmt(o.otaFees)}</td>
-        <td>${fmt(o.cleaning)}</td>
-        <td>${fmt(o.lobieFee)}</td>
-        <td>${fmt(o.condominio)}</td>
-        <td>${fmt(o.netResult)}</td>
-        <td style="color:#16a34a;font-weight:700">${fmt(o.ownerPayout)}</td>
-        <td>${attested}</td>
+        <td>${fmt(o.grossRevenue)}</td><td>${fmt(o.otaFees)}</td><td>${fmt(o.cleaning)}</td>
+        <td>${fmt(o.lobieFee)}</td><td>${fmt(o.condominio)}</td><td>${fmt(o.netResult)}</td>
+        <td style="color:#16a34a;font-weight:700">${fmt(o.ownerPayout)}</td><td>${attested}</td>
       </tr>`;
     }
-
     obsHtml += '</tbody></table>';
 
     content.innerHTML = `<h2>${unit.name}</h2>
-      <div class="sub">Building #${unit.buildingId} · ${unit.obsCount} observations · Token: ${tokenId.slice(0,12)}...
+      <div class="sub">Building #${unit.buildingId} · ${unit.obsCount} observations
         · <a href="https://basescan.org/token/0xd8C32a417B5317D34f783CE4e959850465AD4638?a=${tokenId}" target="_blank" style="color:#7c3aed">Basescan</a></div>
-      <div style="margin-bottom:16px">
-        <span style="color:#7c3aed;font-weight:700;font-family:'Space Mono',monospace;font-size:18px">R$ ${unit.ttmAvg.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-        <span style="color:#737373;font-size:11px"> TTM avg monthly payout</span>
+      <div class="kpis">
+        <div class="kpi"><div class="val green">R$ ${unit.ttmAvg.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div><div class="lbl">TTM Avg Payout/mo</div></div>
+        <div class="kpi"><div class="val purple">${npvStr}</div><div class="lbl">Gordon NPV (r=${(defaultR*100)}% g=${(defaultG*100)}%)</div></div>
+        <div class="kpi"><div class="val">${unit.obsCount}</div><div class="lbl">Observations</div></div>
       </div>
       <div style="font-size:12px;font-weight:700;margin-bottom:8px">Trailing 12 Observations</div>
       ${obsHtml}`;
-
   } catch (err) {
-    content.innerHTML += `<div style="color:#ef4444;font-size:11px">Error loading observations: ${err.message}</div>`;
+    content.innerHTML += `<div style="color:#ef4444;font-size:11px">Error: ${err.message}</div>`;
   }
 }
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('on');
-}
+function closeModal() { document.getElementById('modal').classList.remove('on'); }
+function setView(v, btn) { currentView = v; document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('on')); btn.classList.add('on'); render(); }
 
-function setView(view, btn) {
-  currentView = view;
-  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  render();
-}
-
-// Search & filter
 document.getElementById('search').addEventListener('input', render);
 document.getElementById('buildingFilter').addEventListener('change', render);
 
-// Load
 loadUnits().catch(e => {
-  document.getElementById('content').innerHTML = `<div class="loading" style="color:#ef4444">Error: ${e.message}</div>`;
+  document.getElementById('content').innerHTML = `<div class="progress" style="color:#ef4444">Error: ${e.message}</div>`;
 });
 </script>
 </body>
