@@ -210,8 +210,10 @@ async function loadUnits() {
 
     // Progressive update
     const pct = 20 + Math.floor((i / events.length) * 80);
-    document.getElementById('loadBar').style.width = pct + '%';
-    document.getElementById('loadStatus').textContent = `Loaded ${allUnits.length} of ${events.length} units...`;
+    const bar = document.getElementById('loadBar');
+    const status = document.getElementById('loadStatus');
+    if (bar) bar.style.width = pct + '%';
+    if (status) status.textContent = `Loaded ${allUnits.length} of ${events.length} units...`;
 
     // Render progressively every 50 units
     if (allUnits.length % 50 === 0 || i + BATCH >= events.length) {
@@ -224,8 +226,10 @@ async function loadUnits() {
   updateStats(buildings);
   populateBuildingFilter(buildings);
   render();
-  document.getElementById('loadBar').style.width = '100%';
-  document.getElementById('loadStatus').textContent = '';
+  const bar = document.getElementById('loadBar');
+  const status = document.getElementById('loadStatus');
+  if (bar) bar.style.width = '100%';
+  if (status) status.textContent = '';
 }
 
 function updateStats(buildings) {
