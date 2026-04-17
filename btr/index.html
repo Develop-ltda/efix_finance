@@ -13,7 +13,10 @@
 <link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shared/css/reset.css">
+<link rel="stylesheet" href="/shared/css/lang-selector.css">
 <style>
+/* Light-theme vars consumed by /shared/css/lang-selector.css */
+:root{--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--lang-active:#d97706}
 html{scroll-behavior:smooth}
 body{font-family:'Syne',-apple-system,sans-serif;background:#fff;color:#0a0a0a;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
 ::selection{background:#0a0a0a;color:#fff}
@@ -170,14 +173,29 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
     <a href="/btr/" class="nav-logo">BTR<span class="dot">.</span></a>
     <div style="display:flex;align-items:center;gap:12px">
       <ul class="nav-links">
-        <li><a href="#how">How it Works</a></li>
-        <li><a href="#lifecycle">Lifecycle</a></li>
-        <li><a href="#features">Features</a></li>
-        <li><a href="#contracts">Contracts</a></li>
-        <li><a href="#compliance">Compliance</a></li>
+        <li><a href="#how" data-i18n="nav_how">How it Works</a></li>
+        <li><a href="#lifecycle" data-i18n="nav_lifecycle">Lifecycle</a></li>
+        <li><a href="#features" data-i18n="nav_features">Features</a></li>
+        <li><a href="#contracts" data-i18n="nav_contracts">Contracts</a></li>
+        <li><a href="#compliance" data-i18n="nav_compliance">Compliance</a></li>
         <li><a href="/">efixDI+</a></li>
       </ul>
-      <a href="https://basescan.org/address/0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c#code" target="_blank" class="nav-cta nav-cta-primary">View SALRIO</a>
+      <a href="https://basescan.org/address/0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c#code" target="_blank" class="nav-cta nav-cta-primary" data-i18n="nav_cta">View SALRIO</a>
+      <div class="lang-sel">
+        <div class="lang-btn" onclick="document.getElementById('langMenu').classList.toggle('open')">
+          <span id="langFlag">🇺🇸</span><span id="langCode">EN</span>
+        </div>
+        <div class="lang-menu" id="langMenu">
+          <div class="lang-opt" onclick="setLang('pt')">🇧🇷 Português</div>
+          <div class="lang-opt active" onclick="setLang('en')">🇺🇸 English</div>
+          <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+          <div class="lang-opt" onclick="setLang('fr')">🇫🇷 Français</div>
+          <div class="lang-opt" onclick="setLang('ja')">🇯🇵 日本語</div>
+          <div class="lang-opt" onclick="setLang('zh')">🇨🇳 中文</div>
+          <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-opt" onclick="setLang('ko')">🇰🇷 한국어</div>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -187,19 +205,19 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   <div class="hero-content">
     <div class="hero-tag fade-up">
       <span class="dot"></span>
-      Sal Rio Pool #1 live on Base
+      <span data-i18n="hero_badge">Sal Rio Pool #1 live on Base</span>
     </div>
-    <h1 class="fade-up stagger-1">Tokenized Build-to-Rent<br>with <span>Monthly Dividends</span></h1>
-    <p class="subtitle fade-up stagger-2">
+    <h1 class="fade-up stagger-1" data-i18n="hero_title">Tokenized Build-to-Rent<br>with <span>Monthly Dividends</span></h1>
+    <p class="subtitle fade-up stagger-2" data-i18n="hero_sub">
       SALRIO is a fractional share of 5 Sal Rio Residences studios in Rio de Janeiro.
       Dividends arrive monthly in BRLE. Backed by audited Lobie Unit NFTs. Tradeable on Uniswap, borrowable on Morpho.
     </p>
-    <p class="hero-sub-pt fade-up stagger-2">
+    <p class="hero-sub-pt fade-up stagger-2" data-i18n="hero_pt">
       Casa carioca, rendimento global.
     </p>
     <div class="hero-actions fade-up stagger-3">
-      <a href="https://app.uniswap.org/explore/pools/base/0x566aFCaA4C3bc9254A486fB48580d66f2965e0e2" target="_blank" class="btn btn-primary">Trade on Uniswap</a>
-      <a href="https://basescan.org/address/0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c#code" target="_blank" class="btn btn-secondary">View on Basescan</a>
+      <a href="https://app.uniswap.org/explore/pools/base/0x566aFCaA4C3bc9254A486fB48580d66f2965e0e2" target="_blank" class="btn btn-primary" data-i18n="hero_cta1">Trade on Uniswap</a>
+      <a href="https://basescan.org/address/0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c#code" target="_blank" class="btn btn-secondary" data-i18n="hero_cta2">View on Basescan</a>
     </div>
   </div>
 </section>
@@ -208,19 +226,19 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <div class="stats-strip">
   <div class="stats-inner">
     <div class="stat-item">
-      <div class="stat-label">Pool NAV</div>
+      <div class="stat-label" data-i18n="stat_nav">Pool NAV</div>
       <div class="stat-value">R$ 1.86M</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Phase</div>
-      <div class="stat-value">Construction</div>
+      <div class="stat-label" data-i18n="stat_phase">Phase</div>
+      <div class="stat-value" data-i18n="stat_phase_v">Construction</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Backing</div>
-      <div class="stat-value">5 Studios</div>
+      <div class="stat-label" data-i18n="stat_backing">Backing</div>
+      <div class="stat-value" data-i18n="stat_backing_v">5 Studios</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Network</div>
+      <div class="stat-label" data-i18n="stat_network">Network</div>
       <div class="stat-value">Base</div>
     </div>
   </div>
@@ -229,37 +247,37 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- HOW IT WORKS -->
 <section class="section section-border" id="how">
   <div class="container">
-    <div class="section-label">How it works</div>
-    <div class="section-title">One share. One studio. One monthly dividend.</div>
-    <div class="section-desc">
+    <div class="section-label" data-i18n="sec_how">How it works</div>
+    <div class="section-title" data-i18n="how_title">One share. One studio. One monthly dividend.</div>
+    <div class="section-desc" data-i18n="how_desc">
       Each SALRIO token represents 1 ⁄ 1,861,310 of the pool — 1 SALRIO = R$ 1.00 at par. Lobie operates the studios;
       the SPE collects rent; the Safe deposits BRLE dividends monthly. The contract does the rest via Batog 2018 math
       (O(1) per account, no merkle trees, no off-chain indexers).
     </div>
     <div class="flow-grid">
       <div class="flow-step fade-up">
-        <div class="flow-number">Step 01</div>
-        <div class="flow-icon">Subscribe</div>
-        <div class="flow-title">Buy SALRIO</div>
-        <div class="flow-desc">Subscribe at par from the Lobie Safe treasury or buy on the Uniswap V3 pool. Reg S Category 3 offering.</div>
+        <div class="flow-number" data-i18n="step_01">Step 01</div>
+        <div class="flow-icon" data-i18n="s1_icon">Subscribe</div>
+        <div class="flow-title" data-i18n="s1_title">Buy SALRIO</div>
+        <div class="flow-desc" data-i18n="s1_desc">Subscribe at par from the Lobie Safe treasury or buy on the Uniswap V3 pool. Reg S Category 3 offering.</div>
       </div>
       <div class="flow-step fade-up stagger-1">
-        <div class="flow-number">Step 02</div>
-        <div class="flow-icon">Hold</div>
-        <div class="flow-title">Track the Pool</div>
-        <div class="flow-desc">Your balance entitles you to pro-rata cash flow from 5 studios. ERC-20, ERC-2612 Permit, fully composable.</div>
+        <div class="flow-number" data-i18n="step_02">Step 02</div>
+        <div class="flow-icon" data-i18n="s2_icon">Hold</div>
+        <div class="flow-title" data-i18n="s2_title">Track the Pool</div>
+        <div class="flow-desc" data-i18n="s2_desc">Your balance entitles you to pro-rata cash flow from 5 studios. ERC-20, ERC-2612 Permit, fully composable.</div>
       </div>
       <div class="flow-step fade-up stagger-2">
-        <div class="flow-number">Step 03</div>
-        <div class="flow-icon">Collect</div>
-        <div class="flow-title">Claim BRLE</div>
-        <div class="flow-desc">Lobie Safe calls depositDividend() monthly. Anyone can call claim() to pull their accrued BRLE. CDI during construction.</div>
+        <div class="flow-number" data-i18n="step_03">Step 03</div>
+        <div class="flow-icon" data-i18n="s3_icon">Collect</div>
+        <div class="flow-title" data-i18n="s3_title">Claim BRLE</div>
+        <div class="flow-desc" data-i18n="s3_desc">Lobie Safe calls depositDividend() monthly. Anyone can call claim() to pull their accrued BRLE. CDI during construction.</div>
       </div>
       <div class="flow-step fade-up stagger-3">
-        <div class="flow-number">Step 04</div>
-        <div class="flow-icon">Unlock</div>
-        <div class="flow-title">Borrow or Swap</div>
-        <div class="flow-desc">Deposit SALRIO as collateral on Morpho Blue, borrow USDC up to 62.5% LTV. Or sell into the Uniswap pool.</div>
+        <div class="flow-number" data-i18n="step_04">Step 04</div>
+        <div class="flow-icon" data-i18n="s4_icon">Unlock</div>
+        <div class="flow-title" data-i18n="s4_title">Borrow or Swap</div>
+        <div class="flow-desc" data-i18n="s4_desc">Deposit SALRIO as collateral on Morpho Blue, borrow USDC up to 62.5% LTV. Or sell into the Uniswap pool.</div>
       </div>
     </div>
   </div>
@@ -268,36 +286,36 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- LIFECYCLE -->
 <section class="section section-gray" id="lifecycle">
   <div class="container">
-    <div class="section-label">Lifecycle</div>
-    <div class="section-title">Four phases, one contract, zero upgrades</div>
-    <div class="section-desc">
+    <div class="section-label" data-i18n="sec_life">Lifecycle</div>
+    <div class="section-title" data-i18n="life_title">Four phases, one contract, zero upgrades</div>
+    <div class="section-desc" data-i18n="life_desc">
       Sal Rio is pre-operational at IPO. Cashflows shift across distinct phases — each tagged on-chain so the audit trail
       distinguishes pre-operational yield (sBRLE / CDI proxy) from actual rental income once habite-se is issued.
     </div>
     <div class="timeline">
       <div class="phase fade-up">
-        <div class="phase-months">Month 1 – 18</div>
-        <div class="phase-name">Construction</div>
-        <div class="phase-yield">~R$ 22.3k / month</div>
-        <div class="phase-desc">Lobie parks IPO BRL in sBRLE. Monthly CDI yield (~14.4% a.a.) distributes as dividendPhase = 0 (ConstructionProxy).</div>
+        <div class="phase-months" data-i18n="p1_months">Month 1 – 18</div>
+        <div class="phase-name" data-i18n="p1_name">Construction</div>
+        <div class="phase-yield" data-i18n="p1_yield">~R$ 22.3k / month</div>
+        <div class="phase-desc" data-i18n="p1_desc">Lobie parks IPO BRL in sBRLE. Monthly CDI yield (~14.4% a.a.) distributes as dividendPhase = 0 (ConstructionProxy).</div>
       </div>
       <div class="phase fade-up stagger-1">
-        <div class="phase-months">Month 19 – 24</div>
-        <div class="phase-name">Ramp-up</div>
-        <div class="phase-yield">Mixed sources</div>
-        <div class="phase-desc">Partial habite-se issued. Studios come online progressively. dividendPhase = 1 (RampUp). Both CDI and rental cashflow.</div>
+        <div class="phase-months" data-i18n="p2_months">Month 19 – 24</div>
+        <div class="phase-name" data-i18n="p2_name">Ramp-up</div>
+        <div class="phase-yield" data-i18n="p2_yield">Mixed sources</div>
+        <div class="phase-desc" data-i18n="p2_desc">Partial habite-se issued. Studios come online progressively. dividendPhase = 1 (RampUp). Both CDI and rental cashflow.</div>
       </div>
       <div class="phase fade-up stagger-2">
-        <div class="phase-months">Month 25+</div>
-        <div class="phase-name">Operational</div>
-        <div class="phase-yield">~R$ 13k / month</div>
-        <div class="phase-desc">All 5 studios stabilized at ~R$ 2.6k net payout each. dividendPhase = 2 (Operational). Straight rental cashflow.</div>
+        <div class="phase-months" data-i18n="p3_months">Month 25+</div>
+        <div class="phase-name" data-i18n="p3_name">Operational</div>
+        <div class="phase-yield" data-i18n="p3_yield">~R$ 13k / month</div>
+        <div class="phase-desc" data-i18n="p3_desc">All 5 studios stabilized at ~R$ 2.6k net payout each. dividendPhase = 2 (Operational). Straight rental cashflow.</div>
       </div>
       <div class="phase fade-up stagger-3">
-        <div class="phase-months">Any time</div>
-        <div class="phase-name">Extraordinary</div>
-        <div class="phase-yield">Non-recurring</div>
-        <div class="phase-desc">Capex refunds, legal settlements, insurance payouts. dividendPhase = 3 (ExtraordinaryDist). Same math, different tag.</div>
+        <div class="phase-months" data-i18n="p4_months">Any time</div>
+        <div class="phase-name" data-i18n="p4_name">Extraordinary</div>
+        <div class="phase-yield" data-i18n="p4_yield">Non-recurring</div>
+        <div class="phase-desc" data-i18n="p4_desc">Capex refunds, legal settlements, insurance payouts. dividendPhase = 3 (ExtraordinaryDist). Same math, different tag.</div>
       </div>
     </div>
   </div>
@@ -306,23 +324,23 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- CREDIT UNLOCK -->
 <section class="section section-border">
   <div class="container">
-    <div class="section-label">The Unlock</div>
-    <div class="section-title">Brazilian real estate credit, meet DeFi rates</div>
-    <div class="section-desc">
+    <div class="section-label" data-i18n="sec_unlock">The Unlock</div>
+    <div class="section-title" data-i18n="unlock_title">Brazilian real estate credit, meet DeFi rates</div>
+    <div class="section-desc" data-i18n="unlock_desc">
       Brazilian property-collateralized mortgages typically cost 15-20% a.a. SALRIO on Morpho Blue targets ~6% a.a. —
       the same studios, the same cashflows, a fraction of the cost of capital. Liquidity comes from USDC suppliers on Base,
       not Brazilian banks.
     </div>
     <div class="unlock-compare">
       <div class="unlock-item fade-up">
-        <div class="unlock-label">Traditional BR Mortgage</div>
+        <div class="unlock-label" data-i18n="u1_label">Traditional BR Mortgage</div>
         <div class="unlock-rate">~18%</div>
-        <div class="unlock-sub">a.a. in BRL, 5-30 year terms, heavy documentation, property lien, IOF tax layer. Pre-habite-se financing doubly restricted.</div>
+        <div class="unlock-sub" data-i18n="u1_sub">a.a. in BRL, 5-30 year terms, heavy documentation, property lien, IOF tax layer. Pre-habite-se financing doubly restricted.</div>
       </div>
       <div class="unlock-item highlight fade-up stagger-1">
-        <div class="unlock-label">Morpho Blue on SALRIO</div>
+        <div class="unlock-label" data-i18n="u2_label">Morpho Blue on SALRIO</div>
         <div class="unlock-rate"><span class="highlight-color">~6%</span></div>
-        <div class="unlock-sub">a.a. in USDC, 62.5% LTV, no lockup, instant, priced by Morpho Adaptive IRM. Global USDC supply, Brazilian-asset demand.</div>
+        <div class="unlock-sub" data-i18n="u2_sub">a.a. in USDC, 62.5% LTV, no lockup, instant, priced by Morpho Adaptive IRM. Global USDC supply, Brazilian-asset demand.</div>
       </div>
     </div>
   </div>
@@ -331,43 +349,43 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- FEATURES -->
 <section class="section section-gray" id="features">
   <div class="container">
-    <div class="section-label">Features</div>
-    <div class="section-title">Primitives only. No clever abstractions.</div>
-    <div class="section-desc">
+    <div class="section-label" data-i18n="sec_features">Features</div>
+    <div class="section-title" data-i18n="feat_title">Primitives only. No clever abstractions.</div>
+    <div class="section-desc" data-i18n="feat_desc">
       Every piece is a well-understood building block: Batog 2018 dividend math, OpenZeppelin v5.4 AccessControl,
       Gordon Growth formula for on-chain NPV, Chainlink for BRL/USD, Morpho Blue's immutable-market primitive.
       Integration reviewers recognize every line.
     </div>
     <div class="card-grid">
       <div class="card fade-up">
-        <div class="card-icon">O(1) Math</div>
-        <div class="card-title">Scalable Reward Distribution</div>
-        <div class="card-desc">Single dividendPerShareScaled counter, lazy settlement on transfer. O(1) deposit, O(1) claim, zero off-chain infra. Published pattern (Batog 2018) with a decade of production use.</div>
+        <div class="card-icon" data-i18n="c1_icon">O(1) Math</div>
+        <div class="card-title" data-i18n="c1_title">Scalable Reward Distribution</div>
+        <div class="card-desc" data-i18n="c1_desc">Single dividendPerShareScaled counter, lazy settlement on transfer. O(1) deposit, O(1) claim, zero off-chain infra. Published pattern (Batog 2018) with a decade of production use.</div>
       </div>
       <div class="card fade-up stagger-1">
-        <div class="card-icon">NFT-Backed</div>
-        <div class="card-title">Real Cashflow Backing</div>
-        <div class="card-desc">5 Lobie Unit NFTs registered via BTROfferingRegistry link SALRIO to specific studios in the Lobie registry at 0xd8C32a41… Each NFT carries audited monthly observations once habite-se fires.</div>
+        <div class="card-icon" data-i18n="c2_icon">NFT-Backed</div>
+        <div class="card-title" data-i18n="c2_title">Real Cashflow Backing</div>
+        <div class="card-desc" data-i18n="c2_desc">5 Lobie Unit NFTs registered via BTROfferingRegistry link SALRIO to specific studios in the Lobie registry at 0xd8C32a41… Each NFT carries audited monthly observations once habite-se fires.</div>
       </div>
       <div class="card fade-up stagger-2">
-        <div class="card-icon">Gordon Growth</div>
-        <div class="card-title">NPV Oracle On-Chain</div>
-        <div class="card-desc">Registry exposes gordonGrowthNPV(dividendPerPeriod, r, g) as a pure function. Any frontend or agent can reprice SALRIO at custom discount / growth assumptions without off-chain models.</div>
+        <div class="card-icon" data-i18n="c3_icon">Gordon Growth</div>
+        <div class="card-title" data-i18n="c3_title">NPV Oracle On-Chain</div>
+        <div class="card-desc" data-i18n="c3_desc">Registry exposes gordonGrowthNPV(dividendPerPeriod, r, g) as a pure function. Any frontend or agent can reprice SALRIO at custom discount / growth assumptions without off-chain models.</div>
       </div>
       <div class="card fade-up stagger-3">
-        <div class="card-icon">Reg S Cat 3</div>
-        <div class="card-title">Offshore Securities Framing</div>
-        <div class="card-desc">Wyoming LLC SPE structure (BTS engagement), Regulation S Category 3 with 12-month distribution compliance period. Legend embedded in ERC-20 token name. No U.S. persons in primary.</div>
+        <div class="card-icon" data-i18n="c4_icon">Reg S Cat 3</div>
+        <div class="card-title" data-i18n="c4_title">Offshore Securities Framing</div>
+        <div class="card-desc" data-i18n="c4_desc">Wyoming LLC SPE structure (BTS engagement), Regulation S Category 3 with 12-month distribution compliance period. Legend embedded in ERC-20 token name. No U.S. persons in primary.</div>
       </div>
       <div class="card fade-up">
-        <div class="card-icon">Morpho</div>
-        <div class="card-title">Immutable Lending Market</div>
-        <div class="card-desc">SALRIO / USDC market on Morpho Blue with 62.5% LLTV, par-peg × Chainlink BRL/USD oracle, Adaptive IRM. Isolated, permissionless, unupgradeable — standard Morpho primitive.</div>
+        <div class="card-icon" data-i18n="c5_icon">Morpho</div>
+        <div class="card-title" data-i18n="c5_title">Immutable Lending Market</div>
+        <div class="card-desc" data-i18n="c5_desc">SALRIO / USDC market on Morpho Blue with 62.5% LLTV, par-peg × Chainlink BRL/USD oracle, Adaptive IRM. Isolated, permissionless, unupgradeable — standard Morpho primitive.</div>
       </div>
       <div class="card fade-up stagger-1">
-        <div class="card-icon">Phase Tags</div>
-        <div class="card-title">On-Chain Audit Trail</div>
-        <div class="card-desc">Every depositDividend is tagged with its lifecycle phase (Construction / RampUp / Operational / Extraordinary). Holders, auditors, and agents can attribute yield to its true source.</div>
+        <div class="card-icon" data-i18n="c6_icon">Phase Tags</div>
+        <div class="card-title" data-i18n="c6_title">On-Chain Audit Trail</div>
+        <div class="card-desc" data-i18n="c6_desc">Every depositDividend is tagged with its lifecycle phase (Construction / RampUp / Operational / Extraordinary). Holders, auditors, and agents can attribute yield to its true source.</div>
       </div>
     </div>
   </div>
@@ -376,9 +394,9 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- CONTRACTS -->
 <section class="section section-border" id="contracts">
   <div class="container">
-    <div class="section-label">Smart Contracts</div>
-    <div class="section-title">Fully verified on Basescan</div>
-    <div class="section-desc">Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path.</div>
+    <div class="section-label" data-i18n="sec_contracts">Smart Contracts</div>
+    <div class="section-title" data-i18n="contracts_title">Fully verified on Basescan</div>
+    <div class="section-desc" data-i18n="contracts_desc">Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path.</div>
     <div class="chain-card">
       <div class="chain-header">
         <span style="font-size:18px">🔵</span>
@@ -428,45 +446,45 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- COMPLIANCE -->
 <section class="section section-gray" id="compliance">
   <div class="container">
-    <div class="section-label">Compliance</div>
-    <div class="section-title">Regulated issuer, audited operator</div>
-    <div class="section-desc">EFIX Securitizadora issues. Lobie operates. Harris &amp; Trotter audits the cashflow observations before they land on-chain.</div>
+    <div class="section-label" data-i18n="sec_comp">Compliance</div>
+    <div class="section-title" data-i18n="comp_title">Regulated issuer, audited operator</div>
+    <div class="section-desc" data-i18n="comp_desc">EFIX Securitizadora issues. Lobie operates. Harris &amp; Trotter audits the cashflow observations before they land on-chain.</div>
     <div class="reg-grid">
       <div class="reg-item fade-up">
-        <div class="reg-label">Issuer</div>
+        <div class="reg-label" data-i18n="r1_label">Issuer</div>
         <div class="reg-value">EFIX Securitizadora S.A.</div>
       </div>
       <div class="reg-item fade-up stagger-1">
-        <div class="reg-label">Offering Framework</div>
-        <div class="reg-value">Reg S Category 3</div>
+        <div class="reg-label" data-i18n="r2_label">Offering Framework</div>
+        <div class="reg-value" data-i18n="r2_value">Reg S Category 3</div>
       </div>
       <div class="reg-item fade-up stagger-2">
-        <div class="reg-label">SPE</div>
-        <div class="reg-value">Sal Rio Residences Pool 1</div>
+        <div class="reg-label" data-i18n="r3_label">SPE</div>
+        <div class="reg-value" data-i18n="r3_value">Sal Rio Residences Pool 1</div>
       </div>
       <div class="reg-item fade-up stagger-3">
-        <div class="reg-label">Legal Vehicle</div>
-        <div class="reg-value">Wyoming LLC (BTS)</div>
+        <div class="reg-label" data-i18n="r4_label">Legal Vehicle</div>
+        <div class="reg-value" data-i18n="r4_value">Wyoming LLC (BTS)</div>
       </div>
       <div class="reg-item fade-up stagger-4">
-        <div class="reg-label">Operator</div>
+        <div class="reg-label" data-i18n="r5_label">Operator</div>
         <div class="reg-value">Lobie</div>
       </div>
       <div class="reg-item fade-up">
-        <div class="reg-label">Auditor</div>
+        <div class="reg-label" data-i18n="r6_label">Auditor</div>
         <div class="reg-value">Harris &amp; Trotter</div>
       </div>
       <div class="reg-item fade-up stagger-1">
-        <div class="reg-label">Building ID</div>
+        <div class="reg-label" data-i18n="r7_label">Building ID</div>
         <div class="reg-value mono">21</div>
       </div>
       <div class="reg-item fade-up stagger-2">
-        <div class="reg-label">Backing Units</div>
-        <div class="reg-value mono">5 × Studio</div>
+        <div class="reg-label" data-i18n="r8_label">Backing Units</div>
+        <div class="reg-value mono" data-i18n="r8_value">5 × Studio</div>
       </div>
       <div class="reg-item fade-up stagger-3">
-        <div class="reg-label">Custody</div>
-        <div class="reg-value">2-of-3 Safe</div>
+        <div class="reg-label" data-i18n="r9_label">Custody</div>
+        <div class="reg-value" data-i18n="r9_value">2-of-3 Safe</div>
       </div>
     </div>
   </div>
@@ -475,11 +493,11 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- CTA -->
 <section class="cta-section">
   <div class="container">
-    <h2 class="section-title fade-up">Own a slice of Rio real estate</h2>
-    <p class="cta-desc fade-up stagger-1">Fractional BTR equity with on-chain dividends. Trade on Uniswap or borrow against your shares on Morpho Blue.</p>
+    <h2 class="section-title fade-up" data-i18n="cta_title">Own a slice of Rio real estate</h2>
+    <p class="cta-desc fade-up stagger-1" data-i18n="cta_desc">Fractional BTR equity with on-chain dividends. Trade on Uniswap or borrow against your shares on Morpho Blue.</p>
     <div class="hero-actions fade-up stagger-2">
-      <a href="https://app.uniswap.org/explore/pools/base/0x566aFCaA4C3bc9254A486fB48580d66f2965e0e2" target="_blank" class="btn btn-primary">Trade SALRIO</a>
-      <a href="https://app.morpho.org/base/market/0x48923e6b34271f59637c38ddeeb29622f4dfe1eb9d89f4d5d07218a699fd6d8d" target="_blank" class="btn btn-secondary">Borrow on Morpho</a>
+      <a href="https://app.uniswap.org/explore/pools/base/0x566aFCaA4C3bc9254A486fB48580d66f2965e0e2" target="_blank" class="btn btn-primary" data-i18n="cta_p">Trade SALRIO</a>
+      <a href="https://app.morpho.org/base/market/0x48923e6b34271f59637c38ddeeb29622f4dfe1eb9d89f4d5d07218a699fd6d8d" target="_blank" class="btn btn-secondary" data-i18n="cta_s">Borrow on Morpho</a>
     </div>
   </div>
 </section>
@@ -489,32 +507,32 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   <div class="footer-inner">
     <div>
       <div class="nav-logo" style="margin-bottom:0.5rem">BTR<span class="dot">.</span></div>
-      <p class="footer-brand-text">Tokenized Build-to-Rent on Base. Fractional equity in Brazilian short-stay rentals, operated by Lobie. Built by EFIX Securitizadora.</p>
+      <p class="footer-brand-text" data-i18n="foot_brand">Tokenized Build-to-Rent on Base. Fractional equity in Brazilian short-stay rentals, operated by Lobie. Built by EFIX Securitizadora.</p>
     </div>
     <div class="footer-links">
       <div class="footer-col">
-        <h4>Protocol</h4>
+        <h4 data-i18n="foot_protocol">Protocol</h4>
         <a href="https://basescan.org/address/0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c#code" target="_blank">SALRIO</a>
         <a href="https://app.uniswap.org/explore/pools/base/0x566aFCaA4C3bc9254A486fB48580d66f2965e0e2" target="_blank">Uniswap Pool</a>
         <a href="https://app.morpho.org/base/market/0x48923e6b34271f59637c38ddeeb29622f4dfe1eb9d89f4d5d07218a699fd6d8d" target="_blank">Morpho Market</a>
         <a href="https://defillama.com" target="_blank">DeFiLlama</a>
       </div>
       <div class="footer-col">
-        <h4>Related</h4>
+        <h4 data-i18n="foot_related">Related</h4>
         <a href="/lobie/">Lobie</a>
         <a href="/brle/">BRLE</a>
         <a href="/">efixDI+</a>
       </div>
       <div class="footer-col">
-        <h4>EFIX</h4>
-        <a href="https://x.com/efix_finance" target="_blank">Twitter</a>
-        <a href="https://github.com/Develop-ltda" target="_blank">GitHub</a>
-        <a href="/app/wallet/">Wallet</a>
+        <h4 data-i18n="foot_efix">EFIX</h4>
+        <a href="https://x.com/efix_finance" target="_blank" data-i18n="foot_twitter">Twitter</a>
+        <a href="https://github.com/Develop-ltda" target="_blank" data-i18n="foot_github">GitHub</a>
+        <a href="/app/wallet/" data-i18n="foot_wallet">Wallet</a>
       </div>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>EFIX Securitizadora S.A. — CVM Act 23.635/2025 — Reg S Cat 3</span>
+    <span data-i18n="foot_legal">EFIX Securitizadora S.A. — CVM Act 23.635/2025 — Reg S Cat 3</span>
     <span>CNPJ 00.000.000/0001-00</span>
   </div>
 </footer>
@@ -525,6 +543,285 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+
+<!-- ═══ i18n — 8 LANGUAGES — matches /index.html pattern ═══ -->
+<script>
+const i18n = {
+  en: { flag:'🇺🇸', code:'EN',
+    nav_how:'How it Works', nav_lifecycle:'Lifecycle', nav_features:'Features', nav_contracts:'Contracts', nav_compliance:'Compliance', nav_cta:'View SALRIO',
+    hero_badge:'Sal Rio Pool #1 live on Base', hero_title:'Tokenized Build-to-Rent<br>with <span>Monthly Dividends</span>', hero_sub:'SALRIO is a fractional share of 5 Sal Rio Residences studios in Rio de Janeiro. Dividends arrive monthly in BRLE. Backed by audited Lobie Unit NFTs. Tradeable on Uniswap, borrowable on Morpho.', hero_pt:'Casa carioca, rendimento global.', hero_cta1:'Trade on Uniswap', hero_cta2:'View on Basescan',
+    stat_nav:'Pool NAV', stat_phase:'Phase', stat_phase_v:'Construction', stat_backing:'Backing', stat_backing_v:'5 Studios', stat_network:'Network',
+    sec_how:'How it works', how_title:'One share. One studio. One monthly dividend.', how_desc:'Each SALRIO token represents 1 ⁄ 1,861,310 of the pool — 1 SALRIO = R$ 1.00 at par. Lobie operates the studios; the SPE collects rent; the Safe deposits BRLE dividends monthly. The contract does the rest via Batog 2018 math (O(1) per account, no merkle trees, no off-chain indexers).',
+    step_01:'Step 01', step_02:'Step 02', step_03:'Step 03', step_04:'Step 04',
+    s1_icon:'Subscribe', s1_title:'Buy SALRIO', s1_desc:'Subscribe at par from the Lobie Safe treasury or buy on the Uniswap V3 pool. Reg S Category 3 offering.',
+    s2_icon:'Hold', s2_title:'Track the Pool', s2_desc:'Your balance entitles you to pro-rata cash flow from 5 studios. ERC-20, ERC-2612 Permit, fully composable.',
+    s3_icon:'Collect', s3_title:'Claim BRLE', s3_desc:'Lobie Safe calls depositDividend() monthly. Anyone can call claim() to pull their accrued BRLE. CDI during construction.',
+    s4_icon:'Unlock', s4_title:'Borrow or Swap', s4_desc:'Deposit SALRIO as collateral on Morpho Blue, borrow USDC up to 62.5% LTV. Or sell into the Uniswap pool.',
+    sec_life:'Lifecycle', life_title:'Four phases, one contract, zero upgrades', life_desc:'Sal Rio is pre-operational at IPO. Cashflows shift across distinct phases — each tagged on-chain so the audit trail distinguishes pre-operational yield (sBRLE / CDI proxy) from actual rental income once habite-se is issued.',
+    p1_months:'Month 1 – 18', p1_name:'Construction', p1_yield:'~R$ 22.3k / month', p1_desc:'Lobie parks IPO BRL in sBRLE. Monthly CDI yield (~14.4% a.a.) distributes as dividendPhase = 0 (ConstructionProxy).',
+    p2_months:'Month 19 – 24', p2_name:'Ramp-up', p2_yield:'Mixed sources', p2_desc:'Partial habite-se issued. Studios come online progressively. dividendPhase = 1 (RampUp). Both CDI and rental cashflow.',
+    p3_months:'Month 25+', p3_name:'Operational', p3_yield:'~R$ 13k / month', p3_desc:'All 5 studios stabilized at ~R$ 2.6k net payout each. dividendPhase = 2 (Operational). Straight rental cashflow.',
+    p4_months:'Any time', p4_name:'Extraordinary', p4_yield:'Non-recurring', p4_desc:'Capex refunds, legal settlements, insurance payouts. dividendPhase = 3 (ExtraordinaryDist). Same math, different tag.',
+    sec_unlock:'The Unlock', unlock_title:'Brazilian real estate credit, meet DeFi rates', unlock_desc:'Brazilian property-collateralized mortgages typically cost 15-20% a.a. SALRIO on Morpho Blue targets ~6% a.a. — the same studios, the same cashflows, a fraction of the cost of capital. Liquidity comes from USDC suppliers on Base, not Brazilian banks.',
+    u1_label:'Traditional BR Mortgage', u1_sub:'a.a. in BRL, 5-30 year terms, heavy documentation, property lien, IOF tax layer. Pre-habite-se financing doubly restricted.',
+    u2_label:'Morpho Blue on SALRIO', u2_sub:'a.a. in USDC, 62.5% LTV, no lockup, instant, priced by Morpho Adaptive IRM. Global USDC supply, Brazilian-asset demand.',
+    sec_features:'Features', feat_title:'Primitives only. No clever abstractions.', feat_desc:'Every piece is a well-understood building block: Batog 2018 dividend math, OpenZeppelin v5.4 AccessControl, Gordon Growth formula for on-chain NPV, Chainlink for BRL/USD, Morpho Blue\'s immutable-market primitive. Integration reviewers recognize every line.',
+    c1_icon:'O(1) Math', c1_title:'Scalable Reward Distribution', c1_desc:'Single dividendPerShareScaled counter, lazy settlement on transfer. O(1) deposit, O(1) claim, zero off-chain infra. Published pattern (Batog 2018) with a decade of production use.',
+    c2_icon:'NFT-Backed', c2_title:'Real Cashflow Backing', c2_desc:'5 Lobie Unit NFTs registered via BTROfferingRegistry link SALRIO to specific studios in the Lobie registry at 0xd8C32a41… Each NFT carries audited monthly observations once habite-se fires.',
+    c3_icon:'Gordon Growth', c3_title:'NPV Oracle On-Chain', c3_desc:'Registry exposes gordonGrowthNPV(dividendPerPeriod, r, g) as a pure function. Any frontend or agent can reprice SALRIO at custom discount / growth assumptions without off-chain models.',
+    c4_icon:'Reg S Cat 3', c4_title:'Offshore Securities Framing', c4_desc:'Wyoming LLC SPE structure (BTS engagement), Regulation S Category 3 with 12-month distribution compliance period. Legend embedded in ERC-20 token name. No U.S. persons in primary.',
+    c5_icon:'Morpho', c5_title:'Immutable Lending Market', c5_desc:'SALRIO / USDC market on Morpho Blue with 62.5% LLTV, par-peg × Chainlink BRL/USD oracle, Adaptive IRM. Isolated, permissionless, unupgradeable — standard Morpho primitive.',
+    c6_icon:'Phase Tags', c6_title:'On-Chain Audit Trail', c6_desc:'Every depositDividend is tagged with its lifecycle phase (Construction / RampUp / Operational / Extraordinary). Holders, auditors, and agents can attribute yield to its true source.',
+    sec_contracts:'Smart Contracts', contracts_title:'Fully verified on Basescan', contracts_desc:'Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path.',
+    sec_comp:'Compliance', comp_title:'Regulated issuer, audited operator', comp_desc:'EFIX Securitizadora issues. Lobie operates. Harris & Trotter audits the cashflow observations before they land on-chain.',
+    r1_label:'Issuer', r2_label:'Offering Framework', r2_value:'Reg S Category 3', r3_label:'SPE', r3_value:'Sal Rio Residences Pool 1', r4_label:'Legal Vehicle', r4_value:'Wyoming LLC (BTS)', r5_label:'Operator', r6_label:'Auditor', r7_label:'Building ID', r8_label:'Backing Units', r8_value:'5 × Studio', r9_label:'Custody', r9_value:'2-of-3 Safe',
+    cta_title:'Own a slice of Rio real estate', cta_desc:'Fractional BTR equity with on-chain dividends. Trade on Uniswap or borrow against your shares on Morpho Blue.', cta_p:'Trade SALRIO', cta_s:'Borrow on Morpho',
+    foot_brand:'Tokenized Build-to-Rent on Base. Fractional equity in Brazilian short-stay rentals, operated by Lobie. Built by EFIX Securitizadora.', foot_protocol:'Protocol', foot_related:'Related', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'Wallet', foot_legal:'EFIX Securitizadora S.A. — CVM Act 23.635/2025 — Reg S Cat 3'
+  },
+  pt: { flag:'🇧🇷', code:'PT',
+    nav_how:'Como Funciona', nav_lifecycle:'Ciclo', nav_features:'Recursos', nav_contracts:'Contratos', nav_compliance:'Compliance', nav_cta:'Ver SALRIO',
+    hero_badge:'Sal Rio Pool #1 na Base', hero_title:'Build-to-Rent Tokenizado<br>com <span>Dividendos Mensais</span>', hero_sub:'SALRIO é uma fração de 5 studios no Sal Rio Residences no Rio de Janeiro. Dividendos mensais em BRLE. Lastreados em NFTs Lobie Unit auditados. Negociável na Uniswap, colateralizável na Morpho.', hero_pt:'Casa carioca, rendimento global.', hero_cta1:'Negociar na Uniswap', hero_cta2:'Ver no Basescan',
+    stat_nav:'NAV do Pool', stat_phase:'Fase', stat_phase_v:'Construção', stat_backing:'Lastro', stat_backing_v:'5 Studios', stat_network:'Rede',
+    sec_how:'Como funciona', how_title:'Uma cota. Um studio. Um dividendo mensal.', how_desc:'Cada token SALRIO representa 1 ⁄ 1.861.310 do pool — 1 SALRIO = R$ 1,00 ao par. Lobie opera os studios; a SPE recebe o aluguel; o Safe deposita dividendos em BRLE mensalmente. O contrato faz o resto via matemática Batog 2018 (O(1) por conta, sem árvores merkle, sem indexadores off-chain).',
+    step_01:'Etapa 01', step_02:'Etapa 02', step_03:'Etapa 03', step_04:'Etapa 04',
+    s1_icon:'Subscrever', s1_title:'Comprar SALRIO', s1_desc:'Subscreva ao par pela tesouraria do Lobie Safe ou compre no pool Uniswap V3. Oferta Reg S Categoria 3.',
+    s2_icon:'Reter', s2_title:'Acompanhar o Pool', s2_desc:'Seu saldo dá direito a fluxo de caixa pro-rata dos 5 studios. ERC-20, ERC-2612 Permit, totalmente componível.',
+    s3_icon:'Receber', s3_title:'Reclamar BRLE', s3_desc:'Lobie Safe chama depositDividend() mensalmente. Qualquer um chama claim() para puxar seu BRLE acumulado. CDI durante a construção.',
+    s4_icon:'Destravar', s4_title:'Tomar ou Vender', s4_desc:'Deposite SALRIO como colateral na Morpho Blue, tome USDC até 62,5% LTV. Ou venda no pool Uniswap.',
+    sec_life:'Ciclo de Vida', life_title:'Quatro fases, um contrato, zero upgrades', life_desc:'Sal Rio é pré-operacional no IPO. Os fluxos mudam de fase — cada uma marcada on-chain para o audit trail distinguir rendimento pré-operacional (sBRLE / proxy CDI) de receita de aluguel real após o habite-se.',
+    p1_months:'Mês 1 – 18', p1_name:'Construção', p1_yield:'~R$ 22,3k / mês', p1_desc:'Lobie aplica BRL do IPO em sBRLE. Rendimento CDI mensal (~14,4% a.a.) distribuído como dividendPhase = 0 (ConstructionProxy).',
+    p2_months:'Mês 19 – 24', p2_name:'Ramp-up', p2_yield:'Fontes mistas', p2_desc:'Habite-se parcial emitido. Studios entram em operação progressivamente. dividendPhase = 1 (RampUp). CDI e aluguel.',
+    p3_months:'Mês 25+', p3_name:'Operacional', p3_yield:'~R$ 13k / mês', p3_desc:'5 studios estabilizados com ~R$ 2,6k de repasse líquido cada. dividendPhase = 2 (Operational). Aluguel puro.',
+    p4_months:'A qualquer hora', p4_name:'Extraordinário', p4_yield:'Não recorrente', p4_desc:'Reembolsos de capex, acordos judiciais, seguros. dividendPhase = 3 (ExtraordinaryDist). Mesma matemática, tag diferente.',
+    sec_unlock:'O Destrave', unlock_title:'Crédito imobiliário brasileiro encontra taxas DeFi', unlock_desc:'Hipotecas brasileiras com garantia imobiliária custam tipicamente 15-20% a.a. SALRIO na Morpho Blue mira ~6% a.a. — os mesmos studios, os mesmos fluxos, uma fração do custo de capital. Liquidez vem de fornecedores de USDC na Base, não de bancos brasileiros.',
+    u1_label:'Hipoteca Brasileira', u1_sub:'a.a. em BRL, prazos de 5-30 anos, documentação pesada, alienação fiduciária, IOF. Financiamento pré-habite-se duplamente restrito.',
+    u2_label:'Morpho Blue em SALRIO', u2_sub:'a.a. em USDC, 62,5% LTV, sem lockup, instantâneo, precificado pelo Morpho Adaptive IRM. Liquidez USDC global, demanda brasileira.',
+    sec_features:'Recursos', feat_title:'Só primitivos. Sem abstrações espertas.', feat_desc:'Cada peça é um bloco conhecido: matemática de dividendos Batog 2018, AccessControl OpenZeppelin v5.4, fórmula Gordon Growth para NPV on-chain, Chainlink para BRL/USD, primitivo de mercado imutável da Morpho Blue. Revisores reconhecem cada linha.',
+    c1_icon:'Matemática O(1)', c1_title:'Distribuição de Recompensa Escalável', c1_desc:'Contador único dividendPerShareScaled, liquidação preguiçosa na transferência. Depósito O(1), claim O(1), zero infra off-chain. Padrão publicado (Batog 2018) com uma década de uso em produção.',
+    c2_icon:'Lastreado em NFT', c2_title:'Lastro em Fluxo Real', c2_desc:'5 NFTs Lobie Unit registrados via BTROfferingRegistry linkam SALRIO a studios específicos no registro Lobie em 0xd8C32a41… Cada NFT carrega observações mensais auditadas após o habite-se.',
+    c3_icon:'Gordon Growth', c3_title:'Oráculo NPV On-Chain', c3_desc:'Registry expõe gordonGrowthNPV(dividendPerPeriod, r, g) como função pura. Qualquer frontend ou agente pode reprecificar SALRIO com premissas próprias sem modelos off-chain.',
+    c4_icon:'Reg S Cat 3', c4_title:'Enquadramento Securities Offshore', c4_desc:'Estrutura SPE Wyoming LLC (engajamento BTS), Regulation S Categoria 3 com período de conformidade de distribuição de 12 meses. Legenda embutida no nome do token ERC-20. Sem pessoas norte-americanas na primária.',
+    c5_icon:'Morpho', c5_title:'Mercado de Empréstimo Imutável', c5_desc:'Mercado SALRIO / USDC na Morpho Blue com 62,5% LLTV, oráculo par × Chainlink BRL/USD, Adaptive IRM. Isolado, sem permissão, não-atualizável — primitivo Morpho padrão.',
+    c6_icon:'Phase Tags', c6_title:'Audit Trail On-Chain', c6_desc:'Cada depositDividend é marcado com sua fase do ciclo (Construction / RampUp / Operational / Extraordinary). Holders, auditores e agentes podem atribuir o rendimento à sua fonte real.',
+    sec_contracts:'Contratos Inteligentes', contracts_title:'Totalmente verificados no Basescan', contracts_desc:'Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. Todos os contratos imutáveis, sem proxy, sem upgrade.',
+    sec_comp:'Compliance', comp_title:'Emissor regulado, operador auditado', comp_desc:'EFIX Securitizadora emite. Lobie opera. Harris & Trotter audita as observações de fluxo de caixa antes de irem para a chain.',
+    r1_label:'Emissor', r2_label:'Regime de Oferta', r2_value:'Reg S Categoria 3', r3_label:'SPE', r3_value:'Sal Rio Residences Pool 1', r4_label:'Veículo Legal', r4_value:'LLC Wyoming (BTS)', r5_label:'Operador', r6_label:'Auditor', r7_label:'Building ID', r8_label:'Unidades de Lastro', r8_value:'5 × Studio', r9_label:'Custódia', r9_value:'Safe 2-de-3',
+    cta_title:'Tenha uma fatia do imobiliário carioca', cta_desc:'Equity BTR fracionado com dividendos on-chain. Negocie na Uniswap ou tome empréstimo contra suas cotas na Morpho Blue.', cta_p:'Negociar SALRIO', cta_s:'Tomar na Morpho',
+    foot_brand:'Build-to-Rent tokenizado na Base. Equity fracionado em locações de curta estadia brasileiras, operado pela Lobie. Construído pela EFIX Securitizadora.', foot_protocol:'Protocolo', foot_related:'Relacionados', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'Carteira', foot_legal:'EFIX Securitizadora S.A. — Ato CVM 23.635/2025 — Reg S Cat 3'
+  },
+  es: { flag:'🇪🇸', code:'ES',
+    nav_how:'Cómo Funciona', nav_lifecycle:'Ciclo', nav_features:'Características', nav_contracts:'Contratos', nav_compliance:'Compliance', nav_cta:'Ver SALRIO',
+    hero_badge:'Sal Rio Pool #1 en Base', hero_title:'Build-to-Rent Tokenizado<br>con <span>Dividendos Mensuales</span>', hero_sub:'SALRIO es una fracción de 5 estudios de Sal Rio Residences en Río de Janeiro. Dividendos mensuales en BRLE. Respaldado por NFTs Lobie Unit auditados. Negociable en Uniswap, colateralizable en Morpho.', hero_pt:'Casa carioca, rendimiento global.', hero_cta1:'Operar en Uniswap', hero_cta2:'Ver en Basescan',
+    stat_nav:'NAV del Pool', stat_phase:'Fase', stat_phase_v:'Construcción', stat_backing:'Respaldo', stat_backing_v:'5 Estudios', stat_network:'Red',
+    sec_how:'Cómo funciona', how_title:'Una cuota. Un estudio. Un dividendo mensual.', how_desc:'Cada token SALRIO representa 1 ⁄ 1.861.310 del pool — 1 SALRIO = R$ 1,00 a la par. Lobie opera los estudios; la SPE cobra renta; el Safe deposita dividendos en BRLE mensualmente. El contrato hace el resto vía matemática Batog 2018 (O(1) por cuenta, sin árboles merkle, sin indexadores off-chain).',
+    step_01:'Paso 01', step_02:'Paso 02', step_03:'Paso 03', step_04:'Paso 04',
+    s1_icon:'Suscribir', s1_title:'Comprar SALRIO', s1_desc:'Suscribe a la par desde la tesorería del Lobie Safe o compra en el pool Uniswap V3. Oferta Reg S Categoría 3.',
+    s2_icon:'Mantener', s2_title:'Seguir el Pool', s2_desc:'Tu balance te da derecho a flujo prorrata de los 5 estudios. ERC-20, ERC-2612 Permit, totalmente componible.',
+    s3_icon:'Cobrar', s3_title:'Reclamar BRLE', s3_desc:'Lobie Safe llama depositDividend() mensual. Cualquiera llama claim() para tomar su BRLE acumulado. CDI durante construcción.',
+    s4_icon:'Desbloquear', s4_title:'Pedir o Vender', s4_desc:'Deposita SALRIO como colateral en Morpho Blue, pide USDC hasta 62,5% LTV. O vende en el pool Uniswap.',
+    sec_life:'Ciclo de Vida', life_title:'Cuatro fases, un contrato, cero upgrades', life_desc:'Sal Rio es preoperacional en el IPO. Los flujos cambian de fase — cada una etiquetada on-chain para que el audit trail distinga rendimiento preoperacional (sBRLE / proxy CDI) de ingreso de renta real tras el habite-se.',
+    p1_months:'Mes 1 – 18', p1_name:'Construcción', p1_yield:'~R$ 22,3k / mes', p1_desc:'Lobie aparca el BRL del IPO en sBRLE. Rendimiento CDI mensual (~14,4% anual) distribuido como dividendPhase = 0.',
+    p2_months:'Mes 19 – 24', p2_name:'Ramp-up', p2_yield:'Fuentes mixtas', p2_desc:'Habite-se parcial emitido. Estudios entran progresivamente. dividendPhase = 1. CDI y renta combinadas.',
+    p3_months:'Mes 25+', p3_name:'Operacional', p3_yield:'~R$ 13k / mes', p3_desc:'5 estudios estabilizados a ~R$ 2,6k neto cada uno. dividendPhase = 2. Flujo de renta puro.',
+    p4_months:'En cualquier momento', p4_name:'Extraordinario', p4_yield:'No recurrente', p4_desc:'Reembolsos de capex, acuerdos legales, seguros. dividendPhase = 3. Misma matemática, etiqueta distinta.',
+    sec_unlock:'El Desbloqueo', unlock_title:'Crédito inmobiliario brasileño a tasas DeFi', unlock_desc:'Hipotecas brasileñas cuestan 15-20% anual. SALRIO en Morpho Blue apunta a ~6% anual — los mismos estudios, los mismos flujos, una fracción del costo de capital. Liquidez viene de proveedores de USDC en Base, no de bancos brasileños.',
+    u1_label:'Hipoteca BR Tradicional', u1_sub:'anual en BRL, plazos 5-30 años, documentación pesada, prenda, IOF. Financiamiento pre-habite-se doblemente restringido.',
+    u2_label:'Morpho Blue sobre SALRIO', u2_sub:'anual en USDC, 62,5% LTV, sin lockup, instantáneo, precio Morpho Adaptive IRM. Oferta USDC global, demanda brasileña.',
+    sec_features:'Características', feat_title:'Solo primitivos. Sin abstracciones astutas.', feat_desc:'Cada pieza es un bloque conocido: matemática Batog 2018, AccessControl OpenZeppelin v5.4, Gordon Growth para NPV on-chain, Chainlink BRL/USD, primitivo Morpho Blue. Los revisores reconocen cada línea.',
+    c1_icon:'Matemática O(1)', c1_title:'Distribución de Recompensa Escalable', c1_desc:'Contador único dividendPerShareScaled, liquidación perezosa en transferencia. Depósito O(1), claim O(1), cero infra off-chain. Patrón publicado (Batog 2018) con una década en producción.',
+    c2_icon:'Respaldo NFT', c2_title:'Respaldo con Flujo Real', c2_desc:'5 NFTs Lobie Unit registrados vía BTROfferingRegistry vinculan SALRIO a estudios específicos. Cada NFT lleva observaciones mensuales auditadas tras el habite-se.',
+    c3_icon:'Gordon Growth', c3_title:'Oráculo NPV On-Chain', c3_desc:'Registry expone gordonGrowthNPV(dividendPerPeriod, r, g) como función pura. Cualquier frontend o agente reprecia SALRIO con sus supuestos sin modelos off-chain.',
+    c4_icon:'Reg S Cat 3', c4_title:'Encuadre de Valores Offshore', c4_desc:'Estructura SPE Wyoming LLC (BTS), Regulation S Categoría 3 con período de 12 meses. Leyenda embebida en el nombre del token. Sin personas norteamericanas en primaria.',
+    c5_icon:'Morpho', c5_title:'Mercado de Préstamo Inmutable', c5_desc:'Mercado SALRIO / USDC en Morpho Blue con 62,5% LLTV, oráculo par × Chainlink BRL/USD, Adaptive IRM. Aislado, sin permiso, no actualizable.',
+    c6_icon:'Phase Tags', c6_title:'Audit Trail On-Chain', c6_desc:'Cada depositDividend se etiqueta con su fase del ciclo (Construction / RampUp / Operational / Extraordinary). Holders, auditores y agentes atribuyen el rendimiento a su fuente.',
+    sec_contracts:'Contratos Inteligentes', contracts_title:'Totalmente verificados en Basescan', contracts_desc:'Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. Todos inmutables, sin proxy, sin upgrade.',
+    sec_comp:'Compliance', comp_title:'Emisor regulado, operador auditado', comp_desc:'EFIX Securitizadora emite. Lobie opera. Harris & Trotter audita las observaciones de flujo antes de la chain.',
+    r1_label:'Emisor', r2_label:'Marco de Oferta', r2_value:'Reg S Categoría 3', r3_label:'SPE', r3_value:'Sal Rio Residences Pool 1', r4_label:'Vehículo Legal', r4_value:'LLC Wyoming (BTS)', r5_label:'Operador', r6_label:'Auditor', r7_label:'Building ID', r8_label:'Unidades de Respaldo', r8_value:'5 × Estudio', r9_label:'Custodia', r9_value:'Safe 2-de-3',
+    cta_title:'Posee una parte del inmobiliario carioca', cta_desc:'Equity BTR fraccionado con dividendos on-chain. Opera en Uniswap o pide prestado contra tus cuotas en Morpho Blue.', cta_p:'Operar SALRIO', cta_s:'Pedir en Morpho',
+    foot_brand:'Build-to-Rent tokenizado en Base. Equity fraccionado en alquileres de corta estancia brasileños, operado por Lobie. Construido por EFIX Securitizadora.', foot_protocol:'Protocolo', foot_related:'Relacionados', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'Billetera', foot_legal:'EFIX Securitizadora S.A. — Acto CVM 23.635/2025 — Reg S Cat 3'
+  },
+  fr: { flag:'🇫🇷', code:'FR',
+    nav_how:'Fonctionnement', nav_lifecycle:'Cycle', nav_features:'Caractéristiques', nav_contracts:'Contrats', nav_compliance:'Conformité', nav_cta:'Voir SALRIO',
+    hero_badge:'Sal Rio Pool #1 sur Base', hero_title:'Build-to-Rent Tokenisé<br>avec <span>Dividendes Mensuels</span>', hero_sub:'SALRIO est une fraction de 5 studios Sal Rio Residences à Rio de Janeiro. Dividendes mensuels en BRLE. Adossé à des NFT Lobie Unit audités. Négociable sur Uniswap, empruntable sur Morpho.', hero_pt:'Casa carioca, rendement global.', hero_cta1:'Trader sur Uniswap', hero_cta2:'Voir sur Basescan',
+    stat_nav:'NAV du Pool', stat_phase:'Phase', stat_phase_v:'Construction', stat_backing:'Actif sous-jacent', stat_backing_v:'5 Studios', stat_network:'Réseau',
+    sec_how:'Fonctionnement', how_title:'Une part. Un studio. Un dividende mensuel.', how_desc:'Chaque jeton SALRIO représente 1 ⁄ 1 861 310 du pool — 1 SALRIO = R$ 1,00 au pair. Lobie opère les studios; la SPE encaisse le loyer; le Safe dépose des dividendes BRLE chaque mois. Le contrat gère le reste via Batog 2018 (O(1) par compte).',
+    step_01:'Étape 01', step_02:'Étape 02', step_03:'Étape 03', step_04:'Étape 04',
+    s1_icon:'Souscrire', s1_title:'Acheter SALRIO', s1_desc:'Souscrivez au pair depuis la trésorerie Lobie Safe ou achetez sur le pool Uniswap V3. Offre Reg S Catégorie 3.',
+    s2_icon:'Détenir', s2_title:'Suivre le Pool', s2_desc:'Votre solde vous donne droit au cash flow pro-rata des 5 studios. ERC-20, ERC-2612 Permit, entièrement composable.',
+    s3_icon:'Encaisser', s3_title:'Réclamer BRLE', s3_desc:'Lobie Safe appelle depositDividend() chaque mois. Tout le monde peut appeler claim() pour récupérer ses BRLE. CDI pendant la construction.',
+    s4_icon:'Déverrouiller', s4_title:'Emprunter ou Vendre', s4_desc:'Déposez SALRIO comme collatéral sur Morpho Blue, empruntez USDC jusqu\'à 62,5% LTV. Ou vendez sur Uniswap.',
+    sec_life:'Cycle de Vie', life_title:'Quatre phases, un contrat, zéro upgrade', life_desc:'Sal Rio est pré-opérationnel à l\'IPO. Les cash flows changent de phase — chaque phase taguée on-chain pour que l\'audit trail distingue le rendement pré-opérationnel du vrai loyer après habite-se.',
+    p1_months:'Mois 1 – 18', p1_name:'Construction', p1_yield:'~R$ 22,3k / mois', p1_desc:'Lobie place le BRL de l\'IPO dans sBRLE. Rendement CDI mensuel (~14,4% an) distribué en dividendPhase = 0.',
+    p2_months:'Mois 19 – 24', p2_name:'Montée en charge', p2_yield:'Sources mixtes', p2_desc:'Habite-se partiel émis. Studios mis en service progressivement. dividendPhase = 1. CDI et loyer.',
+    p3_months:'Mois 25+', p3_name:'Opérationnel', p3_yield:'~R$ 13k / mois', p3_desc:'5 studios stabilisés à ~R$ 2,6k net chacun. dividendPhase = 2. Loyer pur.',
+    p4_months:'À tout moment', p4_name:'Extraordinaire', p4_yield:'Non récurrent', p4_desc:'Remboursements capex, règlements judiciaires, assurances. dividendPhase = 3. Même math, tag différent.',
+    sec_unlock:'Le Déverrouillage', unlock_title:'Crédit immobilier brésilien aux taux DeFi', unlock_desc:'Les hypothèques brésiliennes coûtent 15-20% an. SALRIO sur Morpho Blue cible ~6% an — mêmes studios, mêmes cash flows, une fraction du coût du capital.',
+    u1_label:'Hypothèque BR Classique', u1_sub:'an en BRL, 5-30 ans, documentation lourde, nantissement, taxe IOF. Financement pré-habite-se doublement restreint.',
+    u2_label:'Morpho Blue sur SALRIO', u2_sub:'an en USDC, LTV 62,5%, sans lockup, instantané, prix par Morpho Adaptive IRM. Offre USDC globale, demande brésilienne.',
+    sec_features:'Caractéristiques', feat_title:'Uniquement des primitives. Pas d\'abstractions malines.', feat_desc:'Chaque pièce est un bloc connu: math Batog 2018, AccessControl OZ v5.4, Gordon Growth pour NPV on-chain, Chainlink BRL/USD, primitive Morpho Blue. Les reviewers reconnaissent chaque ligne.',
+    c1_icon:'Math O(1)', c1_title:'Distribution Scalable', c1_desc:'Compteur unique dividendPerShareScaled, règlement paresseux au transfert. Dépôt O(1), claim O(1), zéro infra off-chain. Pattern publié (Batog 2018).',
+    c2_icon:'Adossé NFT', c2_title:'Adossé à du Cash Flow Réel', c2_desc:'5 NFT Lobie Unit enregistrés via BTROfferingRegistry lient SALRIO à des studios spécifiques. Chaque NFT porte des observations mensuelles auditées post-habite-se.',
+    c3_icon:'Gordon Growth', c3_title:'Oracle NPV On-Chain', c3_desc:'Registry expose gordonGrowthNPV(dividendPerPeriod, r, g) comme fonction pure. Frontends et agents peuvent repricer SALRIO avec leurs hypothèses.',
+    c4_icon:'Reg S Cat 3', c4_title:'Cadre Securities Offshore', c4_desc:'Structure SPE LLC Wyoming (BTS), Regulation S Catégorie 3 avec période de 12 mois. Légende intégrée au nom du token. Pas de US persons en primaire.',
+    c5_icon:'Morpho', c5_title:'Marché de Prêt Immuable', c5_desc:'Marché SALRIO / USDC sur Morpho Blue, LLTV 62,5%, oracle pair × Chainlink BRL/USD, Adaptive IRM. Isolé, permissionless, non-upgradable.',
+    c6_icon:'Phase Tags', c6_title:'Audit Trail On-Chain', c6_desc:'Chaque depositDividend est tagué avec sa phase (Construction / RampUp / Operational / Extraordinary). Holders, auditeurs et agents peuvent attribuer le yield à sa source.',
+    sec_contracts:'Smart Contracts', contracts_title:'Entièrement vérifiés sur Basescan', contracts_desc:'Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. Tous immuables, pas de proxy, pas d\'upgrade.',
+    sec_comp:'Conformité', comp_title:'Émetteur régulé, opérateur audité', comp_desc:'EFIX Securitizadora émet. Lobie opère. Harris & Trotter audite les observations avant on-chain.',
+    r1_label:'Émetteur', r2_label:'Cadre d\'Offre', r2_value:'Reg S Catégorie 3', r3_label:'SPE', r3_value:'Sal Rio Residences Pool 1', r4_label:'Véhicule Légal', r4_value:'LLC Wyoming (BTS)', r5_label:'Opérateur', r6_label:'Auditeur', r7_label:'Building ID', r8_label:'Unités Sous-jacentes', r8_value:'5 × Studio', r9_label:'Custody', r9_value:'Safe 2-de-3',
+    cta_title:'Possédez une part de l\'immobilier carioca', cta_desc:'Equity BTR fractionnée avec dividendes on-chain. Tradez sur Uniswap ou empruntez contre vos parts sur Morpho Blue.', cta_p:'Trader SALRIO', cta_s:'Emprunter sur Morpho',
+    foot_brand:'Build-to-Rent tokenisé sur Base. Equity fractionnée dans des locations courtes brésiliennes, opérée par Lobie. Construit par EFIX Securitizadora.', foot_protocol:'Protocole', foot_related:'Liens', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'Wallet', foot_legal:'EFIX Securitizadora S.A. — Acte CVM 23.635/2025 — Reg S Cat 3'
+  },
+  ja: { flag:'🇯🇵', code:'JA',
+    nav_how:'仕組み', nav_lifecycle:'ライフサイクル', nav_features:'特徴', nav_contracts:'コントラクト', nav_compliance:'コンプライアンス', nav_cta:'SALRIOを見る',
+    hero_badge:'Sal Rio Pool #1 Base メインネットで稼働中', hero_title:'トークン化された<br>月次配当付き <span>Build-to-Rent</span>', hero_sub:'SALRIOはリオデジャネイロのSal Rio Residences 5ユニットの分割持分。配当は毎月BRLEで到着。Lobie Unit NFTで裏付け。Uniswapで取引、Morphoで借入可能。', hero_pt:'Casa carioca, グローバル利回り。', hero_cta1:'Uniswapで取引', hero_cta2:'Basescanで表示',
+    stat_nav:'プールNAV', stat_phase:'フェーズ', stat_phase_v:'建設中', stat_backing:'裏付け', stat_backing_v:'スタジオ5室', stat_network:'ネットワーク',
+    sec_how:'仕組み', how_title:'1株、1スタジオ、毎月1回の配当。', how_desc:'各SALRIOトークンはプールの1 ⁄ 1,861,310を表します — 1 SALRIO = 額面R$1.00。LobieがスタジオをSPEの代わりに運営し、Safeが毎月BRLE配当を預託。残りはBatog 2018の数学(口座当たりO(1))が処理します。',
+    step_01:'ステップ01', step_02:'ステップ02', step_03:'ステップ03', step_04:'ステップ04',
+    s1_icon:'購入', s1_title:'SALRIOを購入', s1_desc:'Lobie Safeトレジャリーから額面で購入、またはUniswap V3プールで購入。Reg Sカテゴリ3オファリング。',
+    s2_icon:'保有', s2_title:'プールを追跡', s2_desc:'残高に応じてスタジオ5室からのプロラタキャッシュフロー。ERC-20、ERC-2612 Permit、完全にコンポーザブル。',
+    s3_icon:'受取', s3_title:'BRLEを請求', s3_desc:'Lobie Safeが毎月depositDividend()を実行。claim()で蓄積したBRLEを引き出せます。建設中はCDI。',
+    s4_icon:'解放', s4_title:'借入または売却', s4_desc:'SALRIOをMorpho Blueの担保として預け入れ、最大62.5% LTVでUSDCを借入。またはUniswapで売却。',
+    sec_life:'ライフサイクル', life_title:'4フェーズ、1コントラクト、アップグレードなし', life_desc:'IPO時点のSal Rioは未稼働。キャッシュフローはフェーズごとに変化し、各フェーズはオンチェーンでタグ付けされます。建設中の利回り(sBRLE/CDI代替)と稼働後の実際の賃料収入を区別します。',
+    p1_months:'1–18ヶ月目', p1_name:'建設中', p1_yield:'~R$ 22.3k / 月', p1_desc:'LobieがIPO BRLをsBRLEに預託。月次CDI利回り(~14.4%年率)をdividendPhase = 0として分配。',
+    p2_months:'19–24ヶ月目', p2_name:'立ち上げ', p2_yield:'混合ソース', p2_desc:'部分的habite-se発行。スタジオが順次稼働。dividendPhase = 1。CDIと賃料の両方。',
+    p3_months:'25ヶ月目以降', p3_name:'稼働中', p3_yield:'~R$ 13k / 月', p3_desc:'5室が安定化、各~R$ 2.6k純払い戻し。dividendPhase = 2。純賃料キャッシュフロー。',
+    p4_months:'随時', p4_name:'臨時', p4_yield:'非経常', p4_desc:'Capex払戻、訴訟和解、保険金等。dividendPhase = 3。同じ数学、異なるタグ。',
+    sec_unlock:'アンロック', unlock_title:'ブラジル不動産クレジット × DeFiレート', unlock_desc:'ブラジルの不動産担保住宅ローンは通常年15-20%。Morpho Blue上のSALRIOは~年6%を目指す — 同じスタジオ、同じキャッシュフロー、資本コストは一部。流動性はBase上のUSDC供給者から。',
+    u1_label:'従来型BR住宅ローン', u1_sub:'BRL建て年率、5-30年、重い書類、担保、IOF税。habite-se前の融資は二重に制限。',
+    u2_label:'Morpho Blue on SALRIO', u2_sub:'USDC建て年率、62.5% LTV、ロックアップなし、即時、Morpho Adaptive IRMによる価格設定。グローバルUSDC供給、ブラジル資産需要。',
+    sec_features:'特徴', feat_title:'プリミティブのみ。賢しらな抽象化なし。', feat_desc:'各要素はよく理解された構成要素: Batog 2018の配当数学、OpenZeppelin v5.4 AccessControl、オンチェーンNPV用Gordon Growth、BRL/USD用Chainlink、Morpho Blueのイミュータブル市場プリミティブ。',
+    c1_icon:'O(1) 数学', c1_title:'スケーラブル報酬分配', c1_desc:'単一のdividendPerShareScaledカウンター、転送時の遅延決済。O(1) 預託、O(1) 請求、オフチェーンインフラなし。',
+    c2_icon:'NFT裏付け', c2_title:'実キャッシュフロー裏付け', c2_desc:'BTROfferingRegistry経由で登録された5つのLobie Unit NFTがSALRIOを特定スタジオとリンク。各NFTはhabite-se発行後、監査済み月次観測を保持。',
+    c3_icon:'Gordon Growth', c3_title:'オンチェーンNPVオラクル', c3_desc:'Registryはピュア関数としてgordonGrowthNPV(dividendPerPeriod, r, g)を公開。任意のフロントエンドまたはエージェントが仮定でSALRIOを再評価可能。',
+    c4_icon:'Reg S Cat 3', c4_title:'オフショア証券フレーム', c4_desc:'Wyoming LLC SPE構造(BTS)、Regulation S Category 3、12ヶ月の分配コンプライアンス期間。トークン名にレジェンド埋込。プライマリで米国人不可。',
+    c5_icon:'Morpho', c5_title:'イミュータブル貸出市場', c5_desc:'Morpho Blue上のSALRIO / USDC市場、62.5% LLTV、額面 × Chainlink BRL/USDオラクル、Adaptive IRM。隔離、パーミッションレス、アップグレード不可。',
+    c6_icon:'Phase Tags', c6_title:'オンチェーン監査証跡', c6_desc:'各depositDividendはライフサイクルフェーズでタグ付け(Construction / RampUp / Operational / Extraordinary)。Holder、監査人、エージェントが利回りを真のソースに帰属可能。',
+    sec_contracts:'スマートコントラクト', contracts_title:'Basescanで完全検証済み', contracts_desc:'Solidity 0.8.22、OpenZeppelin v5.4、optimizer 200 runs、viaIR。全てイミュータブル、プロキシなし、アップグレードパスなし。',
+    sec_comp:'コンプライアンス', comp_title:'規制下発行者、監査済みオペレーター', comp_desc:'EFIX Securitizadoraが発行。Lobieが運営。Harris & Trotterがキャッシュフロー観測をオンチェーン前に監査。',
+    r1_label:'発行者', r2_label:'オファリングフレーム', r2_value:'Reg S Category 3', r3_label:'SPE', r3_value:'Sal Rio Residences Pool 1', r4_label:'法的ビークル', r4_value:'Wyoming LLC (BTS)', r5_label:'オペレーター', r6_label:'監査人', r7_label:'Building ID', r8_label:'裏付けユニット', r8_value:'5 × スタジオ', r9_label:'カストディ', r9_value:'2-of-3 Safe',
+    cta_title:'リオ不動産の一部を所有', cta_desc:'オンチェーン配当付きの分割BTRエクイティ。Uniswapで取引、またはMorpho Blueで株式を担保に借入。', cta_p:'SALRIOを取引', cta_s:'Morphoで借入',
+    foot_brand:'Baseメインネット上のトークン化Build-to-Rent。Lobie運営のブラジル短期賃貸における分割エクイティ。EFIX Securitizadora構築。', foot_protocol:'プロトコル', foot_related:'関連', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'ウォレット', foot_legal:'EFIX Securitizadora S.A. — CVM法令 23.635/2025 — Reg S Cat 3'
+  },
+  zh: { flag:'🇨🇳', code:'ZH',
+    nav_how:'运作原理', nav_lifecycle:'生命周期', nav_features:'特点', nav_contracts:'合约', nav_compliance:'合规', nav_cta:'查看 SALRIO',
+    hero_badge:'Sal Rio Pool #1 已在 Base 主网上线', hero_title:'代币化 Build-to-Rent<br>带 <span>每月分红</span>', hero_sub:'SALRIO 是里约热内卢 Sal Rio Residences 5 套公寓的分割股份。每月以 BRLE 形式发放分红。由审计过的 Lobie Unit NFT 支撑。可在 Uniswap 交易,可在 Morpho 借贷。', hero_pt:'Casa carioca,全球收益。', hero_cta1:'在 Uniswap 交易', hero_cta2:'在 Basescan 查看',
+    stat_nav:'池 NAV', stat_phase:'阶段', stat_phase_v:'建设中', stat_backing:'资产支撑', stat_backing_v:'5 套公寓', stat_network:'网络',
+    sec_how:'运作原理', how_title:'一份股份。一套公寓。每月一次分红。', how_desc:'每个 SALRIO 代币代表资金池的 1 ⁄ 1,861,310 — 1 SALRIO = R$ 1.00 按面值。Lobie 运营公寓;SPE 收租;Safe 每月存入 BRLE 分红。合约通过 Batog 2018 数学处理剩余部分(每账户 O(1),无 merkle 树,无链下索引)。',
+    step_01:'步骤 01', step_02:'步骤 02', step_03:'步骤 03', step_04:'步骤 04',
+    s1_icon:'认购', s1_title:'购买 SALRIO', s1_desc:'从 Lobie Safe 金库按面值认购,或在 Uniswap V3 池购买。Reg S 类别 3 发行。',
+    s2_icon:'持有', s2_title:'跟踪资金池', s2_desc:'您的余额让您按比例获得 5 套公寓的现金流。ERC-20、ERC-2612 Permit,完全可组合。',
+    s3_icon:'领取', s3_title:'领取 BRLE', s3_desc:'Lobie Safe 每月调用 depositDividend()。任何人都可调用 claim() 提取累计的 BRLE。建设期间按 CDI。',
+    s4_icon:'释放', s4_title:'借贷或交易', s4_desc:'将 SALRIO 存入 Morpho Blue 作为抵押,借出 USDC 最高 62.5% LTV。或在 Uniswap 池出售。',
+    sec_life:'生命周期', life_title:'四个阶段、一个合约、零升级', life_desc:'Sal Rio 在 IPO 时尚未运营。现金流跨阶段变化 — 每个阶段在链上标记,以便审计追踪区分建设前收益(sBRLE / CDI 代理)与 habite-se 颁发后的实际租金收入。',
+    p1_months:'第 1–18 个月', p1_name:'建设', p1_yield:'~R$ 22.3k / 月', p1_desc:'Lobie 将 IPO 的 BRL 存入 sBRLE。月度 CDI 收益(~14.4% 年化)分配为 dividendPhase = 0。',
+    p2_months:'第 19–24 个月', p2_name:'爬坡', p2_yield:'混合来源', p2_desc:'部分 habite-se 颁发。公寓陆续上线。dividendPhase = 1。CDI 与租金双轨。',
+    p3_months:'第 25 个月+', p3_name:'运营中', p3_yield:'~R$ 13k / 月', p3_desc:'5 套公寓稳定,各约 R$ 2.6k 净支付。dividendPhase = 2。纯租金现金流。',
+    p4_months:'随时', p4_name:'非常态', p4_yield:'非经常性', p4_desc:'Capex 退款、法律和解、保险赔付。dividendPhase = 3。相同数学,不同标签。',
+    sec_unlock:'解锁', unlock_title:'巴西房地产信贷遇见 DeFi 利率', unlock_desc:'巴西房产抵押贷款通常年息 15-20%。Morpho Blue 上的 SALRIO 目标 ~6% 年息 — 同样的公寓、同样的现金流、一小部分资本成本。流动性来自 Base 上的 USDC 供应者,而非巴西银行。',
+    u1_label:'传统巴西抵押贷款', u1_sub:'BRL 年息,5-30 年期限,文件繁重,财产抵押,IOF 税层。habite-se 前融资双重受限。',
+    u2_label:'Morpho Blue on SALRIO', u2_sub:'USDC 年息,62.5% LTV,无锁定,即时,由 Morpho Adaptive IRM 定价。全球 USDC 供应,巴西资产需求。',
+    sec_features:'特点', feat_title:'仅使用原语。无巧妙抽象。', feat_desc:'每个部分都是众所周知的构建块:Batog 2018 分红数学、OpenZeppelin v5.4 AccessControl、链上 NPV 用 Gordon Growth、Chainlink BRL/USD、Morpho Blue 不可变市场原语。',
+    c1_icon:'O(1) 数学', c1_title:'可扩展奖励分配', c1_desc:'单一 dividendPerShareScaled 计数器,转账时懒结算。O(1) 存款、O(1) 领取、零链下基础设施。已发布模式(Batog 2018)。',
+    c2_icon:'NFT 支撑', c2_title:'真实现金流支撑', c2_desc:'通过 BTROfferingRegistry 注册的 5 个 Lobie Unit NFT 将 SALRIO 与特定公寓链接。每个 NFT 在 habite-se 后携带审计过的月度观测。',
+    c3_icon:'Gordon Growth', c3_title:'链上 NPV 预言机', c3_desc:'Registry 将 gordonGrowthNPV(dividendPerPeriod, r, g) 作为纯函数公开。任何前端或代理都可用自定义假设对 SALRIO 重新定价。',
+    c4_icon:'Reg S Cat 3', c4_title:'离岸证券框架', c4_desc:'Wyoming LLC SPE 结构(BTS 委托),Regulation S 类别 3,12 个月分发合规期。ERC-20 代币名称中嵌入图例。主要分发中不允许美国人。',
+    c5_icon:'Morpho', c5_title:'不可变借贷市场', c5_desc:'Morpho Blue 上的 SALRIO / USDC 市场,62.5% LLTV,面值 × Chainlink BRL/USD 预言机,Adaptive IRM。隔离、无许可、不可升级。',
+    c6_icon:'Phase Tags', c6_title:'链上审计追踪', c6_desc:'每个 depositDividend 都标有其生命周期阶段(Construction / RampUp / Operational / Extraordinary)。持有者、审计员和代理可将收益归因于真实来源。',
+    sec_contracts:'智能合约', contracts_title:'在 Basescan 完全验证', contracts_desc:'Solidity 0.8.22,OpenZeppelin v5.4,optimizer 200 runs,viaIR。所有合约不可变,无代理,无升级路径。',
+    sec_comp:'合规', comp_title:'受监管发行方,审计过的运营方', comp_desc:'EFIX Securitizadora 发行。Lobie 运营。Harris & Trotter 在链上落地前审计现金流观测。',
+    r1_label:'发行方', r2_label:'发行框架', r2_value:'Reg S 类别 3', r3_label:'SPE', r3_value:'Sal Rio Residences Pool 1', r4_label:'法律实体', r4_value:'Wyoming LLC (BTS)', r5_label:'运营方', r6_label:'审计方', r7_label:'Building ID', r8_label:'支撑单元', r8_value:'5 × 公寓', r9_label:'托管', r9_value:'2-of-3 Safe',
+    cta_title:'拥有一部分里约房地产', cta_desc:'分割 BTR 股权,链上分红。在 Uniswap 交易或在 Morpho Blue 用您的股份抵押借贷。', cta_p:'交易 SALRIO', cta_s:'在 Morpho 借贷',
+    foot_brand:'Base 上的代币化 Build-to-Rent。巴西短租的分割股权,由 Lobie 运营,EFIX Securitizadora 构建。', foot_protocol:'协议', foot_related:'相关', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'钱包', foot_legal:'EFIX Securitizadora S.A. — CVM 法案 23.635/2025 — Reg S Cat 3'
+  },
+  ar: { flag:'🇸🇦', code:'AR',
+    nav_how:'كيف يعمل', nav_lifecycle:'دورة الحياة', nav_features:'الميزات', nav_contracts:'العقود', nav_compliance:'الامتثال', nav_cta:'عرض SALRIO',
+    hero_badge:'Sal Rio Pool #1 مباشر على Base', hero_title:'Build-to-Rent مُرمَّز<br>مع <span>توزيعات شهرية</span>', hero_sub:'SALRIO هو حصة جزئية من 5 استوديوهات Sal Rio Residences في ريو دي جانيرو. توزيعات شهرية بـ BRLE. مدعوم بـ NFTs Lobie Unit مدققة. قابل للتداول على Uniswap، قابل للإقراض على Morpho.', hero_pt:'Casa carioca، عائد عالمي.', hero_cta1:'تداول على Uniswap', hero_cta2:'عرض على Basescan',
+    stat_nav:'NAV للمجمع', stat_phase:'المرحلة', stat_phase_v:'قيد الإنشاء', stat_backing:'الدعم', stat_backing_v:'5 استوديوهات', stat_network:'الشبكة',
+    sec_how:'كيف يعمل', how_title:'سهم واحد. استوديو واحد. توزيع شهري واحد.', how_desc:'كل رمز SALRIO يمثل 1 ⁄ 1,861,310 من المجمع — 1 SALRIO = R$ 1.00 بالقيمة الاسمية. Lobie تدير الاستوديوهات؛ SPE تجمع الإيجار؛ Safe يودع توزيعات BRLE شهريًا. العقد يقوم بالباقي عبر رياضيات Batog 2018 (O(1) لكل حساب).',
+    step_01:'الخطوة 01', step_02:'الخطوة 02', step_03:'الخطوة 03', step_04:'الخطوة 04',
+    s1_icon:'اشتراك', s1_title:'شراء SALRIO', s1_desc:'اشترك بالقيمة الاسمية من خزينة Lobie Safe أو اشترِ من مجمع Uniswap V3. عرض Reg S فئة 3.',
+    s2_icon:'احتفظ', s2_title:'تتبع المجمع', s2_desc:'رصيدك يمنحك حصة نسبية من التدفق النقدي لـ 5 استوديوهات. ERC-20، ERC-2612 Permit، قابل للتركيب بالكامل.',
+    s3_icon:'تحصيل', s3_title:'المطالبة بـ BRLE', s3_desc:'Lobie Safe يستدعي depositDividend() شهريًا. أي شخص يمكنه استدعاء claim() لسحب BRLE المتراكم. CDI أثناء الإنشاء.',
+    s4_icon:'تحرير', s4_title:'اقتراض أو بيع', s4_desc:'إيداع SALRIO كضمان على Morpho Blue، اقتراض USDC حتى 62.5% LTV. أو البيع في مجمع Uniswap.',
+    sec_life:'دورة الحياة', life_title:'أربع مراحل، عقد واحد، صفر ترقيات', life_desc:'Sal Rio قبل التشغيل عند IPO. التدفقات النقدية تتحول عبر مراحل مختلفة — كل مرحلة موسومة على السلسلة لتمييز عائد ما قبل التشغيل (sBRLE / بديل CDI) عن دخل الإيجار الفعلي بعد habite-se.',
+    p1_months:'الشهر 1–18', p1_name:'إنشاء', p1_yield:'~R$ 22.3k / شهر', p1_desc:'Lobie يودع BRL من IPO في sBRLE. عائد CDI شهري (~14.4% سنويًا) يوزع كـ dividendPhase = 0.',
+    p2_months:'الشهر 19–24', p2_name:'تصاعد', p2_yield:'مصادر مختلطة', p2_desc:'habite-se جزئي صادر. الاستوديوهات تدخل تدريجيًا. dividendPhase = 1. CDI وإيجار.',
+    p3_months:'الشهر 25+', p3_name:'تشغيلي', p3_yield:'~R$ 13k / شهر', p3_desc:'5 استوديوهات مستقرة بـ ~R$ 2.6k دفع صافٍ لكل منها. dividendPhase = 2. إيجار نقي.',
+    p4_months:'في أي وقت', p4_name:'استثنائي', p4_yield:'غير متكرر', p4_desc:'ردود capex، تسويات قانونية، تأمين. dividendPhase = 3. نفس الرياضيات، وسم مختلف.',
+    sec_unlock:'التحرير', unlock_title:'الائتمان العقاري البرازيلي يلتقي بأسعار DeFi', unlock_desc:'قروض الرهن العقاري البرازيلية تكلف عادة 15-20% سنويًا. SALRIO على Morpho Blue يستهدف ~6% سنويًا — نفس الاستوديوهات، نفس التدفقات، جزء من تكلفة رأس المال.',
+    u1_label:'رهن عقاري برازيلي تقليدي', u1_sub:'سنويًا بالـ BRL، فترات 5-30 سنة، توثيق ثقيل، رهن، طبقة ضريبة IOF.',
+    u2_label:'Morpho Blue على SALRIO', u2_sub:'سنويًا بالـ USDC، 62.5% LTV، بدون قفل، فوري، مسعر بواسطة Morpho Adaptive IRM.',
+    sec_features:'الميزات', feat_title:'بدائيات فقط. لا تجريدات ذكية.', feat_desc:'كل قطعة هي لبنة مفهومة: رياضيات توزيعات Batog 2018، AccessControl OZ v5.4، Gordon Growth، Chainlink BRL/USD، بدائية سوق Morpho Blue غير القابلة للتغيير.',
+    c1_icon:'رياضيات O(1)', c1_title:'توزيع مكافآت قابل للتوسع', c1_desc:'عداد dividendPerShareScaled واحد، تسوية كسولة عند النقل. إيداع O(1)، مطالبة O(1)، صفر بنية تحتية خارج السلسلة.',
+    c2_icon:'مدعوم بـ NFT', c2_title:'دعم تدفق نقدي حقيقي', c2_desc:'5 NFTs Lobie Unit مسجلة عبر BTROfferingRegistry تربط SALRIO باستوديوهات محددة. كل NFT يحمل ملاحظات شهرية مدققة بعد habite-se.',
+    c3_icon:'Gordon Growth', c3_title:'أوراكل NPV على السلسلة', c3_desc:'Registry يعرض gordonGrowthNPV(dividendPerPeriod, r, g) كدالة نقية. أي واجهة أو وكيل يمكنه إعادة تسعير SALRIO بافتراضاته.',
+    c4_icon:'Reg S Cat 3', c4_title:'إطار أوراق مالية خارجية', c4_desc:'هيكل SPE Wyoming LLC (BTS)، Regulation S فئة 3 مع فترة امتثال توزيع 12 شهرًا. علامة مضمنة في اسم الرمز. لا أشخاص أمريكيون في الأولي.',
+    c5_icon:'Morpho', c5_title:'سوق إقراض غير قابل للتغيير', c5_desc:'سوق SALRIO / USDC على Morpho Blue، 62.5% LLTV، أوراكل القيمة الاسمية × Chainlink BRL/USD، Adaptive IRM. معزول، بدون إذن، غير قابل للترقية.',
+    c6_icon:'Phase Tags', c6_title:'مسار تدقيق على السلسلة', c6_desc:'كل depositDividend موسوم بمرحلة دورة حياته (Construction / RampUp / Operational / Extraordinary). الحاملون والمدققون والوكلاء يمكنهم إسناد العائد إلى مصدره الحقيقي.',
+    sec_contracts:'العقود الذكية', contracts_title:'متحققة بالكامل على Basescan', contracts_desc:'Solidity 0.8.22، OpenZeppelin v5.4، optimizer 200 runs، viaIR. جميع العقود غير قابلة للتغيير، بدون وكيل، بدون مسار ترقية.',
+    sec_comp:'الامتثال', comp_title:'مُصدِر منظم، مشغل مدقق', comp_desc:'EFIX Securitizadora تصدر. Lobie تدير. Harris & Trotter تدقق ملاحظات التدفق النقدي قبل وضعها على السلسلة.',
+    r1_label:'المُصدِر', r2_label:'إطار العرض', r2_value:'Reg S فئة 3', r3_label:'SPE', r3_value:'Sal Rio Residences Pool 1', r4_label:'الأداة القانونية', r4_value:'Wyoming LLC (BTS)', r5_label:'المشغل', r6_label:'المدقق', r7_label:'Building ID', r8_label:'وحدات الدعم', r8_value:'5 × استوديو', r9_label:'الحفظ', r9_value:'Safe 2-من-3',
+    cta_title:'امتلك جزءًا من عقارات ريو', cta_desc:'حقوق ملكية BTR جزئية مع توزيعات على السلسلة. تداول على Uniswap أو اقترض مقابل أسهمك على Morpho Blue.', cta_p:'تداول SALRIO', cta_s:'اقتراض على Morpho',
+    foot_brand:'Build-to-Rent مُرمَّز على Base. حقوق ملكية جزئية في إيجارات قصيرة الأجل برازيلية، تُدار بواسطة Lobie. مبني بواسطة EFIX Securitizadora.', foot_protocol:'البروتوكول', foot_related:'ذات صلة', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'المحفظة', foot_legal:'EFIX Securitizadora S.A. — قانون CVM 23.635/2025 — Reg S Cat 3'
+  },
+  ko: { flag:'🇰🇷', code:'KO',
+    nav_how:'작동 원리', nav_lifecycle:'생애주기', nav_features:'특징', nav_contracts:'컨트랙트', nav_compliance:'컴플라이언스', nav_cta:'SALRIO 보기',
+    hero_badge:'Sal Rio Pool #1 Base 메인넷에서 가동 중', hero_title:'<span>월배당</span> 있는<br>토큰화된 Build-to-Rent', hero_sub:'SALRIO는 리우데자네이루 Sal Rio Residences 5개 스튜디오의 지분 토큰입니다. 매월 BRLE 배당. 감사된 Lobie Unit NFT로 뒷받침. Uniswap에서 거래, Morpho에서 담보 대출 가능.', hero_pt:'Casa carioca, 글로벌 수익.', hero_cta1:'Uniswap에서 거래', hero_cta2:'Basescan에서 보기',
+    stat_nav:'풀 NAV', stat_phase:'단계', stat_phase_v:'건설 중', stat_backing:'담보 자산', stat_backing_v:'스튜디오 5개', stat_network:'네트워크',
+    sec_how:'작동 원리', how_title:'한 주, 한 스튜디오, 매월 한 번의 배당.', how_desc:'각 SALRIO 토큰은 풀의 1 ⁄ 1,861,310을 나타냅니다 — 1 SALRIO = 액면 R$ 1.00. Lobie가 스튜디오를 운영하고; SPE가 임대료를 징수하며; Safe가 매월 BRLE 배당을 예치합니다. 나머지는 Batog 2018 수학(계정당 O(1))이 처리합니다.',
+    step_01:'단계 01', step_02:'단계 02', step_03:'단계 03', step_04:'단계 04',
+    s1_icon:'청약', s1_title:'SALRIO 구매', s1_desc:'Lobie Safe 금고에서 액면가로 청약하거나 Uniswap V3 풀에서 구매. Reg S 카테고리 3 공모.',
+    s2_icon:'보유', s2_title:'풀 추적', s2_desc:'잔고에 따라 5개 스튜디오의 비례 현금 흐름. ERC-20, ERC-2612 Permit, 완전 컴포저블.',
+    s3_icon:'수령', s3_title:'BRLE 청구', s3_desc:'Lobie Safe가 매월 depositDividend() 호출. 누구나 claim()으로 누적된 BRLE를 인출 가능. 건설 중에는 CDI.',
+    s4_icon:'해제', s4_title:'대출 또는 매도', s4_desc:'SALRIO를 Morpho Blue에 담보로 예치, USDC 최대 62.5% LTV 대출. 또는 Uniswap 풀에서 매도.',
+    sec_life:'생애주기', life_title:'4단계, 1개 컨트랙트, 업그레이드 없음', life_desc:'Sal Rio는 IPO 시점에 운영 전입니다. 현금 흐름이 단계별로 변화하며 — 각 단계가 온체인에 태깅되어 건설 전 수익(sBRLE / CDI 프록시)과 habite-se 발급 후 실제 임대 수익을 구분합니다.',
+    p1_months:'1–18개월', p1_name:'건설', p1_yield:'~R$ 22.3k / 월', p1_desc:'Lobie가 IPO BRL을 sBRLE에 예치. 월 CDI 수익(~14.4% 연)이 dividendPhase = 0으로 배포.',
+    p2_months:'19–24개월', p2_name:'램프업', p2_yield:'혼합 소스', p2_desc:'부분 habite-se 발급. 스튜디오가 점진적으로 온라인. dividendPhase = 1. CDI와 임대 동시.',
+    p3_months:'25개월+', p3_name:'운영 중', p3_yield:'~R$ 13k / 월', p3_desc:'5개 스튜디오 안정화, 각 ~R$ 2.6k 순지급. dividendPhase = 2. 순 임대 현금 흐름.',
+    p4_months:'수시', p4_name:'특별', p4_yield:'비경상', p4_desc:'Capex 환급, 법적 합의, 보험금. dividendPhase = 3. 같은 수학, 다른 태그.',
+    sec_unlock:'언락', unlock_title:'브라질 부동산 신용, DeFi 금리를 만나다', unlock_desc:'브라질 부동산 담보 대출은 일반적으로 연 15-20%입니다. Morpho Blue의 SALRIO는 ~6% 연을 목표로 합니다 — 같은 스튜디오, 같은 현금 흐름, 자본 비용의 일부분.',
+    u1_label:'기존 BR 모기지', u1_sub:'BRL 연, 5-30년 기간, 무거운 문서, 재산 저당, IOF 세금. habite-se 전 금융은 이중 제한.',
+    u2_label:'Morpho Blue on SALRIO', u2_sub:'USDC 연, 62.5% LTV, 잠금 없음, 즉시, Morpho Adaptive IRM 가격. 글로벌 USDC 공급, 브라질 자산 수요.',
+    sec_features:'특징', feat_title:'원시 요소만. 영리한 추상화 없음.', feat_desc:'각 부분은 잘 알려진 구성 요소: Batog 2018 배당 수학, OpenZeppelin v5.4 AccessControl, 온체인 NPV용 Gordon Growth, BRL/USD용 Chainlink, Morpho Blue의 불변 시장 원시 요소.',
+    c1_icon:'O(1) 수학', c1_title:'확장 가능한 보상 분배', c1_desc:'단일 dividendPerShareScaled 카운터, 전송 시 지연 정산. 예치 O(1), 청구 O(1), 오프체인 인프라 없음.',
+    c2_icon:'NFT 담보', c2_title:'실제 현금 흐름 담보', c2_desc:'BTROfferingRegistry를 통해 등록된 5개 Lobie Unit NFT가 SALRIO를 특정 스튜디오와 연결. 각 NFT는 habite-se 후 감사된 월간 관측치를 보유.',
+    c3_icon:'Gordon Growth', c3_title:'온체인 NPV 오라클', c3_desc:'Registry는 gordonGrowthNPV(dividendPerPeriod, r, g)를 순수 함수로 노출. 어떤 프론트엔드나 에이전트도 자체 가정으로 SALRIO 재가격 책정 가능.',
+    c4_icon:'Reg S Cat 3', c4_title:'오프쇼어 증권 프레임', c4_desc:'Wyoming LLC SPE 구조(BTS 참여), Regulation S 카테고리 3, 12개월 분배 컴플라이언스 기간. 토큰 이름에 레전드 포함. 1차 분배에 미국인 불가.',
+    c5_icon:'Morpho', c5_title:'불변 대출 시장', c5_desc:'Morpho Blue의 SALRIO / USDC 시장, 62.5% LLTV, 액면 × Chainlink BRL/USD 오라클, Adaptive IRM. 격리, 무허가, 업그레이드 불가.',
+    c6_icon:'Phase Tags', c6_title:'온체인 감사 추적', c6_desc:'모든 depositDividend에 생애주기 단계 태그(Construction / RampUp / Operational / Extraordinary). 보유자, 감사인, 에이전트가 수익을 실제 출처에 귀속 가능.',
+    sec_contracts:'스마트 컨트랙트', contracts_title:'Basescan에서 완전히 검증됨', contracts_desc:'Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. 모든 컨트랙트 불변, 프록시 없음, 업그레이드 경로 없음.',
+    sec_comp:'컴플라이언스', comp_title:'규제된 발행자, 감사된 운영자', comp_desc:'EFIX Securitizadora 발행. Lobie 운영. Harris & Trotter가 온체인 전 현금 흐름 관측치 감사.',
+    r1_label:'발행자', r2_label:'공모 프레임', r2_value:'Reg S 카테고리 3', r3_label:'SPE', r3_value:'Sal Rio Residences Pool 1', r4_label:'법적 비히클', r4_value:'Wyoming LLC (BTS)', r5_label:'운영자', r6_label:'감사인', r7_label:'Building ID', r8_label:'담보 단위', r8_value:'5 × 스튜디오', r9_label:'수탁', r9_value:'2-of-3 Safe',
+    cta_title:'리우 부동산의 한 조각 소유', cta_desc:'온체인 배당이 있는 분할 BTR 지분. Uniswap에서 거래하거나 Morpho Blue에서 지분을 담보로 대출.', cta_p:'SALRIO 거래', cta_s:'Morpho에서 대출',
+    foot_brand:'Base의 토큰화된 Build-to-Rent. Lobie가 운영하는 브라질 단기 임대의 분할 지분. EFIX Securitizadora가 구축.', foot_protocol:'프로토콜', foot_related:'관련', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'지갑', foot_legal:'EFIX Securitizadora S.A. — CVM 법 23.635/2025 — Reg S Cat 3'
+  }
+};
+let currentLang = 'en';
+function setLang(lang) {
+  if (!i18n[lang]) return;
+  currentLang = lang;
+  const t = i18n[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if (t[k]) el.innerHTML = t[k]; });
+  document.getElementById('langFlag').textContent = t.flag;
+  document.getElementById('langCode').textContent = t.code;
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+  document.querySelectorAll('.lang-opt').forEach(o => { if (o.onclick && o.onclick.toString().includes("'"+lang+"'")) o.classList.add('active'); });
+  document.getElementById('langMenu').classList.remove('open');
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.documentElement.lang = (lang === 'pt') ? 'pt-BR' : lang;
+  const titles = { en:'BTR — Tokenized Build-to-Rent on Base', pt:'BTR — Build-to-Rent Tokenizado na Base', es:'BTR — Build-to-Rent Tokenizado en Base', fr:'BTR — Build-to-Rent Tokenisé sur Base', ja:'BTR — Baseメインネット上のトークン化Build-to-Rent', zh:'BTR — Base 上的代币化 Build-to-Rent', ar:'BTR — Build-to-Rent مُرمَّز على Base', ko:'BTR — Base의 토큰화된 Build-to-Rent' };
+  document.title = titles[lang] || titles.en;
+  try { localStorage.setItem('efixLang', lang); } catch (e) {}
+}
+(function () {
+  const saved = localStorage.getItem('efixLang');
+  if (saved && i18n[saved]) { setTimeout(() => setLang(saved), 50); return; }
+  const bl = (navigator.language || '').slice(0, 2).toLowerCase();
+  const map = { pt:'pt', en:'en', es:'es', fr:'fr', ja:'ja', zh:'zh', ar:'ar', ko:'ko' };
+  if (map[bl]) setTimeout(() => setLang(map[bl]), 50);
+})();
+document.addEventListener('click', (e) => { if (!e.target.closest('.lang-sel')) document.getElementById('langMenu').classList.remove('open'); });
 </script>
 </body>
 </html>
