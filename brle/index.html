@@ -13,7 +13,9 @@
 <link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shared/css/reset.css">
+<link rel="stylesheet" href="/shared/css/lang-selector.css">
 <style>
+:root{--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--lang-active:#22c55e}
 html{scroll-behavior:smooth}
 body{font-family:'Syne',-apple-system,sans-serif;background:#fff;color:#0a0a0a;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
 ::selection{background:#0a0a0a;color:#fff}
@@ -148,13 +150,28 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
     <a href="/brle/" class="nav-logo">BRLE<span class="dot">.</span></a>
     <div style="display:flex;align-items:center;gap:12px">
       <ul class="nav-links">
-        <li><a href="#how">How it Works</a></li>
-        <li><a href="#features">Features</a></li>
-        <li><a href="#contracts">Contracts</a></li>
-        <li><a href="#compliance">Compliance</a></li>
+        <li><a href="#how" data-i18n="nav_how">How it Works</a></li>
+        <li><a href="#features" data-i18n="nav_features">Features</a></li>
+        <li><a href="#contracts" data-i18n="nav_contracts">Contracts</a></li>
+        <li><a href="#compliance" data-i18n="nav_compliance">Compliance</a></li>
         <li><a href="/">efixDI+</a></li>
       </ul>
-      <a href="/brle/app/" class="nav-cta nav-cta-primary">Launch App</a>
+      <a href="/brle/app/" class="nav-cta nav-cta-primary" data-i18n="nav_cta">Launch App</a>
+      <div class="lang-sel">
+        <div class="lang-btn" onclick="document.getElementById('langMenu').classList.toggle('open')">
+          <span id="langFlag">🇺🇸</span><span id="langCode">EN</span>
+        </div>
+        <div class="lang-menu" id="langMenu">
+          <div class="lang-opt" onclick="setLang('pt')">🇧🇷 Português</div>
+          <div class="lang-opt active" onclick="setLang('en')">🇺🇸 English</div>
+          <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+          <div class="lang-opt" onclick="setLang('fr')">🇫🇷 Français</div>
+          <div class="lang-opt" onclick="setLang('ja')">🇯🇵 日本語</div>
+          <div class="lang-opt" onclick="setLang('zh')">🇨🇳 中文</div>
+          <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-opt" onclick="setLang('ko')">🇰🇷 한국어</div>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -164,16 +181,16 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   <div class="hero-content">
     <div class="hero-tag fade-up">
       <span class="dot"></span>
-      Live on Base Mainnet
+      <span data-i18n="hero_badge">Live on Base Mainnet</span>
     </div>
-    <h1 class="fade-up stagger-1">BRL Stablecoin with<br><span>Built-in Yield</span></h1>
-    <p class="subtitle fade-up stagger-2">
+    <h1 class="fade-up stagger-1" data-i18n="hero_title">BRL Stablecoin with<br><span>Built-in Yield</span></h1>
+    <p class="subtitle fade-up stagger-2" data-i18n="hero_sub">
       BRLE is pegged 1:1 to BRL and backed by DI fund shares at BTG Pactual.
       Earn CDI yield automatically. Buy with PIX or USD/EUR. Gasless transactions.
     </p>
     <div class="hero-actions fade-up stagger-3">
-      <a href="/brle/app/" class="btn btn-primary">Buy BRLE</a>
-      <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank" class="btn btn-secondary">View on Basescan</a>
+      <a href="/brle/app/" class="btn btn-primary" data-i18n="hero_cta1">Buy BRLE</a>
+      <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank" class="btn btn-secondary" data-i18n="hero_cta2">View on Basescan</a>
     </div>
   </div>
 </section>
@@ -182,19 +199,19 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <div class="stats-strip">
   <div class="stats-inner">
     <div class="stat-item">
-      <div class="stat-label">CDI Base Rate</div>
+      <div class="stat-label" data-i18n="stat_cdi">CDI Base Rate</div>
       <div class="stat-value">~14.4%</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Redemption</div>
+      <div class="stat-label" data-i18n="stat_redemption">Redemption</div>
       <div class="stat-value">D+0</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Mint/Redeem Fee</div>
+      <div class="stat-label" data-i18n="stat_fee">Mint/Redeem Fee</div>
       <div class="stat-value">0.10%</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Network</div>
+      <div class="stat-label" data-i18n="stat_network">Network</div>
       <div class="stat-value">Base</div>
     </div>
   </div>
@@ -203,33 +220,33 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- HOW IT WORKS -->
 <section class="section section-border" id="how">
   <div class="container">
-    <div class="section-label">How it works</div>
-    <div class="section-title">From PIX to yield in 4 steps</div>
-    <div class="section-desc">The PSM (Peg Stability Module) replaces AMM pools. The DI fund IS the reserve — no idle liquidity needed.</div>
+    <div class="section-label" data-i18n="sec_how">How it works</div>
+    <div class="section-title" data-i18n="how_title">From PIX to yield in 4 steps</div>
+    <div class="section-desc" data-i18n="how_desc">The PSM (Peg Stability Module) replaces AMM pools. The DI fund IS the reserve — no idle liquidity needed.</div>
     <div class="flow-grid">
       <div class="flow-step fade-up">
-        <div class="flow-number">Step 01</div>
+        <div class="flow-number" data-i18n="step_01">Step 01</div>
         <div class="flow-icon">R$</div>
-        <div class="flow-title">Send PIX</div>
-        <div class="flow-desc">Deposit BRL via PIX instantly. Or send USD/EUR via ACH, Wire, or SEPA through Bridge.xyz.</div>
+        <div class="flow-title" data-i18n="s1_title">Send PIX</div>
+        <div class="flow-desc" data-i18n="s1_desc">Deposit BRL via PIX instantly. Or send USD/EUR via ACH, Wire, or SEPA through Bridge.xyz.</div>
       </div>
       <div class="flow-step fade-up stagger-1">
-        <div class="flow-number">Step 02</div>
+        <div class="flow-number" data-i18n="step_02">Step 02</div>
         <div class="flow-icon">BRLE</div>
-        <div class="flow-title">Receive BRLE</div>
-        <div class="flow-desc">BRLE is minted 1:1 after the operator confirms the DI fund application at BTG Pactual.</div>
+        <div class="flow-title" data-i18n="s2_title">Receive BRLE</div>
+        <div class="flow-desc" data-i18n="s2_desc">BRLE is minted 1:1 after the operator confirms the DI fund application at BTG Pactual.</div>
       </div>
       <div class="flow-step fade-up stagger-2">
-        <div class="flow-number">Step 03</div>
+        <div class="flow-number" data-i18n="step_03">Step 03</div>
         <div class="flow-icon">sBRLE</div>
-        <div class="flow-title">Stake for Yield</div>
-        <div class="flow-desc">Deposit BRLE into the sBRLE vault (ERC-4626). The share price increases monthly with DI fund yield.</div>
+        <div class="flow-title" data-i18n="s3_title">Stake for Yield</div>
+        <div class="flow-desc" data-i18n="s3_desc">Deposit BRLE into the sBRLE vault (ERC-4626). The share price increases monthly with DI fund yield.</div>
       </div>
       <div class="flow-step fade-up stagger-3">
-        <div class="flow-number">Step 04</div>
+        <div class="flow-number" data-i18n="step_04">Step 04</div>
         <div class="flow-icon">PIX</div>
-        <div class="flow-title">Redeem Anytime</div>
-        <div class="flow-desc">Burn BRLE to receive BRL via PIX same-day (D+0). No lockup, no exit fees beyond 0.10%.</div>
+        <div class="flow-title" data-i18n="s4_title">Redeem Anytime</div>
+        <div class="flow-desc" data-i18n="s4_desc">Burn BRLE to receive BRL via PIX same-day (D+0). No lockup, no exit fees beyond 0.10%.</div>
       </div>
     </div>
   </div>
@@ -238,39 +255,39 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- FEATURES -->
 <section class="section section-gray" id="features">
   <div class="container">
-    <div class="section-label">Features</div>
-    <div class="section-title">Built for DeFi composability</div>
-    <div class="section-desc">BRLE is designed for AI agents, x402 micropayments, and DeFi integration on Base.</div>
+    <div class="section-label" data-i18n="sec_features">Features</div>
+    <div class="section-title" data-i18n="feat_title">Built for DeFi composability</div>
+    <div class="section-desc" data-i18n="feat_desc">BRLE is designed for AI agents, x402 micropayments, and DeFi integration on Base.</div>
     <div class="card-grid">
       <div class="card fade-up">
         <div class="card-icon">ERC-4626</div>
-        <div class="card-title">Standard Yield Vault</div>
-        <div class="card-desc">sBRLE implements the ERC-4626 standard. Any protocol or agent can query yield via convertToAssets(), sharePrice(), and estimatedAPY().</div>
+        <div class="card-title" data-i18n="c1_title">Standard Yield Vault</div>
+        <div class="card-desc" data-i18n="c1_desc">sBRLE implements the ERC-4626 standard. Any protocol or agent can query yield via convertToAssets(), sharePrice(), and estimatedAPY().</div>
       </div>
       <div class="card fade-up stagger-1">
         <div class="card-icon">0 Gas</div>
-        <div class="card-title">Gasless Transactions</div>
-        <div class="card-desc">Login with email. All transactions sponsored by EFIX via Alchemy Account Kit (ERC-4337). No MetaMask, no gas tokens needed.</div>
+        <div class="card-title" data-i18n="c2_title">Gasless Transactions</div>
+        <div class="card-desc" data-i18n="c2_desc">Login with email. All transactions sponsored by EFIX via Alchemy Account Kit (ERC-4337). No MetaMask, no gas tokens needed.</div>
       </div>
       <div class="card fade-up stagger-2">
         <div class="card-icon">PSM</div>
-        <div class="card-title">Capital-Efficient Peg</div>
-        <div class="card-desc">The Peg Stability Module mints/burns BRLE directly against DI fund shares. No AMM liquidity pools — the fund IS the reserve.</div>
+        <div class="card-title" data-i18n="c3_title">Capital-Efficient Peg</div>
+        <div class="card-desc" data-i18n="c3_desc">The Peg Stability Module mints/burns BRLE directly against DI fund shares. No AMM liquidity pools — the fund IS the reserve.</div>
       </div>
       <div class="card fade-up stagger-3">
         <div class="card-icon">USD</div>
-        <div class="card-title">USD/EUR Onramp</div>
-        <div class="card-desc">Deposit USD (ACH/Wire) or EUR (SEPA) via Bridge.xyz. Receive USDC on Base, swap to BRLE at live Chainlink BRL/USD rate.</div>
+        <div class="card-title" data-i18n="c4_title">USD/EUR Onramp</div>
+        <div class="card-desc" data-i18n="c4_desc">Deposit USD (ACH/Wire) or EUR (SEPA) via Bridge.xyz. Receive USDC on Base, swap to BRLE at live Chainlink BRL/USD rate.</div>
       </div>
       <div class="card fade-up">
         <div class="card-icon">x402</div>
-        <div class="card-title">AI Agent Native</div>
-        <div class="card-desc">Built for the agentic economy. AI agents discover BRLE yield via ERC-4626, pay for premium APIs with USDC via x402 protocol. No API keys needed — just pay and query.</div>
+        <div class="card-title" data-i18n="c5_title">AI Agent Native</div>
+        <div class="card-desc" data-i18n="c5_desc">Built for the agentic economy. AI agents discover BRLE yield via ERC-4626, pay for premium APIs with USDC via x402 protocol. No API keys needed — just pay and query.</div>
       </div>
       <div class="card fade-up stagger-1">
         <div class="card-icon">API</div>
-        <div class="card-title">Agent Endpoints</div>
-        <div class="card-desc">Free: yield stats, protocol info. Paid via x402: TVL analytics ($0.01), live BRL/USD rate ($0.005), priority minting ($0.05). HTTP 402 → pay → access.</div>
+        <div class="card-title" data-i18n="c6_title">Agent Endpoints</div>
+        <div class="card-desc" data-i18n="c6_desc">Free: yield stats, protocol info. Paid via x402: TVL analytics ($0.01), live BRL/USD rate ($0.005), priority minting ($0.05). HTTP 402 → pay → access.</div>
       </div>
     </div>
   </div>
@@ -279,9 +296,9 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- CONTRACTS -->
 <section class="section section-border" id="contracts">
   <div class="container">
-    <div class="section-label">Smart Contracts</div>
-    <div class="section-title">Fully verified on Basescan</div>
-    <div class="section-desc">All contracts use OpenZeppelin v5.4 with audit findings applied. Solidity 0.8.20, optimizer 200 runs.</div>
+    <div class="section-label" data-i18n="sec_contracts">Smart Contracts</div>
+    <div class="section-title" data-i18n="contracts_title">Fully verified on Basescan</div>
+    <div class="section-desc" data-i18n="contracts_desc">All contracts use OpenZeppelin v5.4 with audit findings applied. Solidity 0.8.20, optimizer 200 runs.</div>
     <div class="chain-card">
       <div class="chain-header">
         <span style="font-size:18px">Base</span>
@@ -315,33 +332,33 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- COMPLIANCE -->
 <section class="section section-gray" id="compliance">
   <div class="container">
-    <div class="section-label">Compliance</div>
-    <div class="section-title">CVM-regulated infrastructure</div>
-    <div class="section-desc">EFIX Securitizadora operates under Brazilian securities regulation, with custody at BTG Pactual.</div>
+    <div class="section-label" data-i18n="sec_comp">Compliance</div>
+    <div class="section-title" data-i18n="comp_title">CVM-regulated infrastructure</div>
+    <div class="section-desc" data-i18n="comp_desc">EFIX Securitizadora operates under Brazilian securities regulation, with custody at BTG Pactual.</div>
     <div class="reg-grid">
       <div class="reg-item fade-up">
-        <div class="reg-label">Issuer</div>
+        <div class="reg-label" data-i18n="r1_label">Issuer</div>
         <div class="reg-value">EFIX Securitizadora S.A.</div>
       </div>
       <div class="reg-item fade-up stagger-1">
-        <div class="reg-label">Regulation</div>
+        <div class="reg-label" data-i18n="r2_label">Regulation</div>
         <div class="reg-value">CVM Act 23.635/2025</div>
       </div>
       <div class="reg-item fade-up stagger-2">
-        <div class="reg-label">Custody</div>
+        <div class="reg-label" data-i18n="r3_label">Custody</div>
         <div class="reg-value">BTG Pactual</div>
       </div>
       <div class="reg-item fade-up stagger-3">
-        <div class="reg-label">Backing</div>
-        <div class="reg-value">DI Fund Shares</div>
+        <div class="reg-label" data-i18n="r4_label">Backing</div>
+        <div class="reg-value" data-i18n="r4_value">DI Fund Shares</div>
       </div>
       <div class="reg-item fade-up stagger-4">
-        <div class="reg-label">Oracle</div>
+        <div class="reg-label" data-i18n="r5_label">Oracle</div>
         <div class="reg-value mono">Chainlink BRL/USD</div>
       </div>
       <div class="reg-item fade-up">
-        <div class="reg-label">Redemption</div>
-        <div class="reg-value">D+0 (Same Day)</div>
+        <div class="reg-label" data-i18n="r6_label">Redemption</div>
+        <div class="reg-value" data-i18n="r6_value">D+0 (Same Day)</div>
       </div>
     </div>
   </div>
@@ -350,10 +367,10 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- CTA -->
 <section class="cta-section">
   <div class="container">
-    <h2 class="section-title fade-up">Start earning CDI yield today</h2>
-    <p class="cta-desc fade-up stagger-1">Buy BRLE with PIX in seconds. No KYC for small amounts. Gasless, no MetaMask needed.</p>
+    <h2 class="section-title fade-up" data-i18n="cta_title">Start earning CDI yield today</h2>
+    <p class="cta-desc fade-up stagger-1" data-i18n="cta_desc">Buy BRLE with PIX in seconds. No KYC for small amounts. Gasless, no MetaMask needed.</p>
     <div class="hero-actions fade-up stagger-2">
-      <a href="/brle/app/" class="btn btn-primary">Launch App</a>
+      <a href="/brle/app/" class="btn btn-primary" data-i18n="cta_p">Launch App</a>
       <a href="https://github.com/Develop-ltda/brle-protocol" target="_blank" class="btn btn-secondary">GitHub</a>
     </div>
   </div>
@@ -364,34 +381,34 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   <div class="footer-inner">
     <div>
       <div class="nav-logo" style="margin-bottom:0.5rem">BRLE<span class="dot">.</span></div>
-      <p class="footer-brand-text">BRL yield stablecoin backed by DI fund shares. Built by EFIX Securitizadora on Base.</p>
+      <p class="footer-brand-text" data-i18n="foot_brand">BRL yield stablecoin backed by DI fund shares. Built by EFIX Securitizadora on Base.</p>
     </div>
     <div class="footer-links">
       <div class="footer-col">
-        <h4>Protocol</h4>
-        <a href="/brle/app/">App</a>
-        <a href="/brle/operator/">Operator</a>
+        <h4 data-i18n="foot_protocol">Protocol</h4>
+        <a href="/brle/app/" data-i18n="foot_app">App</a>
+        <a href="/brle/operator/" data-i18n="foot_operator">Operator</a>
         <a href="https://github.com/Develop-ltda/brle-protocol" target="_blank">GitHub</a>
         <a href="https://www.geckoterminal.com/base/pools/0xb9d4b6e911fdd6e10a603c1fb286a00aa7003310" target="_blank"><img src="https://www.geckoterminal.com/favicon.ico" alt="GeckoTerminal" style="height:14px;vertical-align:middle;margin-right:4px">GeckoTerminal</a>
         <a href="https://defillama.com" target="_blank">DeFiLlama</a>
       </div>
       <div class="footer-col">
-        <h4>Contracts</h4>
+        <h4 data-i18n="foot_contracts">Contracts</h4>
         <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank">BRLEToken</a>
         <a href="https://basescan.org/address/0xB89A62c2B1d006A2fB472B6445a52ABA2F70E6Ab#code" target="_blank">BRLEPSM</a>
         <a href="https://basescan.org/address/0xC65069694e32ef72CD94649BC5174DF9D18475D0#code" target="_blank">sBRLE</a>
         <a href="https://basescan.org/address/0xDac75EC3f9d0294d4a48BcE5d0d7A2b0693D7AD1#code" target="_blank">BRLESwap</a>
       </div>
       <div class="footer-col">
-        <h4>EFIX</h4>
+        <h4 data-i18n="foot_efix">EFIX</h4>
         <a href="/">efixDI+</a>
-        <a href="https://x.com/efix_finance" target="_blank">Twitter</a>
-        <a href="/app/wallet/">Wallet</a>
+        <a href="https://x.com/efix_finance" target="_blank" data-i18n="foot_twitter">Twitter</a>
+        <a href="/app/wallet/" data-i18n="foot_wallet">Wallet</a>
       </div>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>EFIX Securitizadora S.A. — CVM Act 23.635/2025</span>
+    <span data-i18n="foot_legal">EFIX Securitizadora S.A. — CVM Act 23.635/2025</span>
     <span>CNPJ 00.000.000/0001-00</span>
   </div>
 </footer>
@@ -402,6 +419,221 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+
+<!-- ═══ i18n — 8 LANGUAGES ═══ -->
+<script>
+const i18n = {
+  en: { flag:'🇺🇸', code:'EN',
+    nav_how:'How it Works', nav_features:'Features', nav_contracts:'Contracts', nav_compliance:'Compliance', nav_cta:'Launch App',
+    hero_badge:'Live on Base Mainnet', hero_title:'BRL Stablecoin with<br><span>Built-in Yield</span>', hero_sub:'BRLE is pegged 1:1 to BRL and backed by DI fund shares at BTG Pactual. Earn CDI yield automatically. Buy with PIX or USD/EUR. Gasless transactions.', hero_cta1:'Buy BRLE', hero_cta2:'View on Basescan',
+    stat_cdi:'CDI Base Rate', stat_redemption:'Redemption', stat_fee:'Mint/Redeem Fee', stat_network:'Network',
+    sec_how:'How it works', how_title:'From PIX to yield in 4 steps', how_desc:'The PSM (Peg Stability Module) replaces AMM pools. The DI fund IS the reserve — no idle liquidity needed.',
+    step_01:'Step 01', step_02:'Step 02', step_03:'Step 03', step_04:'Step 04',
+    s1_title:'Send PIX', s1_desc:'Deposit BRL via PIX instantly. Or send USD/EUR via ACH, Wire, or SEPA through Bridge.xyz.',
+    s2_title:'Receive BRLE', s2_desc:'BRLE is minted 1:1 after the operator confirms the DI fund application at BTG Pactual.',
+    s3_title:'Stake for Yield', s3_desc:'Deposit BRLE into the sBRLE vault (ERC-4626). The share price increases monthly with DI fund yield.',
+    s4_title:'Redeem Anytime', s4_desc:'Burn BRLE to receive BRL via PIX same-day (D+0). No lockup, no exit fees beyond 0.10%.',
+    sec_features:'Features', feat_title:'Built for DeFi composability', feat_desc:'BRLE is designed for AI agents, x402 micropayments, and DeFi integration on Base.',
+    c1_title:'Standard Yield Vault', c1_desc:'sBRLE implements the ERC-4626 standard. Any protocol or agent can query yield via convertToAssets(), sharePrice(), and estimatedAPY().',
+    c2_title:'Gasless Transactions', c2_desc:'Login with email. All transactions sponsored by EFIX via Alchemy Account Kit (ERC-4337). No MetaMask, no gas tokens needed.',
+    c3_title:'Capital-Efficient Peg', c3_desc:'The Peg Stability Module mints/burns BRLE directly against DI fund shares. No AMM liquidity pools — the fund IS the reserve.',
+    c4_title:'USD/EUR Onramp', c4_desc:'Deposit USD (ACH/Wire) or EUR (SEPA) via Bridge.xyz. Receive USDC on Base, swap to BRLE at live Chainlink BRL/USD rate.',
+    c5_title:'AI Agent Native', c5_desc:'Built for the agentic economy. AI agents discover BRLE yield via ERC-4626, pay for premium APIs with USDC via x402 protocol. No API keys needed — just pay and query.',
+    c6_title:'Agent Endpoints', c6_desc:'Free: yield stats, protocol info. Paid via x402: TVL analytics ($0.01), live BRL/USD rate ($0.005), priority minting ($0.05). HTTP 402 → pay → access.',
+    sec_contracts:'Smart Contracts', contracts_title:'Fully verified on Basescan', contracts_desc:'All contracts use OpenZeppelin v5.4 with audit findings applied. Solidity 0.8.20, optimizer 200 runs.',
+    sec_comp:'Compliance', comp_title:'CVM-regulated infrastructure', comp_desc:'EFIX Securitizadora operates under Brazilian securities regulation, with custody at BTG Pactual.',
+    r1_label:'Issuer', r2_label:'Regulation', r3_label:'Custody', r4_label:'Backing', r4_value:'DI Fund Shares', r5_label:'Oracle', r6_label:'Redemption', r6_value:'D+0 (Same Day)',
+    cta_title:'Start earning CDI yield today', cta_desc:'Buy BRLE with PIX in seconds. No KYC for small amounts. Gasless, no MetaMask needed.', cta_p:'Launch App',
+    foot_brand:'BRL yield stablecoin backed by DI fund shares. Built by EFIX Securitizadora on Base.', foot_protocol:'Protocol', foot_app:'App', foot_operator:'Operator', foot_contracts:'Contracts', foot_efix:'EFIX', foot_twitter:'Twitter', foot_wallet:'Wallet', foot_legal:'EFIX Securitizadora S.A. — CVM Act 23.635/2025'
+  },
+  pt: { flag:'🇧🇷', code:'PT',
+    nav_how:'Como Funciona', nav_features:'Recursos', nav_contracts:'Contratos', nav_compliance:'Compliance', nav_cta:'Abrir App',
+    hero_badge:'Na Base Mainnet', hero_title:'Stablecoin BRL com<br><span>Rendimento Embutido</span>', hero_sub:'BRLE é atrelado 1:1 ao BRL e lastreado em cotas de fundo DI no BTG Pactual. Renda CDI automática. Compra via PIX ou USD/EUR. Transações sem gas.', hero_cta1:'Comprar BRLE', hero_cta2:'Ver no Basescan',
+    stat_cdi:'Taxa CDI Base', stat_redemption:'Resgate', stat_fee:'Taxa Mint/Resgate', stat_network:'Rede',
+    sec_how:'Como funciona', how_title:'Do PIX ao rendimento em 4 passos', how_desc:'O PSM (Peg Stability Module) substitui pools AMM. O fundo DI É a reserva — sem liquidez ociosa.',
+    step_01:'Passo 01', step_02:'Passo 02', step_03:'Passo 03', step_04:'Passo 04',
+    s1_title:'Envie PIX', s1_desc:'Deposite BRL via PIX instantaneamente. Ou envie USD/EUR via ACH, Wire ou SEPA pelo Bridge.xyz.',
+    s2_title:'Receba BRLE', s2_desc:'BRLE é mintado 1:1 após o operador confirmar a aplicação no fundo DI no BTG Pactual.',
+    s3_title:'Staking por Rendimento', s3_desc:'Deposite BRLE no cofre sBRLE (ERC-4626). O preço da cota sobe mensalmente com o rendimento do fundo DI.',
+    s4_title:'Resgate a Qualquer Hora', s4_desc:'Queime BRLE para receber BRL via PIX no mesmo dia (D+0). Sem lockup, sem taxas além de 0,10%.',
+    sec_features:'Recursos', feat_title:'Feito para componibilidade DeFi', feat_desc:'BRLE foi projetado para agentes IA, micropagamentos x402 e integração DeFi na Base.',
+    c1_title:'Cofre de Rendimento Padrão', c1_desc:'sBRLE implementa o padrão ERC-4626. Qualquer protocolo ou agente consulta o rendimento via convertToAssets(), sharePrice() e estimatedAPY().',
+    c2_title:'Transações Sem Gas', c2_desc:'Login por email. Todas as transações patrocinadas pela EFIX via Alchemy Account Kit (ERC-4337). Sem MetaMask, sem token de gas.',
+    c3_title:'Peg com Capital Eficiente', c3_desc:'O Peg Stability Module minta/queima BRLE direto contra cotas do fundo DI. Sem pools AMM — o fundo É a reserva.',
+    c4_title:'Onramp USD/EUR', c4_desc:'Deposite USD (ACH/Wire) ou EUR (SEPA) via Bridge.xyz. Receba USDC na Base, troque por BRLE na taxa Chainlink BRL/USD.',
+    c5_title:'Nativo para Agentes IA', c5_desc:'Feito para a economia de agentes. Agentes IA descobrem o rendimento BRLE via ERC-4626, pagam APIs premium com USDC via x402. Sem chave de API — só pague e consulte.',
+    c6_title:'Endpoints de Agente', c6_desc:'Gratuito: estatísticas de rendimento, info do protocolo. Pago via x402: analytics de TVL ($0,01), taxa BRL/USD ($0,005), minting prioritário ($0,05). HTTP 402 → pague → acesse.',
+    sec_contracts:'Contratos Inteligentes', contracts_title:'Totalmente verificados no Basescan', contracts_desc:'Todos usam OpenZeppelin v5.4 com achados de auditoria aplicados. Solidity 0.8.20, optimizer 200 runs.',
+    sec_comp:'Compliance', comp_title:'Infraestrutura regulada pela CVM', comp_desc:'EFIX Securitizadora opera sob regulação de valores mobiliários brasileira, com custódia no BTG Pactual.',
+    r1_label:'Emissor', r2_label:'Regulação', r3_label:'Custódia', r4_label:'Lastro', r4_value:'Cotas de Fundo DI', r5_label:'Oráculo', r6_label:'Resgate', r6_value:'D+0 (Mesmo Dia)',
+    cta_title:'Comece a ganhar CDI hoje', cta_desc:'Compre BRLE via PIX em segundos. Sem KYC para valores pequenos. Sem gas, sem MetaMask.', cta_p:'Abrir App',
+    foot_brand:'Stablecoin de rendimento BRL lastreado em cotas de fundo DI. Construído pela EFIX Securitizadora na Base.', foot_protocol:'Protocolo', foot_app:'App', foot_operator:'Operador', foot_contracts:'Contratos', foot_efix:'EFIX', foot_twitter:'Twitter', foot_wallet:'Carteira', foot_legal:'EFIX Securitizadora S.A. — Ato CVM 23.635/2025'
+  },
+  es: { flag:'🇪🇸', code:'ES',
+    nav_how:'Cómo Funciona', nav_features:'Características', nav_contracts:'Contratos', nav_compliance:'Compliance', nav_cta:'Abrir App',
+    hero_badge:'En Base Mainnet', hero_title:'Stablecoin BRL con<br><span>Rendimiento Integrado</span>', hero_sub:'BRLE está vinculado 1:1 al BRL y respaldado por cuotas de fondo DI en BTG Pactual. Rendimiento CDI automático. Compra con PIX o USD/EUR. Sin gas.', hero_cta1:'Comprar BRLE', hero_cta2:'Ver en Basescan',
+    stat_cdi:'Tasa CDI Base', stat_redemption:'Redención', stat_fee:'Tarifa Mint/Redención', stat_network:'Red',
+    sec_how:'Cómo funciona', how_title:'De PIX a rendimiento en 4 pasos', how_desc:'El PSM (Peg Stability Module) reemplaza pools AMM. El fondo DI ES la reserva — sin liquidez ociosa.',
+    step_01:'Paso 01', step_02:'Paso 02', step_03:'Paso 03', step_04:'Paso 04',
+    s1_title:'Envía PIX', s1_desc:'Deposita BRL via PIX al instante. O envía USD/EUR via ACH, Wire o SEPA con Bridge.xyz.',
+    s2_title:'Recibe BRLE', s2_desc:'BRLE se emite 1:1 tras confirmar el operador la aplicación al fondo DI en BTG Pactual.',
+    s3_title:'Stakea por Rendimiento', s3_desc:'Deposita BRLE en la bóveda sBRLE (ERC-4626). El precio de la cuota sube mensualmente con el fondo DI.',
+    s4_title:'Redime Cuando Quieras', s4_desc:'Quema BRLE para recibir BRL via PIX el mismo día (D+0). Sin lockup, sin tarifas más allá del 0,10%.',
+    sec_features:'Características', feat_title:'Hecho para componibilidad DeFi', feat_desc:'BRLE está diseñado para agentes IA, micropagos x402 e integración DeFi en Base.',
+    c1_title:'Bóveda de Rendimiento Estándar', c1_desc:'sBRLE implementa el estándar ERC-4626. Cualquier protocolo o agente consulta el rendimiento via convertToAssets(), sharePrice() y estimatedAPY().',
+    c2_title:'Transacciones sin Gas', c2_desc:'Login con email. Todas las transacciones patrocinadas por EFIX via Alchemy Account Kit (ERC-4337). Sin MetaMask, sin tokens de gas.',
+    c3_title:'Peg con Capital Eficiente', c3_desc:'El PSM emite/quema BRLE directo contra cuotas del fondo DI. Sin pools AMM — el fondo ES la reserva.',
+    c4_title:'Onramp USD/EUR', c4_desc:'Deposita USD (ACH/Wire) o EUR (SEPA) via Bridge.xyz. Recibe USDC en Base, intercambia por BRLE a tasa Chainlink BRL/USD.',
+    c5_title:'Nativo para Agentes IA', c5_desc:'Hecho para la economía agéntica. Agentes IA descubren rendimiento BRLE via ERC-4626, pagan APIs premium con USDC via x402. Sin claves API.',
+    c6_title:'Endpoints de Agente', c6_desc:'Gratis: estadísticas, info del protocolo. Pago via x402: analytics TVL ($0,01), tasa BRL/USD ($0,005), minting prioritario ($0,05). HTTP 402 → paga → accede.',
+    sec_contracts:'Contratos Inteligentes', contracts_title:'Totalmente verificados en Basescan', contracts_desc:'Todos usan OpenZeppelin v5.4 con hallazgos de auditoría aplicados. Solidity 0.8.20, optimizer 200 runs.',
+    sec_comp:'Compliance', comp_title:'Infraestructura regulada por CVM', comp_desc:'EFIX Securitizadora opera bajo regulación brasileña de valores, con custodia en BTG Pactual.',
+    r1_label:'Emisor', r2_label:'Regulación', r3_label:'Custodia', r4_label:'Respaldo', r4_value:'Cuotas de Fondo DI', r5_label:'Oráculo', r6_label:'Redención', r6_value:'D+0 (Mismo Día)',
+    cta_title:'Empieza a ganar CDI hoy', cta_desc:'Compra BRLE con PIX en segundos. Sin KYC para montos pequeños. Sin gas, sin MetaMask.', cta_p:'Abrir App',
+    foot_brand:'Stablecoin de rendimiento BRL respaldado por cuotas de fondo DI. Construido por EFIX Securitizadora en Base.', foot_protocol:'Protocolo', foot_app:'App', foot_operator:'Operador', foot_contracts:'Contratos', foot_efix:'EFIX', foot_twitter:'Twitter', foot_wallet:'Billetera', foot_legal:'EFIX Securitizadora S.A. — Acto CVM 23.635/2025'
+  },
+  fr: { flag:'🇫🇷', code:'FR',
+    nav_how:'Fonctionnement', nav_features:'Caractéristiques', nav_contracts:'Contrats', nav_compliance:'Conformité', nav_cta:'Lancer l\'App',
+    hero_badge:'Sur Base Mainnet', hero_title:'Stablecoin BRL à<br><span>Rendement Intégré</span>', hero_sub:'BRLE est ancré 1:1 au BRL et adossé à des parts de fonds DI à BTG Pactual. Rendement CDI automatique. Achat via PIX ou USD/EUR. Transactions sans gas.', hero_cta1:'Acheter BRLE', hero_cta2:'Voir sur Basescan',
+    stat_cdi:'Taux CDI de Base', stat_redemption:'Rachat', stat_fee:'Frais Mint/Rachat', stat_network:'Réseau',
+    sec_how:'Fonctionnement', how_title:'De PIX au rendement en 4 étapes', how_desc:'Le PSM (Peg Stability Module) remplace les pools AMM. Le fonds DI EST la réserve — pas de liquidité oisive.',
+    step_01:'Étape 01', step_02:'Étape 02', step_03:'Étape 03', step_04:'Étape 04',
+    s1_title:'Envoyer PIX', s1_desc:'Dépôt BRL via PIX instantanément. Ou envoyer USD/EUR via ACH, Wire ou SEPA avec Bridge.xyz.',
+    s2_title:'Recevoir BRLE', s2_desc:'BRLE émis 1:1 après que l\'opérateur confirme l\'application au fonds DI à BTG Pactual.',
+    s3_title:'Staker pour Rendement', s3_desc:'Déposer BRLE dans le coffre sBRLE (ERC-4626). Le prix de la part monte chaque mois avec le fonds DI.',
+    s4_title:'Racheter à Tout Moment', s4_desc:'Brûler BRLE pour recevoir BRL via PIX le jour même (D+0). Pas de lockup, pas de frais au-delà de 0,10%.',
+    sec_features:'Caractéristiques', feat_title:'Conçu pour la composabilité DeFi', feat_desc:'BRLE est conçu pour les agents IA, micro-paiements x402 et intégration DeFi sur Base.',
+    c1_title:'Coffre de Rendement Standard', c1_desc:'sBRLE implémente le standard ERC-4626. Tout protocole ou agent interroge le rendement via convertToAssets(), sharePrice() et estimatedAPY().',
+    c2_title:'Transactions Sans Gas', c2_desc:'Connexion par email. Toutes les transactions sponsorisées par EFIX via Alchemy Account Kit (ERC-4337). Pas de MetaMask, pas de gas.',
+    c3_title:'Peg en Capital Efficient', c3_desc:'Le PSM émet/brûle BRLE directement contre parts du fonds DI. Pas de pools AMM — le fonds EST la réserve.',
+    c4_title:'Onramp USD/EUR', c4_desc:'Dépôt USD (ACH/Wire) ou EUR (SEPA) via Bridge.xyz. Recevez USDC sur Base, swapez en BRLE au taux Chainlink BRL/USD.',
+    c5_title:'Natif pour Agents IA', c5_desc:'Conçu pour l\'économie agentique. Les agents IA découvrent le rendement BRLE via ERC-4626, paient les APIs premium en USDC via x402. Pas de clés API.',
+    c6_title:'Endpoints pour Agents', c6_desc:'Gratuit: stats, info protocole. Payant via x402: analytics TVL ($0,01), taux BRL/USD ($0,005), minting prioritaire ($0,05). HTTP 402 → payer → accéder.',
+    sec_contracts:'Smart Contracts', contracts_title:'Entièrement vérifiés sur Basescan', contracts_desc:'Tous utilisent OpenZeppelin v5.4 avec les findings d\'audit appliqués. Solidity 0.8.20, optimizer 200 runs.',
+    sec_comp:'Conformité', comp_title:'Infrastructure régulée par la CVM', comp_desc:'EFIX Securitizadora opère sous régulation brésilienne des valeurs mobilières, avec custody à BTG Pactual.',
+    r1_label:'Émetteur', r2_label:'Régulation', r3_label:'Custody', r4_label:'Sous-jacent', r4_value:'Parts de Fonds DI', r5_label:'Oracle', r6_label:'Rachat', r6_value:'D+0 (Même Jour)',
+    cta_title:'Commencez à gagner du CDI aujourd\'hui', cta_desc:'Achetez BRLE avec PIX en secondes. Pas de KYC pour petits montants. Sans gas, sans MetaMask.', cta_p:'Lancer l\'App',
+    foot_brand:'Stablecoin à rendement BRL adossé à des parts de fonds DI. Construit par EFIX Securitizadora sur Base.', foot_protocol:'Protocole', foot_app:'App', foot_operator:'Opérateur', foot_contracts:'Contrats', foot_efix:'EFIX', foot_twitter:'Twitter', foot_wallet:'Wallet', foot_legal:'EFIX Securitizadora S.A. — Acte CVM 23.635/2025'
+  },
+  ja: { flag:'🇯🇵', code:'JA',
+    nav_how:'仕組み', nav_features:'特徴', nav_contracts:'コントラクト', nav_compliance:'コンプライアンス', nav_cta:'アプリを開く',
+    hero_badge:'Base メインネットで稼働中', hero_title:'<span>利回り内蔵型</span><br>BRL ステーブルコイン', hero_sub:'BRLE は BRL に 1:1 ペッグされ、BTG Pactual の DI ファンド株式で裏付けされています。CDI 利回りを自動取得。PIX または USD/EUR で購入可能。ガスレス取引。', hero_cta1:'BRLE を購入', hero_cta2:'Basescan で表示',
+    stat_cdi:'CDI ベースレート', stat_redemption:'償還', stat_fee:'ミント/償還手数料', stat_network:'ネットワーク',
+    sec_how:'仕組み', how_title:'PIX から利回りまで 4 ステップ', how_desc:'PSM(Peg Stability Module)が AMM プールに代わります。DI ファンドが準備金そのもの — 遊休流動性は不要。',
+    step_01:'ステップ 01', step_02:'ステップ 02', step_03:'ステップ 03', step_04:'ステップ 04',
+    s1_title:'PIX 送金', s1_desc:'PIX で BRL を即時入金。または Bridge.xyz 経由で ACH、Wire、SEPA で USD/EUR 送金。',
+    s2_title:'BRLE を受領', s2_desc:'オペレーターが BTG Pactual での DI ファンド申込を確認後、BRLE が 1:1 でミントされます。',
+    s3_title:'ステーキングで利回り', s3_desc:'BRLE を sBRLE 金庫(ERC-4626)に預け入れ。DI ファンド利回りで毎月株価が上昇。',
+    s4_title:'いつでも償還', s4_desc:'BRLE を焼却し、PIX で BRL を同日(D+0)受領。ロックアップなし、0.10% 以外の退出手数料なし。',
+    sec_features:'特徴', feat_title:'DeFi コンポーザビリティ向けに設計', feat_desc:'BRLE は AI エージェント、x402 マイクロペイメント、Base 上の DeFi 統合向けに設計されています。',
+    c1_title:'標準利回り金庫', c1_desc:'sBRLE は ERC-4626 標準を実装。任意のプロトコルやエージェントが convertToAssets()、sharePrice()、estimatedAPY() で利回りを照会可能。',
+    c2_title:'ガスレストランザクション', c2_desc:'メールでログイン。全取引が Alchemy Account Kit(ERC-4337)経由で EFIX によりスポンサー。MetaMask 不要、ガストークン不要。',
+    c3_title:'資本効率的なペッグ', c3_desc:'PSM は DI ファンド株式に対して BRLE を直接ミント/焼却。AMM プール不要 — ファンドが準備金そのもの。',
+    c4_title:'USD/EUR オンランプ', c4_desc:'Bridge.xyz 経由で USD(ACH/Wire)または EUR(SEPA)入金。Base 上で USDC 受領、Chainlink BRL/USD レートで BRLE にスワップ。',
+    c5_title:'AI エージェントネイティブ', c5_desc:'エージェントエコノミー向け構築。AI エージェントが ERC-4626 経由で BRLE 利回りを発見、x402 経由で USDC プレミアム API 支払い。API キー不要。',
+    c6_title:'エージェントエンドポイント', c6_desc:'無料: 利回り統計、プロトコル情報。x402 有料: TVL 分析($0.01)、BRL/USD レート($0.005)、優先ミンティング($0.05)。HTTP 402 → 支払い → アクセス。',
+    sec_contracts:'スマートコントラクト', contracts_title:'Basescan で完全検証済み', contracts_desc:'全コントラクト OpenZeppelin v5.4 使用、監査findings適用。Solidity 0.8.20、optimizer 200 runs。',
+    sec_comp:'コンプライアンス', comp_title:'CVM 規制インフラ', comp_desc:'EFIX Securitizadora はブラジル証券規制下で運営、BTG Pactual でカストディ。',
+    r1_label:'発行者', r2_label:'規制', r3_label:'カストディ', r4_label:'裏付け', r4_value:'DI ファンド株式', r5_label:'オラクル', r6_label:'償還', r6_value:'D+0(同日)',
+    cta_title:'今日から CDI 利回りを獲得', cta_desc:'PIX で BRLE を数秒で購入。小額は KYC 不要。ガスレス、MetaMask 不要。', cta_p:'アプリを開く',
+    foot_brand:'DI ファンド株式で裏付けされた BRL 利回りステーブルコイン。EFIX Securitizadora が Base 上に構築。', foot_protocol:'プロトコル', foot_app:'アプリ', foot_operator:'オペレーター', foot_contracts:'コントラクト', foot_efix:'EFIX', foot_twitter:'Twitter', foot_wallet:'ウォレット', foot_legal:'EFIX Securitizadora S.A. — CVM 法令 23.635/2025'
+  },
+  zh: { flag:'🇨🇳', code:'ZH',
+    nav_how:'运作原理', nav_features:'特点', nav_contracts:'合约', nav_compliance:'合规', nav_cta:'打开应用',
+    hero_badge:'已在 Base 主网上线', hero_title:'<span>内置收益</span>的<br>BRL 稳定币', hero_sub:'BRLE 与 BRL 按 1:1 挂钩,由 BTG Pactual 的 DI 基金份额支撑。自动获得 CDI 收益。使用 PIX 或 USD/EUR 购买。无 gas 交易。', hero_cta1:'购买 BRLE', hero_cta2:'在 Basescan 查看',
+    stat_cdi:'CDI 基础利率', stat_redemption:'赎回', stat_fee:'铸造/赎回费', stat_network:'网络',
+    sec_how:'运作原理', how_title:'从 PIX 到收益,4 步完成', how_desc:'PSM(锚定稳定模块)取代 AMM 池。DI 基金即是储备 — 无需闲置流动性。',
+    step_01:'步骤 01', step_02:'步骤 02', step_03:'步骤 03', step_04:'步骤 04',
+    s1_title:'发送 PIX', s1_desc:'通过 PIX 即时存入 BRL。或通过 Bridge.xyz 使用 ACH、电汇或 SEPA 发送 USD/EUR。',
+    s2_title:'接收 BRLE', s2_desc:'操作员确认 BTG Pactual 的 DI 基金申请后,BRLE 按 1:1 铸造。',
+    s3_title:'质押获得收益', s3_desc:'将 BRLE 存入 sBRLE 金库(ERC-4626)。份额价格随 DI 基金收益每月上涨。',
+    s4_title:'随时赎回', s4_desc:'销毁 BRLE 即可通过 PIX 当日(D+0)收到 BRL。无锁定,除 0.10% 外无退出费用。',
+    sec_features:'特点', feat_title:'为 DeFi 可组合性而建', feat_desc:'BRLE 为 AI 代理、x402 微支付和 Base 上的 DeFi 集成而设计。',
+    c1_title:'标准收益金库', c1_desc:'sBRLE 实现 ERC-4626 标准。任何协议或代理可通过 convertToAssets()、sharePrice()、estimatedAPY() 查询收益。',
+    c2_title:'无 Gas 交易', c2_desc:'邮箱登录。所有交易由 EFIX 通过 Alchemy Account Kit (ERC-4337) 赞助。无需 MetaMask,无需 gas 代币。',
+    c3_title:'资本高效的锚定', c3_desc:'PSM 直接对 DI 基金份额铸造/销毁 BRLE。无 AMM 流动性池 — 基金即是储备。',
+    c4_title:'USD/EUR 入金通道', c4_desc:'通过 Bridge.xyz 存入 USD (ACH/电汇) 或 EUR (SEPA)。在 Base 上接收 USDC,按 Chainlink BRL/USD 实时汇率兑换为 BRLE。',
+    c5_title:'AI 代理原生', c5_desc:'为代理经济而建。AI 代理通过 ERC-4626 发现 BRLE 收益,通过 x402 协议使用 USDC 支付高级 API。无需 API 密钥。',
+    c6_title:'代理端点', c6_desc:'免费:收益统计、协议信息。x402 付费:TVL 分析 ($0.01)、实时 BRL/USD 汇率 ($0.005)、优先铸造 ($0.05)。HTTP 402 → 支付 → 访问。',
+    sec_contracts:'智能合约', contracts_title:'在 Basescan 完全验证', contracts_desc:'所有合约使用 OpenZeppelin v5.4,应用审计发现。Solidity 0.8.20,optimizer 200 runs。',
+    sec_comp:'合规', comp_title:'CVM 监管基础设施', comp_desc:'EFIX Securitizadora 在巴西证券监管下运营,由 BTG Pactual 托管。',
+    r1_label:'发行方', r2_label:'监管', r3_label:'托管', r4_label:'资产支撑', r4_value:'DI 基金份额', r5_label:'预言机', r6_label:'赎回', r6_value:'D+0(当日)',
+    cta_title:'今天开始赚 CDI 收益', cta_desc:'几秒内用 PIX 购买 BRLE。小额无需 KYC。无 gas,无需 MetaMask。', cta_p:'打开应用',
+    foot_brand:'由 DI 基金份额支撑的 BRL 收益稳定币。由 EFIX Securitizadora 在 Base 上构建。', foot_protocol:'协议', foot_app:'应用', foot_operator:'操作员', foot_contracts:'合约', foot_efix:'EFIX', foot_twitter:'Twitter', foot_wallet:'钱包', foot_legal:'EFIX Securitizadora S.A. — CVM 法案 23.635/2025'
+  },
+  ar: { flag:'🇸🇦', code:'AR',
+    nav_how:'كيف يعمل', nav_features:'الميزات', nav_contracts:'العقود', nav_compliance:'الامتثال', nav_cta:'فتح التطبيق',
+    hero_badge:'مباشر على Base', hero_title:'عملة BRL المستقرة مع<br><span>عائد مدمج</span>', hero_sub:'BRLE مربوط 1:1 بـ BRL ومدعوم بحصص صندوق DI في BTG Pactual. اكسب عائد CDI تلقائيًا. اشترِ بـ PIX أو USD/EUR. معاملات بدون gas.', hero_cta1:'شراء BRLE', hero_cta2:'عرض على Basescan',
+    stat_cdi:'معدل CDI الأساسي', stat_redemption:'الاسترداد', stat_fee:'رسوم السك/الاسترداد', stat_network:'الشبكة',
+    sec_how:'كيف يعمل', how_title:'من PIX إلى العائد في 4 خطوات', how_desc:'PSM يحل محل تجمعات AMM. صندوق DI هو الاحتياطي — لا سيولة خاملة.',
+    step_01:'الخطوة 01', step_02:'الخطوة 02', step_03:'الخطوة 03', step_04:'الخطوة 04',
+    s1_title:'إرسال PIX', s1_desc:'أودع BRL عبر PIX فورًا. أو أرسل USD/EUR عبر ACH أو Wire أو SEPA من خلال Bridge.xyz.',
+    s2_title:'استلام BRLE', s2_desc:'يُسك BRLE بنسبة 1:1 بعد تأكيد المشغل لطلب صندوق DI في BTG Pactual.',
+    s3_title:'ستاك للعائد', s3_desc:'أودع BRLE في خزنة sBRLE (ERC-4626). سعر الحصة يرتفع شهريًا مع عائد صندوق DI.',
+    s4_title:'استرداد في أي وقت', s4_desc:'احرق BRLE لاستلام BRL عبر PIX في نفس اليوم (D+0). لا قفل، لا رسوم خروج تتجاوز 0.10%.',
+    sec_features:'الميزات', feat_title:'مصمم لقابلية تركيب DeFi', feat_desc:'BRLE مصمم لوكلاء AI، مدفوعات x402 الصغيرة، وتكامل DeFi على Base.',
+    c1_title:'خزنة عائد قياسية', c1_desc:'sBRLE يطبق معيار ERC-4626. أي بروتوكول أو وكيل يستعلم عن العائد عبر convertToAssets() و sharePrice() و estimatedAPY().',
+    c2_title:'معاملات بدون gas', c2_desc:'تسجيل دخول بالإيميل. جميع المعاملات مدعومة من EFIX عبر Alchemy Account Kit (ERC-4337). بدون MetaMask، بدون رموز gas.',
+    c3_title:'ربط فعال في رأس المال', c3_desc:'PSM يسك/يحرق BRLE مباشرة مقابل حصص صندوق DI. لا تجمعات AMM — الصندوق هو الاحتياطي.',
+    c4_title:'مدخل USD/EUR', c4_desc:'أودع USD (ACH/Wire) أو EUR (SEPA) عبر Bridge.xyz. استلم USDC على Base، بدل إلى BRLE بسعر Chainlink BRL/USD.',
+    c5_title:'أصلي لوكلاء AI', c5_desc:'مبني للاقتصاد الوكيل. وكلاء AI يكتشفون عائد BRLE عبر ERC-4626، يدفعون لـ APIs المميزة بـ USDC عبر بروتوكول x402. لا حاجة لمفاتيح API.',
+    c6_title:'نقاط نهاية الوكيل', c6_desc:'مجاني: إحصائيات العائد، معلومات البروتوكول. مدفوع عبر x402: تحليلات TVL ($0.01)، سعر BRL/USD ($0.005)، سك بأولوية ($0.05). HTTP 402 → ادفع → ادخل.',
+    sec_contracts:'العقود الذكية', contracts_title:'متحققة بالكامل على Basescan', contracts_desc:'جميع العقود تستخدم OpenZeppelin v5.4 مع تطبيق نتائج التدقيق. Solidity 0.8.20، optimizer 200 runs.',
+    sec_comp:'الامتثال', comp_title:'بنية تحتية منظمة من CVM', comp_desc:'EFIX Securitizadora تعمل تحت تنظيم الأوراق المالية البرازيلي، مع الحفظ في BTG Pactual.',
+    r1_label:'المُصدِر', r2_label:'التنظيم', r3_label:'الحفظ', r4_label:'الدعم', r4_value:'حصص صندوق DI', r5_label:'الأوراكل', r6_label:'الاسترداد', r6_value:'D+0 (نفس اليوم)',
+    cta_title:'ابدأ بكسب عائد CDI اليوم', cta_desc:'اشترِ BRLE بـ PIX في ثوانٍ. لا KYC للمبالغ الصغيرة. بدون gas، بدون MetaMask.', cta_p:'فتح التطبيق',
+    foot_brand:'عملة BRL مستقرة بعائد مدعومة بحصص صندوق DI. مبنية بواسطة EFIX Securitizadora على Base.', foot_protocol:'البروتوكول', foot_app:'التطبيق', foot_operator:'المشغل', foot_contracts:'العقود', foot_efix:'EFIX', foot_twitter:'Twitter', foot_wallet:'المحفظة', foot_legal:'EFIX Securitizadora S.A. — قانون CVM 23.635/2025'
+  },
+  ko: { flag:'🇰🇷', code:'KO',
+    nav_how:'작동 원리', nav_features:'특징', nav_contracts:'컨트랙트', nav_compliance:'컴플라이언스', nav_cta:'앱 열기',
+    hero_badge:'Base 메인넷에서 가동 중', hero_title:'<span>내장 수익</span>이 있는<br>BRL 스테이블코인', hero_sub:'BRLE는 BRL에 1:1 페그되고 BTG Pactual의 DI 펀드 지분으로 뒷받침됩니다. CDI 수익 자동 취득. PIX 또는 USD/EUR로 구매. 가스리스 거래.', hero_cta1:'BRLE 구매', hero_cta2:'Basescan에서 보기',
+    stat_cdi:'CDI 기본 금리', stat_redemption:'상환', stat_fee:'민팅/상환 수수료', stat_network:'네트워크',
+    sec_how:'작동 원리', how_title:'PIX에서 수익까지 4단계', how_desc:'PSM(페그 안정성 모듈)이 AMM 풀을 대체합니다. DI 펀드 자체가 준비금 — 유휴 유동성 불필요.',
+    step_01:'단계 01', step_02:'단계 02', step_03:'단계 03', step_04:'단계 04',
+    s1_title:'PIX 송금', s1_desc:'PIX로 BRL 즉시 입금. 또는 Bridge.xyz를 통해 ACH, Wire, SEPA로 USD/EUR 송금.',
+    s2_title:'BRLE 수령', s2_desc:'운영자가 BTG Pactual의 DI 펀드 신청을 확인한 후 BRLE가 1:1로 민팅됩니다.',
+    s3_title:'스테이킹으로 수익', s3_desc:'sBRLE 볼트(ERC-4626)에 BRLE 예치. DI 펀드 수익으로 매월 지분 가격 상승.',
+    s4_title:'언제든지 상환', s4_desc:'BRLE를 소각하면 당일(D+0) PIX로 BRL 수령. 잠금 없음, 0.10% 외 출금 수수료 없음.',
+    sec_features:'특징', feat_title:'DeFi 컴포저빌리티를 위해 구축', feat_desc:'BRLE는 AI 에이전트, x402 마이크로페이먼트, Base의 DeFi 통합을 위해 설계되었습니다.',
+    c1_title:'표준 수익 볼트', c1_desc:'sBRLE는 ERC-4626 표준을 구현. 모든 프로토콜이나 에이전트가 convertToAssets(), sharePrice(), estimatedAPY()로 수익을 쿼리 가능.',
+    c2_title:'가스리스 거래', c2_desc:'이메일로 로그인. 모든 거래를 EFIX가 Alchemy Account Kit(ERC-4337)을 통해 후원. MetaMask 불필요, 가스 토큰 불필요.',
+    c3_title:'자본 효율적 페그', c3_desc:'PSM이 DI 펀드 지분에 대해 BRLE를 직접 민팅/소각. AMM 풀 없음 — 펀드 자체가 준비금.',
+    c4_title:'USD/EUR 온램프', c4_desc:'Bridge.xyz를 통해 USD(ACH/Wire) 또는 EUR(SEPA) 예치. Base에서 USDC 수령, Chainlink BRL/USD 실시간 환율로 BRLE 교환.',
+    c5_title:'AI 에이전트 네이티브', c5_desc:'에이전트 경제를 위해 구축. AI 에이전트는 ERC-4626으로 BRLE 수익을 발견하고, x402 프로토콜로 USDC로 프리미엄 API 결제. API 키 불필요.',
+    c6_title:'에이전트 엔드포인트', c6_desc:'무료: 수익 통계, 프로토콜 정보. x402 유료: TVL 분석($0.01), 실시간 BRL/USD($0.005), 우선 민팅($0.05). HTTP 402 → 결제 → 접근.',
+    sec_contracts:'스마트 컨트랙트', contracts_title:'Basescan에서 완전 검증됨', contracts_desc:'모든 컨트랙트 OpenZeppelin v5.4 사용, 감사 결과 적용. Solidity 0.8.20, optimizer 200 runs.',
+    sec_comp:'컴플라이언스', comp_title:'CVM 규제 인프라', comp_desc:'EFIX Securitizadora는 브라질 증권 규제 하에 운영되며, BTG Pactual에서 수탁.',
+    r1_label:'발행자', r2_label:'규제', r3_label:'수탁', r4_label:'담보', r4_value:'DI 펀드 지분', r5_label:'오라클', r6_label:'상환', r6_value:'D+0(당일)',
+    cta_title:'오늘부터 CDI 수익 획득', cta_desc:'PIX로 BRLE를 몇 초 만에 구매. 소액은 KYC 불필요. 가스리스, MetaMask 불필요.', cta_p:'앱 열기',
+    foot_brand:'DI 펀드 지분으로 뒷받침되는 BRL 수익 스테이블코인. EFIX Securitizadora가 Base에 구축.', foot_protocol:'프로토콜', foot_app:'앱', foot_operator:'운영자', foot_contracts:'컨트랙트', foot_efix:'EFIX', foot_twitter:'Twitter', foot_wallet:'지갑', foot_legal:'EFIX Securitizadora S.A. — CVM 법 23.635/2025'
+  }
+};
+let currentLang = 'en';
+function setLang(lang) {
+  if (!i18n[lang]) return;
+  currentLang = lang;
+  const t = i18n[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if (t[k]) el.innerHTML = t[k]; });
+  document.getElementById('langFlag').textContent = t.flag;
+  document.getElementById('langCode').textContent = t.code;
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+  document.querySelectorAll('.lang-opt').forEach(o => { if (o.onclick && o.onclick.toString().includes("'"+lang+"'")) o.classList.add('active'); });
+  document.getElementById('langMenu').classList.remove('open');
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.documentElement.lang = (lang === 'pt') ? 'pt-BR' : lang;
+  const titles = { en:'BRLE — BRL Yield Stablecoin on Base', pt:'BRLE — Stablecoin BRL com Rendimento na Base', es:'BRLE — Stablecoin BRL con Rendimiento en Base', fr:'BRLE — Stablecoin BRL à Rendement sur Base', ja:'BRLE — Base 上の BRL 利回りステーブルコイン', zh:'BRLE — Base 上的 BRL 收益稳定币', ar:'BRLE — عملة BRL مستقرة بعائد على Base', ko:'BRLE — Base의 BRL 수익 스테이블코인' };
+  document.title = titles[lang] || titles.en;
+  try { localStorage.setItem('efixLang', lang); } catch (e) {}
+}
+(function () {
+  const saved = localStorage.getItem('efixLang');
+  if (saved && i18n[saved]) { setTimeout(() => setLang(saved), 50); return; }
+  const bl = (navigator.language || '').slice(0, 2).toLowerCase();
+  const map = { pt:'pt', en:'en', es:'es', fr:'fr', ja:'ja', zh:'zh', ar:'ar', ko:'ko' };
+  if (map[bl]) setTimeout(() => setLang(map[bl]), 50);
+})();
+document.addEventListener('click', (e) => { if (!e.target.closest('.lang-sel')) document.getElementById('langMenu').classList.remove('open'); });
 </script>
 </body>
 </html>
