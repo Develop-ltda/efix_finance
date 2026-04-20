@@ -13,7 +13,9 @@
 <link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shared/css/reset.css">
+<link rel="stylesheet" href="/shared/css/lang-selector.css">
 <style>
+:root{--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--lang-active:#7c3aed}
 html{scroll-behavior:smooth}
 body{font-family:'Syne',-apple-system,sans-serif;background:#fff;color:#0a0a0a;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
 ::selection{background:#0a0a0a;color:#fff}
@@ -136,15 +138,31 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
     <a href="/lobie/" class="nav-logo">Lobie<span class="dot">.</span></a>
     <div style="display:flex;align-items:center;gap:12px">
       <ul class="nav-links">
-        <li><a href="#how">How it Works</a></li>
-        <li><a href="#data">On-Chain Data</a></li>
-        <li><a href="#contract">Contract</a></li>
-        <li><a href="#compliance">Compliance</a></li>
+        <li><a href="#how" data-i18n="nav_how">How it Works</a></li>
+        <li><a href="#data" data-i18n="nav_data">On-Chain Data</a></li>
+        <li><a href="#contract" data-i18n="nav_contract">Contract</a></li>
+        <li><a href="#compliance" data-i18n="nav_compliance">Compliance</a></li>
         <li><a href="/">efixDI+</a></li>
         <li><a href="/brle/">BRLE</a></li>
+        <li><a href="/btr/">BTR</a></li>
       </ul>
-      <a href="/lobie/explorer/" class="nav-cta" style="background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4;margin-right:8px">Explorer</a>
+      <a href="/lobie/explorer/" class="nav-cta" style="background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4;margin-right:8px" data-i18n="nav_explorer">Explorer</a>
       <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank" class="nav-cta">Basescan</a>
+      <div class="lang-sel">
+        <div class="lang-btn" onclick="document.getElementById('langMenu').classList.toggle('open')">
+          <span id="langFlag">🇺🇸</span><span id="langCode">EN</span>
+        </div>
+        <div class="lang-menu" id="langMenu">
+          <div class="lang-opt" onclick="setLang('pt')">🇧🇷 Português</div>
+          <div class="lang-opt active" onclick="setLang('en')">🇺🇸 English</div>
+          <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+          <div class="lang-opt" onclick="setLang('fr')">🇫🇷 Français</div>
+          <div class="lang-opt" onclick="setLang('ja')">🇯🇵 日本語</div>
+          <div class="lang-opt" onclick="setLang('zh')">🇨🇳 中文</div>
+          <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-opt" onclick="setLang('ko')">🇰🇷 한국어</div>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -154,16 +172,16 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   <div class="hero-content">
     <div class="hero-tag fade-up">
       <span class="dot"></span>
-      Backfill in Progress on Base Mainnet
+      <span data-i18n="hero_badge">Backfill in Progress on Base Mainnet</span>
     </div>
-    <h1 class="fade-up stagger-1">Every Rental Unit.<br><span>One NFT. Audited Cash Flows.</span></h1>
-    <p class="subtitle fade-up stagger-2">
+    <h1 class="fade-up stagger-1" data-i18n="hero_title">Every Rental Unit.<br><span>One NFT. Audited Cash Flows.</span></h1>
+    <p class="subtitle fade-up stagger-2" data-i18n="hero_sub">
       Lobie Units is an on-chain registry where each short-term rental unit is one ERC-721 NFT
       that publishes its audited monthly financial series. Gordon Growth NPV computed on-chain.
       Harris & Trotter attested. No PII. Ever.
     </p>
     <div class="hero-actions fade-up stagger-3">
-      <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank" class="btn btn-primary">Explore Contract</a>
+      <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank" class="btn btn-primary" data-i18n="hero_cta1">Explore Contract</a>
       <a href="https://github.com/Develop-ltda/lobie-unit-registry" target="_blank" class="btn btn-secondary">GitHub</a>
     </div>
   </div>
@@ -173,19 +191,19 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <div class="stats-strip">
   <div class="stats-inner">
     <div class="stat-item">
-      <div class="stat-label">Rental Units</div>
+      <div class="stat-label" data-i18n="stat_units">Rental Units</div>
       <div class="stat-value" id="sUnits">509</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Monthly Observations</div>
+      <div class="stat-label" data-i18n="stat_obs">Monthly Observations</div>
       <div class="stat-value" id="sObs">18,664</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Buildings</div>
+      <div class="stat-label" data-i18n="stat_buildings">Buildings</div>
       <div class="stat-value">17</div>
     </div>
     <div class="stat-item">
-      <div class="stat-label">Data Range</div>
+      <div class="stat-label" data-i18n="stat_range">Data Range</div>
       <div class="stat-value">Jan 2023 — Mar 2026</div>
     </div>
   </div>
@@ -194,33 +212,33 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- HOW IT WORKS -->
 <section class="section section-border" id="how">
   <div class="container">
-    <div class="section-label">How it works</div>
-    <div class="section-title">From SQL to on-chain in 4 steps</div>
-    <div class="section-desc">The protocol does ONE thing: publish audited per-unit cash flows. Every economic layer is built on top.</div>
+    <div class="section-label" data-i18n="sec_how">How it works</div>
+    <div class="section-title" data-i18n="how_title">From SQL to on-chain in 4 steps</div>
+    <div class="section-desc" data-i18n="how_desc">The protocol does ONE thing: publish audited per-unit cash flows. Every economic layer is built on top.</div>
     <div class="flow-grid">
       <div class="flow-step fade-up">
-        <div class="flow-number">Step 01</div>
+        <div class="flow-number" data-i18n="step_01">Step 01</div>
         <div class="flow-icon">SQL</div>
-        <div class="flow-title">Source Data</div>
-        <div class="flow-desc">Lobie's property management system records monthly revenue, expenses, and owner payouts for each unit in a GCP SQL database.</div>
+        <div class="flow-title" data-i18n="s1_title">Source Data</div>
+        <div class="flow-desc" data-i18n="s1_desc">Lobie's property management system records monthly revenue, expenses, and owner payouts for each unit in a GCP SQL database.</div>
       </div>
       <div class="flow-step fade-up stagger-1">
-        <div class="flow-number">Step 02</div>
+        <div class="flow-number" data-i18n="step_02">Step 02</div>
         <div class="flow-icon">NFT</div>
-        <div class="flow-title">Mint Unit</div>
-        <div class="flow-desc">Each unit gets one ERC-721 NFT with a deterministic tokenId derived from building + unit code. No PII on-chain (LGPD compliant).</div>
+        <div class="flow-title" data-i18n="s2_title">Mint Unit</div>
+        <div class="flow-desc" data-i18n="s2_desc">Each unit gets one ERC-721 NFT with a deterministic tokenId derived from building + unit code. No PII on-chain (LGPD compliant).</div>
       </div>
       <div class="flow-step fade-up stagger-2">
-        <div class="flow-number">Step 03</div>
+        <div class="flow-number" data-i18n="step_03">Step 03</div>
         <div class="flow-icon">R$</div>
-        <div class="flow-title">Post Observations</div>
-        <div class="flow-desc">Monthly financial data posted on-chain: gross revenue, 11 expense categories, net result, owner payout. Each observation has a canonical row hash.</div>
+        <div class="flow-title" data-i18n="s3_title">Post Observations</div>
+        <div class="flow-desc" data-i18n="s3_desc">Monthly financial data posted on-chain: gross revenue, 11 expense categories, net result, owner payout. Each observation has a canonical row hash.</div>
       </div>
       <div class="flow-step fade-up stagger-3">
-        <div class="flow-number">Step 04</div>
+        <div class="flow-number" data-i18n="step_04">Step 04</div>
         <div class="flow-icon">HT</div>
-        <div class="flow-title">Auditor Attests</div>
-        <div class="flow-desc">Harris & Trotter reconciles on-chain data against bank movements, then attaches an EAS attestation UID to each verified observation.</div>
+        <div class="flow-title" data-i18n="s4_title">Auditor Attests</div>
+        <div class="flow-desc" data-i18n="s4_desc">Harris & Trotter reconciles on-chain data against bank movements, then attaches an EAS attestation UID to each verified observation.</div>
       </div>
     </div>
   </div>
@@ -229,9 +247,9 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- PROTOCOL FLOW DIAGRAM -->
 <section class="section section-gray">
   <div class="container">
-    <div class="section-label">Architecture</div>
-    <div class="section-title">From property to DeFi primitive</div>
-    <div class="section-desc">The data pipeline that turns private SQL into composable on-chain valuations.</div>
+    <div class="section-label" data-i18n="sec_arch">Architecture</div>
+    <div class="section-title" data-i18n="arch_title">From property to DeFi primitive</div>
+    <div class="section-desc" data-i18n="arch_desc">The data pipeline that turns private SQL into composable on-chain valuations.</div>
 
     <div style="max-width:900px;margin:0 auto">
       <svg viewBox="0 0 900 420" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
@@ -335,39 +353,39 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- ON-CHAIN DATA -->
 <section class="section section-gray" id="data">
   <div class="container">
-    <div class="section-label">On-Chain Data</div>
-    <div class="section-title">Full expense decomposition per unit</div>
-    <div class="section-desc">Every monthly observation contains 11 expense categories plus revenue and payout — the same granularity as the internal accounting system.</div>
+    <div class="section-label" data-i18n="sec_data">On-Chain Data</div>
+    <div class="section-title" data-i18n="data_title">Full expense decomposition per unit</div>
+    <div class="section-desc" data-i18n="data_desc">Every monthly observation contains 11 expense categories plus revenue and payout — the same granularity as the internal accounting system.</div>
     <div class="card-grid">
       <div class="card fade-up">
         <div class="card-icon">R$</div>
-        <div class="card-title">Revenue & Payout</div>
-        <div class="card-desc">grossRevenue (valor_bruto_reservas), netResult (resultado_liquido), and ownerPayout (repasse_unidade) — the valuation-relevant line.</div>
+        <div class="card-title" data-i18n="c1_title">Revenue & Payout</div>
+        <div class="card-desc" data-i18n="c1_desc">grossRevenue (valor_bruto_reservas), netResult (resultado_liquido), and ownerPayout (repasse_unidade) — the valuation-relevant line.</div>
       </div>
       <div class="card fade-up stagger-1">
         <div class="card-icon">11</div>
-        <div class="card-title">Expense Categories</div>
-        <div class="card-desc">OTA fees, taxes, cleaning, Lobie fee, condominio, energia, IPTU, manutencao, enxoval, and other expenses — all on-chain.</div>
+        <div class="card-title" data-i18n="c2_title">Expense Categories</div>
+        <div class="card-desc" data-i18n="c2_desc">OTA fees, taxes, cleaning, Lobie fee, condominio, energia, IPTU, manutencao, enxoval, and other expenses — all on-chain.</div>
       </div>
       <div class="card fade-up stagger-2">
         <div class="card-icon">NPV</div>
-        <div class="card-title">Gordon Growth Valuation</div>
-        <div class="card-desc">npvOf(tokenId, r, g) computes on-chain NPV using trailing 12-month average payout. Default: r=6%, g=3%. Any protocol can call it.</div>
+        <div class="card-title" data-i18n="c3_title">Gordon Growth Valuation</div>
+        <div class="card-desc" data-i18n="c3_desc">npvOf(tokenId, r, g) computes on-chain NPV using trailing 12-month average payout. Default: r=6%, g=3%. Any protocol can call it.</div>
       </div>
       <div class="card fade-up stagger-3">
         <div class="card-icon">#</div>
-        <div class="card-title">Canonical Row Hash</div>
-        <div class="card-desc">Each observation includes keccak256 of the canonical row (excluding PII). Auditors verify the hash matches source data — full audit trail.</div>
+        <div class="card-title" data-i18n="c4_title">Canonical Row Hash</div>
+        <div class="card-desc" data-i18n="c4_desc">Each observation includes keccak256 of the canonical row (excluding PII). Auditors verify the hash matches source data — full audit trail.</div>
       </div>
       <div class="card fade-up">
         <div class="card-icon">EAS</div>
-        <div class="card-title">Auditor Attestation</div>
-        <div class="card-desc">Harris & Trotter attaches EAS attestation UIDs after bank reconciliation. Corrections reset the attestation — HT must re-attest.</div>
+        <div class="card-title" data-i18n="c5_title">Auditor Attestation</div>
+        <div class="card-desc" data-i18n="c5_desc">Harris & Trotter attaches EAS attestation UIDs after bank reconciliation. Corrections reset the attestation — HT must re-attest.</div>
       </div>
       <div class="card fade-up stagger-1">
         <div class="card-icon">0</div>
-        <div class="card-title">Zero PII On-Chain</div>
-        <div class="card-desc">No names, emails, CPFs, or personal data ever touch the blockchain. LGPD compliant by design. Only financial data and hashes.</div>
+        <div class="card-title" data-i18n="c6_title">Zero PII On-Chain</div>
+        <div class="card-desc" data-i18n="c6_desc">No names, emails, CPFs, or personal data ever touch the blockchain. LGPD compliant by design. Only financial data and hashes.</div>
       </div>
     </div>
   </div>
@@ -376,9 +394,9 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- LIVE DATA VISUALIZATION -->
 <section class="section section-border" id="viz">
   <div class="container">
-    <div class="section-label">Live Portfolio Data</div>
-    <div class="section-title">R$ 28M+ in total owner payouts since Jan 2023</div>
-    <div class="section-desc">All data sourced from on-chain observations. Updated monthly after each repasse cycle.</div>
+    <div class="section-label" data-i18n="sec_viz">Live Portfolio Data</div>
+    <div class="section-title" data-i18n="viz_title">R$ 28M+ in total owner payouts since Jan 2023</div>
+    <div class="section-desc" data-i18n="viz_desc">All data sourced from on-chain observations. Updated monthly after each repasse cycle.</div>
 
     <!-- Chart 1: Monthly Portfolio Revenue -->
     <div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:24px;margin-bottom:24px">
@@ -408,9 +426,9 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- CONTRACT -->
 <section class="section section-border" id="contract">
   <div class="container">
-    <div class="section-label">Smart Contract</div>
-    <div class="section-title">Verified on Basescan</div>
-    <div class="section-desc">Single immutable contract. ERC-721 + AccessControl. Solidity 0.8.27, OpenZeppelin v5.4.0, Cancun EVM target.</div>
+    <div class="section-label" data-i18n="sec_contract">Smart Contract</div>
+    <div class="section-title" data-i18n="contract_title">Verified on Basescan</div>
+    <div class="section-desc" data-i18n="contract_desc">Single immutable contract. ERC-721 + AccessControl. Solidity 0.8.27, OpenZeppelin v5.4.0, Cancun EVM target.</div>
     <div class="chain-card">
       <div class="chain-header">
         <span style="font-size:18px">Base</span>
@@ -440,32 +458,32 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- COMPLIANCE -->
 <section class="section section-gray" id="compliance">
   <div class="container">
-    <div class="section-label">Compliance & Audit</div>
-    <div class="section-title">Institutional-grade data pipeline</div>
-    <div class="section-desc">Every observation is reconcilable to source accounting data. Auditor-attested. Correction history preserved.</div>
+    <div class="section-label" data-i18n="sec_comp">Compliance & Audit</div>
+    <div class="section-title" data-i18n="comp_title">Institutional-grade data pipeline</div>
+    <div class="section-desc" data-i18n="comp_desc">Every observation is reconcilable to source accounting data. Auditor-attested. Correction history preserved.</div>
     <div class="reg-grid">
       <div class="reg-item fade-up">
-        <div class="reg-label">Issuer</div>
+        <div class="reg-label" data-i18n="r1_label">Issuer</div>
         <div class="reg-value">EFIX Securitizadora S.A.</div>
       </div>
       <div class="reg-item fade-up stagger-1">
-        <div class="reg-label">Regulation</div>
+        <div class="reg-label" data-i18n="r2_label">Regulation</div>
         <div class="reg-value">CVM Act 23.635/2025</div>
       </div>
       <div class="reg-item fade-up stagger-2">
-        <div class="reg-label">Auditor</div>
+        <div class="reg-label" data-i18n="r3_label">Auditor</div>
         <div class="reg-value">Harris & Trotter</div>
       </div>
       <div class="reg-item fade-up stagger-3">
-        <div class="reg-label">Attestation</div>
+        <div class="reg-label" data-i18n="r4_label">Attestation</div>
         <div class="reg-value mono">EAS on Base</div>
       </div>
       <div class="reg-item fade-up">
-        <div class="reg-label">Privacy</div>
-        <div class="reg-value">LGPD — Zero PII on-chain</div>
+        <div class="reg-label" data-i18n="r5_label">Privacy</div>
+        <div class="reg-value" data-i18n="r5_value">LGPD — Zero PII on-chain</div>
       </div>
       <div class="reg-item fade-up stagger-1">
-        <div class="reg-label">Data Source</div>
+        <div class="reg-label" data-i18n="r6_label">Data Source</div>
         <div class="reg-value mono">repasse_v2_unidades</div>
       </div>
     </div>
@@ -475,29 +493,29 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- COMPOSABILITY -->
 <section class="section section-border">
   <div class="container">
-    <div class="section-label">Composability</div>
-    <div class="section-title">Built to be composed on</div>
-    <div class="section-desc">The registry publishes data. Everything else is built on top by other protocols.</div>
+    <div class="section-label" data-i18n="sec_compose">Composability</div>
+    <div class="section-title" data-i18n="compose_title">Built to be composed on</div>
+    <div class="section-desc" data-i18n="compose_desc">The registry publishes data. Everything else is built on top by other protocols.</div>
     <div class="card-grid">
       <div class="card fade-up">
         <div class="card-icon">Morpho</div>
-        <div class="card-title">NPV-Priced Collateral</div>
-        <div class="card-desc">Wrap unit NFT, use npvOf() as price feed. Borrow against audited rental cash flows on Morpho Blue.</div>
+        <div class="card-title" data-i18n="x1_title">NPV-Priced Collateral</div>
+        <div class="card-desc" data-i18n="x1_desc">Wrap unit NFT, use npvOf() as price feed. Borrow against audited rental cash flows on Morpho Blue.</div>
       </div>
       <div class="card fade-up stagger-1">
         <div class="card-icon">BRLE</div>
-        <div class="card-title">BRLE + Lobie Yield</div>
-        <div class="card-desc">Combine DI fixed income (BRLE ~14.4% APY) with real rental yield (Lobie units). Two yield sources, one platform.</div>
+        <div class="card-title" data-i18n="x2_title">BRLE + Lobie Yield</div>
+        <div class="card-desc" data-i18n="x2_desc">Combine DI fixed income (BRLE ~14.4% APY) with real rental yield (Lobie units). Two yield sources, one platform.</div>
       </div>
       <div class="card fade-up stagger-2">
         <div class="card-icon">Index</div>
-        <div class="card-title">Lobie Index Token</div>
-        <div class="card-desc">Fungible token tracking volume-weighted NPV of the unit basket. Passive exposure to the entire Lobie portfolio.</div>
+        <div class="card-title" data-i18n="x3_title">Lobie Index Token</div>
+        <div class="card-desc" data-i18n="x3_desc">Fungible token tracking volume-weighted NPV of the unit basket. Passive exposure to the entire Lobie portfolio.</div>
       </div>
       <div class="card fade-up stagger-3">
         <div class="card-icon">AI</div>
-        <div class="card-title">Agent-Queryable</div>
-        <div class="card-desc">AI agents can call npvOf(), observationsOf(), and units() to evaluate rental assets programmatically. Standard ERC-721 interface.</div>
+        <div class="card-title" data-i18n="x4_title">Agent-Queryable</div>
+        <div class="card-desc" data-i18n="x4_desc">AI agents can call npvOf(), observationsOf(), and units() to evaluate rental assets programmatically. Standard ERC-721 interface.</div>
       </div>
     </div>
   </div>
@@ -506,10 +524,10 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <!-- CTA -->
 <section class="cta-section">
   <div class="container">
-    <h2 class="section-title fade-up">Audited cash flows. On-chain. Composable.</h2>
-    <p class="cta-desc fade-up stagger-1">509 rental units across 17 buildings in Rio de Janeiro. Every month, every expense category, every payout — verified and immutable.</p>
+    <h2 class="section-title fade-up" data-i18n="cta_title">Audited cash flows. On-chain. Composable.</h2>
+    <p class="cta-desc fade-up stagger-1" data-i18n="cta_desc">509 rental units across 17 buildings in Rio de Janeiro. Every month, every expense category, every payout — verified and immutable.</p>
     <div class="hero-actions fade-up stagger-2">
-      <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank" class="btn btn-primary">View Contract</a>
+      <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank" class="btn btn-primary" data-i18n="cta_p">View Contract</a>
       <a href="https://github.com/Develop-ltda/lobie-unit-registry" target="_blank" class="btn btn-secondary">GitHub</a>
     </div>
   </div>
@@ -520,30 +538,31 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   <div class="footer-inner">
     <div>
       <div class="nav-logo" style="margin-bottom:0.5rem">Lobie<span class="dot">.</span></div>
-      <p class="footer-brand-text">On-chain registry of audited rental cash flows. Built by EFIX Securitizadora on Base. Audited by Harris & Trotter.</p>
+      <p class="footer-brand-text" data-i18n="foot_brand">On-chain registry of audited rental cash flows. Built by EFIX Securitizadora on Base. Audited by Harris & Trotter.</p>
     </div>
     <div class="footer-links">
       <div class="footer-col">
-        <h4>Protocol</h4>
-        <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank">Contract</a>
+        <h4 data-i18n="foot_protocol">Protocol</h4>
+        <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank" data-i18n="foot_contract">Contract</a>
         <a href="https://github.com/Develop-ltda/lobie-unit-registry" target="_blank">GitHub</a>
       </div>
       <div class="footer-col">
-        <h4>EFIX Ecosystem</h4>
+        <h4 data-i18n="foot_eco">EFIX Ecosystem</h4>
         <a href="/">efixDI+</a>
         <a href="/brle/">BRLE</a>
-        <a href="https://x.com/efix_finance" target="_blank">Twitter</a>
+        <a href="/btr/">BTR</a>
+        <a href="https://x.com/efix_finance" target="_blank" data-i18n="foot_twitter">Twitter</a>
       </div>
       <div class="footer-col">
-        <h4>Audit</h4>
+        <h4 data-i18n="foot_audit">Audit</h4>
         <a href="https://ht.digital" target="_blank">Harris & Trotter</a>
         <a href="https://basescan.org/address/0x4200000000000000000000000000000000000021" target="_blank">EAS on Base</a>
       </div>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>EFIX Securitizadora S.A. — CVM Act 23.635/2025</span>
-    <span>Lobie Units Registry on Base (Chain 8453)</span>
+    <span data-i18n="foot_legal">EFIX Securitizadora S.A. — CVM Act 23.635/2025</span>
+    <span data-i18n="foot_chain">Lobie Units Registry on Base (Chain 8453)</span>
   </div>
 </footer>
 
@@ -623,6 +642,277 @@ new Chart(document.getElementById('chartTop'), {
   },
   options: {indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR')}}}}
 });
+</script>
+
+<!-- ═══ i18n — 8 LANGUAGES ═══ -->
+<script>
+const i18n = {
+  en: { flag:'🇺🇸', code:'EN',
+    nav_how:'How it Works', nav_data:'On-Chain Data', nav_contract:'Contract', nav_compliance:'Compliance', nav_explorer:'Explorer',
+    hero_badge:'Backfill in Progress on Base Mainnet', hero_title:'Every Rental Unit.<br><span>One NFT. Audited Cash Flows.</span>', hero_sub:'Lobie Units is an on-chain registry where each short-term rental unit is one ERC-721 NFT that publishes its audited monthly financial series. Gordon Growth NPV computed on-chain. Harris & Trotter attested. No PII. Ever.', hero_cta1:'Explore Contract',
+    stat_units:'Rental Units', stat_obs:'Monthly Observations', stat_buildings:'Buildings', stat_range:'Data Range',
+    sec_how:'How it works', how_title:'From SQL to on-chain in 4 steps', how_desc:'The protocol does ONE thing: publish audited per-unit cash flows. Every economic layer is built on top.',
+    step_01:'Step 01', step_02:'Step 02', step_03:'Step 03', step_04:'Step 04',
+    s1_title:'Source Data', s1_desc:'Lobie\'s property management system records monthly revenue, expenses, and owner payouts for each unit in a GCP SQL database.',
+    s2_title:'Mint Unit', s2_desc:'Each unit gets one ERC-721 NFT with a deterministic tokenId derived from building + unit code. No PII on-chain (LGPD compliant).',
+    s3_title:'Post Observations', s3_desc:'Monthly financial data posted on-chain: gross revenue, 11 expense categories, net result, owner payout. Each observation has a canonical row hash.',
+    s4_title:'Auditor Attests', s4_desc:'Harris & Trotter reconciles on-chain data against bank movements, then attaches an EAS attestation UID to each verified observation.',
+    sec_arch:'Architecture', arch_title:'From property to DeFi primitive', arch_desc:'The data pipeline that turns private SQL into composable on-chain valuations.',
+    sec_data:'On-Chain Data', data_title:'Full expense decomposition per unit', data_desc:'Every monthly observation contains 11 expense categories plus revenue and payout — the same granularity as the internal accounting system.',
+    c1_title:'Revenue & Payout', c1_desc:'grossRevenue (valor_bruto_reservas), netResult (resultado_liquido), and ownerPayout (repasse_unidade) — the valuation-relevant line.',
+    c2_title:'Expense Categories', c2_desc:'OTA fees, taxes, cleaning, Lobie fee, condominio, energia, IPTU, manutencao, enxoval, and other expenses — all on-chain.',
+    c3_title:'Gordon Growth Valuation', c3_desc:'npvOf(tokenId, r, g) computes on-chain NPV using trailing 12-month average payout. Default: r=6%, g=3%. Any protocol can call it.',
+    c4_title:'Canonical Row Hash', c4_desc:'Each observation includes keccak256 of the canonical row (excluding PII). Auditors verify the hash matches source data — full audit trail.',
+    c5_title:'Auditor Attestation', c5_desc:'Harris & Trotter attaches EAS attestation UIDs after bank reconciliation. Corrections reset the attestation — HT must re-attest.',
+    c6_title:'Zero PII On-Chain', c6_desc:'No names, emails, CPFs, or personal data ever touch the blockchain. LGPD compliant by design. Only financial data and hashes.',
+    sec_viz:'Live Portfolio Data', viz_title:'R$ 28M+ in total owner payouts since Jan 2023', viz_desc:'All data sourced from on-chain observations. Updated monthly after each repasse cycle.',
+    sec_contract:'Smart Contract', contract_title:'Verified on Basescan', contract_desc:'Single immutable contract. ERC-721 + AccessControl. Solidity 0.8.27, OpenZeppelin v5.4.0, Cancun EVM target.',
+    sec_comp:'Compliance & Audit', comp_title:'Institutional-grade data pipeline', comp_desc:'Every observation is reconcilable to source accounting data. Auditor-attested. Correction history preserved.',
+    r1_label:'Issuer', r2_label:'Regulation', r3_label:'Auditor', r4_label:'Attestation', r5_label:'Privacy', r5_value:'LGPD — Zero PII on-chain', r6_label:'Data Source',
+    sec_compose:'Composability', compose_title:'Built to be composed on', compose_desc:'The registry publishes data. Everything else is built on top by other protocols.',
+    x1_title:'NPV-Priced Collateral', x1_desc:'Wrap unit NFT, use npvOf() as price feed. Borrow against audited rental cash flows on Morpho Blue.',
+    x2_title:'BRLE + Lobie Yield', x2_desc:'Combine DI fixed income (BRLE ~14.4% APY) with real rental yield (Lobie units). Two yield sources, one platform.',
+    x3_title:'Lobie Index Token', x3_desc:'Fungible token tracking volume-weighted NPV of the unit basket. Passive exposure to the entire Lobie portfolio.',
+    x4_title:'Agent-Queryable', x4_desc:'AI agents can call npvOf(), observationsOf(), and units() to evaluate rental assets programmatically. Standard ERC-721 interface.',
+    cta_title:'Audited cash flows. On-chain. Composable.', cta_desc:'509 rental units across 17 buildings in Rio de Janeiro. Every month, every expense category, every payout — verified and immutable.', cta_p:'View Contract',
+    foot_brand:'On-chain registry of audited rental cash flows. Built by EFIX Securitizadora on Base. Audited by Harris & Trotter.', foot_protocol:'Protocol', foot_contract:'Contract', foot_eco:'EFIX Ecosystem', foot_twitter:'Twitter', foot_audit:'Audit', foot_legal:'EFIX Securitizadora S.A. — CVM Act 23.635/2025', foot_chain:'Lobie Units Registry on Base (Chain 8453)'
+  },
+  pt: { flag:'🇧🇷', code:'PT',
+    nav_how:'Como Funciona', nav_data:'Dados On-Chain', nav_contract:'Contrato', nav_compliance:'Compliance', nav_explorer:'Explorador',
+    hero_badge:'Backfill em Andamento na Base Mainnet', hero_title:'Cada Unidade de Aluguel.<br><span>Um NFT. Fluxos de Caixa Auditados.</span>', hero_sub:'Lobie Units é um registro on-chain onde cada unidade de aluguel de curta temporada é um NFT ERC-721 que publica sua série financeira mensal auditada. NPV Gordon Growth calculado on-chain. Atestado por Harris & Trotter. Zero PII. Sempre.', hero_cta1:'Explorar Contrato',
+    stat_units:'Unidades de Aluguel', stat_obs:'Observações Mensais', stat_buildings:'Prédios', stat_range:'Período de Dados',
+    sec_how:'Como funciona', how_title:'Do SQL ao on-chain em 4 passos', how_desc:'O protocolo faz UMA coisa: publicar fluxos de caixa auditados por unidade. Toda camada econômica é construída em cima.',
+    step_01:'Passo 01', step_02:'Passo 02', step_03:'Passo 03', step_04:'Passo 04',
+    s1_title:'Dados de Origem', s1_desc:'O sistema de gestão da Lobie registra receita mensal, despesas e repasses de cada unidade em banco SQL no GCP.',
+    s2_title:'Mintar Unidade', s2_desc:'Cada unidade recebe um NFT ERC-721 com tokenId determinístico derivado de prédio + código de unidade. Sem PII on-chain (conforme LGPD).',
+    s3_title:'Postar Observações', s3_desc:'Dados financeiros mensais postados on-chain: receita bruta, 11 categorias de despesa, resultado líquido, repasse. Cada observação tem um hash canônico.',
+    s4_title:'Auditor Atesta', s4_desc:'Harris & Trotter reconcilia dados on-chain com movimentos bancários, então anexa um UID de atestação EAS a cada observação verificada.',
+    sec_arch:'Arquitetura', arch_title:'Do imóvel ao primitivo DeFi', arch_desc:'A pipeline de dados que transforma SQL privado em avaliações on-chain componíveis.',
+    sec_data:'Dados On-Chain', data_title:'Decomposição completa de despesas por unidade', data_desc:'Cada observação mensal contém 11 categorias de despesa mais receita e repasse — mesma granularidade do sistema contábil interno.',
+    c1_title:'Receita & Repasse', c1_desc:'grossRevenue (valor_bruto_reservas), netResult (resultado_liquido), e ownerPayout (repasse_unidade) — a linha relevante para valuation.',
+    c2_title:'Categorias de Despesa', c2_desc:'Taxas OTA, impostos, limpeza, taxa Lobie, condomínio, energia, IPTU, manutenção, enxoval e outras — todas on-chain.',
+    c3_title:'Avaliação Gordon Growth', c3_desc:'npvOf(tokenId, r, g) calcula NPV on-chain usando média de repasse dos últimos 12 meses. Padrão: r=6%, g=3%. Qualquer protocolo pode chamar.',
+    c4_title:'Hash Canônico', c4_desc:'Cada observação inclui keccak256 da linha canônica (excluindo PII). Auditores verificam se o hash bate com dados de origem — audit trail completo.',
+    c5_title:'Atestação do Auditor', c5_desc:'Harris & Trotter anexa UIDs de atestação EAS após reconciliação bancária. Correções resetam a atestação — HT deve re-atestar.',
+    c6_title:'Zero PII On-Chain', c6_desc:'Sem nomes, emails, CPFs ou dados pessoais na blockchain. LGPD por design. Apenas dados financeiros e hashes.',
+    sec_viz:'Dados ao Vivo do Portfolio', viz_title:'R$ 28M+ em repasses totais desde Jan 2023', viz_desc:'Todos os dados vêm de observações on-chain. Atualizado mensalmente após cada ciclo de repasse.',
+    sec_contract:'Contrato Inteligente', contract_title:'Verificado no Basescan', contract_desc:'Contrato único imutável. ERC-721 + AccessControl. Solidity 0.8.27, OpenZeppelin v5.4.0, target Cancun EVM.',
+    sec_comp:'Compliance & Auditoria', comp_title:'Pipeline de dados nível institucional', comp_desc:'Cada observação é reconciliável com dados contábeis de origem. Atestada por auditor. Histórico de correções preservado.',
+    r1_label:'Emissor', r2_label:'Regulação', r3_label:'Auditor', r4_label:'Atestação', r5_label:'Privacidade', r5_value:'LGPD — Zero PII on-chain', r6_label:'Fonte de Dados',
+    sec_compose:'Componibilidade', compose_title:'Feito para ser composto', compose_desc:'O registro publica dados. Todo o resto é construído em cima por outros protocolos.',
+    x1_title:'Colateral Precificado por NPV', x1_desc:'Envolva o NFT da unidade, use npvOf() como price feed. Empreste contra fluxos de caixa auditados na Morpho Blue.',
+    x2_title:'Rendimento BRLE + Lobie', x2_desc:'Combine renda fixa DI (BRLE ~14,4% a.a.) com aluguel real (Lobie units). Duas fontes de rendimento, uma plataforma.',
+    x3_title:'Token Índice Lobie', x3_desc:'Token fungível rastreando NPV ponderado por volume da cesta de unidades. Exposição passiva ao portfolio Lobie inteiro.',
+    x4_title:'Consultável por Agentes', x4_desc:'Agentes IA chamam npvOf(), observationsOf() e units() para avaliar ativos de aluguel programaticamente. Interface ERC-721 padrão.',
+    cta_title:'Fluxos auditados. On-chain. Componíveis.', cta_desc:'509 unidades em 17 prédios no Rio de Janeiro. Todo mês, toda categoria de despesa, todo repasse — verificado e imutável.', cta_p:'Ver Contrato',
+    foot_brand:'Registro on-chain de fluxos de caixa de aluguel auditados. Construído pela EFIX Securitizadora na Base. Auditado pela Harris & Trotter.', foot_protocol:'Protocolo', foot_contract:'Contrato', foot_eco:'Ecossistema EFIX', foot_twitter:'Twitter', foot_audit:'Auditoria', foot_legal:'EFIX Securitizadora S.A. — Ato CVM 23.635/2025', foot_chain:'Registro Lobie Units na Base (Chain 8453)'
+  },
+  es: { flag:'🇪🇸', code:'ES',
+    nav_how:'Cómo Funciona', nav_data:'Datos On-Chain', nav_contract:'Contrato', nav_compliance:'Compliance', nav_explorer:'Explorador',
+    hero_badge:'Backfill en Progreso en Base Mainnet', hero_title:'Cada Unidad de Alquiler.<br><span>Un NFT. Flujos de Caja Auditados.</span>', hero_sub:'Lobie Units es un registro on-chain donde cada unidad de alquiler corto es un NFT ERC-721 que publica su serie financiera mensual auditada. NPV Gordon Growth calculado on-chain. Atestado por Harris & Trotter. Sin PII. Nunca.', hero_cta1:'Explorar Contrato',
+    stat_units:'Unidades de Alquiler', stat_obs:'Observaciones Mensuales', stat_buildings:'Edificios', stat_range:'Rango de Datos',
+    sec_how:'Cómo funciona', how_title:'De SQL a on-chain en 4 pasos', how_desc:'El protocolo hace UNA cosa: publicar flujos de caja auditados por unidad. Toda capa económica se construye encima.',
+    step_01:'Paso 01', step_02:'Paso 02', step_03:'Paso 03', step_04:'Paso 04',
+    s1_title:'Datos Origen', s1_desc:'El sistema de gestión de Lobie registra ingresos, gastos y pagos mensuales de cada unidad en una base SQL en GCP.',
+    s2_title:'Mintar Unidad', s2_desc:'Cada unidad recibe un NFT ERC-721 con tokenId determinístico derivado de edificio + código. Sin PII on-chain (LGPD).',
+    s3_title:'Publicar Observaciones', s3_desc:'Datos mensuales on-chain: ingresos brutos, 11 categorías de gastos, resultado neto, pago al propietario. Cada observación con hash canónico.',
+    s4_title:'Auditor Atestigua', s4_desc:'Harris & Trotter reconcilia datos on-chain con movimientos bancarios, luego adjunta UID de atestación EAS a cada observación verificada.',
+    sec_arch:'Arquitectura', arch_title:'De inmueble a primitivo DeFi', arch_desc:'El pipeline de datos que convierte SQL privado en valuaciones on-chain componibles.',
+    sec_data:'Datos On-Chain', data_title:'Descomposición completa de gastos por unidad', data_desc:'Cada observación mensual contiene 11 categorías de gastos más ingresos y pagos — misma granularidad del sistema contable interno.',
+    c1_title:'Ingresos & Pagos', c1_desc:'grossRevenue (valor_bruto_reservas), netResult (resultado_liquido), ownerPayout (repasse_unidade) — la línea relevante para valuación.',
+    c2_title:'Categorías de Gastos', c2_desc:'Tarifas OTA, impuestos, limpieza, tarifa Lobie, condomínio, energia, IPTU, manutenção, enxoval y otros — todos on-chain.',
+    c3_title:'Valuación Gordon Growth', c3_desc:'npvOf(tokenId, r, g) calcula NPV on-chain usando promedio de pago 12 meses. Por defecto: r=6%, g=3%. Cualquier protocolo la llama.',
+    c4_title:'Hash Canónico', c4_desc:'Cada observación incluye keccak256 de la fila canónica (sin PII). Auditores verifican que coincida con datos origen.',
+    c5_title:'Atestación del Auditor', c5_desc:'Harris & Trotter adjunta UIDs de atestación EAS tras reconciliación bancaria. Correcciones resetean atestación — HT debe re-atestar.',
+    c6_title:'Cero PII On-Chain', c6_desc:'Ningún nombre, email, CPF o dato personal toca la blockchain. Compatible con LGPD por diseño.',
+    sec_viz:'Datos en Vivo del Portfolio', viz_title:'R$ 28M+ en pagos totales desde Ene 2023', viz_desc:'Todos los datos vienen de observaciones on-chain. Actualizado mensual tras cada ciclo de repasse.',
+    sec_contract:'Contrato Inteligente', contract_title:'Verificado en Basescan', contract_desc:'Contrato único inmutable. ERC-721 + AccessControl. Solidity 0.8.27, OpenZeppelin v5.4.0, Cancun EVM.',
+    sec_comp:'Compliance & Auditoría', comp_title:'Pipeline de datos nivel institucional', comp_desc:'Cada observación es reconciliable con datos contables origen. Atestada. Historial de correcciones preservado.',
+    r1_label:'Emisor', r2_label:'Regulación', r3_label:'Auditor', r4_label:'Atestación', r5_label:'Privacidad', r5_value:'LGPD — Cero PII on-chain', r6_label:'Fuente de Datos',
+    sec_compose:'Componibilidad', compose_title:'Hecho para ser compuesto', compose_desc:'El registro publica datos. Todo lo demás se construye encima por otros protocolos.',
+    x1_title:'Colateral a Precio NPV', x1_desc:'Envuelve el NFT, usa npvOf() como price feed. Pide prestado contra flujos auditados en Morpho Blue.',
+    x2_title:'Rendimiento BRLE + Lobie', x2_desc:'Combina renta fija DI (BRLE ~14,4% anual) con renta real (Lobie units). Dos fuentes, una plataforma.',
+    x3_title:'Token Índice Lobie', x3_desc:'Token fungible rastreando NPV ponderado de la canasta. Exposición pasiva al portfolio Lobie completo.',
+    x4_title:'Consultable por Agentes', x4_desc:'Agentes IA llaman npvOf(), observationsOf() y units() para evaluar alquileres programáticamente. Interfaz ERC-721 estándar.',
+    cta_title:'Flujos auditados. On-chain. Componibles.', cta_desc:'509 unidades en 17 edificios de Río de Janeiro. Cada mes, cada gasto, cada pago — verificado e inmutable.', cta_p:'Ver Contrato',
+    foot_brand:'Registro on-chain de flujos de alquiler auditados. Construido por EFIX Securitizadora en Base. Auditado por Harris & Trotter.', foot_protocol:'Protocolo', foot_contract:'Contrato', foot_eco:'Ecosistema EFIX', foot_twitter:'Twitter', foot_audit:'Auditoría', foot_legal:'EFIX Securitizadora S.A. — Acto CVM 23.635/2025', foot_chain:'Registro Lobie Units en Base (Chain 8453)'
+  },
+  fr: { flag:'🇫🇷', code:'FR',
+    nav_how:'Fonctionnement', nav_data:'Données On-Chain', nav_contract:'Contrat', nav_compliance:'Conformité', nav_explorer:'Explorateur',
+    hero_badge:'Backfill en Cours sur Base Mainnet', hero_title:'Chaque Location.<br><span>Un NFT. Flux Audités.</span>', hero_sub:'Lobie Units est un registre on-chain où chaque location courte durée est un NFT ERC-721 qui publie sa série financière mensuelle auditée. NPV Gordon Growth calculé on-chain. Attesté par Harris & Trotter. Zéro PII.', hero_cta1:'Explorer le Contrat',
+    stat_units:'Locations', stat_obs:'Observations Mensuelles', stat_buildings:'Immeubles', stat_range:'Période de Données',
+    sec_how:'Fonctionnement', how_title:'De SQL à on-chain en 4 étapes', how_desc:'Le protocole fait UNE chose: publier des flux audités par unité. Toute couche économique se construit dessus.',
+    step_01:'Étape 01', step_02:'Étape 02', step_03:'Étape 03', step_04:'Étape 04',
+    s1_title:'Données Source', s1_desc:'Le système de gestion Lobie enregistre revenus, dépenses et reversements mensuels par unité dans une base SQL GCP.',
+    s2_title:'Mint Unité', s2_desc:'Chaque unité reçoit un NFT ERC-721 avec tokenId déterministe dérivé de immeuble + code unité. Sans PII (LGPD).',
+    s3_title:'Publier Observations', s3_desc:'Données mensuelles on-chain: revenu brut, 11 catégories de dépenses, résultat net, reversement. Hash canonique par observation.',
+    s4_title:'Auditeur Atteste', s4_desc:'Harris & Trotter réconcilie les données on-chain avec les mouvements bancaires, puis attache un UID d\'attestation EAS.',
+    sec_arch:'Architecture', arch_title:'De l\'immeuble au primitif DeFi', arch_desc:'Le pipeline qui transforme du SQL privé en valorisations on-chain composables.',
+    sec_data:'Données On-Chain', data_title:'Décomposition complète des dépenses par unité', data_desc:'Chaque observation mensuelle contient 11 catégories de dépenses plus revenus et reversements — même granularité que la compta interne.',
+    c1_title:'Revenus & Reversements', c1_desc:'grossRevenue (valor_bruto_reservas), netResult (resultado_liquido), ownerPayout (repasse_unidade) — ligne clé pour la valorisation.',
+    c2_title:'Catégories de Dépenses', c2_desc:'Frais OTA, taxes, ménage, frais Lobie, condomínio, energia, IPTU, manutenção, enxoval et autres — tout on-chain.',
+    c3_title:'Valorisation Gordon Growth', c3_desc:'npvOf(tokenId, r, g) calcule le NPV on-chain via la moyenne 12 mois des reversements. Défaut: r=6%, g=3%.',
+    c4_title:'Hash de Ligne Canonique', c4_desc:'Chaque observation inclut keccak256 de la ligne canonique (hors PII). Les auditeurs vérifient que le hash correspond aux données source.',
+    c5_title:'Attestation d\'Auditeur', c5_desc:'Harris & Trotter attache les UIDs EAS après réconciliation. Les corrections resettent l\'attestation — HT doit ré-attester.',
+    c6_title:'Zéro PII On-Chain', c6_desc:'Aucun nom, email, CPF ou donnée personnelle ne touche la chain. Compatible LGPD par conception.',
+    sec_viz:'Données Portfolio en Direct', viz_title:'R$ 28M+ en reversements totaux depuis Jan 2023', viz_desc:'Toutes données issues des observations on-chain. Mise à jour mensuelle après chaque cycle repasse.',
+    sec_contract:'Smart Contract', contract_title:'Vérifié sur Basescan', contract_desc:'Contrat unique immuable. ERC-721 + AccessControl. Solidity 0.8.27, OpenZeppelin v5.4.0, Cancun EVM.',
+    sec_comp:'Conformité & Audit', comp_title:'Pipeline de niveau institutionnel', comp_desc:'Chaque observation est réconciliable avec les données comptables source. Historique des corrections préservé.',
+    r1_label:'Émetteur', r2_label:'Régulation', r3_label:'Auditeur', r4_label:'Attestation', r5_label:'Confidentialité', r5_value:'LGPD — Zéro PII on-chain', r6_label:'Source de Données',
+    sec_compose:'Composabilité', compose_title:'Conçu pour être composé', compose_desc:'Le registre publie les données. Le reste est construit dessus par d\'autres protocoles.',
+    x1_title:'Collatéral Valorisé NPV', x1_desc:'Enveloppez le NFT, utilisez npvOf() comme price feed. Empruntez contre flux audités sur Morpho Blue.',
+    x2_title:'Rendement BRLE + Lobie', x2_desc:'Combinez revenu fixe DI (BRLE ~14,4% an) avec rendement locatif réel. Deux sources, une plateforme.',
+    x3_title:'Token Index Lobie', x3_desc:'Token fongible suivant le NPV pondéré du panier. Exposition passive au portfolio Lobie complet.',
+    x4_title:'Interrogeable par Agents', x4_desc:'Les agents IA appellent npvOf(), observationsOf() et units() pour évaluer les actifs programmatiquement.',
+    cta_title:'Flux audités. On-chain. Composables.', cta_desc:'509 locations dans 17 immeubles à Rio de Janeiro. Chaque mois, chaque dépense, chaque reversement — vérifié et immuable.', cta_p:'Voir le Contrat',
+    foot_brand:'Registre on-chain de flux locatifs audités. Construit par EFIX Securitizadora sur Base. Audité par Harris & Trotter.', foot_protocol:'Protocole', foot_contract:'Contrat', foot_eco:'Écosystème EFIX', foot_twitter:'Twitter', foot_audit:'Audit', foot_legal:'EFIX Securitizadora S.A. — Acte CVM 23.635/2025', foot_chain:'Registre Lobie Units sur Base (Chain 8453)'
+  },
+  ja: { flag:'🇯🇵', code:'JA',
+    nav_how:'仕組み', nav_data:'オンチェーンデータ', nav_contract:'コントラクト', nav_compliance:'コンプライアンス', nav_explorer:'エクスプローラー',
+    hero_badge:'Base メインネットでバックフィル中', hero_title:'全ての賃貸ユニット。<br><span>1 NFT。監査済みキャッシュフロー。</span>', hero_sub:'Lobie Units は各短期賃貸ユニットが監査済み月次財務データを公開する ERC-721 NFT として登録されるオンチェーン台帳です。オンチェーンで Gordon Growth NPV 計算。Harris & Trotter による認証。PII なし。', hero_cta1:'コントラクトを探索',
+    stat_units:'賃貸ユニット', stat_obs:'月次観測', stat_buildings:'建物', stat_range:'データ期間',
+    sec_how:'仕組み', how_title:'SQL からオンチェーンまで 4 ステップ', how_desc:'プロトコルは一つのことだけを行います: ユニットごとの監査済みキャッシュフローを公開。全ての経済レイヤーはその上に構築されます。',
+    step_01:'ステップ 01', step_02:'ステップ 02', step_03:'ステップ 03', step_04:'ステップ 04',
+    s1_title:'ソースデータ', s1_desc:'Lobie の物件管理システムが各ユニットの月次収益、経費、オーナー支払いを GCP SQL データベースに記録。',
+    s2_title:'ユニットを Mint', s2_desc:'各ユニットは建物 + ユニットコードから派生した決定論的 tokenId を持つ ERC-721 NFT を受領。オンチェーンに PII なし (LGPD 準拠)。',
+    s3_title:'観測を投稿', s3_desc:'月次財務データをオンチェーン投稿: 総収益、11 経費カテゴリ、純利益、オーナー支払い。各観測には正規行ハッシュ。',
+    s4_title:'監査人の認証', s4_desc:'Harris & Trotter がオンチェーンデータを銀行取引と照合し、各検証済み観測に EAS 認証 UID を添付。',
+    sec_arch:'アーキテクチャ', arch_title:'物件から DeFi プリミティブへ', arch_desc:'プライベート SQL を構成可能なオンチェーン評価に変換するデータパイプライン。',
+    sec_data:'オンチェーンデータ', data_title:'ユニットごとの完全な経費分解', data_desc:'各月次観測には 11 の経費カテゴリと収益・支払いが含まれる — 内部会計システムと同じ粒度。',
+    c1_title:'収益 & 支払い', c1_desc:'grossRevenue (valor_bruto_reservas)、netResult (resultado_liquido)、ownerPayout (repasse_unidade) — 評価関連ライン。',
+    c2_title:'経費カテゴリ', c2_desc:'OTA 手数料、税金、清掃、Lobie 手数料、condominio、energia、IPTU、manutencao、enxoval、その他経費 — 全てオンチェーン。',
+    c3_title:'Gordon Growth 評価', c3_desc:'npvOf(tokenId, r, g) は過去 12 ヶ月の平均支払いを使用してオンチェーン NPV を計算。デフォルト: r=6%、g=3%。',
+    c4_title:'正規行ハッシュ', c4_desc:'各観測には正規行の keccak256 (PII を除く) が含まれる。監査人はハッシュがソースデータと一致することを検証 — 完全な監査証跡。',
+    c5_title:'監査人認証', c5_desc:'Harris & Trotter は銀行照合後に EAS 認証 UID を添付。訂正は認証をリセット — HT が再認証する必要あり。',
+    c6_title:'オンチェーン PII ゼロ', c6_desc:'名前、メール、CPF、個人データは一切ブロックチェーンに触れない。設計により LGPD 準拠。財務データとハッシュのみ。',
+    sec_viz:'ライブポートフォリオデータ', viz_title:'2023 年 1 月以降の総オーナー支払い R$ 28M+', viz_desc:'全データはオンチェーン観測由来。各 repasse サイクル後に月次更新。',
+    sec_contract:'スマートコントラクト', contract_title:'Basescan で検証済み', contract_desc:'単一の不変コントラクト。ERC-721 + AccessControl。Solidity 0.8.27、OpenZeppelin v5.4.0、Cancun EVM ターゲット。',
+    sec_comp:'コンプライアンス & 監査', comp_title:'機関投資家グレードのデータパイプライン', comp_desc:'各観測はソース会計データと照合可能。監査人認証済み。訂正履歴保存。',
+    r1_label:'発行者', r2_label:'規制', r3_label:'監査人', r4_label:'認証', r5_label:'プライバシー', r5_value:'LGPD — オンチェーン PII ゼロ', r6_label:'データソース',
+    sec_compose:'コンポーザビリティ', compose_title:'合成されるために構築', compose_desc:'レジストリはデータを公開。他は全て他のプロトコルが上に構築。',
+    x1_title:'NPV 価格付けの担保', x1_desc:'ユニット NFT をラップし、npvOf() を価格フィードとして使用。Morpho Blue で監査済みキャッシュフローに対して借入。',
+    x2_title:'BRLE + Lobie 利回り', x2_desc:'DI 固定収入 (BRLE ~14.4% APY) と実際の賃貸利回り (Lobie ユニット) を組み合わせ。2 つの利回り源、1 プラットフォーム。',
+    x3_title:'Lobie インデックストークン', x3_desc:'ユニットバスケットのボリューム加重 NPV を追跡する代替可能トークン。Lobie ポートフォリオ全体への受動的エクスポージャー。',
+    x4_title:'エージェント照会可能', x4_desc:'AI エージェントは npvOf()、observationsOf()、units() を呼び出して賃貸資産をプログラム的に評価可能。標準 ERC-721 インターフェース。',
+    cta_title:'監査済みキャッシュフロー。オンチェーン。コンポーザブル。', cta_desc:'リオデジャネイロの 17 建物にわたる 509 賃貸ユニット。毎月、各経費カテゴリ、各支払い — 検証済みで不変。', cta_p:'コントラクトを表示',
+    foot_brand:'監査済み賃貸キャッシュフローのオンチェーンレジストリ。EFIX Securitizadora が Base 上に構築。Harris & Trotter による監査。', foot_protocol:'プロトコル', foot_contract:'コントラクト', foot_eco:'EFIX エコシステム', foot_twitter:'Twitter', foot_audit:'監査', foot_legal:'EFIX Securitizadora S.A. — CVM 法令 23.635/2025', foot_chain:'Base 上の Lobie Units レジストリ (Chain 8453)'
+  },
+  zh: { flag:'🇨🇳', code:'ZH',
+    nav_how:'运作原理', nav_data:'链上数据', nav_contract:'合约', nav_compliance:'合规', nav_explorer:'浏览器',
+    hero_badge:'Base 主网回填中', hero_title:'每一个出租单元。<br><span>一个 NFT。审计现金流。</span>', hero_sub:'Lobie Units 是一个链上注册表,每个短租单元都是一个 ERC-721 NFT,发布其经审计的月度财务序列。链上计算 Gordon Growth NPV。Harris & Trotter 证明。永不包含 PII。', hero_cta1:'浏览合约',
+    stat_units:'出租单元', stat_obs:'月度观测', stat_buildings:'建筑', stat_range:'数据范围',
+    sec_how:'运作原理', how_title:'从 SQL 到链上,4 步完成', how_desc:'协议只做一件事:发布每单元审计现金流。所有经济层都在此之上构建。',
+    step_01:'步骤 01', step_02:'步骤 02', step_03:'步骤 03', step_04:'步骤 04',
+    s1_title:'源数据', s1_desc:'Lobie 物业管理系统在 GCP SQL 数据库中记录每单元的月度收入、支出和业主支付。',
+    s2_title:'铸造单元', s2_desc:'每个单元获得一个 ERC-721 NFT,tokenId 从建筑 + 单元代码确定性派生。链上无 PII(符合 LGPD)。',
+    s3_title:'发布观测', s3_desc:'月度财务数据上链:总收入、11 个支出类别、净结果、业主支付。每个观测都有规范行哈希。',
+    s4_title:'审计师证明', s4_desc:'Harris & Trotter 将链上数据与银行流水对账,然后为每个已验证的观测附加 EAS 证明 UID。',
+    sec_arch:'架构', arch_title:'从房产到 DeFi 原语', arch_desc:'将私有 SQL 转换为可组合链上估值的数据管道。',
+    sec_data:'链上数据', data_title:'每单元完整支出分解', data_desc:'每个月度观测包含 11 个支出类别加收入和支付 — 与内部会计系统相同的粒度。',
+    c1_title:'收入与支付', c1_desc:'grossRevenue (valor_bruto_reservas)、netResult (resultado_liquido) 和 ownerPayout (repasse_unidade) — 估值相关行。',
+    c2_title:'支出类别', c2_desc:'OTA 费用、税金、清洁、Lobie 费用、condominio、energia、IPTU、manutencao、enxoval 和其他 — 全部链上。',
+    c3_title:'Gordon Growth 估值', c3_desc:'npvOf(tokenId, r, g) 使用过去 12 个月的平均支付计算链上 NPV。默认:r=6%,g=3%。',
+    c4_title:'规范行哈希', c4_desc:'每个观测包含规范行的 keccak256(不含 PII)。审计师验证哈希与源数据匹配 — 完整审计跟踪。',
+    c5_title:'审计师证明', c5_desc:'Harris & Trotter 在银行对账后附加 EAS 证明 UID。修正会重置证明 — HT 必须重新证明。',
+    c6_title:'链上零 PII', c6_desc:'没有姓名、邮箱、CPF 或个人数据接触区块链。设计上符合 LGPD。仅财务数据和哈希。',
+    sec_viz:'实时投资组合数据', viz_title:'自 2023 年 1 月以来业主支付总额 R$ 2800 万+', viz_desc:'所有数据来自链上观测。每个 repasse 周期后月度更新。',
+    sec_contract:'智能合约', contract_title:'在 Basescan 验证', contract_desc:'单一不可变合约。ERC-721 + AccessControl。Solidity 0.8.27,OpenZeppelin v5.4.0,Cancun EVM 目标。',
+    sec_comp:'合规与审计', comp_title:'机构级数据管道', comp_desc:'每个观测都可与源会计数据对账。审计师证明。保留修正历史。',
+    r1_label:'发行方', r2_label:'监管', r3_label:'审计师', r4_label:'证明', r5_label:'隐私', r5_value:'LGPD — 链上零 PII', r6_label:'数据源',
+    sec_compose:'可组合性', compose_title:'为被组合而构建', compose_desc:'注册表发布数据。其他一切都由其他协议在此之上构建。',
+    x1_title:'NPV 定价抵押品', x1_desc:'包装单元 NFT,使用 npvOf() 作为价格 feed。在 Morpho Blue 上借贷对抗审计租赁现金流。',
+    x2_title:'BRLE + Lobie 收益', x2_desc:'将 DI 固定收入(BRLE ~14.4% APY)与真实租赁收益(Lobie 单元)结合。两个收益源,一个平台。',
+    x3_title:'Lobie 指数代币', x3_desc:'跟踪单元篮子加权 NPV 的可替代代币。被动暴露于整个 Lobie 投资组合。',
+    x4_title:'代理可查询', x4_desc:'AI 代理可调用 npvOf()、observationsOf() 和 units() 以编程方式评估租赁资产。标准 ERC-721 接口。',
+    cta_title:'审计现金流。链上。可组合。', cta_desc:'里约热内卢 17 座建筑中的 509 个出租单元。每月、每个支出类别、每笔支付 — 已验证且不可变。', cta_p:'查看合约',
+    foot_brand:'审计租赁现金流的链上注册表。EFIX Securitizadora 在 Base 上构建。Harris & Trotter 审计。', foot_protocol:'协议', foot_contract:'合约', foot_eco:'EFIX 生态', foot_twitter:'Twitter', foot_audit:'审计', foot_legal:'EFIX Securitizadora S.A. — CVM 法案 23.635/2025', foot_chain:'Base 上的 Lobie Units 注册表(Chain 8453)'
+  },
+  ar: { flag:'🇸🇦', code:'AR',
+    nav_how:'كيف يعمل', nav_data:'البيانات على السلسلة', nav_contract:'العقد', nav_compliance:'الامتثال', nav_explorer:'المستكشف',
+    hero_badge:'الردم جارٍ على Base Mainnet', hero_title:'كل وحدة إيجار.<br><span>NFT واحد. تدفقات نقدية مدققة.</span>', hero_sub:'Lobie Units هو سجل على السلسلة حيث كل وحدة إيجار قصيرة المدى هي NFT ERC-721 ينشر سلسلته المالية الشهرية المدققة. NPV Gordon Growth محسوب على السلسلة. موثق من Harris & Trotter. بدون PII أبدًا.', hero_cta1:'استكشاف العقد',
+    stat_units:'وحدات إيجار', stat_obs:'ملاحظات شهرية', stat_buildings:'مباني', stat_range:'نطاق البيانات',
+    sec_how:'كيف يعمل', how_title:'من SQL إلى السلسلة في 4 خطوات', how_desc:'البروتوكول يقوم بشيء واحد: نشر تدفقات نقدية مدققة لكل وحدة. كل طبقة اقتصادية تُبنى عليه.',
+    step_01:'الخطوة 01', step_02:'الخطوة 02', step_03:'الخطوة 03', step_04:'الخطوة 04',
+    s1_title:'بيانات المصدر', s1_desc:'نظام إدارة ممتلكات Lobie يسجل الإيرادات والنفقات والمدفوعات الشهرية لكل وحدة في قاعدة بيانات SQL على GCP.',
+    s2_title:'سك وحدة', s2_desc:'كل وحدة تحصل على NFT ERC-721 مع tokenId حتمي مشتق من المبنى + كود الوحدة. بدون PII على السلسلة (متوافق LGPD).',
+    s3_title:'نشر الملاحظات', s3_desc:'بيانات مالية شهرية منشورة على السلسلة: الإيرادات الإجمالية، 11 فئة نفقات، النتيجة الصافية، دفع المالك. كل ملاحظة لها تجزئة صف معيارية.',
+    s4_title:'المدقق يشهد', s4_desc:'Harris & Trotter يوفق البيانات على السلسلة مع الحركات البنكية، ثم يرفق UID شهادة EAS لكل ملاحظة تم التحقق منها.',
+    sec_arch:'البنية', arch_title:'من العقار إلى بدائية DeFi', arch_desc:'خط أنابيب البيانات الذي يحول SQL الخاص إلى تقييمات على السلسلة قابلة للتركيب.',
+    sec_data:'البيانات على السلسلة', data_title:'تحليل كامل للنفقات لكل وحدة', data_desc:'كل ملاحظة شهرية تحتوي على 11 فئة نفقات بالإضافة إلى الإيرادات والمدفوعات — نفس دقة النظام المحاسبي الداخلي.',
+    c1_title:'الإيرادات والمدفوعات', c1_desc:'grossRevenue، netResult، ownerPayout — السطر الملائم للتقييم.',
+    c2_title:'فئات النفقات', c2_desc:'رسوم OTA، الضرائب، التنظيف، رسوم Lobie، condominio، energia، IPTU، manutencao، enxoval وغيرها — كلها على السلسلة.',
+    c3_title:'تقييم Gordon Growth', c3_desc:'npvOf(tokenId, r, g) يحسب NPV على السلسلة باستخدام متوسط الدفع لـ 12 شهرًا. الافتراضي: r=6%، g=3%.',
+    c4_title:'تجزئة الصف المعيارية', c4_desc:'كل ملاحظة تتضمن keccak256 للصف المعياري (باستثناء PII). المدققون يتحققون من مطابقة التجزئة لبيانات المصدر.',
+    c5_title:'شهادة المدقق', c5_desc:'Harris & Trotter يرفق UIDs شهادة EAS بعد التوفيق البنكي. التصحيحات تعيد تعيين الشهادة — يجب على HT إعادة الشهادة.',
+    c6_title:'صفر PII على السلسلة', c6_desc:'لا أسماء، بريد إلكتروني، CPFs أو بيانات شخصية تلمس البلوكشين أبدًا. متوافق LGPD بالتصميم.',
+    sec_viz:'بيانات المحفظة المباشرة', viz_title:'R$ 28M+ في إجمالي مدفوعات المالكين منذ يناير 2023', viz_desc:'جميع البيانات مصدرها الملاحظات على السلسلة. محدث شهريًا بعد كل دورة repasse.',
+    sec_contract:'العقد الذكي', contract_title:'متحقق على Basescan', contract_desc:'عقد واحد غير قابل للتغيير. ERC-721 + AccessControl. Solidity 0.8.27، OpenZeppelin v5.4.0، Cancun EVM.',
+    sec_comp:'الامتثال والتدقيق', comp_title:'خط أنابيب بيانات بمستوى مؤسسي', comp_desc:'كل ملاحظة قابلة للتوفيق مع بيانات المحاسبة المصدر. موثقة من المدقق. تاريخ التصحيحات محفوظ.',
+    r1_label:'المُصدِر', r2_label:'التنظيم', r3_label:'المدقق', r4_label:'الشهادة', r5_label:'الخصوصية', r5_value:'LGPD — صفر PII على السلسلة', r6_label:'مصدر البيانات',
+    sec_compose:'قابلية التركيب', compose_title:'مبني ليتم تركيبه', compose_desc:'السجل ينشر البيانات. كل شيء آخر يُبنى فوقه بواسطة بروتوكولات أخرى.',
+    x1_title:'ضمان مسعر NPV', x1_desc:'لف NFT الوحدة، استخدم npvOf() كمغذي سعر. اقترض مقابل تدفقات نقدية مدققة على Morpho Blue.',
+    x2_title:'عائد BRLE + Lobie', x2_desc:'ادمج الدخل الثابت DI (BRLE ~14.4% APY) مع العائد الحقيقي من الإيجار. مصدرا عائد، منصة واحدة.',
+    x3_title:'رمز مؤشر Lobie', x3_desc:'رمز قابل للاستبدال يتتبع NPV الموزون بالحجم لسلة الوحدات. تعرض سلبي لمحفظة Lobie الكاملة.',
+    x4_title:'قابل للاستعلام بواسطة الوكلاء', x4_desc:'وكلاء AI يمكنهم استدعاء npvOf()، observationsOf() وunits() لتقييم أصول الإيجار برمجيًا.',
+    cta_title:'تدفقات نقدية مدققة. على السلسلة. قابلة للتركيب.', cta_desc:'509 وحدة إيجار في 17 مبنى في ريو دي جانيرو. كل شهر، كل فئة نفقات، كل دفعة — تم التحقق منها وغير قابلة للتغيير.', cta_p:'عرض العقد',
+    foot_brand:'سجل على السلسلة لتدفقات نقدية مدققة للإيجار. مبني من قبل EFIX Securitizadora على Base. مدقق بواسطة Harris & Trotter.', foot_protocol:'البروتوكول', foot_contract:'العقد', foot_eco:'نظام EFIX', foot_twitter:'Twitter', foot_audit:'تدقيق', foot_legal:'EFIX Securitizadora S.A. — قانون CVM 23.635/2025', foot_chain:'سجل Lobie Units على Base (Chain 8453)'
+  },
+  ko: { flag:'🇰🇷', code:'KO',
+    nav_how:'작동 원리', nav_data:'온체인 데이터', nav_contract:'컨트랙트', nav_compliance:'컴플라이언스', nav_explorer:'익스플로러',
+    hero_badge:'Base 메인넷에서 백필 진행 중', hero_title:'모든 임대 유닛.<br><span>1개 NFT. 감사된 현금 흐름.</span>', hero_sub:'Lobie Units는 각 단기 임대 유닛이 감사된 월별 재무 시리즈를 게시하는 ERC-721 NFT인 온체인 레지스트리입니다. 온체인에서 Gordon Growth NPV 계산. Harris & Trotter 증명. PII 없음.', hero_cta1:'컨트랙트 탐색',
+    stat_units:'임대 유닛', stat_obs:'월별 관측', stat_buildings:'건물', stat_range:'데이터 범위',
+    sec_how:'작동 원리', how_title:'SQL에서 온체인까지 4단계', how_desc:'프로토콜은 오직 하나만 합니다: 유닛별 감사된 현금 흐름 게시. 모든 경제적 계층은 그 위에 구축됩니다.',
+    step_01:'단계 01', step_02:'단계 02', step_03:'단계 03', step_04:'단계 04',
+    s1_title:'소스 데이터', s1_desc:'Lobie의 부동산 관리 시스템이 각 유닛의 월별 수익, 비용, 소유자 지급을 GCP SQL 데이터베이스에 기록.',
+    s2_title:'유닛 민팅', s2_desc:'각 유닛은 건물 + 유닛 코드에서 결정적으로 파생된 tokenId를 가진 ERC-721 NFT를 받음. 온체인에 PII 없음(LGPD 준수).',
+    s3_title:'관측 게시', s3_desc:'월별 재무 데이터 온체인 게시: 총수익, 11개 비용 카테고리, 순결과, 소유자 지급. 각 관측에 표준 행 해시.',
+    s4_title:'감사자 증명', s4_desc:'Harris & Trotter가 온체인 데이터를 은행 거래와 대조한 후 각 검증된 관측에 EAS 증명 UID 부착.',
+    sec_arch:'아키텍처', arch_title:'부동산에서 DeFi 프리미티브로', arch_desc:'개인 SQL을 컴포저블 온체인 평가로 전환하는 데이터 파이프라인.',
+    sec_data:'온체인 데이터', data_title:'유닛별 완전한 비용 분해', data_desc:'각 월별 관측은 수익 및 지급 외에 11개 비용 카테고리를 포함 — 내부 회계 시스템과 동일한 세분성.',
+    c1_title:'수익 & 지급', c1_desc:'grossRevenue, netResult, ownerPayout — 평가 관련 라인.',
+    c2_title:'비용 카테고리', c2_desc:'OTA 수수료, 세금, 청소, Lobie 수수료, condominio, energia, IPTU, manutencao, enxoval 등 — 모두 온체인.',
+    c3_title:'Gordon Growth 평가', c3_desc:'npvOf(tokenId, r, g)는 최근 12개월 평균 지급을 사용하여 온체인 NPV 계산. 기본값: r=6%, g=3%.',
+    c4_title:'표준 행 해시', c4_desc:'각 관측에는 표준 행의 keccak256(PII 제외)이 포함됨. 감사자가 해시가 소스 데이터와 일치하는지 검증.',
+    c5_title:'감사자 증명', c5_desc:'Harris & Trotter가 은행 대조 후 EAS 증명 UID 부착. 수정은 증명을 리셋 — HT가 재증명해야 함.',
+    c6_title:'온체인 PII 제로', c6_desc:'이름, 이메일, CPF, 개인 데이터가 블록체인에 닿지 않음. 설계상 LGPD 준수. 재무 데이터와 해시만.',
+    sec_viz:'실시간 포트폴리오 데이터', viz_title:'2023년 1월 이후 총 소유자 지급 R$ 28M+', viz_desc:'모든 데이터는 온체인 관측에서 소싱. 각 repasse 주기 후 월별 업데이트.',
+    sec_contract:'스마트 컨트랙트', contract_title:'Basescan에서 검증됨', contract_desc:'단일 불변 컨트랙트. ERC-721 + AccessControl. Solidity 0.8.27, OpenZeppelin v5.4.0, Cancun EVM 타겟.',
+    sec_comp:'컴플라이언스 & 감사', comp_title:'기관급 데이터 파이프라인', comp_desc:'각 관측은 소스 회계 데이터와 대조 가능. 감사자 증명. 수정 이력 보존.',
+    r1_label:'발행자', r2_label:'규제', r3_label:'감사인', r4_label:'증명', r5_label:'프라이버시', r5_value:'LGPD — 온체인 PII 제로', r6_label:'데이터 소스',
+    sec_compose:'컴포저빌리티', compose_title:'조합되도록 구축됨', compose_desc:'레지스트리는 데이터를 게시. 나머지는 모두 다른 프로토콜이 그 위에 구축.',
+    x1_title:'NPV 가격 담보', x1_desc:'유닛 NFT 래핑, npvOf()를 가격 피드로 사용. Morpho Blue에서 감사된 임대 현금 흐름에 대해 대출.',
+    x2_title:'BRLE + Lobie 수익', x2_desc:'DI 고정 수입(BRLE ~14.4% APY)과 실제 임대 수익(Lobie 유닛) 결합. 두 수익원, 한 플랫폼.',
+    x3_title:'Lobie 인덱스 토큰', x3_desc:'유닛 바스켓의 볼륨 가중 NPV를 추적하는 대체 가능 토큰. 전체 Lobie 포트폴리오에 대한 수동 노출.',
+    x4_title:'에이전트 쿼리 가능', x4_desc:'AI 에이전트는 npvOf(), observationsOf(), units()를 호출하여 임대 자산을 프로그래밍 방식으로 평가 가능. 표준 ERC-721 인터페이스.',
+    cta_title:'감사된 현금 흐름. 온체인. 컴포저블.', cta_desc:'리우데자네이루 17개 건물에 걸친 509개 임대 유닛. 매월, 각 비용 카테고리, 각 지급 — 검증되고 불변.', cta_p:'컨트랙트 보기',
+    foot_brand:'감사된 임대 현금 흐름의 온체인 레지스트리. EFIX Securitizadora가 Base에 구축. Harris & Trotter 감사.', foot_protocol:'프로토콜', foot_contract:'컨트랙트', foot_eco:'EFIX 생태계', foot_twitter:'Twitter', foot_audit:'감사', foot_legal:'EFIX Securitizadora S.A. — CVM 법 23.635/2025', foot_chain:'Base의 Lobie Units 레지스트리 (Chain 8453)'
+  }
+};
+let currentLang = 'en';
+function setLang(lang) {
+  if (!i18n[lang]) return;
+  currentLang = lang;
+  const t = i18n[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if (t[k]) el.innerHTML = t[k]; });
+  document.getElementById('langFlag').textContent = t.flag;
+  document.getElementById('langCode').textContent = t.code;
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+  document.querySelectorAll('.lang-opt').forEach(o => { if (o.onclick && o.onclick.toString().includes("'"+lang+"'")) o.classList.add('active'); });
+  document.getElementById('langMenu').classList.remove('open');
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.documentElement.lang = (lang === 'pt') ? 'pt-BR' : lang;
+  const titles = { en:'Lobie Units — On-Chain Rental Cash Flow Registry', pt:'Lobie Units — Registro On-Chain de Fluxos de Aluguel', es:'Lobie Units — Registro On-Chain de Flujos de Alquiler', fr:'Lobie Units — Registre On-Chain des Flux Locatifs', ja:'Lobie Units — オンチェーン賃貸キャッシュフローレジストリ', zh:'Lobie Units — 链上租赁现金流注册表', ar:'Lobie Units — سجل تدفقات الإيجار على السلسلة', ko:'Lobie Units — 온체인 임대 현금 흐름 레지스트리' };
+  document.title = titles[lang] || titles.en;
+  try { localStorage.setItem('efixLang', lang); } catch (e) {}
+}
+(function () {
+  const saved = localStorage.getItem('efixLang');
+  if (saved && i18n[saved]) { setTimeout(() => setLang(saved), 50); return; }
+  const bl = (navigator.language || '').slice(0, 2).toLowerCase();
+  const map = { pt:'pt', en:'en', es:'es', fr:'fr', ja:'ja', zh:'zh', ar:'ar', ko:'ko' };
+  if (map[bl]) setTimeout(() => setLang(map[bl]), 50);
+})();
+document.addEventListener('click', (e) => { if (!e.target.closest('.lang-sel')) document.getElementById('langMenu').classList.remove('open'); });
 </script>
 </body>
 </html>
