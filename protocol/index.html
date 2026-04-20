@@ -329,22 +329,56 @@ const AK='efixdi-admin-2026';
 const fmt=fmtNum;
 
 // ═══════════════════════════════════════
-// LIVE DATA
+// LIVE DATA — on-chain primary, backend for uptime only
 // ═══════════════════════════════════════
+// Previously this page relied on /api/status, which silently fails open
+// with stale hardcoded numbers when the backend 500s or the admin key
+// rotates. Now we read totalSupply and Chainlink BRL/USD directly from
+// Polygon — same approach as /app/wallet/admin. Source of truth is the
+// chain, not a service.
+const PR='https://polygon-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf';
+const EP='0x04082b283818D9d0dd9Ee8742892eEe5CC396441'; // efixDI on Polygon
+const CL_POLY='0xB90DA3ff54C3ED09115abf6FbA0Ff4645586af2c'; // Chainlink BRL/USD on Polygon
+
+async function rpcCall(url,to,data){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to,data},'latest'],id:1})});
+  const j=await r.json();
+  if(j.error) throw new Error(j.error.message||'RPC error');
+  return BigInt(j.result||'0x0');
+}
+
+function fmtBRL(n){return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
 async function fetchLive(){
+  // On-chain reads (authoritative)
   try{
-    const d=await ProtocolLogic.fetchLive(BE,AK);
-    document.getElementById('kpi-tvl').textContent='R$ '+d.tvlBrl;
-    document.getElementById('kpi-tvl-usd').textContent='$'+d.tvlUsd+' USD';
-    document.getElementById('kpi-supply').textContent=d.supply;
-    document.getElementById('kpi-rate').textContent=d.rate;
-    document.getElementById('kpi-uptime').textContent=d.uptimeH+'h '+d.uptimeM+'m';
-    document.getElementById('navStatus').textContent='Mainnet · Block '+d.block;
+    const [supplyRaw,answerRaw]=await Promise.all([
+      rpcCall(PR,EP,'0x18160ddd'),          // totalSupply() selector
+      rpcCall(PR,CL_POLY,'0x50d25bcd')      // latestAnswer() selector — 8 decimals
+    ]);
+    const supply=Number(supplyRaw)/1e18;
+    const rate=Number(answerRaw)/1e8;
+    // 1 efixDI = R$1 by par peg (100% collateralized by DI fund shares).
+    // TVL_BRL == supply. TVL_USD = supply * (BRL/USD).
+    document.getElementById('kpi-tvl').textContent='R$ '+fmtBRL(supply);
+    document.getElementById('kpi-tvl-usd').textContent='$'+fmtBRL(supply*rate)+' USD';
+    document.getElementById('kpi-supply').textContent=supply.toFixed(2);
+    document.getElementById('kpi-rate').textContent=rate.toFixed(6);
   }catch(e){
-    document.getElementById('kpi-tvl').textContent='R$ 100.09';
-    document.getElementById('kpi-tvl-usd').textContent='$19.18 USD';
-    document.getElementById('kpi-supply').textContent='678.77';
-    document.getElementById('kpi-rate').textContent='0.191626';
+    document.getElementById('kpi-tvl').textContent='R$ —';
+    document.getElementById('kpi-tvl-usd').textContent='—';
+    document.getElementById('kpi-supply').textContent='—';
+    document.getElementById('kpi-rate').textContent='—';
+    console.warn('on-chain fetch failed:',e);
+  }
+
+  // Backend uptime (optional — if this fails, just show —)
+  try{
+    const h=await fetch(BE+'/health',{signal:AbortSignal.timeout(3000)}).then(r=>r.json());
+    document.getElementById('kpi-uptime').textContent=Math.floor(h.uptime/3600)+'h '+Math.floor((h.uptime%3600)/60)+'m';
+    if(h.block) document.getElementById('navStatus').textContent='Mainnet · Block '+h.block;
+  }catch(e){
     document.getElementById('kpi-uptime').textContent='—';
   }
 }
