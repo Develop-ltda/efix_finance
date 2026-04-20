@@ -17,7 +17,9 @@
     <link rel="stylesheet" href="/shared/css/nav-inter.css">
     <link rel="stylesheet" href="/shared/css/components.css">
     <link rel="stylesheet" href="/shared/css/footer.css">
+    <link rel="stylesheet" href="/shared/css/lang-selector.css">
     <style>
+:root{--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--lang-active:#2563eb}
         body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
 
         .hero { padding: 130px 2rem 50px; text-align: center; }
@@ -113,25 +115,42 @@
     <div class="nav-inner">
         <a href="../" class="nav-logo"><img src="../app/logo_efix_400x400.jpg" alt="EFIX">efixDI+</a>
         <ul class="nav-links">
-            <li><a href="../">Home</a></li>
-            <li><a href="../app/">App</a></li>
-            <li><a href="../protocol/">Protocol</a></li>
-            <li><a href="../listings/">Listings</a></li>
-            <li><a href="./" class="active">Team</a></li>
-            <li><a href="../app/" class="nav-cta">Launch App &rarr;</a></li>
+            <li><a href="../" data-i18n="nav_home">Home</a></li>
+            <li><a href="../app/" data-i18n="nav_app">App</a></li>
+            <li><a href="../protocol/" data-i18n="nav_protocol">Protocol</a></li>
+            <li><a href="../listings/" data-i18n="nav_listings">Listings</a></li>
+            <li><a href="./" class="active" data-i18n="nav_team">Team</a></li>
+            <li><a href="../app/" class="nav-cta" data-i18n="nav_launch">Launch App &rarr;</a></li>
+            <li>
+                <div class="lang-sel" style="display:inline-flex">
+                    <div class="lang-btn" onclick="document.getElementById('langMenu').classList.toggle('open')">
+                        <span id="langFlag">🇺🇸</span><span id="langCode">EN</span>
+                    </div>
+                    <div class="lang-menu" id="langMenu">
+                        <div class="lang-opt" onclick="setLang('pt')">🇧🇷 Português</div>
+                        <div class="lang-opt active" onclick="setLang('en')">🇺🇸 English</div>
+                        <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+                        <div class="lang-opt" onclick="setLang('fr')">🇫🇷 Français</div>
+                        <div class="lang-opt" onclick="setLang('ja')">🇯🇵 日本語</div>
+                        <div class="lang-opt" onclick="setLang('zh')">🇨🇳 中文</div>
+                        <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+                        <div class="lang-opt" onclick="setLang('ko')">🇰🇷 한국어</div>
+                    </div>
+                </div>
+            </li>
         </ul>
     </div>
 </nav>
 
 <section class="hero">
-    <div class="hero-badge">CVM Registered Securitizer &middot; Est. 2025</div>
-    <h1>Meet the <span>Team</span></h1>
-    <p>Capital markets veterans, world-class engineers, and data scientists building the infrastructure connecting Brazilian fixed income to DeFi composability.</p>
+    <div class="hero-badge" data-i18n="hero_badge">CVM Registered Securitizer &middot; Est. 2025</div>
+    <h1 data-i18n="hero_title">Meet the <span>Team</span></h1>
+    <p data-i18n="hero_sub">Capital markets veterans, world-class engineers, and data scientists building the infrastructure connecting Brazilian fixed income to DeFi composability.</p>
 </section>
 
 <!-- LEADERSHIP -->
 <section class="section">
-    <div class="section-header"><h2>Leadership</h2></div>
+    <div class="section-header"><h2 data-i18n="sec_leadership">Leadership</h2></div>
 
     <!-- ERNESTO -->
     <div class="member-card">
@@ -244,8 +263,8 @@
 <!-- LEGAL ENTITIES -->
 <section class="section" style="padding-top: 0;">
     <div class="section-header">
-        <h2>Legal Entities</h2>
-        <p>Regulated Brazilian corporate structure backing the efixDI+ protocol.</p>
+        <h2 data-i18n="sec_entities">Legal Entities</h2>
+        <p data-i18n="entities_desc">Regulated Brazilian corporate structure backing the efixDI+ protocol.</p>
     </div>
     <div class="entities-grid">
         <div class="entity-card">
@@ -280,8 +299,8 @@
 <!-- PARTNERS -->
 <section class="section" style="padding-top: 0;">
     <div class="section-header">
-        <h2>Partners &amp; Infrastructure</h2>
-        <p>Technology and service providers powering the efixDI+ protocol stack.</p>
+        <h2 data-i18n="sec_partners">Partners &amp; Infrastructure</h2>
+        <p data-i18n="partners_desc">Technology and service providers powering the efixDI+ protocol stack.</p>
     </div>
     <div class="partners-grid">
         <div class="partner-card">
@@ -326,9 +345,46 @@
             <a href="../listings/">Listings</a><a href="https://github.com/Develop-ltda" target="_blank">GitHub</a>
             <a href="https://x.com/efix_finance" target="_blank">X / Twitter</a><a href="mailto:contato@efix.com.br">Contact</a>
         </div>
-        <div class="footer-copy">&copy; 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda &middot; CNPJ 60.756.859/0001-57 &middot; CVM Act 23.635/2025</div>
+        <div class="footer-copy" data-i18n="foot_copy">&copy; 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda &middot; CNPJ 60.756.859/0001-57 &middot; CVM Act 23.635/2025</div>
     </div>
 </footer>
+
+<!-- ═══ i18n — UI chrome only; bios stay in English for credential accuracy ═══ -->
+<script>
+const i18n = {
+  en: { flag:'🇺🇸', code:'EN', nav_home:'Home', nav_app:'App', nav_protocol:'Protocol', nav_listings:'Listings', nav_team:'Team', nav_launch:'Launch App →', hero_badge:'CVM Registered Securitizer · Est. 2025', hero_title:'Meet the <span>Team</span>', hero_sub:'Capital markets veterans, world-class engineers, and data scientists building the infrastructure connecting Brazilian fixed income to DeFi composability.', sec_leadership:'Leadership', sec_entities:'Legal Entities', entities_desc:'Regulated Brazilian corporate structure backing the efixDI+ protocol.', sec_partners:'Partners & Infrastructure', partners_desc:'Technology and service providers powering the efixDI+ protocol stack.', foot_copy:'© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57 · CVM Act 23.635/2025' },
+  pt: { flag:'🇧🇷', code:'PT', nav_home:'Início', nav_app:'App', nav_protocol:'Protocolo', nav_listings:'Listagens', nav_team:'Equipe', nav_launch:'Abrir App →', hero_badge:'Securitizadora Registrada na CVM · Est. 2025', hero_title:'Conheça a <span>Equipe</span>', hero_sub:'Veteranos de mercados de capitais, engenheiros de classe mundial e cientistas de dados construindo a infraestrutura que conecta a renda fixa brasileira à componibilidade DeFi.', sec_leadership:'Liderança', sec_entities:'Entidades Legais', entities_desc:'Estrutura corporativa brasileira regulada que sustenta o protocolo efixDI+.', sec_partners:'Parceiros & Infraestrutura', partners_desc:'Provedores de tecnologia e serviços que alimentam o stack do protocolo efixDI+.', foot_copy:'© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57 · Ato CVM 23.635/2025' },
+  es: { flag:'🇪🇸', code:'ES', nav_home:'Inicio', nav_app:'App', nav_protocol:'Protocolo', nav_listings:'Listados', nav_team:'Equipo', nav_launch:'Abrir App →', hero_badge:'Securitizadora Registrada CVM · Est. 2025', hero_title:'Conozca al <span>Equipo</span>', hero_sub:'Veteranos de mercados de capitales, ingenieros de clase mundial y científicos de datos construyendo la infraestructura que conecta la renta fija brasileña con la componibilidad DeFi.', sec_leadership:'Liderazgo', sec_entities:'Entidades Legales', entities_desc:'Estructura corporativa brasileña regulada que respalda el protocolo efixDI+.', sec_partners:'Socios & Infraestructura', partners_desc:'Proveedores de tecnología y servicios que impulsan el stack del protocolo efixDI+.', foot_copy:'© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57 · Acto CVM 23.635/2025' },
+  fr: { flag:'🇫🇷', code:'FR', nav_home:'Accueil', nav_app:'App', nav_protocol:'Protocole', nav_listings:'Listings', nav_team:'Équipe', nav_launch:'Lancer l\'App →', hero_badge:'Securitizadora Enregistrée CVM · Est. 2025', hero_title:'Rencontrez l\'<span>Équipe</span>', hero_sub:'Vétérans des marchés de capitaux, ingénieurs de classe mondiale et data scientists construisant l\'infrastructure qui connecte le revenu fixe brésilien à la composabilité DeFi.', sec_leadership:'Leadership', sec_entities:'Entités Légales', entities_desc:'Structure corporative brésilienne régulée qui soutient le protocole efixDI+.', sec_partners:'Partenaires & Infrastructure', partners_desc:'Fournisseurs de technologie et services qui alimentent le stack du protocole efixDI+.', foot_copy:'© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57 · Acte CVM 23.635/2025' },
+  ja: { flag:'🇯🇵', code:'JA', nav_home:'ホーム', nav_app:'アプリ', nav_protocol:'プロトコル', nav_listings:'リスティング', nav_team:'チーム', nav_launch:'アプリを開く →', hero_badge:'CVM 登録証券化会社 · 2025 年設立', hero_title:'<span>チーム</span>紹介', hero_sub:'資本市場のベテラン、世界クラスのエンジニア、データサイエンティストが、ブラジル固定収入と DeFi コンポーザビリティを接続するインフラを構築しています。', sec_leadership:'リーダーシップ', sec_entities:'法人', entities_desc:'efixDI+ プロトコルを支える規制されたブラジルの法人構造。', sec_partners:'パートナー & インフラ', partners_desc:'efixDI+ プロトコルスタックを動かすテクノロジーとサービスプロバイダー。', foot_copy:'© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57 · CVM 法令 23.635/2025' },
+  zh: { flag:'🇨🇳', code:'ZH', nav_home:'首页', nav_app:'应用', nav_protocol:'协议', nav_listings:'上线', nav_team:'团队', nav_launch:'打开应用 →', hero_badge:'CVM 注册证券化公司 · 成立于 2025', hero_title:'认识<span>团队</span>', hero_sub:'资本市场资深人士、世界一流的工程师和数据科学家正在构建连接巴西固定收益与 DeFi 可组合性的基础设施。', sec_leadership:'领导层', sec_entities:'法律实体', entities_desc:'支撑 efixDI+ 协议的受监管巴西企业结构。', sec_partners:'合作伙伴与基础设施', partners_desc:'为 efixDI+ 协议栈提供动力的技术和服务提供商。', foot_copy:'© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57 · CVM 法案 23.635/2025' },
+  ar: { flag:'🇸🇦', code:'AR', nav_home:'الرئيسية', nav_app:'التطبيق', nav_protocol:'البروتوكول', nav_listings:'القوائم', nav_team:'الفريق', nav_launch:'افتح التطبيق →', hero_badge:'شركة تسنيد مسجلة CVM · تأسست 2025', hero_title:'تعرف على <span>الفريق</span>', hero_sub:'قدامى أسواق رأس المال، مهندسون عالميون، وعلماء بيانات يبنون البنية التحتية التي تربط الدخل الثابت البرازيلي بقابلية تركيب DeFi.', sec_leadership:'القيادة', sec_entities:'الكيانات القانونية', entities_desc:'هيكل شركات برازيلي منظم يدعم بروتوكول efixDI+.', sec_partners:'الشركاء والبنية التحتية', partners_desc:'مزودو التكنولوجيا والخدمات الذين يشغلون حزمة بروتوكول efixDI+.', foot_copy:'© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57 · قانون CVM 23.635/2025' },
+  ko: { flag:'🇰🇷', code:'KO', nav_home:'홈', nav_app:'앱', nav_protocol:'프로토콜', nav_listings:'리스팅', nav_team:'팀', nav_launch:'앱 열기 →', hero_badge:'CVM 등록 증권화 회사 · 2025년 설립', hero_title:'<span>팀</span> 소개', hero_sub:'자본 시장 베테랑, 세계 수준의 엔지니어, 데이터 과학자들이 브라질 고정 수입과 DeFi 컴포저빌리티를 연결하는 인프라를 구축하고 있습니다.', sec_leadership:'리더십', sec_entities:'법인', entities_desc:'efixDI+ 프로토콜을 뒷받침하는 규제된 브라질 기업 구조.', sec_partners:'파트너 & 인프라', partners_desc:'efixDI+ 프로토콜 스택에 동력을 공급하는 기술 및 서비스 제공업체.', foot_copy:'© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57 · CVM 법 23.635/2025' }
+};
+let currentLang = 'en';
+function setLang(lang) {
+  if (!i18n[lang]) return;
+  currentLang = lang;
+  const t = i18n[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if (t[k]) el.innerHTML = t[k]; });
+  document.getElementById('langFlag').textContent = t.flag;
+  document.getElementById('langCode').textContent = t.code;
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+  document.querySelectorAll('.lang-opt').forEach(o => { if (o.onclick && o.onclick.toString().includes("'"+lang+"'")) o.classList.add('active'); });
+  document.getElementById('langMenu').classList.remove('open');
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.documentElement.lang = (lang === 'pt') ? 'pt-BR' : lang;
+  try { localStorage.setItem('efixLang', lang); } catch (e) {}
+}
+(function () {
+  const saved = localStorage.getItem('efixLang');
+  if (saved && i18n[saved]) { setTimeout(() => setLang(saved), 50); return; }
+  const bl = (navigator.language || '').slice(0, 2).toLowerCase();
+  const map = { pt:'pt', en:'en', es:'es', fr:'fr', ja:'ja', zh:'zh', ar:'ar', ko:'ko' };
+  if (map[bl]) setTimeout(() => setLang(map[bl]), 50);
+})();
+document.addEventListener('click', (e) => { if (!e.target.closest('.lang-sel')) document.getElementById('langMenu').classList.remove('open'); });
+</script>
 
 </body>
 </html>
