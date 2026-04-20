@@ -15,7 +15,9 @@
 <link rel="stylesheet" href="/shared/css/reset.css">
 <link rel="stylesheet" href="/shared/css/vars-syne.css">
 <link rel="stylesheet" href="/shared/css/nav-syne.css">
+<link rel="stylesheet" href="/shared/css/lang-selector.css">
 <style>
+:root{--lang-active:#22c55e}
 body{font-family:'Syne',-apple-system,sans-serif;background:var(--white);color:var(--black);line-height:1.7;min-height:100vh}
 ::selection{background:var(--black);color:var(--white)}
 
@@ -120,63 +122,78 @@ footer{border-top:1px solid var(--gray-200);padding:2rem;text-align:center}
     <img src="../logo_efix_400x400.jpg" alt="Efix" class="logo">
     <div class="nav-right">
       <div class="nav-links">
-        <a href="#how">Como Funciona</a>
-        <a href="#numbers">Rendimento</a>
-        <a href="#features">Recursos</a>
-        <a href="https://efix.finance">Protocolo</a>
+        <a href="#how" data-i18n="nav_how">Como Funciona</a>
+        <a href="#numbers" data-i18n="nav_yield">Rendimento</a>
+        <a href="#features" data-i18n="nav_features">Recursos</a>
+        <a href="https://efix.finance" data-i18n="nav_protocol">Protocolo</a>
       </div>
-      <a href="app.html" class="nav-cta">Criar Cartão</a>
+      <a href="app.html" class="nav-cta" data-i18n="nav_cta">Criar Cartão</a>
+      <div class="lang-sel" style="margin-left:12px">
+        <div class="lang-btn" onclick="document.getElementById('langMenu').classList.toggle('open')">
+          <span id="langFlag">🇧🇷</span><span id="langCode">PT</span>
+        </div>
+        <div class="lang-menu" id="langMenu">
+          <div class="lang-opt active" onclick="setLang('pt')">🇧🇷 Português</div>
+          <div class="lang-opt" onclick="setLang('en')">🇺🇸 English</div>
+          <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+          <div class="lang-opt" onclick="setLang('fr')">🇫🇷 Français</div>
+          <div class="lang-opt" onclick="setLang('ja')">🇯🇵 日本語</div>
+          <div class="lang-opt" onclick="setLang('zh')">🇨🇳 中文</div>
+          <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-opt" onclick="setLang('ko')">🇰🇷 한국어</div>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-badge"><span class="dot"></span> Sandbox Ativo</div>
-  <h1>Crédito a 5% ao Ano.<br>Não a 400%.</h1>
-  <p class="subtitle">O cartão de crédito brasileiro cobra ~400% a.a. de juros rotativos. O EFIX Card usa colateral DeFi para emprestar a ~5%. A mesma Visa. 80x mais barato.</p>
+  <div class="hero-badge"><span class="dot"></span> <span data-i18n="hero_badge">Sandbox Ativo</span></div>
+  <h1 data-i18n="hero_title">Crédito a 5% ao Ano.<br>Não a 400%.</h1>
+  <p class="subtitle" data-i18n="hero_sub">O cartão de crédito brasileiro cobra ~400% a.a. de juros rotativos. O EFIX Card usa colateral DeFi para emprestar a ~5%. A mesma Visa. 80x mais barato.</p>
   <a href="app.html" class="hero-cta">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-    Criar Meu Cartão EFIX
+    <span data-i18n="hero_cta">Criar Meu Cartão EFIX</span>
   </a>
   <div class="stats-bar">
-    <div class="stat"><div class="stat-label">Rotativo no Brasil</div><div class="stat-value" style="color:var(--red)">~400%</div></div>
-    <div class="stat"><div class="stat-label">Custo EFIX Card</div><div class="stat-value green">~5%</div></div>
-    <div class="stat"><div class="stat-label">Mais Barato</div><div class="stat-value green">80x</div></div>
-    <div class="stat"><div class="stat-label">Rendimento Líquido</div><div class="stat-value green">+10%</div></div>
+    <div class="stat"><div class="stat-label" data-i18n="s_revolving">Rotativo no Brasil</div><div class="stat-value" style="color:var(--red)">~400%</div></div>
+    <div class="stat"><div class="stat-label" data-i18n="s_cost">Custo EFIX Card</div><div class="stat-value green">~5%</div></div>
+    <div class="stat"><div class="stat-label" data-i18n="s_cheaper">Mais Barato</div><div class="stat-value green">80x</div></div>
+    <div class="stat"><div class="stat-label" data-i18n="s_yield">Rendimento Líquido</div><div class="stat-value green">+10%</div></div>
   </div>
 </section>
 
 <!-- HOW IT WORKS -->
 <section id="how">
   <div class="container">
-    <div class="section-label">Como Funciona</div>
-    <div class="section-title reveal">Do Rendimento DeFi ao Cartão Visa</div>
-    <div class="section-desc reveal">Enquanto bancos brasileiros cobram ~400% no rotativo, o EFIX Card usa colateral DeFi regulado pela CVM para oferecer crédito a ~5%. E seu colateral ainda rende ~15% CDI.</div>
+    <div class="section-label" data-i18n="sec_how">Como Funciona</div>
+    <div class="section-title reveal" data-i18n="how_title">Do Rendimento DeFi ao Cartão Visa</div>
+    <div class="section-desc reveal" data-i18n="how_desc">Enquanto bancos brasileiros cobram ~400% no rotativo, o EFIX Card usa colateral DeFi regulado pela CVM para oferecer crédito a ~5%. E seu colateral ainda rende ~15% CDI.</div>
     <div class="steps-grid">
       <div class="step-card reveal">
-        <div class="step-num">PASSO 01</div>
+        <div class="step-num" data-i18n="step_01">PASSO 01</div>
         <div class="step-icon">🏦</div>
-        <div class="step-title">Colateralize</div>
-        <div class="step-desc">Deposite efixDI como colateral no Morpho Blue. Seus tokens continuam gerando ~15% CDI APY.</div>
+        <div class="step-title" data-i18n="s1_title">Colateralize</div>
+        <div class="step-desc" data-i18n="s1_desc">Deposite efixDI como colateral no Morpho Blue. Seus tokens continuam gerando ~15% CDI APY.</div>
       </div>
       <div class="step-card reveal">
-        <div class="step-num">PASSO 02</div>
+        <div class="step-num" data-i18n="step_02">PASSO 02</div>
         <div class="step-icon">💵</div>
-        <div class="step-title">Empreste USDC</div>
-        <div class="step-desc">Pegue USDC emprestado a ~5% contra seu colateral. O spread é seu lucro.</div>
+        <div class="step-title" data-i18n="s2_title">Empreste USDC</div>
+        <div class="step-desc" data-i18n="s2_desc">Pegue USDC emprestado a ~5% contra seu colateral. O spread é seu lucro.</div>
       </div>
       <div class="step-card reveal">
-        <div class="step-num">PASSO 03</div>
+        <div class="step-num" data-i18n="step_03">PASSO 03</div>
         <div class="step-icon">💳</div>
-        <div class="step-title">Carregue o Cartão</div>
-        <div class="step-desc">Envie USDC para seu endereço de funding na rede Base. Saldo aparece instantaneamente.</div>
+        <div class="step-title" data-i18n="s3_title">Carregue o Cartão</div>
+        <div class="step-desc" data-i18n="s3_desc">Envie USDC para seu endereço de funding na rede Base. Saldo aparece instantaneamente.</div>
       </div>
       <div class="step-card reveal">
-        <div class="step-num">PASSO 04</div>
+        <div class="step-num" data-i18n="step_04">PASSO 04</div>
         <div class="step-icon">🌎</div>
-        <div class="step-title">Gaste</div>
-        <div class="step-desc">Use seu cartão Visa EFIX em qualquer estabelecimento — físico ou online — em qualquer país.</div>
+        <div class="step-title" data-i18n="s4_title">Gaste</div>
+        <div class="step-desc" data-i18n="s4_desc">Use seu cartão Visa EFIX em qualquer estabelecimento — físico ou online — em qualquer país.</div>
       </div>
     </div>
   </div>
@@ -184,37 +201,37 @@ footer{border-top:1px solid var(--gray-200);padding:2rem;text-align:center}
 
 <!-- DIAGRAM -->
 <section class="diagram-section" id="diagram">
-  <div class="section-label">Arquitetura</div>
-  <div class="section-title reveal">Fluxo de Transações e Dados</div>
+  <div class="section-label" data-i18n="sec_arch">Arquitetura</div>
+  <div class="section-title reveal" data-i18n="arch_title">Fluxo de Transações e Dados</div>
   <img src="assets/card-flow-diagram.png" alt="Arquitetura efixDI Card" class="diagram-img reveal" loading="lazy">
 </section>
 
 <!-- NUMBERS -->
 <section id="numbers">
   <div class="container">
-    <div class="section-label" style="text-align:center">Por Que Existe</div>
-    <div class="section-title reveal" style="text-align:center;max-width:700px;margin:0 auto 1rem">O Crédito no Brasil é Predatório</div>
-    <p class="section-desc reveal" style="text-align:center;max-width:600px;margin:0 auto 3rem">O rotativo do cartão de crédito brasileiro é o mais caro do mundo. O EFIX Card substitui esse custo por uma taxa DeFi de mercado — e ainda paga rendimento sobre o colateral.</p>
+    <div class="section-label" style="text-align:center" data-i18n="sec_why">Por Que Existe</div>
+    <div class="section-title reveal" style="text-align:center;max-width:700px;margin:0 auto 1rem" data-i18n="why_title">O Crédito no Brasil é Predatório</div>
+    <p class="section-desc reveal" style="text-align:center;max-width:600px;margin:0 auto 3rem" data-i18n="why_desc">O rotativo do cartão de crédito brasileiro é o mais caro do mundo. O EFIX Card substitui esse custo por uma taxa DeFi de mercado — e ainda paga rendimento sobre o colateral.</p>
     <div class="math-grid">
       <div class="math-card reveal">
         <div class="math-value" style="color:#ef4444">~400%</div>
-        <div class="math-label">Rotativo Brasil</div>
-        <div class="math-desc">Juro médio do cartão de crédito brasileiro (BCB, 2024)</div>
+        <div class="math-label" data-i18n="m1_label">Rotativo Brasil</div>
+        <div class="math-desc" data-i18n="m1_desc">Juro médio do cartão de crédito brasileiro (BCB, 2024)</div>
       </div>
       <div class="math-card reveal">
         <div class="math-value green">~5%</div>
-        <div class="math-label">Custo EFIX Card</div>
-        <div class="math-desc">USDC emprestado no Morpho Blue contra colateral efixDI</div>
+        <div class="math-label" data-i18n="m2_label">Custo EFIX Card</div>
+        <div class="math-desc" data-i18n="m2_desc">USDC emprestado no Morpho Blue contra colateral efixDI</div>
       </div>
       <div class="math-card reveal">
         <div class="math-value green">+15%</div>
-        <div class="math-label">Rendimento Colateral</div>
-        <div class="math-desc">efixDI rastreia CDI — o colateral gera rendimento enquanto você gasta</div>
+        <div class="math-label" data-i18n="m3_label">Rendimento Colateral</div>
+        <div class="math-desc" data-i18n="m3_desc">efixDI rastreia CDI — o colateral gera rendimento enquanto você gasta</div>
       </div>
       <div class="math-card reveal">
         <div class="math-value green">+10%</div>
-        <div class="math-label">Net Carry</div>
-        <div class="math-desc">Você ganha 15%, paga 5%. Lucro de 10% ao ano — gastando.</div>
+        <div class="math-label" data-i18n="m4_label">Net Carry</div>
+        <div class="math-desc" data-i18n="m4_desc">Você ganha 15%, paga 5%. Lucro de 10% ao ano — gastando.</div>
       </div>
     </div>
   </div>
@@ -223,39 +240,39 @@ footer{border-top:1px solid var(--gray-200);padding:2rem;text-align:center}
 <!-- FEATURES -->
 <section id="features">
   <div class="container">
-    <div class="section-label">Recursos</div>
-    <div class="section-title reveal">Construído Para o Futuro</div>
-    <div class="section-desc reveal">Infraestrutura de nível institucional, acessível a qualquer pessoa.</div>
+    <div class="section-label" data-i18n="sec_feat">Recursos</div>
+    <div class="section-title reveal" data-i18n="feat_title">Construído Para o Futuro</div>
+    <div class="section-desc reveal" data-i18n="feat_desc">Infraestrutura de nível institucional, acessível a qualquer pessoa.</div>
     <div class="feat-grid">
       <div class="feat-card reveal">
         <div class="feat-icon">🔐</div>
-        <div class="feat-title">CVM Regulado</div>
-        <div class="feat-desc">Colateral regulado pela CVM. Ato Declaratório 23.635/2025. CNPJ 60.756.859/0001-57.</div>
+        <div class="feat-title" data-i18n="f1_title">CVM Regulado</div>
+        <div class="feat-desc" data-i18n="f1_desc">Colateral regulado pela CVM. Ato Declaratório 23.635/2025. CNPJ 60.756.859/0001-57.</div>
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon">⛓️</div>
-        <div class="feat-title">Multi-Chain</div>
-        <div class="feat-desc">Polygon + Base via LayerZero V2. Lock-and-mint seguro entre cadeias.</div>
+        <div class="feat-title" data-i18n="f2_title">Multi-Chain</div>
+        <div class="feat-desc" data-i18n="f2_desc">Polygon + Base via LayerZero V2. Lock-and-mint seguro entre cadeias.</div>
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon">🏪</div>
-        <div class="feat-title">Visa Global</div>
-        <div class="feat-desc">Aceito em milhões de estabelecimentos. Apple Pay, Google Pay. Sem taxas cross-border.</div>
+        <div class="feat-title" data-i18n="f3_title">Visa Global</div>
+        <div class="feat-desc" data-i18n="f3_desc">Aceito em milhões de estabelecimentos. Apple Pay, Google Pay. Sem taxas cross-border.</div>
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon">📊</div>
-        <div class="feat-title">Monitorização Dual</div>
-        <div class="feat-desc">Logs on-chain via Alchemy + transações de cartão via Bridge API. Transparência total.</div>
+        <div class="feat-title" data-i18n="f4_title">Monitorização Dual</div>
+        <div class="feat-desc" data-i18n="f4_desc">Logs on-chain via Alchemy + transações de cartão via Bridge API. Transparência total.</div>
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon">🤖</div>
-        <div class="feat-title">Smart Wallets</div>
-        <div class="feat-desc">Login por email via Alchemy. Sem seed phrases. Abstração de gas. UX Web2.</div>
+        <div class="feat-title" data-i18n="f5_title">Smart Wallets</div>
+        <div class="feat-desc" data-i18n="f5_desc">Login por email via Alchemy. Sem seed phrases. Abstração de gas. UX Web2.</div>
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon">⚡</div>
-        <div class="feat-title">Funding Instantâneo</div>
-        <div class="feat-desc">USDC na rede Base carrega o cartão em segundos. Sem espera, sem intermediários.</div>
+        <div class="feat-title" data-i18n="f6_title">Funding Instantâneo</div>
+        <div class="feat-desc" data-i18n="f6_desc">USDC na rede Base carrega o cartão em segundos. Sem espera, sem intermediários.</div>
       </div>
     </div>
   </div>
@@ -263,23 +280,23 @@ footer{border-top:1px solid var(--gray-200);padding:2rem;text-align:center}
 
 <!-- CTA -->
 <section class="cta-section">
-  <div class="section-label" style="text-align:center">Comece Agora</div>
-  <h2 class="cta-title reveal">Pare de Pagar 400%.<br>Comece a Ganhar 10%.</h2>
-  <p class="cta-desc reveal">O mesmo Visa. O mesmo poder de compra. Mas ao invés de pagar os maiores juros do mundo, você ganha rendimento enquanto gasta.</p>
-  <a href="app.html" class="cta-btn reveal">Criar Meu Cartão EFIX →</a>
+  <div class="section-label" style="text-align:center" data-i18n="sec_cta">Comece Agora</div>
+  <h2 class="cta-title reveal" data-i18n="cta_title">Pare de Pagar 400%.<br>Comece a Ganhar 10%.</h2>
+  <p class="cta-desc reveal" data-i18n="cta_desc">O mesmo Visa. O mesmo poder de compra. Mas ao invés de pagar os maiores juros do mundo, você ganha rendimento enquanto gasta.</p>
+  <a href="app.html" class="cta-btn reveal" data-i18n="cta_btn">Criar Meu Cartão EFIX →</a>
 </section>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-links">
-    <a href="https://efix.finance">Protocolo</a>
-    <a href="https://efix.finance/app">App</a>
+    <a href="https://efix.finance" data-i18n="foot_protocol">Protocolo</a>
+    <a href="https://efix.finance/app" data-i18n="foot_app">App</a>
     <a href="https://github.com/Develop-ltda" target="_blank">GitHub</a>
-    <a href="mailto:ernesto.otero@efix.finance">Contato</a>
+    <a href="mailto:ernesto.otero@efix.finance" data-i18n="foot_contact">Contato</a>
   </div>
   <div class="footer-legal">
-    EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — CVM Ato Declaratório 23.635/2025<br>
-    Produto em fase sandbox. Cartão emitido por Bridge (Stripe). Rendimentos passados não garantem rendimentos futuros.
+    <span data-i18n="foot_legal1">EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — CVM Ato Declaratório 23.635/2025</span><br>
+    <span data-i18n="foot_legal2">Produto em fase sandbox. Cartão emitido por Bridge (Stripe). Rendimentos passados não garantem rendimentos futuros.</span>
   </div>
 </footer>
 
@@ -289,6 +306,245 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.15 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+<!-- ═══ i18n — 8 LANGUAGES (PT is source) ═══ -->
+<script>
+const i18n = {
+  pt: { flag:'🇧🇷', code:'PT',
+    nav_how:'Como Funciona', nav_yield:'Rendimento', nav_features:'Recursos', nav_protocol:'Protocolo', nav_cta:'Criar Cartão',
+    hero_badge:'Sandbox Ativo', hero_title:'Crédito a 5% ao Ano.<br>Não a 400%.', hero_sub:'O cartão de crédito brasileiro cobra ~400% a.a. de juros rotativos. O EFIX Card usa colateral DeFi para emprestar a ~5%. A mesma Visa. 80x mais barato.', hero_cta:'Criar Meu Cartão EFIX',
+    s_revolving:'Rotativo no Brasil', s_cost:'Custo EFIX Card', s_cheaper:'Mais Barato', s_yield:'Rendimento Líquido',
+    sec_how:'Como Funciona', how_title:'Do Rendimento DeFi ao Cartão Visa', how_desc:'Enquanto bancos brasileiros cobram ~400% no rotativo, o EFIX Card usa colateral DeFi regulado pela CVM para oferecer crédito a ~5%. E seu colateral ainda rende ~15% CDI.',
+    step_01:'PASSO 01', step_02:'PASSO 02', step_03:'PASSO 03', step_04:'PASSO 04',
+    s1_title:'Colateralize', s1_desc:'Deposite efixDI como colateral no Morpho Blue. Seus tokens continuam gerando ~15% CDI APY.',
+    s2_title:'Empreste USDC', s2_desc:'Pegue USDC emprestado a ~5% contra seu colateral. O spread é seu lucro.',
+    s3_title:'Carregue o Cartão', s3_desc:'Envie USDC para seu endereço de funding na rede Base. Saldo aparece instantaneamente.',
+    s4_title:'Gaste', s4_desc:'Use seu cartão Visa EFIX em qualquer estabelecimento — físico ou online — em qualquer país.',
+    sec_arch:'Arquitetura', arch_title:'Fluxo de Transações e Dados',
+    sec_why:'Por Que Existe', why_title:'O Crédito no Brasil é Predatório', why_desc:'O rotativo do cartão de crédito brasileiro é o mais caro do mundo. O EFIX Card substitui esse custo por uma taxa DeFi de mercado — e ainda paga rendimento sobre o colateral.',
+    m1_label:'Rotativo Brasil', m1_desc:'Juro médio do cartão de crédito brasileiro (BCB, 2024)',
+    m2_label:'Custo EFIX Card', m2_desc:'USDC emprestado no Morpho Blue contra colateral efixDI',
+    m3_label:'Rendimento Colateral', m3_desc:'efixDI rastreia CDI — o colateral gera rendimento enquanto você gasta',
+    m4_label:'Net Carry', m4_desc:'Você ganha 15%, paga 5%. Lucro de 10% ao ano — gastando.',
+    sec_feat:'Recursos', feat_title:'Construído Para o Futuro', feat_desc:'Infraestrutura de nível institucional, acessível a qualquer pessoa.',
+    f1_title:'CVM Regulado', f1_desc:'Colateral regulado pela CVM. Ato Declaratório 23.635/2025. CNPJ 60.756.859/0001-57.',
+    f2_title:'Multi-Chain', f2_desc:'Polygon + Base via LayerZero V2. Lock-and-mint seguro entre cadeias.',
+    f3_title:'Visa Global', f3_desc:'Aceito em milhões de estabelecimentos. Apple Pay, Google Pay. Sem taxas cross-border.',
+    f4_title:'Monitorização Dual', f4_desc:'Logs on-chain via Alchemy + transações de cartão via Bridge API. Transparência total.',
+    f5_title:'Smart Wallets', f5_desc:'Login por email via Alchemy. Sem seed phrases. Abstração de gas. UX Web2.',
+    f6_title:'Funding Instantâneo', f6_desc:'USDC na rede Base carrega o cartão em segundos. Sem espera, sem intermediários.',
+    sec_cta:'Comece Agora', cta_title:'Pare de Pagar 400%.<br>Comece a Ganhar 10%.', cta_desc:'O mesmo Visa. O mesmo poder de compra. Mas ao invés de pagar os maiores juros do mundo, você ganha rendimento enquanto gasta.', cta_btn:'Criar Meu Cartão EFIX →',
+    foot_protocol:'Protocolo', foot_app:'App', foot_contact:'Contato', foot_legal1:'EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — CVM Ato Declaratório 23.635/2025', foot_legal2:'Produto em fase sandbox. Cartão emitido por Bridge (Stripe). Rendimentos passados não garantem rendimentos futuros.'
+  },
+  en: { flag:'🇺🇸', code:'EN',
+    nav_how:'How it Works', nav_yield:'Yield', nav_features:'Features', nav_protocol:'Protocol', nav_cta:'Create Card',
+    hero_badge:'Sandbox Live', hero_title:'5% Credit Per Year.<br>Not 400%.', hero_sub:'Brazilian credit cards charge ~400% a.a. revolving interest. EFIX Card uses DeFi collateral to lend at ~5%. The same Visa. 80x cheaper.', hero_cta:'Create My EFIX Card',
+    s_revolving:'Brazil Revolving', s_cost:'EFIX Card Cost', s_cheaper:'Cheaper', s_yield:'Net Yield',
+    sec_how:'How It Works', how_title:'From DeFi Yield to Visa Card', how_desc:'While Brazilian banks charge ~400% revolving, EFIX Card uses CVM-regulated DeFi collateral to offer credit at ~5%. And your collateral still earns ~15% CDI.',
+    step_01:'STEP 01', step_02:'STEP 02', step_03:'STEP 03', step_04:'STEP 04',
+    s1_title:'Collateralize', s1_desc:'Deposit efixDI as collateral on Morpho Blue. Your tokens keep earning ~15% CDI APY.',
+    s2_title:'Borrow USDC', s2_desc:'Borrow USDC at ~5% against your collateral. The spread is your profit.',
+    s3_title:'Load the Card', s3_desc:'Send USDC to your funding address on Base. Balance appears instantly.',
+    s4_title:'Spend', s4_desc:'Use your EFIX Visa card at any merchant — physical or online — in any country.',
+    sec_arch:'Architecture', arch_title:'Transaction and Data Flow',
+    sec_why:'Why It Exists', why_title:'Brazilian Credit Is Predatory', why_desc:'Brazilian credit card revolving rates are the highest in the world. EFIX Card replaces that cost with a market DeFi rate — and pays yield on the collateral too.',
+    m1_label:'Brazil Revolving', m1_desc:'Average Brazilian credit card interest (BCB, 2024)',
+    m2_label:'EFIX Card Cost', m2_desc:'USDC borrowed on Morpho Blue against efixDI collateral',
+    m3_label:'Collateral Yield', m3_desc:'efixDI tracks CDI — collateral earns while you spend',
+    m4_label:'Net Carry', m4_desc:'You earn 15%, pay 5%. 10% profit per year — while spending.',
+    sec_feat:'Features', feat_title:'Built For the Future', feat_desc:'Institutional-grade infrastructure, accessible to anyone.',
+    f1_title:'CVM Regulated', f1_desc:'CVM-regulated collateral. Act 23.635/2025. CNPJ 60.756.859/0001-57.',
+    f2_title:'Multi-Chain', f2_desc:'Polygon + Base via LayerZero V2. Secure lock-and-mint between chains.',
+    f3_title:'Global Visa', f3_desc:'Accepted at millions of merchants. Apple Pay, Google Pay. No cross-border fees.',
+    f4_title:'Dual Monitoring', f4_desc:'On-chain logs via Alchemy + card transactions via Bridge API. Full transparency.',
+    f5_title:'Smart Wallets', f5_desc:'Email login via Alchemy. No seed phrases. Gas abstraction. Web2 UX.',
+    f6_title:'Instant Funding', f6_desc:'USDC on Base loads the card in seconds. No waiting, no intermediaries.',
+    sec_cta:'Start Now', cta_title:'Stop Paying 400%.<br>Start Earning 10%.', cta_desc:'The same Visa. The same purchasing power. But instead of paying the world\'s highest interest, you earn yield while spending.', cta_btn:'Create My EFIX Card →',
+    foot_protocol:'Protocol', foot_app:'App', foot_contact:'Contact', foot_legal1:'EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — CVM Act 23.635/2025', foot_legal2:'Sandbox product. Card issued by Bridge (Stripe). Past yields do not guarantee future yields.'
+  },
+  es: { flag:'🇪🇸', code:'ES',
+    nav_how:'Cómo Funciona', nav_yield:'Rendimiento', nav_features:'Características', nav_protocol:'Protocolo', nav_cta:'Crear Tarjeta',
+    hero_badge:'Sandbox Activo', hero_title:'Crédito al 5% Anual.<br>No al 400%.', hero_sub:'La tarjeta de crédito brasileña cobra ~400% anual de interés rotativo. EFIX Card usa colateral DeFi para prestar al ~5%. La misma Visa. 80x más barato.', hero_cta:'Crear Mi Tarjeta EFIX',
+    s_revolving:'Rotativo Brasil', s_cost:'Costo EFIX Card', s_cheaper:'Más Barato', s_yield:'Rendimiento Neto',
+    sec_how:'Cómo Funciona', how_title:'Del Rendimiento DeFi a la Tarjeta Visa', how_desc:'Mientras los bancos brasileños cobran ~400%, EFIX Card usa colateral DeFi regulado por CVM para ofrecer crédito al ~5%. Y tu colateral aún rinde ~15% CDI.',
+    step_01:'PASO 01', step_02:'PASO 02', step_03:'PASO 03', step_04:'PASO 04',
+    s1_title:'Coloca Colateral', s1_desc:'Deposita efixDI como colateral en Morpho Blue. Tus tokens siguen ganando ~15% CDI APY.',
+    s2_title:'Pide USDC Prestado', s2_desc:'Pide USDC al ~5% contra tu colateral. El spread es tu ganancia.',
+    s3_title:'Carga la Tarjeta', s3_desc:'Envía USDC a tu dirección de funding en Base. Saldo aparece al instante.',
+    s4_title:'Gasta', s4_desc:'Usa tu tarjeta EFIX Visa en cualquier comercio — físico u online — en cualquier país.',
+    sec_arch:'Arquitectura', arch_title:'Flujo de Transacciones y Datos',
+    sec_why:'Por Qué Existe', why_title:'El Crédito Brasileño Es Predatorio', why_desc:'Las tasas de crédito brasileñas son las más altas del mundo. EFIX Card reemplaza ese costo con una tasa DeFi — y paga rendimiento sobre el colateral.',
+    m1_label:'Rotativo Brasil', m1_desc:'Interés medio de tarjeta de crédito brasileña (BCB, 2024)',
+    m2_label:'Costo EFIX Card', m2_desc:'USDC prestado en Morpho Blue contra colateral efixDI',
+    m3_label:'Rendimiento Colateral', m3_desc:'efixDI rastrea CDI — el colateral gana mientras gastas',
+    m4_label:'Net Carry', m4_desc:'Ganas 15%, pagas 5%. 10% de ganancia anual — gastando.',
+    sec_feat:'Características', feat_title:'Construido Para el Futuro', feat_desc:'Infraestructura institucional accesible a cualquier persona.',
+    f1_title:'CVM Regulado', f1_desc:'Colateral regulado por CVM. Acto 23.635/2025. CNPJ 60.756.859/0001-57.',
+    f2_title:'Multi-Chain', f2_desc:'Polygon + Base vía LayerZero V2. Lock-and-mint seguro entre cadenas.',
+    f3_title:'Visa Global', f3_desc:'Aceptado en millones de comercios. Apple Pay, Google Pay. Sin comisiones cross-border.',
+    f4_title:'Monitoreo Dual', f4_desc:'Logs on-chain vía Alchemy + transacciones de tarjeta vía Bridge API.',
+    f5_title:'Smart Wallets', f5_desc:'Login por email vía Alchemy. Sin seed phrases. Abstracción de gas. UX Web2.',
+    f6_title:'Funding Instantáneo', f6_desc:'USDC en Base carga la tarjeta en segundos. Sin esperas, sin intermediarios.',
+    sec_cta:'Empieza Ya', cta_title:'Deja de Pagar 400%.<br>Empieza a Ganar 10%.', cta_desc:'La misma Visa. El mismo poder de compra. Pero en vez de pagar los intereses más altos del mundo, ganas rendimiento mientras gastas.', cta_btn:'Crear Mi Tarjeta EFIX →',
+    foot_protocol:'Protocolo', foot_app:'App', foot_contact:'Contacto', foot_legal1:'EFIX Plataforma de Tokenización e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — Acto CVM 23.635/2025', foot_legal2:'Producto en fase sandbox. Tarjeta emitida por Bridge (Stripe). Rendimientos pasados no garantizan rendimientos futuros.'
+  },
+  fr: { flag:'🇫🇷', code:'FR',
+    nav_how:'Fonctionnement', nav_yield:'Rendement', nav_features:'Caractéristiques', nav_protocol:'Protocole', nav_cta:'Créer une Carte',
+    hero_badge:'Sandbox Actif', hero_title:'Crédit à 5% Par An.<br>Pas à 400%.', hero_sub:'La carte de crédit brésilienne coûte ~400% d\'intérêts revolving. EFIX Card utilise un collatéral DeFi pour prêter à ~5%. La même Visa. 80x moins cher.', hero_cta:'Créer Ma Carte EFIX',
+    s_revolving:'Revolving Brésil', s_cost:'Coût EFIX Card', s_cheaper:'Moins Cher', s_yield:'Rendement Net',
+    sec_how:'Fonctionnement', how_title:'Du Rendement DeFi à la Carte Visa', how_desc:'Pendant que les banques brésiliennes prennent ~400%, EFIX Card utilise du collatéral DeFi régulé par la CVM pour offrir du crédit à ~5%.',
+    step_01:'ÉTAPE 01', step_02:'ÉTAPE 02', step_03:'ÉTAPE 03', step_04:'ÉTAPE 04',
+    s1_title:'Collatéraliser', s1_desc:'Déposez efixDI comme collatéral sur Morpho Blue. Vos tokens continuent de générer ~15% CDI APY.',
+    s2_title:'Emprunter USDC', s2_desc:'Empruntez USDC à ~5% contre votre collatéral. Le spread est votre profit.',
+    s3_title:'Charger la Carte', s3_desc:'Envoyez USDC à votre adresse de funding sur Base. Solde apparaît instantanément.',
+    s4_title:'Dépenser', s4_desc:'Utilisez votre carte Visa EFIX chez n\'importe quel commerçant — physique ou en ligne — dans n\'importe quel pays.',
+    sec_arch:'Architecture', arch_title:'Flux de Transactions et Données',
+    sec_why:'Pourquoi Ça Existe', why_title:'Le Crédit Brésilien Est Prédateur', why_desc:'Le revolving des cartes de crédit brésiliennes est le plus cher au monde. EFIX Card remplace ce coût par un taux DeFi de marché.',
+    m1_label:'Revolving Brésil', m1_desc:'Taux moyen carte de crédit brésilienne (BCB, 2024)',
+    m2_label:'Coût EFIX Card', m2_desc:'USDC emprunté sur Morpho Blue contre collatéral efixDI',
+    m3_label:'Rendement Collatéral', m3_desc:'efixDI suit le CDI — le collatéral génère du rendement pendant que vous dépensez',
+    m4_label:'Net Carry', m4_desc:'Vous gagnez 15%, payez 5%. 10% de profit par an — en dépensant.',
+    sec_feat:'Caractéristiques', feat_title:'Construit Pour l\'Avenir', feat_desc:'Infrastructure de niveau institutionnel, accessible à tous.',
+    f1_title:'Régulé par la CVM', f1_desc:'Collatéral régulé par la CVM. Acte 23.635/2025. CNPJ 60.756.859/0001-57.',
+    f2_title:'Multi-Chain', f2_desc:'Polygon + Base via LayerZero V2. Lock-and-mint sécurisé entre chaînes.',
+    f3_title:'Visa Global', f3_desc:'Accepté chez des millions de commerçants. Apple Pay, Google Pay. Sans frais cross-border.',
+    f4_title:'Monitoring Dual', f4_desc:'Logs on-chain via Alchemy + transactions carte via Bridge API. Transparence totale.',
+    f5_title:'Smart Wallets', f5_desc:'Connexion par email via Alchemy. Pas de seed phrase. Abstraction de gas. UX Web2.',
+    f6_title:'Funding Instantané', f6_desc:'USDC sur Base charge la carte en secondes. Pas d\'attente, pas d\'intermédiaires.',
+    sec_cta:'Commencez Maintenant', cta_title:'Arrêtez de Payer 400%.<br>Commencez à Gagner 10%.', cta_desc:'La même Visa. Le même pouvoir d\'achat. Mais au lieu de payer les intérêts les plus élevés du monde, vous gagnez du rendement en dépensant.', cta_btn:'Créer Ma Carte EFIX →',
+    foot_protocol:'Protocole', foot_app:'App', foot_contact:'Contact', foot_legal1:'EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — Acte CVM 23.635/2025', foot_legal2:'Produit en phase sandbox. Carte émise par Bridge (Stripe). Les rendements passés ne garantissent pas les rendements futurs.'
+  },
+  ja: { flag:'🇯🇵', code:'JA',
+    nav_how:'仕組み', nav_yield:'利回り', nav_features:'特徴', nav_protocol:'プロトコル', nav_cta:'カード作成',
+    hero_badge:'サンドボックス稼働中', hero_title:'年率 5% のクレジット。<br>400% ではない。', hero_sub:'ブラジルのクレジットカードは年率 ~400% のリボルビング金利を請求します。EFIX Card は DeFi 担保を使用して ~5% で貸し出します。同じ Visa。80 倍安い。', hero_cta:'EFIX カードを作成',
+    s_revolving:'ブラジル リボルビング', s_cost:'EFIX カード費用', s_cheaper:'より安い', s_yield:'純利回り',
+    sec_how:'仕組み', how_title:'DeFi 利回りから Visa カードへ', how_desc:'ブラジルの銀行が ~400% を請求している間、EFIX Card は CVM 規制の DeFi 担保を使用して ~5% でクレジットを提供。担保は ~15% CDI を獲得し続けます。',
+    step_01:'ステップ 01', step_02:'ステップ 02', step_03:'ステップ 03', step_04:'ステップ 04',
+    s1_title:'担保化', s1_desc:'Morpho Blue に efixDI を担保として預け入れ。トークンは ~15% CDI APY を獲得し続けます。',
+    s2_title:'USDC 借入', s2_desc:'担保に対して ~5% で USDC を借入。スプレッドが利益です。',
+    s3_title:'カードに入金', s3_desc:'Base ネットワークの資金調達アドレスに USDC を送信。残高は即座に反映。',
+    s4_title:'利用', s4_desc:'物理・オンラインの任意の加盟店で EFIX Visa カードを使用。任意の国で。',
+    sec_arch:'アーキテクチャ', arch_title:'取引とデータフロー',
+    sec_why:'なぜ存在するか', why_title:'ブラジルのクレジットは略奪的', why_desc:'ブラジルのクレジットカードリボルビング金利は世界一高い。EFIX Card はそのコストを市場の DeFi レートに置き換え、担保利回りも支払います。',
+    m1_label:'ブラジル リボルビング', m1_desc:'ブラジルのクレジットカード平均金利 (BCB, 2024)',
+    m2_label:'EFIX カード費用', m2_desc:'efixDI 担保に対して Morpho Blue で借りた USDC',
+    m3_label:'担保利回り', m3_desc:'efixDI は CDI を追跡 — 支出中に担保が利回りを生成',
+    m4_label:'ネットキャリー', m4_desc:'15% を稼ぎ、5% を支払い。年 10% の利益 — 支出しながら。',
+    sec_feat:'特徴', feat_title:'未来のために構築', feat_desc:'機関投資家レベルのインフラ、誰でもアクセス可能。',
+    f1_title:'CVM 規制', f1_desc:'CVM 規制担保。法令 23.635/2025。CNPJ 60.756.859/0001-57。',
+    f2_title:'マルチチェーン', f2_desc:'LayerZero V2 経由の Polygon + Base。チェーン間の安全な lock-and-mint。',
+    f3_title:'グローバル Visa', f3_desc:'数百万の加盟店で使用可能。Apple Pay、Google Pay。クロスボーダー手数料なし。',
+    f4_title:'デュアルモニタリング', f4_desc:'Alchemy 経由のオンチェーンログ + Bridge API 経由のカード取引。完全な透明性。',
+    f5_title:'スマートウォレット', f5_desc:'Alchemy 経由のメールログイン。シードフレーズなし。ガス抽象化。Web2 UX。',
+    f6_title:'即時資金調達', f6_desc:'Base 上の USDC が数秒でカードにロード。待機時間なし、仲介者なし。',
+    sec_cta:'今すぐ始める', cta_title:'400% の支払いをやめる。<br>10% の獲得を始める。', cta_desc:'同じ Visa。同じ購買力。しかし世界最高の金利を支払う代わりに、支出中に利回りを得ます。', cta_btn:'EFIX カードを作成 →',
+    foot_protocol:'プロトコル', foot_app:'アプリ', foot_contact:'連絡', foot_legal1:'EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — CVM 法令 23.635/2025', foot_legal2:'サンドボックス製品。カードは Bridge (Stripe) が発行。過去の利回りは将来の利回りを保証しません。'
+  },
+  zh: { flag:'🇨🇳', code:'ZH',
+    nav_how:'运作原理', nav_yield:'收益', nav_features:'特点', nav_protocol:'协议', nav_cta:'创建卡',
+    hero_badge:'沙盒活跃', hero_title:'年利率 5% 的信用。<br>不是 400%。', hero_sub:'巴西信用卡收取约 400% 年利率的循环利息。EFIX Card 使用 DeFi 抵押品以约 5% 放贷。相同的 Visa。便宜 80 倍。', hero_cta:'创建我的 EFIX 卡',
+    s_revolving:'巴西循环利率', s_cost:'EFIX 卡费用', s_cheaper:'更便宜', s_yield:'净收益',
+    sec_how:'运作原理', how_title:'从 DeFi 收益到 Visa 卡', how_desc:'当巴西银行收取约 400% 的循环利率时,EFIX Card 使用 CVM 监管的 DeFi 抵押品以约 5% 提供信用。您的抵押品仍然赚取约 15% CDI。',
+    step_01:'步骤 01', step_02:'步骤 02', step_03:'步骤 03', step_04:'步骤 04',
+    s1_title:'抵押', s1_desc:'在 Morpho Blue 存入 efixDI 作为抵押品。您的代币继续赚取约 15% CDI APY。',
+    s2_title:'借 USDC', s2_desc:'以约 5% 借入 USDC 对抗您的抵押品。利差就是您的利润。',
+    s3_title:'加载卡', s3_desc:'将 USDC 发送到 Base 网络上的资金地址。余额立即显示。',
+    s4_title:'消费', s4_desc:'在任何商户使用您的 EFIX Visa 卡 — 实体或在线 — 在任何国家。',
+    sec_arch:'架构', arch_title:'交易和数据流',
+    sec_why:'为什么存在', why_title:'巴西信用是掠夺性的', why_desc:'巴西信用卡循环利率是世界最高。EFIX Card 用市场 DeFi 利率取代这一成本 — 并对抵押品支付收益。',
+    m1_label:'巴西循环', m1_desc:'巴西信用卡平均利息 (BCB, 2024)',
+    m2_label:'EFIX 卡费用', m2_desc:'在 Morpho Blue 上对抗 efixDI 抵押品借入的 USDC',
+    m3_label:'抵押品收益', m3_desc:'efixDI 跟踪 CDI — 您消费时抵押品赚取收益',
+    m4_label:'净套利', m4_desc:'您赚 15%,支付 5%。每年 10% 利润 — 消费时。',
+    sec_feat:'特点', feat_title:'为未来而建', feat_desc:'机构级基础设施,任何人均可访问。',
+    f1_title:'CVM 监管', f1_desc:'CVM 监管抵押品。法案 23.635/2025。CNPJ 60.756.859/0001-57。',
+    f2_title:'多链', f2_desc:'通过 LayerZero V2 的 Polygon + Base。跨链安全的锁定与铸造。',
+    f3_title:'全球 Visa', f3_desc:'数百万商户接受。Apple Pay、Google Pay。无跨境费用。',
+    f4_title:'双重监控', f4_desc:'通过 Alchemy 的链上日志 + 通过 Bridge API 的卡交易。完全透明。',
+    f5_title:'智能钱包', f5_desc:'通过 Alchemy 的邮箱登录。无种子短语。Gas 抽象。Web2 UX。',
+    f6_title:'即时融资', f6_desc:'Base 上的 USDC 在数秒内加载卡。无等待,无中介。',
+    sec_cta:'立即开始', cta_title:'停止支付 400%。<br>开始赚取 10%。', cta_desc:'相同的 Visa。相同的购买力。但不是支付世界最高利息,而是在消费时赚取收益。', cta_btn:'创建我的 EFIX 卡 →',
+    foot_protocol:'协议', foot_app:'应用', foot_contact:'联系', foot_legal1:'EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — CVM 法案 23.635/2025', foot_legal2:'沙盒产品。卡由 Bridge (Stripe) 发行。过去的收益不保证未来的收益。'
+  },
+  ar: { flag:'🇸🇦', code:'AR',
+    nav_how:'كيف يعمل', nav_yield:'العائد', nav_features:'الميزات', nav_protocol:'البروتوكول', nav_cta:'إنشاء بطاقة',
+    hero_badge:'Sandbox نشط', hero_title:'ائتمان بنسبة 5% سنوياً.<br>ليس 400%.', hero_sub:'بطاقات الائتمان البرازيلية تفرض ~400% سنوياً من الفائدة المتجددة. EFIX Card يستخدم ضمان DeFi للإقراض بنسبة ~5%. نفس Visa. أرخص بـ 80x.', hero_cta:'أنشئ بطاقة EFIX',
+    s_revolving:'متجدد البرازيل', s_cost:'تكلفة EFIX Card', s_cheaper:'أرخص', s_yield:'العائد الصافي',
+    sec_how:'كيف يعمل', how_title:'من عائد DeFi إلى بطاقة Visa', how_desc:'بينما تفرض البنوك البرازيلية ~400%، يستخدم EFIX Card ضمان DeFi منظم من CVM لتقديم ائتمان بنسبة ~5%.',
+    step_01:'الخطوة 01', step_02:'الخطوة 02', step_03:'الخطوة 03', step_04:'الخطوة 04',
+    s1_title:'ضع ضماناً', s1_desc:'أودع efixDI كضمان على Morpho Blue. رموزك تواصل كسب ~15% CDI APY.',
+    s2_title:'اقترض USDC', s2_desc:'اقترض USDC بنسبة ~5% مقابل ضمانك. الفرق ربحك.',
+    s3_title:'اشحن البطاقة', s3_desc:'أرسل USDC إلى عنوان التمويل على Base. الرصيد يظهر فوراً.',
+    s4_title:'أنفق', s4_desc:'استخدم بطاقة EFIX Visa في أي متجر — مادي أو عبر الإنترنت — في أي بلد.',
+    sec_arch:'البنية', arch_title:'تدفق المعاملات والبيانات',
+    sec_why:'لماذا يوجد', why_title:'الائتمان البرازيلي مفترس', why_desc:'أسعار الفائدة المتجددة لبطاقات الائتمان البرازيلية هي الأعلى في العالم. EFIX Card يستبدل تلك التكلفة بسعر DeFi سوقي.',
+    m1_label:'متجدد البرازيل', m1_desc:'متوسط فائدة بطاقة الائتمان البرازيلية (BCB، 2024)',
+    m2_label:'تكلفة EFIX Card', m2_desc:'USDC مقترض على Morpho Blue مقابل ضمان efixDI',
+    m3_label:'عائد الضمان', m3_desc:'efixDI يتتبع CDI — الضمان يكسب بينما تنفق',
+    m4_label:'صافي الحمل', m4_desc:'تكسب 15%، تدفع 5%. ربح 10% سنوياً — أثناء الإنفاق.',
+    sec_feat:'الميزات', feat_title:'مبني للمستقبل', feat_desc:'بنية تحتية بمستوى مؤسسي، متاحة لأي شخص.',
+    f1_title:'منظم CVM', f1_desc:'ضمان منظم من CVM. القانون 23.635/2025. CNPJ 60.756.859/0001-57.',
+    f2_title:'متعدد السلاسل', f2_desc:'Polygon + Base عبر LayerZero V2. lock-and-mint آمن بين السلاسل.',
+    f3_title:'Visa عالمية', f3_desc:'مقبولة في ملايين التجار. Apple Pay، Google Pay. بدون رسوم عبر الحدود.',
+    f4_title:'مراقبة مزدوجة', f4_desc:'سجلات على السلسلة عبر Alchemy + معاملات البطاقة عبر Bridge API. شفافية كاملة.',
+    f5_title:'محافظ ذكية', f5_desc:'تسجيل دخول بالإيميل عبر Alchemy. بدون عبارات seed. تجريد gas. UX Web2.',
+    f6_title:'تمويل فوري', f6_desc:'USDC على Base يشحن البطاقة في ثوانٍ. بدون انتظار، بدون وسطاء.',
+    sec_cta:'ابدأ الآن', cta_title:'توقف عن دفع 400%.<br>ابدأ في كسب 10%.', cta_desc:'نفس Visa. نفس القوة الشرائية. لكن بدلاً من دفع أعلى فائدة في العالم، تكسب عائداً أثناء الإنفاق.', cta_btn:'أنشئ بطاقة EFIX ←',
+    foot_protocol:'البروتوكول', foot_app:'التطبيق', foot_contact:'الاتصال', foot_legal1:'EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — قانون CVM 23.635/2025', foot_legal2:'منتج sandbox. البطاقة صادرة من Bridge (Stripe). العوائد السابقة لا تضمن العوائد المستقبلية.'
+  },
+  ko: { flag:'🇰🇷', code:'KO',
+    nav_how:'작동 원리', nav_yield:'수익', nav_features:'특징', nav_protocol:'프로토콜', nav_cta:'카드 만들기',
+    hero_badge:'샌드박스 활성', hero_title:'연 5% 크레딧.<br>400%가 아닌.', hero_sub:'브라질 신용 카드는 약 400% 연리 리볼빙 이자를 부과합니다. EFIX Card는 DeFi 담보를 사용하여 약 5%로 대출합니다. 같은 Visa. 80배 저렴.', hero_cta:'내 EFIX 카드 만들기',
+    s_revolving:'브라질 리볼빙', s_cost:'EFIX 카드 비용', s_cheaper:'더 저렴', s_yield:'순 수익',
+    sec_how:'작동 원리', how_title:'DeFi 수익에서 Visa 카드로', how_desc:'브라질 은행이 약 400%를 부과하는 동안, EFIX Card는 CVM 규제 DeFi 담보를 사용하여 약 5%로 크레딧을 제공합니다. 담보는 여전히 약 15% CDI를 벌어들입니다.',
+    step_01:'단계 01', step_02:'단계 02', step_03:'단계 03', step_04:'단계 04',
+    s1_title:'담보 예치', s1_desc:'Morpho Blue에 efixDI를 담보로 예치. 토큰은 약 15% CDI APY를 계속 벌어들입니다.',
+    s2_title:'USDC 대출', s2_desc:'담보에 대해 약 5%로 USDC 대출. 스프레드가 이익입니다.',
+    s3_title:'카드 충전', s3_desc:'Base 네트워크의 펀딩 주소로 USDC 전송. 잔액 즉시 반영.',
+    s4_title:'사용', s4_desc:'어느 상점에서든 EFIX Visa 카드 사용 — 오프라인 또는 온라인 — 어느 국가에서나.',
+    sec_arch:'아키텍처', arch_title:'거래 및 데이터 흐름',
+    sec_why:'왜 존재하는가', why_title:'브라질 크레딧은 약탈적', why_desc:'브라질 신용 카드 리볼빙 금리는 세계 최고입니다. EFIX Card는 그 비용을 시장 DeFi 금리로 대체하고 담보에 수익도 지급합니다.',
+    m1_label:'브라질 리볼빙', m1_desc:'브라질 신용 카드 평균 이자 (BCB, 2024)',
+    m2_label:'EFIX 카드 비용', m2_desc:'efixDI 담보에 대해 Morpho Blue에서 대출한 USDC',
+    m3_label:'담보 수익', m3_desc:'efixDI는 CDI를 추적 — 소비하는 동안 담보가 수익 창출',
+    m4_label:'순 캐리', m4_desc:'15% 벌고, 5% 지불. 연 10% 이익 — 소비하면서.',
+    sec_feat:'특징', feat_title:'미래를 위해 구축', feat_desc:'기관급 인프라, 누구나 접근 가능.',
+    f1_title:'CVM 규제', f1_desc:'CVM 규제 담보. 법 23.635/2025. CNPJ 60.756.859/0001-57.',
+    f2_title:'멀티체인', f2_desc:'LayerZero V2를 통한 Polygon + Base. 체인 간 안전한 lock-and-mint.',
+    f3_title:'글로벌 Visa', f3_desc:'수백만 상점에서 수락. Apple Pay, Google Pay. 크로스보더 수수료 없음.',
+    f4_title:'이중 모니터링', f4_desc:'Alchemy를 통한 온체인 로그 + Bridge API를 통한 카드 거래. 완전한 투명성.',
+    f5_title:'스마트 지갑', f5_desc:'Alchemy를 통한 이메일 로그인. 시드 문구 없음. Gas 추상화. Web2 UX.',
+    f6_title:'즉시 펀딩', f6_desc:'Base의 USDC가 카드를 몇 초 만에 충전. 대기 없음, 중개자 없음.',
+    sec_cta:'지금 시작', cta_title:'400% 지불 중단.<br>10% 획득 시작.', cta_desc:'같은 Visa. 같은 구매력. 하지만 세계 최고 이자를 지불하는 대신, 소비하면서 수익을 얻습니다.', cta_btn:'내 EFIX 카드 만들기 →',
+    foot_protocol:'프로토콜', foot_app:'앱', foot_contact:'연락', foot_legal1:'EFIX Plataforma de Tokenização e Crowdfunding Ltda — CNPJ 60.756.859/0001-57 — CVM 법 23.635/2025', foot_legal2:'샌드박스 제품. 카드는 Bridge (Stripe) 발행. 과거 수익이 미래 수익을 보장하지 않습니다.'
+  }
+};
+let currentLang = 'pt';
+function setLang(lang) {
+  if (!i18n[lang]) return;
+  currentLang = lang;
+  const t = i18n[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if (t[k]) el.innerHTML = t[k]; });
+  document.getElementById('langFlag').textContent = t.flag;
+  document.getElementById('langCode').textContent = t.code;
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+  document.querySelectorAll('.lang-opt').forEach(o => { if (o.onclick && o.onclick.toString().includes("'"+lang+"'")) o.classList.add('active'); });
+  document.getElementById('langMenu').classList.remove('open');
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.documentElement.lang = (lang === 'pt') ? 'pt-BR' : lang;
+  const titles = { pt:'EFIX Card — O Primeiro Cartão DeFi do Mundo', en:'EFIX Card — The World\'s First DeFi Card', es:'EFIX Card — La Primera Tarjeta DeFi del Mundo', fr:'EFIX Card — La Première Carte DeFi au Monde', ja:'EFIX Card — 世界初の DeFi カード', zh:'EFIX Card — 世界首张 DeFi 卡', ar:'EFIX Card — أول بطاقة DeFi في العالم', ko:'EFIX Card — 세계 최초의 DeFi 카드' };
+  document.title = titles[lang] || titles.pt;
+  try { localStorage.setItem('efixLang', lang); } catch (e) {}
+}
+(function () {
+  const saved = localStorage.getItem('efixLang');
+  if (saved && i18n[saved]) { setTimeout(() => setLang(saved), 50); return; }
+  const bl = (navigator.language || '').slice(0, 2).toLowerCase();
+  const map = { pt:'pt', en:'en', es:'es', fr:'fr', ja:'ja', zh:'zh', ar:'ar', ko:'ko' };
+  if (map[bl] && map[bl] !== 'pt') setTimeout(() => setLang(map[bl]), 50);
+})();
+document.addEventListener('click', (e) => { if (!e.target.closest('.lang-sel')) document.getElementById('langMenu').classList.remove('open'); });
 </script>
 
 </body>
