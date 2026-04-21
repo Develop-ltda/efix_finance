@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
+<script src="/shared/js/ga4.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTR Equity — HBTRE1 (pure equity, 2/3 sale vote) on Base</title>
+<meta name="description" content="HBTRE1 is the pure-equity Haus BTR share. No CDI proxy during construction — holders receive rent pro-rata once operational. Sale requires an on-chain 2/3 DAO vote. Live on Base, Reg S Cat 3.">
+<meta property="og:title" content="BTR Equity — HBTRE1 (pure equity, 2/3 sale vote)">
+<meta property="og:description" content="Pure-equity Build-to-Rent on Base. No dividends during construction. 2/3 on-chain vote to sell. Governor role irreversibly locked.">
+<meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/reset.css">
+<link rel="stylesheet" href="/shared/css/lang-selector.css">
+<style>
+/* Blue accent variant — #2563eb */
+:root{--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--lang-active:#2563eb}
+html{scroll-behavior:smooth}
+body{font-family:'Syne',-apple-system,sans-serif;background:#fff;color:#0a0a0a;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:#0a0a0a;color:#fff}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(0,0,0,0.06);padding:0 2rem;height:56px}
+.nav-content{max-width:1200px;margin:0 auto;height:100%;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-weight:800;font-size:20px;text-decoration:none;color:#0a0a0a;letter-spacing:-0.5px}
+.nav-logo .dot{color:#2563eb}
+.nav-links{display:flex;gap:20px;align-items:center;list-style:none}
+.nav-links a{color:#737373;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;transition:color .3s}
+.nav-links a:hover{color:#0a0a0a}
+.nav-cta{padding:0.5rem 1.25rem;border-radius:6px;font-size:0.8rem;letter-spacing:0.01em;font-weight:600;text-decoration:none;transition:all .3s}
+.nav-cta-outline{background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4}
+.nav-cta-outline:hover{border-color:#0a0a0a;transform:translateY(-1px)}
+.nav-cta-primary{background:#0a0a0a;color:#fff;border:none}
+.nav-cta-primary:hover{background:#262626;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+
+/* Hero */
+.hero{padding:10rem 2rem 3rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%)}
+.hero-content{position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:2.5rem}
+.hero-tag .dot{width:6px;height:6px;background:#2563eb;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+h1{font-size:clamp(1.75rem,3.5vw,2.75rem);font-weight:700;color:#0a0a0a;margin-bottom:1.25rem;letter-spacing:-0.025em;line-height:1.2}
+h1 span{background:linear-gradient(to right,#a3a3a3,#2563eb,#a3a3a3);background-size:200% auto;color:transparent;-webkit-background-clip:text;background-clip:text;animation:shine 4s linear infinite}
+@keyframes shine{to{background-position:200% center}}
+.subtitle{color:#737373;font-size:0.95rem;font-weight:400;max-width:620px;margin:0 auto 0.5rem;line-height:1.75}
+.hero-sub-pt{color:#a3a3a3;font-size:0.85rem;font-style:italic;max-width:560px;margin:0 auto 2.5rem;line-height:1.75}
+.hero-actions{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap}
+.btn{padding:0.75rem 1.75rem;border-radius:8px;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all .3s;font-family:inherit;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 4px 20px rgba(37,99,235,0.25)}
+.btn-secondary{background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4}
+.btn-secondary:hover{border-color:#0a0a0a;transform:translateY(-1px)}
+.container{max-width:1100px;margin:0 auto;padding:0 2rem}
+
+/* Stats */
+.stats-strip{border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.stat-item{padding:1.75rem 2rem;border-right:1px solid #e5e5e5;transition:background .3s}
+.stat-item:last-child{border-right:none}
+.stat-item:hover{background:#f5f5f5}
+.stat-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem}
+.stat-value{font-family:'Space Mono',monospace;font-size:1.35rem;font-weight:700;color:#0a0a0a}
+
+/* Sections */
+.section{padding:5rem 0}
+.section-border{border-top:1px solid #e5e5e5}
+.section-gray{background:#f5f5f5}
+.section-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem}
+.section-title{font-size:clamp(1.5rem,2.5vw,2rem);font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:0.75rem}
+.section-desc{color:#737373;font-size:0.92rem;max-width:640px;margin-bottom:2.5rem;line-height:1.7}
+
+/* Flow Grid */
+.flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.flow-step{padding:2rem 1.75rem;border-right:1px solid #e5e5e5;transition:background .3s}
+.flow-step:last-child{border-right:none}
+.flow-step:hover{background:#f5f5f5}
+.flow-number{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.25rem}
+.flow-icon{font-family:'Space Mono',monospace;font-size:0.75rem;color:#2563eb;letter-spacing:0.02em;margin-bottom:0.75rem;font-weight:700}
+.flow-title{font-weight:700;font-size:0.92rem;margin-bottom:0.4rem}
+.flow-desc{font-size:0.8rem;color:#737373;line-height:1.7}
+
+/* Lifecycle Timeline */
+.timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;margin-top:2rem}
+.phase{padding:1.5rem 1.5rem;border-right:1px solid #e5e5e5;position:relative;transition:background .3s}
+.phase:last-child{border-right:none}
+.phase:hover{background:#f5f5f5}
+.phase-months{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem}
+.phase-name{font-weight:700;font-size:0.9rem;margin-bottom:0.35rem}
+.phase-yield{font-family:'Space Mono',monospace;font-size:0.72rem;color:#2563eb;margin-bottom:0.4rem}
+.phase-desc{font-size:0.78rem;color:#737373;line-height:1.65}
+
+/* Governance diagram */
+.gov-box{border:1px solid #e5e5e5;border-radius:12px;background:#fff;margin-top:1rem;overflow:hidden}
+.gov-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid #e5e5e5;transition:background .2s}
+.gov-row:last-child{border-bottom:none}
+.gov-row:hover{background:#fafbfc}
+.gov-step{background:#f5f5f5;padding:1.25rem 1.25rem;font-family:'Space Mono',monospace;font-size:0.72rem;color:#2563eb;font-weight:700;border-right:1px solid #e5e5e5;letter-spacing:0.05em}
+.gov-desc{padding:1.25rem 1.5rem;font-size:0.86rem;line-height:1.7;color:#525252}
+.gov-desc strong{color:#0a0a0a;font-weight:700}
+.gov-desc code{font-family:'Space Mono',monospace;font-size:0.75rem;color:#1d4ed8;background:#eff6ff;padding:2px 6px;border-radius:4px}
+
+/* Card Grid */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.card{background:#fff;padding:2rem 1.75rem;transition:background .3s;position:relative}
+.card:hover{background:#f5f5f5}
+.card-icon{font-family:'Space Mono',monospace;font-size:0.72rem;color:#2563eb;letter-spacing:0.04em;margin-bottom:0.8rem;font-weight:700}
+.card-title{font-size:0.95rem;font-weight:700;margin-bottom:0.4rem}
+.card-desc{font-size:0.82rem;color:#737373;line-height:1.75}
+
+/* Contracts */
+.chain-card{border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;transition:all .3s;max-width:680px}
+.chain-card:hover{border-color:#a3a3a3}
+.chain-header{padding:1rem 1.25rem;background:#f5f5f5;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;gap:0.6rem}
+.chain-name{font-weight:700;font-size:0.9rem}
+.chain-id{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;margin-left:auto}
+.contract-row{display:flex;justify-content:space-between;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e5e5e5;transition:background .2s;gap:1rem}
+.contract-row:last-child{border-bottom:none}
+.contract-row:hover{background:#f5f5f5}
+.contract-label{font-size:0.8rem;color:#525252;flex:0 0 auto}
+.contract-addr{font-family:'Space Mono',monospace;font-size:0.7rem;color:#0a0a0a;text-decoration:none;transition:color .2s;text-align:right}
+.contract-addr:hover{color:#2563eb}
+
+/* Reg Grid */
+.reg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.reg-item{background:#fff;padding:1.5rem;transition:background .2s}
+.reg-item:hover{background:#f5f5f5}
+.reg-label{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.35rem}
+.reg-value{font-size:0.9rem;font-weight:700}
+.reg-value.mono{font-family:'Space Mono',monospace;font-size:0.8rem}
+
+/* Side-by-side vs Hybrid */
+.vs-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;margin-top:1rem}
+.vs-item{background:#fff;padding:1.75rem;transition:background .2s}
+.vs-item.this{background:linear-gradient(135deg,rgba(37,99,235,0.03),transparent)}
+.vs-item.this:hover{background:linear-gradient(135deg,rgba(37,99,235,0.08),transparent)}
+.vs-item:hover{background:#fafbfc}
+.vs-label{font-family:'Space Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem;font-weight:700}
+.vs-item.this .vs-label{color:#2563eb}
+.vs-item:not(.this) .vs-label{color:#d97706}
+.vs-name{font-size:1.05rem;font-weight:700;margin-bottom:0.75rem}
+.vs-list{list-style:none;padding:0;margin:0}
+.vs-list li{font-size:0.82rem;color:#525252;padding:0.3rem 0;line-height:1.6}
+.vs-list li::before{content:'→ ';color:#a3a3a3}
+
+/* CTA */
+.cta-section{padding:5rem 0;text-align:center;border-top:1px solid #e5e5e5}
+.cta-desc{color:#737373;font-size:0.92rem;margin:0 auto 2rem;max-width:480px}
+
+/* Footer */
+footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:start;gap:2rem;flex-wrap:wrap}
+.footer-brand-text{font-size:0.8rem;color:#737373;margin-top:0.75rem;max-width:300px;line-height:1.7}
+.footer-links{display:flex;gap:3rem}
+.footer-col h4{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem}
+.footer-col a{display:block;color:#525252;text-decoration:none;font-size:0.8rem;padding:0.3rem 0;transition:color .2s}
+.footer-col a:hover{color:#0a0a0a}
+.footer-bottom{max-width:1100px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid #e5e5e5;font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;display:flex;justify-content:space-between}
+
+/* Animations */
+.fade-up{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.stagger-1{transition-delay:.05s}.stagger-2{transition-delay:.1s}.stagger-3{transition-delay:.15s}.stagger-4{transition-delay:.2s}
+
+/* Mobile */
+@media(max-width:900px){
+  .nav-links{display:none}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .flow-grid,.timeline{grid-template-columns:repeat(2,1fr)}
+  .flow-step:nth-child(2),.phase:nth-child(2){border-right:none}
+  .flow-step:nth-child(1),.flow-step:nth-child(2),.phase:nth-child(1),.phase:nth-child(2){border-bottom:1px solid #e5e5e5}
+  .card-grid,.vs-grid{grid-template-columns:1fr}
+  .reg-grid{grid-template-columns:1fr}
+  .gov-row{grid-template-columns:1fr}
+  .gov-step{border-right:none;border-bottom:1px solid #e5e5e5}
+  .footer-inner{flex-direction:column}
+  .footer-bottom{flex-direction:column;gap:0.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-content">
+    <a href="/btr/" class="nav-logo" title="Back to BTR hub">BTR<span class="dot">.</span> <span style="font-size:12px;font-weight:500;color:#737373;margin-left:6px">/ Equity</span></a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <ul class="nav-links">
+        <li><a href="#how" data-i18n="nav_how">How it Works</a></li>
+        <li><a href="#lifecycle" data-i18n="nav_lifecycle">Lifecycle</a></li>
+        <li><a href="#governance" data-i18n="nav_gov">Governance</a></li>
+        <li><a href="#features" data-i18n="nav_features">Features</a></li>
+        <li><a href="#contracts" data-i18n="nav_contracts">Contracts</a></li>
+        <li><a href="/btr/" data-i18n="nav_hub">← Hub</a></li>
+      </ul>
+      <a href="https://basescan.org/address/0x399a5060060bDff51976a09ea4fAC30fCDFcD2f6#code" target="_blank" class="nav-cta nav-cta-primary" data-i18n="nav_cta">View HBTRE1</a>
+      <div class="lang-sel">
+        <div class="lang-btn" onclick="document.getElementById('langMenu').classList.toggle('open')">
+          <span id="langFlag">🇺🇸</span><span id="langCode">EN</span>
+        </div>
+        <div class="lang-menu" id="langMenu">
+          <div class="lang-opt" onclick="setLang('pt')">🇧🇷 Português</div>
+          <div class="lang-opt active" onclick="setLang('en')">🇺🇸 English</div>
+          <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+          <div class="lang-opt" onclick="setLang('fr')">🇫🇷 Français</div>
+          <div class="lang-opt" onclick="setLang('ja')">🇯🇵 日本語</div>
+          <div class="lang-opt" onclick="setLang('zh')">🇨🇳 中文</div>
+          <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-opt" onclick="setLang('ko')">🇰🇷 한국어</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-tag fade-up">
+      <span class="dot"></span>
+      <span data-i18n="hero_badge">Haus BTR Equity Pool #1 live on Base</span>
+      <span style="margin:0 8px;color:#d4d4d4">·</span>
+      <a href="/btr/" style="color:#737373;text-decoration:none;border-bottom:1px dotted #d4d4d4" data-i18n="hero_hub_link">← BTR Hub</a>
+    </div>
+    <h1 class="fade-up stagger-1" data-i18n="hero_title">Pure-Equity Build-to-Rent<br>with <span>2/3 Sale Vote</span></h1>
+    <p class="subtitle fade-up stagger-2" data-i18n="hero_sub">
+      HBTRE1 is a fractional share of Brazilian Build-to-Rent. No dividends during construction. Rent pro-rata once operational.
+      Sale of the underlying requires an on-chain 2/3 supermajority — the Governor role is irreversibly locked so even the admin Safe can't bypass it.
+    </p>
+    <p class="hero-sub-pt fade-up stagger-2" data-i18n="hero_pt">
+      Equity puro, voto puro — cada holder com sua parte, cada venda com seu voto.
+    </p>
+    <div class="hero-actions fade-up stagger-3">
+      <a href="https://basescan.org/address/0x399a5060060bDff51976a09ea4fAC30fCDFcD2f6#code" target="_blank" class="btn btn-primary" data-i18n="hero_cta1">View on Basescan</a>
+      <a href="/btr/#compare" class="btn btn-secondary" data-i18n="hero_cta2">Compare vs Hybrid</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-label" data-i18n="stat_supply">Supply</div>
+      <div class="stat-value">1,000,000</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label" data-i18n="stat_phase">Phase</div>
+      <div class="stat-value" data-i18n="stat_phase_v">Offering</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label" data-i18n="stat_quorum">Sale Quorum</div>
+      <div class="stat-value">2/3</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label" data-i18n="stat_network">Network</div>
+      <div class="stat-value">Base</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section section-border" id="how">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_how">How it works</div>
+    <div class="section-title" data-i18n="how_title">Rent only when operating. Sale only by vote.</div>
+    <div class="section-desc" data-i18n="how_desc">
+      HBTRE1 strips the construction-phase yield entirely. Holders wait for habite-se, then receive rent pro-rata via snapshot epochs. The exit is decided on-chain by holders, not the operator.
+    </div>
+    <div class="flow-grid">
+      <div class="flow-step fade-up">
+        <div class="flow-number" data-i18n="step_01">Step 01</div>
+        <div class="flow-icon" data-i18n="s1_icon">Subscribe</div>
+        <div class="flow-title" data-i18n="s1_title">Buy HBTRE1</div>
+        <div class="flow-desc" data-i18n="s1_desc">Subscribe at par from the Lobie-Haus-Btr Safe treasury. Reg S Cat 3. No U.S. persons in primary. Free transfers after.</div>
+      </div>
+      <div class="flow-step fade-up stagger-1">
+        <div class="flow-number" data-i18n="step_02">Step 02</div>
+        <div class="flow-icon" data-i18n="s2_icon">Wait</div>
+        <div class="flow-title" data-i18n="s2_title">Construction Phase</div>
+        <div class="flow-desc" data-i18n="s2_desc">Zero dividends while the building is constructed. Tokens remain freely transferable. <code>depositRent()</code> reverts. No fixed-income framing, no SPE cash obligation.</div>
+      </div>
+      <div class="flow-step fade-up stagger-2">
+        <div class="flow-number" data-i18n="step_03">Step 03</div>
+        <div class="flow-icon" data-i18n="s3_icon">Earn</div>
+        <div class="flow-title" data-i18n="s3_title">Collect Rent</div>
+        <div class="flow-desc" data-i18n="s3_desc">After habite-se, Lobie Safe deposits monthly BRLE rent. Snapshot epochs freeze your balance at that block; call <code>claim(epochIds[])</code> to pull your pro-rata share.</div>
+      </div>
+      <div class="flow-step fade-up stagger-3">
+        <div class="flow-number" data-i18n="step_04">Step 04</div>
+        <div class="flow-icon" data-i18n="s4_icon">Vote</div>
+        <div class="flow-title" data-i18n="s4_title">Decide on Sale</div>
+        <div class="flow-desc" data-i18n="s4_desc">Any holder may propose a sale. Vote passes only at ≥2/3 of votes cast (50% quorum). Timelock delay. Winners claim-and-burn for pro-rata proceeds.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIFECYCLE -->
+<section class="section section-gray" id="lifecycle">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_life">Lifecycle</div>
+    <div class="section-title" data-i18n="life_title">Four phases. One-way. Enforced on-chain.</div>
+    <div class="section-desc" data-i18n="life_desc">
+      The contract enforces the phase machine strictly: rent can only flow during OPERATIONAL, sale can only execute via GOVERNOR_ROLE (the Timelock, after a 2/3 vote). No upgrades. No admin override.
+    </div>
+    <div class="timeline">
+      <div class="phase fade-up">
+        <div class="phase-months" data-i18n="p1_months">Phase 0</div>
+        <div class="phase-name" data-i18n="p1_name">Offering</div>
+        <div class="phase-yield" data-i18n="p1_yield">Primary distribution</div>
+        <div class="phase-desc" data-i18n="p1_desc">Tokens distributed to initial holders. Free transfers. No rent flows. Operator advances on funds-closed milestone.</div>
+      </div>
+      <div class="phase fade-up stagger-1">
+        <div class="phase-months" data-i18n="p2_months">Phase 1</div>
+        <div class="phase-name" data-i18n="p2_name">Construction</div>
+        <div class="phase-yield" data-i18n="p2_yield">Zero dividends</div>
+        <div class="phase-desc" data-i18n="p2_desc">Building under construction. <code>depositRent()</code> reverts with WrongPhase. Tokens freely transferable. Operator advances on habite-se.</div>
+      </div>
+      <div class="phase fade-up stagger-2">
+        <div class="phase-months" data-i18n="p3_months">Phase 2</div>
+        <div class="phase-name" data-i18n="p3_name">Operational</div>
+        <div class="phase-yield" data-i18n="p3_yield">Rent pro-rata</div>
+        <div class="phase-desc" data-i18n="p3_desc">Lobie Safe deposits monthly rent. Each deposit creates a snapshot epoch. Holders claim pro-rata by epochId. Transfers remain free.</div>
+      </div>
+      <div class="phase fade-up stagger-3">
+        <div class="phase-months" data-i18n="p4_months">Phase 3</div>
+        <div class="phase-name" data-i18n="p4_name">Sold</div>
+        <div class="phase-yield" data-i18n="p4_yield">Claim-and-burn</div>
+        <div class="phase-desc" data-i18n="p4_desc">After 2/3 vote + Timelock + execution. <code>totalSupplyAtSale</code> is frozen. Holders burn tokens for pro-rata share of proceeds. Terminal state.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GOVERNANCE -->
+<section class="section section-border" id="governance">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_gov">Governance</div>
+    <div class="section-title" data-i18n="gov_title">The 2/3 sale vote, end to end</div>
+    <div class="section-desc" data-i18n="gov_desc">
+      Standard OpenZeppelin Governor with one critical override: proposals whose calldata targets <code>initiateSale(uint256)</code> on the Share require 2/3 supermajority. Every other proposal (pause, parameter change) passes at simple majority. Detection happens at propose-time and is publicly flagged via <code>isSaleProposal[id]</code>.
+    </div>
+    <div class="gov-box">
+      <div class="gov-row">
+        <div class="gov-step" data-i18n="gv_s1">01 · Deposit</div>
+        <div class="gov-desc" data-i18n="gv_d1">Buyer/operator transfers BRLE sale proceeds to the Share contract via <code>depositSaleProceeds(amount)</code>. A public event confirms funds are on-hand <strong>before</strong> voters vote.</div>
+      </div>
+      <div class="gov-row">
+        <div class="gov-step" data-i18n="gv_s2">02 · Propose</div>
+        <div class="gov-desc" data-i18n="gv_d2">Any holder with ≥ 1% of supply calls <code>governor.propose(share, 0, initiateSale(proceeds), description)</code>. Governor inspects calldata and flags <code>isSaleProposal[id] = true</code>.</div>
+      </div>
+      <div class="gov-row">
+        <div class="gov-step" data-i18n="gv_s3">03 · Vote</div>
+        <div class="gov-desc" data-i18n="gv_d3">1-day voting delay, 7-day voting period. Quorum <strong>50%</strong> of supply must cast. Then: <code>forVotes × 3 ≥ (for + against) × 2</code> — i.e., ≥2/3 of decisive votes must be FOR.</div>
+      </div>
+      <div class="gov-row">
+        <div class="gov-step" data-i18n="gv_s4">04 · Queue</div>
+        <div class="gov-desc" data-i18n="gv_d4">If succeeded, anyone calls <code>governor.queue()</code>. Timelock holds the transaction for <strong>2 days</strong>, giving the ecosystem time to react before execution.</div>
+      </div>
+      <div class="gov-row">
+        <div class="gov-step" data-i18n="gv_s5">05 · Execute</div>
+        <div class="gov-desc" data-i18n="gv_d5">After timelock delay, anyone calls <code>governor.execute()</code>. Timelock calls <code>share.initiateSale()</code> → phase moves to SOLD, <code>totalSupplyAtSale</code> freezes.</div>
+      </div>
+      <div class="gov-row">
+        <div class="gov-step" data-i18n="gv_s6">06 · Claim &amp; Burn</div>
+        <div class="gov-desc" data-i18n="gv_d6">Each holder calls <code>claimSaleProceeds()</code> — tokens burn, BRLE transfers out at pro-rata of the frozen supply. Idempotent, non-reentrant, pull-model.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- vs HYBRID -->
+<section class="section section-gray">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_vs">Variant comparison</div>
+    <div class="section-title" data-i18n="vs_title">What's different from the Hybrid variant</div>
+    <div class="section-desc" data-i18n="vs_desc">
+      Both variants tokenize Brazilian BTR on Base. The equity variant drops two features the hybrid has, and adds one the hybrid doesn't.
+    </div>
+    <div class="vs-grid">
+      <div class="vs-item fade-up">
+        <div class="vs-label">Hybrid · SALRIO</div>
+        <div class="vs-name" data-i18n="vs_h_name">Debt + Equity</div>
+        <ul class="vs-list">
+          <li data-i18n="vs_h1">CDI proxy yield during construction</li>
+          <li data-i18n="vs_h2">Batog 2018 dividend math</li>
+          <li data-i18n="vs_h3">Operator Safe decides sale</li>
+          <li data-i18n="vs_h4">Exclusion list for DEX pools</li>
+        </ul>
+      </div>
+      <div class="vs-item this fade-up stagger-1">
+        <div class="vs-label">Equity · HBTRE1 (this page)</div>
+        <div class="vs-name" data-i18n="vs_e_name">Pure Equity</div>
+        <ul class="vs-list">
+          <li data-i18n="vs_e1"><strong>No</strong> construction dividends</li>
+          <li data-i18n="vs_e2">Snapshot epochs (ERC-20 Votes) — no Batog</li>
+          <li data-i18n="vs_e3"><strong>2/3 on-chain vote</strong> decides sale</li>
+          <li data-i18n="vs_e4">Governor role <strong>irreversibly locked</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section section-border" id="features">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_features">Features</div>
+    <div class="section-title" data-i18n="feat_title">Minimal surface area. Maximum immutability.</div>
+    <div class="section-desc" data-i18n="feat_desc">
+      Every feature exists to tighten the guarantee or reduce attack surface. No construction-yield plumbing, no exclusion list, no dividend-per-share counters. The contract does less — on purpose.
+    </div>
+    <div class="card-grid">
+      <div class="card fade-up">
+        <div class="card-icon" data-i18n="c1_icon">Phase Gate</div>
+        <div class="card-title" data-i18n="c1_title">Rent only during OPERATIONAL</div>
+        <div class="card-desc" data-i18n="c1_desc">The phase enum is enforced strictly: depositRent reverts in OFFERING, CONSTRUCTION, and SOLD. Pre-operational cash obligations simply cannot be created on the SPE. Cleaner legal.</div>
+      </div>
+      <div class="card fade-up stagger-1">
+        <div class="card-icon" data-i18n="c2_icon">Snapshot Epochs</div>
+        <div class="card-title" data-i18n="c2_title">Historical-balance pro-rata</div>
+        <div class="card-desc" data-i18n="c2_desc">Each depositRent pushes an epoch snapshotted at the prior block. Claim reads getPastVotes(holder, block) × amount / getPastTotalSupply(block). No Batog counters, no exclusion list, no settle-on-transfer.</div>
+      </div>
+      <div class="card fade-up stagger-2">
+        <div class="card-icon" data-i18n="c3_icon">2/3 Override</div>
+        <div class="card-title" data-i18n="c3_title">Sale-specific supermajority</div>
+        <div class="card-desc" data-i18n="c3_desc">Governor._voteSucceeded detects sale proposals by calldata selector. Applies 2/3 threshold on sale, simple majority everywhere else. Abstain votes count for quorum, not for the ratio.</div>
+      </div>
+      <div class="card fade-up stagger-3">
+        <div class="card-icon" data-i18n="c4_icon">Role Lock</div>
+        <div class="card-title" data-i18n="c4_title">Irreversible handoff</div>
+        <div class="card-desc" data-i18n="c4_desc">After granting GOVERNOR_ROLE to Timelock, the Safe calls lockGovernorRole(). The role's admin becomes itself — even DEFAULT_ADMIN can no longer grant or revoke it. The 2/3 vote is the only path.</div>
+      </div>
+      <div class="card fade-up">
+        <div class="card-icon" data-i18n="c5_icon">Delegation Off</div>
+        <div class="card-title" data-i18n="c5_title">Auto-self-delegation</div>
+        <div class="card-desc" data-i18n="c5_desc">Explicit delegate() reverts. Balances auto-self-delegate on receive, so historical voting power always equals historical balance. Rent math and governance math align perfectly by construction.</div>
+      </div>
+      <div class="card fade-up stagger-1">
+        <div class="card-icon" data-i18n="c6_icon">Claim-and-Burn</div>
+        <div class="card-title" data-i18n="c6_title">Terminal redemption</div>
+        <div class="card-desc" data-i18n="c6_desc">After sale, holders call claimSaleProceeds() — tokens burn, BRLE transfers out. Frozen totalSupplyAtSale is the pro-rata divisor. Clean finality; no phantom supply on a settled asset.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTRACTS -->
+<section class="section section-gray" id="contracts">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_contracts">Smart Contracts</div>
+    <div class="section-title" data-i18n="contracts_title">Verified on Basescan · deployed 2026-04-21</div>
+    <div class="section-desc" data-i18n="contracts_desc">Solidity 0.8.24, OpenZeppelin v5.4, EVM target Cancun, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path.</div>
+    <div class="chain-card">
+      <div class="chain-header">
+        <span style="font-size:18px">🔵</span>
+        <span class="chain-name">Base Mainnet</span>
+        <span class="chain-id">Chain 8453</span>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">HausBTREquityShare (HBTRE1)</span>
+        <a href="https://basescan.org/address/0x399a5060060bDff51976a09ea4fAC30fCDFcD2f6#code" target="_blank" class="contract-addr">0x399a…D2f6</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">TimelockController (2d delay)</span>
+        <a href="https://basescan.org/address/0xF8746EB0839224ea4E2b510915A633077a14Ce2C#code" target="_blank" class="contract-addr">0xF874…Ce2C</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">BTREquityGovernor</span>
+        <a href="https://basescan.org/address/0x42b8A7668e2367F3c6f3CCc1202521874D880AFD#code" target="_blank" class="contract-addr">0x42b8…0AFD</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">Lobie-Haus-Btr Safe (2-of-3)</span>
+        <a href="https://app.safe.global/base:0xa09d5E0001d1FdD2b59072E96c91aa79ed3e40D6" target="_blank" class="contract-addr">0xa09d…40D6</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">BRLE (rent / sale asset)</span>
+        <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank" class="contract-addr">0x7D12…82F6</a>
+      </div>
+      <div class="contract-row">
+        <span class="contract-label">Lobie Unit Registry</span>
+        <a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank" class="contract-addr">0xd8C3…4638</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section class="section section-border" id="compliance">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_comp">Compliance</div>
+    <div class="section-title" data-i18n="comp_title">Same framework, cleaner framing</div>
+    <div class="section-desc" data-i18n="comp_desc">Reg S Category 3 with 12-month distribution compliance period. EFIX Securitizadora issues. Lobie operates. Harris &amp; Trotter audits. The pure-equity structure simplifies the legal memo — no fixed-income yield obligation on the SPE during construction.</div>
+    <div class="reg-grid">
+      <div class="reg-item fade-up">
+        <div class="reg-label" data-i18n="r1_label">Issuer</div>
+        <div class="reg-value">EFIX Securitizadora S.A.</div>
+      </div>
+      <div class="reg-item fade-up stagger-1">
+        <div class="reg-label" data-i18n="r2_label">Offering Framework</div>
+        <div class="reg-value" data-i18n="r2_value">Reg S Category 3</div>
+      </div>
+      <div class="reg-item fade-up stagger-2">
+        <div class="reg-label" data-i18n="r3_label">SPE</div>
+        <div class="reg-value" data-i18n="r3_value">Haus BTR Equity Pool 1</div>
+      </div>
+      <div class="reg-item fade-up stagger-3">
+        <div class="reg-label" data-i18n="r4_label">Legal Vehicle</div>
+        <div class="reg-value" data-i18n="r4_value">Wyoming LLC (BTS)</div>
+      </div>
+      <div class="reg-item fade-up stagger-4">
+        <div class="reg-label" data-i18n="r5_label">Operator</div>
+        <div class="reg-value">Lobie</div>
+      </div>
+      <div class="reg-item fade-up">
+        <div class="reg-label" data-i18n="r6_label">Auditor</div>
+        <div class="reg-value">Harris &amp; Trotter</div>
+      </div>
+      <div class="reg-item fade-up stagger-1">
+        <div class="reg-label" data-i18n="r7_label">Governance</div>
+        <div class="reg-value mono" data-i18n="r7_value">OZ Governor + Timelock</div>
+      </div>
+      <div class="reg-item fade-up stagger-2">
+        <div class="reg-label" data-i18n="r8_label">Sale Quorum</div>
+        <div class="reg-value mono" data-i18n="r8_value">2/3 supermajority</div>
+      </div>
+      <div class="reg-item fade-up stagger-3">
+        <div class="reg-label" data-i18n="r9_label">Custody</div>
+        <div class="reg-value" data-i18n="r9_value">2-of-3 Safe</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2 class="section-title fade-up" data-i18n="cta_title">Pure equity in Brazilian real estate</h2>
+    <p class="cta-desc fade-up stagger-1" data-i18n="cta_desc">Fractional ownership with rent only when earned, and a 2/3 on-chain vote on every sale. Live on Base.</p>
+    <div class="hero-actions fade-up stagger-2">
+      <a href="https://basescan.org/address/0x399a5060060bDff51976a09ea4fAC30fCDFcD2f6#code" target="_blank" class="btn btn-primary" data-i18n="cta_p">View HBTRE1 on Basescan</a>
+      <a href="/btr/" class="btn btn-secondary" data-i18n="cta_s">← Compare both variants</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="nav-logo" style="margin-bottom:0.5rem">BTR<span class="dot">.</span> <span style="font-size:13px;font-weight:500;color:#737373;margin-left:4px">Equity</span></div>
+      <p class="footer-brand-text" data-i18n="foot_brand">Pure-equity Build-to-Rent on Base. Rent when operational, 2/3 on-chain sale vote, irreversibly locked governance. Issued by EFIX Securitizadora, operated by Lobie.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4 data-i18n="foot_protocol">Protocol</h4>
+        <a href="https://basescan.org/address/0x399a5060060bDff51976a09ea4fAC30fCDFcD2f6#code" target="_blank">HBTRE1</a>
+        <a href="https://basescan.org/address/0x42b8A7668e2367F3c6f3CCc1202521874D880AFD#code" target="_blank">Governor</a>
+        <a href="https://basescan.org/address/0xF8746EB0839224ea4E2b510915A633077a14Ce2C#code" target="_blank">Timelock</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="foot_related">Related</h4>
+        <a href="/btr/">BTR Hub</a>
+        <a href="/btr-hybrid/">Hybrid · SALRIO</a>
+        <a href="/lobie/">Lobie</a>
+        <a href="/brle/">BRLE</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="foot_efix">EFIX</h4>
+        <a href="https://x.com/efix_finance" target="_blank" data-i18n="foot_twitter">Twitter</a>
+        <a href="https://github.com/Develop-ltda" target="_blank" data-i18n="foot_github">GitHub</a>
+        <a href="/app/wallet/" data-i18n="foot_wallet">Wallet</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span data-i18n="foot_legal">EFIX Securitizadora S.A. — CVM Act 23.635/2025 — Reg S Cat 3</span>
+    <span>CNPJ 00.000.000/0001-00</span>
+  </div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+
+<!-- ═══ i18n — EN + PT native, other 6 fall back to EN gracefully ═══ -->
+<script>
+const i18n = {
+  en: { flag:'🇺🇸', code:'EN',
+    nav_how:'How it Works', nav_lifecycle:'Lifecycle', nav_gov:'Governance', nav_features:'Features', nav_contracts:'Contracts', nav_hub:'← Hub', nav_cta:'View HBTRE1',
+    hero_badge:'Haus BTR Equity Pool #1 live on Base', hero_hub_link:'← BTR Hub',
+    hero_title:'Pure-Equity Build-to-Rent<br>with <span>2/3 Sale Vote</span>',
+    hero_sub:"HBTRE1 is a fractional share of Brazilian Build-to-Rent. No dividends during construction. Rent pro-rata once operational. Sale of the underlying requires an on-chain 2/3 supermajority — the Governor role is irreversibly locked so even the admin Safe can't bypass it.",
+    hero_pt:'Equity puro, voto puro — cada holder com sua parte, cada venda com seu voto.',
+    hero_cta1:'View on Basescan', hero_cta2:'Compare vs Hybrid',
+    stat_supply:'Supply', stat_phase:'Phase', stat_phase_v:'Offering', stat_quorum:'Sale Quorum', stat_network:'Network',
+    sec_how:'How it works', how_title:'Rent only when operating. Sale only by vote.',
+    how_desc:'HBTRE1 strips the construction-phase yield entirely. Holders wait for habite-se, then receive rent pro-rata via snapshot epochs. The exit is decided on-chain by holders, not the operator.',
+    step_01:'Step 01', step_02:'Step 02', step_03:'Step 03', step_04:'Step 04',
+    s1_icon:'Subscribe', s1_title:'Buy HBTRE1', s1_desc:'Subscribe at par from the Lobie-Haus-Btr Safe treasury. Reg S Cat 3. No U.S. persons in primary. Free transfers after.',
+    s2_icon:'Wait', s2_title:'Construction Phase', s2_desc:'Zero dividends while the building is constructed. Tokens remain freely transferable. <code>depositRent()</code> reverts. No fixed-income framing, no SPE cash obligation.',
+    s3_icon:'Earn', s3_title:'Collect Rent', s3_desc:'After habite-se, Lobie Safe deposits monthly BRLE rent. Snapshot epochs freeze your balance at that block; call <code>claim(epochIds[])</code> to pull your pro-rata share.',
+    s4_icon:'Vote', s4_title:'Decide on Sale', s4_desc:'Any holder may propose a sale. Vote passes only at ≥2/3 of votes cast (50% quorum). Timelock delay. Winners claim-and-burn for pro-rata proceeds.',
+    sec_life:'Lifecycle', life_title:'Four phases. One-way. Enforced on-chain.',
+    life_desc:'The contract enforces the phase machine strictly: rent can only flow during OPERATIONAL, sale can only execute via GOVERNOR_ROLE (the Timelock, after a 2/3 vote). No upgrades. No admin override.',
+    p1_months:'Phase 0', p1_name:'Offering', p1_yield:'Primary distribution', p1_desc:'Tokens distributed to initial holders. Free transfers. No rent flows. Operator advances on funds-closed milestone.',
+    p2_months:'Phase 1', p2_name:'Construction', p2_yield:'Zero dividends', p2_desc:'Building under construction. <code>depositRent()</code> reverts with WrongPhase. Tokens freely transferable. Operator advances on habite-se.',
+    p3_months:'Phase 2', p3_name:'Operational', p3_yield:'Rent pro-rata', p3_desc:'Lobie Safe deposits monthly rent. Each deposit creates a snapshot epoch. Holders claim pro-rata by epochId. Transfers remain free.',
+    p4_months:'Phase 3', p4_name:'Sold', p4_yield:'Claim-and-burn', p4_desc:'After 2/3 vote + Timelock + execution. <code>totalSupplyAtSale</code> is frozen. Holders burn tokens for pro-rata share of proceeds. Terminal state.',
+    sec_gov:'Governance', gov_title:'The 2/3 sale vote, end to end',
+    gov_desc:'Standard OpenZeppelin Governor with one critical override: proposals whose calldata targets <code>initiateSale(uint256)</code> on the Share require 2/3 supermajority. Every other proposal (pause, parameter change) passes at simple majority. Detection happens at propose-time and is publicly flagged via <code>isSaleProposal[id]</code>.',
+    gv_s1:'01 · Deposit', gv_d1:'Buyer/operator transfers BRLE sale proceeds to the Share contract via <code>depositSaleProceeds(amount)</code>. A public event confirms funds are on-hand <strong>before</strong> voters vote.',
+    gv_s2:'02 · Propose', gv_d2:'Any holder with ≥ 1% of supply calls <code>governor.propose(share, 0, initiateSale(proceeds), description)</code>. Governor inspects calldata and flags <code>isSaleProposal[id] = true</code>.',
+    gv_s3:'03 · Vote', gv_d3:'1-day voting delay, 7-day voting period. Quorum <strong>50%</strong> of supply must cast. Then: <code>forVotes × 3 ≥ (for + against) × 2</code> — i.e., ≥2/3 of decisive votes must be FOR.',
+    gv_s4:'04 · Queue', gv_d4:'If succeeded, anyone calls <code>governor.queue()</code>. Timelock holds the transaction for <strong>2 days</strong>, giving the ecosystem time to react before execution.',
+    gv_s5:'05 · Execute', gv_d5:'After timelock delay, anyone calls <code>governor.execute()</code>. Timelock calls <code>share.initiateSale()</code> → phase moves to SOLD, <code>totalSupplyAtSale</code> freezes.',
+    gv_s6:'06 · Claim &amp; Burn', gv_d6:'Each holder calls <code>claimSaleProceeds()</code> — tokens burn, BRLE transfers out at pro-rata of the frozen supply. Idempotent, non-reentrant, pull-model.',
+    sec_vs:'Variant comparison', vs_title:"What's different from the Hybrid variant",
+    vs_desc:'Both variants tokenize Brazilian BTR on Base. The equity variant drops two features the hybrid has, and adds one the hybrid doesn\'t.',
+    vs_h_name:'Debt + Equity', vs_h1:'CDI proxy yield during construction', vs_h2:'Batog 2018 dividend math', vs_h3:'Operator Safe decides sale', vs_h4:'Exclusion list for DEX pools',
+    vs_e_name:'Pure Equity', vs_e1:'<strong>No</strong> construction dividends', vs_e2:'Snapshot epochs (ERC-20 Votes) — no Batog', vs_e3:'<strong>2/3 on-chain vote</strong> decides sale', vs_e4:'Governor role <strong>irreversibly locked</strong>',
+    sec_features:'Features', feat_title:'Minimal surface area. Maximum immutability.',
+    feat_desc:'Every feature exists to tighten the guarantee or reduce attack surface. No construction-yield plumbing, no exclusion list, no dividend-per-share counters. The contract does less — on purpose.',
+    c1_icon:'Phase Gate', c1_title:'Rent only during OPERATIONAL', c1_desc:'The phase enum is enforced strictly: depositRent reverts in OFFERING, CONSTRUCTION, and SOLD. Pre-operational cash obligations simply cannot be created on the SPE. Cleaner legal.',
+    c2_icon:'Snapshot Epochs', c2_title:'Historical-balance pro-rata', c2_desc:'Each depositRent pushes an epoch snapshotted at the prior block. Claim reads getPastVotes(holder, block) × amount / getPastTotalSupply(block). No Batog counters, no exclusion list, no settle-on-transfer.',
+    c3_icon:'2/3 Override', c3_title:'Sale-specific supermajority', c3_desc:'Governor._voteSucceeded detects sale proposals by calldata selector. Applies 2/3 threshold on sale, simple majority everywhere else. Abstain votes count for quorum, not for the ratio.',
+    c4_icon:'Role Lock', c4_title:'Irreversible handoff', c4_desc:"After granting GOVERNOR_ROLE to Timelock, the Safe calls lockGovernorRole(). The role's admin becomes itself — even DEFAULT_ADMIN can no longer grant or revoke it. The 2/3 vote is the only path.",
+    c5_icon:'Delegation Off', c5_title:'Auto-self-delegation', c5_desc:'Explicit delegate() reverts. Balances auto-self-delegate on receive, so historical voting power always equals historical balance. Rent math and governance math align perfectly by construction.',
+    c6_icon:'Claim-and-Burn', c6_title:'Terminal redemption', c6_desc:'After sale, holders call claimSaleProceeds() — tokens burn, BRLE transfers out. Frozen totalSupplyAtSale is the pro-rata divisor. Clean finality; no phantom supply on a settled asset.',
+    sec_contracts:'Smart Contracts', contracts_title:'Verified on Basescan · deployed 2026-04-21',
+    contracts_desc:'Solidity 0.8.24, OpenZeppelin v5.4, EVM target Cancun, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path.',
+    sec_comp:'Compliance', comp_title:'Same framework, cleaner framing',
+    comp_desc:'Reg S Category 3 with 12-month distribution compliance period. EFIX Securitizadora issues. Lobie operates. Harris & Trotter audits. The pure-equity structure simplifies the legal memo — no fixed-income yield obligation on the SPE during construction.',
+    r1_label:'Issuer', r2_label:'Offering Framework', r2_value:'Reg S Category 3', r3_label:'SPE', r3_value:'Haus BTR Equity Pool 1', r4_label:'Legal Vehicle', r4_value:'Wyoming LLC (BTS)', r5_label:'Operator', r6_label:'Auditor', r7_label:'Governance', r7_value:'OZ Governor + Timelock', r8_label:'Sale Quorum', r8_value:'2/3 supermajority', r9_label:'Custody', r9_value:'2-of-3 Safe',
+    cta_title:'Pure equity in Brazilian real estate', cta_desc:'Fractional ownership with rent only when earned, and a 2/3 on-chain vote on every sale. Live on Base.',
+    cta_p:'View HBTRE1 on Basescan', cta_s:'← Compare both variants',
+    foot_brand:'Pure-equity Build-to-Rent on Base. Rent when operational, 2/3 on-chain sale vote, irreversibly locked governance. Issued by EFIX Securitizadora, operated by Lobie.',
+    foot_protocol:'Protocol', foot_related:'Related', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'Wallet',
+    foot_legal:'EFIX Securitizadora S.A. — CVM Act 23.635/2025 — Reg S Cat 3'
+  },
+  pt: { flag:'🇧🇷', code:'PT',
+    nav_how:'Como Funciona', nav_lifecycle:'Ciclo', nav_gov:'Governança', nav_features:'Recursos', nav_contracts:'Contratos', nav_hub:'← Hub', nav_cta:'Ver HBTRE1',
+    hero_badge:'Haus BTR Equity Pool #1 ao vivo na Base', hero_hub_link:'← Hub BTR',
+    hero_title:'Build-to-Rent Equity Puro<br>com <span>Voto de 2/3 na Venda</span>',
+    hero_sub:'HBTRE1 é uma cota de BTR brasileiro. Sem dividendos durante a obra. Aluguel pro-rata após operacional. Venda do ativo exige supermaioria 2/3 on-chain — o role do Governor está trancado irreversivelmente, então nem o Safe admin passa por cima do voto.',
+    hero_pt:'Equity puro, voto puro — cada holder com sua parte, cada venda com seu voto.',
+    hero_cta1:'Ver no Basescan', hero_cta2:'Comparar com Híbrida',
+    stat_supply:'Supply', stat_phase:'Fase', stat_phase_v:'Oferta', stat_quorum:'Quórum Venda', stat_network:'Rede',
+    sec_how:'Como funciona', how_title:'Aluguel só quando opera. Venda só por voto.',
+    how_desc:'HBTRE1 elimina o rendimento da fase de obra. Holders esperam o habite-se, então recebem aluguel pro-rata via épocas snapshot. A saída é decidida on-chain pelos holders, não pelo operador.',
+    step_01:'Etapa 01', step_02:'Etapa 02', step_03:'Etapa 03', step_04:'Etapa 04',
+    s1_icon:'Subscrever', s1_title:'Comprar HBTRE1', s1_desc:'Subscreva ao par pela tesouraria do Safe Lobie-Haus-Btr. Reg S Cat 3. Sem americanos no primário. Transferências livres após.',
+    s2_icon:'Esperar', s2_title:'Fase de Obra', s2_desc:'Zero dividendos durante a obra. Tokens permanecem livremente transferíveis. <code>depositRent()</code> reverte. Sem enquadramento fixed-income, sem obrigação de caixa da SPE.',
+    s3_icon:'Receber', s3_title:'Coletar Aluguel', s3_desc:'Pós-habite-se, Safe Lobie deposita aluguel mensal em BRLE. Épocas snapshot congelam seu saldo naquele bloco; chame <code>claim(epochIds[])</code> para puxar sua parte.',
+    s4_icon:'Votar', s4_title:'Decidir a Venda', s4_desc:'Qualquer holder pode propor venda. Voto aprovado só com ≥2/3 dos votos emitidos (50% quórum). Delay do Timelock. Vencedores fazem claim-and-burn pro-rata.',
+    sec_life:'Ciclo de Vida', life_title:'Quatro fases. Via única. Aplicadas on-chain.',
+    life_desc:'O contrato aplica a máquina de fases rigorosamente: aluguel só flui em OPERATIONAL, venda só executa via GOVERNOR_ROLE (o Timelock, após voto 2/3). Sem upgrades. Sem override do admin.',
+    p1_months:'Fase 0', p1_name:'Oferta', p1_yield:'Distribuição primária', p1_desc:'Tokens distribuídos aos holders iniciais. Transferências livres. Sem aluguel. Operador avança no marco de fechamento.',
+    p2_months:'Fase 1', p2_name:'Construção', p2_yield:'Zero dividendos', p2_desc:'Edifício em obra. <code>depositRent()</code> reverte com WrongPhase. Tokens transferíveis. Operador avança no habite-se.',
+    p3_months:'Fase 2', p3_name:'Operacional', p3_yield:'Aluguel pro-rata', p3_desc:'Safe Lobie deposita aluguel mensal. Cada depósito cria uma época snapshot. Holders coletam pro-rata por epochId. Transferências continuam livres.',
+    p4_months:'Fase 3', p4_name:'Vendido', p4_yield:'Claim-and-burn', p4_desc:'Após voto 2/3 + Timelock + execução. <code>totalSupplyAtSale</code> congelado. Holders queimam tokens pela sua parte pro-rata da receita. Estado terminal.',
+    sec_gov:'Governança', gov_title:'O voto de 2/3 na venda, ponta a ponta',
+    gov_desc:'Governor OpenZeppelin padrão com um override crítico: propostas cujo calldata mira <code>initiateSale(uint256)</code> na Share exigem supermaioria 2/3. Outras propostas (pause, parâmetros) passam em maioria simples. Detecção no propose-time e flag público <code>isSaleProposal[id]</code>.',
+    gv_s1:'01 · Depósito', gv_d1:'Comprador/operador transfere receita em BRLE para a Share via <code>depositSaleProceeds(amount)</code>. Evento público confirma que os recursos estão presentes <strong>antes</strong> do voto.',
+    gv_s2:'02 · Propor', gv_d2:'Qualquer holder com ≥ 1% de supply chama <code>governor.propose(share, 0, initiateSale(receita), descrição)</code>. Governor inspeciona calldata e flaga <code>isSaleProposal[id] = true</code>.',
+    gv_s3:'03 · Votar', gv_d3:'1 dia de delay, 7 dias de votação. Quórum <strong>50%</strong> do supply deve votar. Então: <code>forVotes × 3 ≥ (for + against) × 2</code> — ou seja, ≥2/3 dos votos decisivos devem ser FOR.',
+    gv_s4:'04 · Queue', gv_d4:'Se aprovado, qualquer um chama <code>governor.queue()</code>. Timelock segura a transação por <strong>2 dias</strong>, dando tempo ao ecossistema reagir antes da execução.',
+    gv_s5:'05 · Executar', gv_d5:'Após delay, qualquer um chama <code>governor.execute()</code>. Timelock chama <code>share.initiateSale()</code> → fase muda para SOLD, <code>totalSupplyAtSale</code> congela.',
+    gv_s6:'06 · Claim &amp; Burn', gv_d6:'Cada holder chama <code>claimSaleProceeds()</code> — tokens queimam, BRLE transfere saindo em pro-rata do supply congelado. Idempotente, non-reentrant, pull-model.',
+    sec_vs:'Comparação de variantes', vs_title:'O que é diferente da variante Híbrida',
+    vs_desc:'Ambas variantes tokenizam BTR brasileiro na Base. A variante equity remove duas features que a híbrida tem, e adiciona uma que a híbrida não tem.',
+    vs_h_name:'Dívida + Equity', vs_h1:'Proxy CDI durante a obra', vs_h2:'Matemática Batog 2018', vs_h3:'Safe do operador decide a venda', vs_h4:'Lista de exclusão para pools DEX',
+    vs_e_name:'Equity Puro', vs_e1:'<strong>Sem</strong> dividendos durante a obra', vs_e2:'Épocas snapshot (ERC-20 Votes) — sem Batog', vs_e3:'<strong>Voto 2/3 on-chain</strong> decide a venda', vs_e4:'Role do Governor <strong>trancado irreversivelmente</strong>',
+    sec_features:'Recursos', feat_title:'Superfície mínima. Imutabilidade máxima.',
+    feat_desc:'Cada feature existe para apertar a garantia ou reduzir a superfície de ataque. Sem encanamento de rendimento de obra, sem lista de exclusão, sem contadores por-ação. O contrato faz menos — por design.',
+    c1_icon:'Phase Gate', c1_title:'Aluguel só em OPERATIONAL', c1_desc:'O enum de fase é rigorosamente aplicado: depositRent reverte em OFFERING, CONSTRUCTION e SOLD. Obrigações de caixa pré-operacionais simplesmente não podem ser criadas na SPE. Mais limpo juridicamente.',
+    c2_icon:'Épocas Snapshot', c2_title:'Pro-rata por saldo histórico', c2_desc:'Cada depositRent empurra uma época snapshotada no bloco anterior. Claim lê getPastVotes(holder, block) × amount / getPastTotalSupply(block). Sem contadores Batog, sem lista de exclusão, sem settle-on-transfer.',
+    c3_icon:'Override 2/3', c3_title:'Supermaioria específica de venda', c3_desc:'Governor._voteSucceeded detecta propostas de venda pelo selector da calldata. Aplica threshold 2/3 na venda, maioria simples em todo o resto. Abstenção conta no quórum, não na razão.',
+    c4_icon:'Role Lock', c4_title:'Handoff irreversível', c4_desc:'Após conceder GOVERNOR_ROLE ao Timelock, o Safe chama lockGovernorRole(). O admin do role passa a ser ele mesmo — nem DEFAULT_ADMIN consegue conceder ou revogar. Voto 2/3 é o único caminho.',
+    c5_icon:'Delegation Off', c5_title:'Auto self-delegation', c5_desc:'delegate() explícito reverte. Saldos auto self-delegam ao receber, então poder de voto histórico sempre igual ao saldo histórico. Matemática de aluguel e governança alinhadas por construção.',
+    c6_icon:'Claim-and-Burn', c6_title:'Resgate terminal', c6_desc:'Após venda, holders chamam claimSaleProceeds() — tokens queimam, BRLE transfere. totalSupplyAtSale congelado é o divisor pro-rata. Finalidade limpa; sem supply fantasma em ativo liquidado.',
+    sec_contracts:'Contratos', contracts_title:'Verificados na Basescan · deployed 2026-04-21',
+    contracts_desc:'Solidity 0.8.24, OpenZeppelin v5.4, EVM target Cancun, optimizer 200 runs, viaIR. Todos imutáveis, sem proxy, sem caminho de upgrade.',
+    sec_comp:'Compliance', comp_title:'Mesmo framework, enquadramento mais limpo',
+    comp_desc:'Reg S Categoria 3 com período de compliance de distribuição de 12 meses. EFIX Securitizadora emite. Lobie opera. Harris & Trotter audita. A estrutura equity puro simplifica o memorando legal — sem obrigação fixed-income na SPE durante a obra.',
+    r1_label:'Emissor', r2_label:'Framework da Oferta', r2_value:'Reg S Categoria 3', r3_label:'SPE', r3_value:'Haus BTR Equity Pool 1', r4_label:'Veículo Legal', r4_value:'Wyoming LLC (BTS)', r5_label:'Operador', r6_label:'Auditor', r7_label:'Governança', r7_value:'OZ Governor + Timelock', r8_label:'Quórum de Venda', r8_value:'Supermaioria 2/3', r9_label:'Custódia', r9_value:'Safe 2-de-3',
+    cta_title:'Equity puro em imóveis brasileiros', cta_desc:'Propriedade fracionada com aluguel só quando ganho, e voto on-chain de 2/3 em cada venda. Ao vivo na Base.',
+    cta_p:'Ver HBTRE1 na Basescan', cta_s:'← Comparar as duas variantes',
+    foot_brand:'Build-to-Rent equity puro na Base. Aluguel quando operacional, voto 2/3 on-chain na venda, governança trancada irreversivelmente. Emitido pela EFIX Securitizadora, operado pela Lobie.',
+    foot_protocol:'Protocolo', foot_related:'Relacionado', foot_efix:'EFIX', foot_twitter:'Twitter', foot_github:'GitHub', foot_wallet:'Carteira',
+    foot_legal:'EFIX Securitizadora S.A. — CVM Ato 23.635/2025 — Reg S Cat 3'
+  },
+  es: { flag:'🇪🇸', code:'ES' }, fr: { flag:'🇫🇷', code:'FR' },
+  ja: { flag:'🇯🇵', code:'JA' }, zh: { flag:'🇨🇳', code:'ZH' },
+  ar: { flag:'🇸🇦', code:'AR' }, ko: { flag:'🇰🇷', code:'KO' }
+};
+let currentLang = 'en';
+function setLang(lang) {
+  if (!i18n[lang]) return;
+  currentLang = lang;
+  const t = Object.assign({}, i18n.en, i18n[lang]);
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if (t[k]) el.innerHTML = t[k]; });
+  document.getElementById('langFlag').textContent = t.flag;
+  document.getElementById('langCode').textContent = t.code;
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+  document.querySelectorAll('.lang-opt').forEach(o => { if (o.onclick && o.onclick.toString().includes("'"+lang+"'")) o.classList.add('active'); });
+  document.getElementById('langMenu').classList.remove('open');
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.documentElement.lang = (lang === 'pt') ? 'pt-BR' : lang;
+  const titles = { en:'BTR Equity — HBTRE1 on Base', pt:'BTR Equity — HBTRE1 na Base' };
+  document.title = titles[lang] || titles.en;
+  try { localStorage.setItem('efixLang', lang); } catch (e) {}
+}
+(function () {
+  const saved = localStorage.getItem('efixLang');
+  if (saved && i18n[saved]) { setTimeout(() => setLang(saved), 50); return; }
+  const bl = (navigator.language || '').slice(0, 2).toLowerCase();
+  const map = { pt:'pt', en:'en', es:'es', fr:'fr', ja:'ja', zh:'zh', ar:'ar', ko:'ko' };
+  if (map[bl]) setTimeout(() => setLang(map[bl]), 50);
+})();
+document.addEventListener('click', (e) => { if (!e.target.closest('.lang-sel')) document.getElementById('langMenu').classList.remove('open'); });
+</script>
+</body>
+</html>
