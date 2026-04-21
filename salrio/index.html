@@ -102,39 +102,36 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 .ret-yield{font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700;color:#d97706;margin-bottom:0.3rem}
 .ret-detail{font-size:0.78rem;color:#737373;line-height:1.65}
 
-/* ONRAMP — the critical section */
+/* ONRAMP — mirrors /app/wallet/ flow */
 .onramp-wrap{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:2.5rem;box-shadow:0 10px 40px rgba(217,119,6,0.06);margin-top:1rem}
-.onramp-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
-.onramp-title{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em}
-.onramp-sub{font-size:0.85rem;color:#737373;margin-top:0.35rem;max-width:480px}
-.onramp-secure{font-family:'Space Mono',monospace;font-size:0.62rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.1em;display:inline-flex;align-items:center;gap:0.4rem}
-.onramp-secure::before{content:'';width:6px;height:6px;border-radius:50%;background:#16a34a}
+.onramp-head{margin-bottom:2rem}
+.onramp-title{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.5rem}
+.onramp-sub{font-size:0.9rem;color:#525252;max-width:720px;line-height:1.65}
+.onramp-sub code{font-family:'Space Mono',monospace;font-size:0.8rem;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:4px}
 
-.rail-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1.5rem}
-.rail-tab{padding:1rem 1.25rem;border:1.5px solid #e5e5e5;border-radius:10px;background:#fff;cursor:pointer;text-align:left;transition:all .25s;font-family:inherit}
-.rail-tab:hover{border-color:#d4d4d4;background:#fafbfc}
-.rail-tab.active{border-color:#d97706;background:#fffbeb;box-shadow:0 4px 16px rgba(217,119,6,0.1)}
-.rail-label{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.4rem}
-.rail-tab.active .rail-label{color:#d97706}
-.rail-name{font-weight:700;font-size:0.95rem;margin-bottom:0.15rem}
-.rail-desc{font-size:0.72rem;color:#737373;line-height:1.45}
+.rail-info{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:2rem}
+.rail-info-card{padding:1.25rem;border:1.5px solid #e5e5e5;border-radius:12px;background:#fff;transition:all .25s}
+.rail-info-card:hover{border-color:#f3d2a7;background:#fffbeb}
+.rail-info-label{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem}
+.rail-info-name{font-weight:700;font-size:1rem;margin-bottom:0.25rem}
+.rail-info-desc{font-size:0.78rem;color:#737373;line-height:1.55}
 
-.onramp-body{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
-.onramp-col h4{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem}
-.bank-box{background:#f9fafb;border:1px solid #e5e5e5;border-radius:10px;padding:1.25rem}
-.bank-row{display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px dashed #e5e5e5;font-size:0.82rem}
-.bank-row:last-child{border-bottom:none}
-.bank-row .lab{color:#737373}
-.bank-row .val{font-family:'Space Mono',monospace;font-weight:700;color:#0a0a0a;font-size:0.78rem;text-align:right;max-width:60%;word-break:break-all}
-.bank-note{margin-top:1rem;font-size:0.75rem;color:#525252;background:#fffbeb;padding:0.75rem;border-radius:8px;border-left:3px solid #d97706;line-height:1.6}
+.flow-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-bottom:2rem;counter-reset:fs}
+.flow-step-card{padding:1rem;border:1px dashed #e5e5e5;border-radius:10px;background:#fafbfc;counter-increment:fs;position:relative}
+.flow-step-card::before{content:counter(fs,decimal-leading-zero);font-family:'Space Mono',monospace;font-size:0.6rem;color:#d97706;font-weight:700;letter-spacing:0.08em;margin-bottom:0.4rem;display:block}
+.flow-step-title{font-weight:700;font-size:0.82rem;margin-bottom:0.2rem;line-height:1.3}
+.flow-step-desc{font-size:0.72rem;color:#737373;line-height:1.55}
 
-.form-row{display:block;margin-bottom:1.25rem}
-.form-row label{display:block;font-family:'Space Mono',monospace;font-size:0.65rem;color:#525252;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem;font-weight:700}
-.form-row input{width:100%;padding:0.85rem 1rem;border:1.5px solid #e5e5e5;border-radius:8px;font-size:0.9rem;font-family:'Space Mono',monospace;color:#0a0a0a;background:#fff;transition:border-color .2s}
-.form-row input:focus{outline:none;border-color:#d97706;background:#fffbeb}
-.form-row small{display:block;font-size:0.72rem;color:#737373;margin-top:0.35rem;line-height:1.5}
-.form-submit{width:100%;padding:1rem;margin-top:0.5rem;background:#d97706;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all .3s;font-family:inherit}
-.form-submit:hover{background:#b45309;transform:translateY(-1px);box-shadow:0 6px 20px rgba(217,119,6,0.25)}
+.start-row{display:grid;grid-template-columns:1fr auto;gap:0.75rem;align-items:end;padding:1.5rem;background:#fffbeb;border:1px solid #f3d2a7;border-radius:12px}
+.start-input-wrap label{display:block;font-family:'Space Mono',monospace;font-size:0.65rem;color:#525252;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem;font-weight:700}
+.start-input-wrap input{width:100%;padding:0.85rem 1rem;border:1.5px solid #fef3c7;border-radius:8px;font-size:0.92rem;font-family:'Space Mono',monospace;color:#0a0a0a;background:#fff;transition:border-color .2s}
+.start-input-wrap input:focus{outline:none;border-color:#d97706}
+.start-submit{padding:0.9rem 1.75rem;background:#d97706;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all .3s;font-family:inherit;white-space:nowrap}
+.start-submit:hover{background:#b45309;transform:translateY(-1px);box-shadow:0 6px 20px rgba(217,119,6,0.3)}
+
+.operator-callout{margin-top:1.25rem;padding:1rem 1.25rem;background:#fafbfc;border-left:3px solid #d4d4d4;border-radius:0 10px 10px 0;font-size:0.8rem;color:#525252;line-height:1.65}
+.operator-callout strong{color:#0a0a0a}
+.operator-callout code{font-family:'Space Mono',monospace;font-size:0.72rem;color:#0a0a0a;background:#fff;padding:1px 5px;border-radius:3px;border:1px solid #e5e5e5}
 
 /* Contracts */
 .chain-card{border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;transition:all .3s;max-width:720px}
@@ -183,8 +180,9 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   .stats-inner{grid-template-columns:repeat(2,1fr)}
   .opp-grid{grid-template-columns:1fr}
   .returns-grid{grid-template-columns:1fr}
-  .rail-tabs{grid-template-columns:1fr}
-  .onramp-body{grid-template-columns:1fr}
+  .rail-info{grid-template-columns:1fr}
+  .flow-steps{grid-template-columns:1fr 1fr}
+  .start-row{grid-template-columns:1fr}
   .onramp-wrap{padding:1.5rem}
   .footer-inner{flex-direction:column}
   .footer-bottom{flex-direction:column;gap:0.5rem}
@@ -357,62 +355,56 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 
     <div class="onramp-wrap">
       <div class="onramp-head">
-        <div>
-          <div class="onramp-title" data-i18n="on_h">Request an allocation</div>
-          <div class="onramp-sub" data-i18n="on_sh">Pick the rail that matches your currency. Banking details below are ready to copy; we send confirmation instructions by email.</div>
-        </div>
-        <div class="onramp-secure" data-i18n="on_secure">Reg S · KYC on deposit</div>
+        <div class="onramp-title" data-i18n="on_h">Allocate via the EFIX wallet</div>
+        <div class="onramp-sub" data-i18n="on_sh">Same email-first flow as our <code>efix.finance/app/wallet</code>. Log in with your email, we generate a smart wallet on Base for you (no MetaMask, no gas), pick your rail, and EFIX's operator wallet receives your funds — SALRIO tokens are delivered to your smart wallet automatically.</div>
       </div>
 
-      <div class="rail-tabs" role="tablist">
-        <button type="button" class="rail-tab active" data-rail="pix" onclick="selectRail('pix')">
-          <div class="rail-label">🇧🇷 <span data-i18n="rl_pix">BRL · PIX</span></div>
-          <div class="rail-name" data-i18n="rl_pix_n">Instant BRL</div>
-          <div class="rail-desc" data-i18n="rl_pix_d">Recommended for Brazilian accounts. Settles in minutes.</div>
-        </button>
-        <button type="button" class="rail-tab" data-rail="ach" onclick="selectRail('ach')">
-          <div class="rail-label">🇺🇸 <span data-i18n="rl_ach">USD · ACH</span></div>
-          <div class="rail-name" data-i18n="rl_ach_n">Domestic US transfer</div>
-          <div class="rail-desc" data-i18n="rl_ach_d">For U.S. accredited investors (1-2 business days).</div>
-        </button>
-        <button type="button" class="rail-tab" data-rail="wire" onclick="selectRail('wire')">
-          <div class="rail-label">🌎 <span data-i18n="rl_wire">USD · Wire</span></div>
-          <div class="rail-name" data-i18n="rl_wire_n">International wire</div>
-          <div class="rail-desc" data-i18n="rl_wire_d">Any country, SWIFT. Same-day if sent before 15:00 UTC.</div>
-        </button>
-      </div>
-
-      <div class="onramp-body">
-        <div class="onramp-col">
-          <h4 data-i18n="bank_h">Deposit to EFIX</h4>
-          <div class="bank-box" id="bankDetails">
-            <!-- filled by JS per rail -->
-          </div>
-          <div class="bank-note" data-i18n="bank_note">Include the allocation reference (ALLOC-XXXX) shown after you submit this form in your payment memo so we can match your deposit to your wallet.</div>
+      <div class="rail-info">
+        <div class="rail-info-card">
+          <div class="rail-info-label">🇧🇷 <span data-i18n="rl_pix">BRL · PIX</span></div>
+          <div class="rail-info-name" data-i18n="rl_pix_n">Instant BRL</div>
+          <div class="rail-info-desc" data-i18n="rl_pix_d">Recommended for Brazilian accounts. QR code generated in-app; settles in minutes.</div>
         </div>
-
-        <div class="onramp-col">
-          <h4 data-i18n="form_h">Your allocation</h4>
-          <form onsubmit="submitAllocation(event)">
-            <div class="form-row">
-              <label for="fld-amount" data-i18n="fl_amt">Amount</label>
-              <input type="text" id="fld-amount" placeholder="e.g. 10,000" required>
-              <small data-i18n="fl_amt_sub">In BRL for PIX · USD for ACH/Wire. Minimum R$ 1,000 (or equivalent).</small>
-            </div>
-            <div class="form-row">
-              <label for="fld-wallet" data-i18n="fl_wal">Your Base wallet address</label>
-              <input type="text" id="fld-wallet" placeholder="0x..." pattern="^0x[a-fA-F0-9]{40}$" required>
-              <small data-i18n="fl_wal_sub">SALRIO will be minted to this address once your payment clears. Must be an EVM address you control.</small>
-            </div>
-            <div class="form-row">
-              <label for="fld-email" data-i18n="fl_mail">Email for confirmation</label>
-              <input type="email" id="fld-email" placeholder="you@example.com" required>
-              <small data-i18n="fl_mail_sub">We email you a reference ID + KYC form within 1 business hour.</small>
-            </div>
-            <button type="submit" class="form-submit" data-i18n="fl_submit">Request allocation →</button>
-          </form>
+        <div class="rail-info-card">
+          <div class="rail-info-label">🇺🇸 <span data-i18n="rl_ach">USD · ACH / Wire</span></div>
+          <div class="rail-info-name" data-i18n="rl_ach_n">Domestic US transfer</div>
+          <div class="rail-info-desc" data-i18n="rl_ach_d">Virtual bank details issued via Bridge.xyz. ACH: 1-2 business days. Wire: same-day.</div>
+        </div>
+        <div class="rail-info-card">
+          <div class="rail-info-label">🇪🇺 <span data-i18n="rl_wire">EUR · SEPA</span></div>
+          <div class="rail-info-name" data-i18n="rl_wire_n">EU transfer</div>
+          <div class="rail-info-desc" data-i18n="rl_wire_d">SEPA details via Bridge.xyz. Typical settlement: 1 business day.</div>
         </div>
       </div>
+
+      <div class="flow-steps">
+        <div class="flow-step-card">
+          <div class="flow-step-title" data-i18n="fs1_t">Log in with email</div>
+          <div class="flow-step-desc" data-i18n="fs1_d">Alchemy Account Kit creates your ERC-4337 smart wallet on Base.</div>
+        </div>
+        <div class="flow-step-card">
+          <div class="flow-step-title" data-i18n="fs2_t">Pick PIX, ACH/Wire or SEPA</div>
+          <div class="flow-step-desc" data-i18n="fs2_d">PIX shows a QR. ACH/Wire/SEPA shows Bridge.xyz virtual bank details you own.</div>
+        </div>
+        <div class="flow-step-card">
+          <div class="flow-step-title" data-i18n="fs3_t">Operator wallet receives</div>
+          <div class="flow-step-desc" data-i18n="fs3_d">EFIX Securitizadora operator wallet receives your BRL/USD/EUR deposit.</div>
+        </div>
+        <div class="flow-step-card">
+          <div class="flow-step-title" data-i18n="fs4_t">SALRIO delivered</div>
+          <div class="flow-step-desc" data-i18n="fs4_d">Treasury transfers SALRIO to your smart wallet at par. Usually within minutes of PIX / same-day for ACH+Wire.</div>
+        </div>
+      </div>
+
+      <form class="start-row" onsubmit="startAllocation(event)">
+        <div class="start-input-wrap">
+          <label for="fld-email" data-i18n="fl_mail">Your email</label>
+          <input type="email" id="fld-email" placeholder="you@example.com" required>
+        </div>
+        <button type="submit" class="start-submit" data-i18n="fl_submit">Open wallet to allocate →</button>
+      </form>
+
+      <div class="operator-callout" data-i18n="op_note"><strong>Operator wallet:</strong> BRL via PIX lands in EFIX Securitizadora's bank account (CNPJ <code>00.000.000/0001-00</code>); USD/EUR via Bridge.xyz is auto-converted to USDC and deposited to your smart wallet. Treasury then settles SALRIO at par — 1 SALRIO = R$ 1.00 — per your allocation size.</div>
     </div>
   </div>
 </section>
@@ -553,66 +545,15 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-// Onramp rail data
-const rails = {
-  pix: [
-    ['Beneficiary', 'EFIX Securitizadora S.A.'],
-    ['CNPJ', '00.000.000/0001-00'],
-    ['Bank', 'Banco Haus (260)'],
-    ['Agency', '0001'],
-    ['Account', '1234567-8'],
-    ['PIX key (CNPJ)', '00.000.000/0001-00'],
-    ['Reference', 'ALLOC-XXXX (shown after submit)']
-  ],
-  ach: [
-    ['Beneficiary', 'EFIX Securitizadora S.A.'],
-    ['Bank', 'Mercury Bank, USA'],
-    ['Routing (ABA)', '084106768'],
-    ['Account', '98765432XX'],
-    ['Account type', 'Checking'],
-    ['Reference', 'ALLOC-XXXX (shown after submit)']
-  ],
-  wire: [
-    ['Beneficiary', 'EFIX Securitizadora S.A.'],
-    ['Bank', 'Mercury Bank, USA'],
-    ['SWIFT / BIC', 'CHASUS33'],
-    ['Routing (ABA)', '084106768'],
-    ['Account', '98765432XX'],
-    ['Intermediary', 'JPMorgan Chase, New York'],
-    ['Reference', 'ALLOC-XXXX (shown after submit)']
-  ]
-};
-
-function selectRail(rail) {
-  document.querySelectorAll('.rail-tab').forEach(t => t.classList.toggle('active', t.dataset.rail === rail));
-  renderBank(rail);
-}
-function renderBank(rail) {
-  const box = document.getElementById('bankDetails');
-  const rows = rails[rail].map(([lab, val]) => `<div class="bank-row"><span class="lab">${lab}</span><span class="val">${val}</span></div>`).join('');
-  box.innerHTML = rows;
-}
-renderBank('pix');
-
-function submitAllocation(event) {
+// Onramp flow mirrors /app/wallet/ — email auth → smart wallet → PIX/ACH/Wire → operator wallet → SALRIO delivered.
+// We deep-link into the wallet app with an `intent=salrio` hint so the wallet UI can show SALRIO context
+// once the backend supports it. For now the wallet handles auth + deposit; treasury settles SALRIO manually.
+function startAllocation(event) {
   event.preventDefault();
-  const amount = document.getElementById('fld-amount').value.trim();
-  const wallet = document.getElementById('fld-wallet').value.trim();
   const email = document.getElementById('fld-email').value.trim();
-  const rail = document.querySelector('.rail-tab.active').dataset.rail;
-  const ref = 'ALLOC-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-  const subject = encodeURIComponent(`SALRIO allocation request ${ref}`);
-  const body = encodeURIComponent(
-    `Allocation request ${ref}\n` +
-    `\n` +
-    `Rail: ${rail.toUpperCase()}\n` +
-    `Amount: ${amount}\n` +
-    `Wallet (Base): ${wallet}\n` +
-    `Email: ${email}\n` +
-    `\n` +
-    `Please send KYC form + final banking instructions. I will include reference ${ref} in the payment memo.`
-  );
-  window.location.href = `mailto:ernesto.otero@hausbank.com.br?subject=${subject}&body=${body}`;
+  if (!email) return;
+  const params = new URLSearchParams({ intent: 'salrio', email });
+  window.location.href = `/app/wallet/?${params.toString()}`;
 }
 </script>
 
@@ -645,16 +586,17 @@ const i18n = {
     r3_period:'Month 25+ · Operational', r3_source:'Real rental cashflow', r3_yield:'~R$ 13k / mo', r3_detail:'All 5 studios stabilized at ~R$ 2.6k net per studio. Phase-tagged <code>Operational</code>.',
     sec_onramp:'Allocate', on_title:'Buy SALRIO — three payment rails',
     on_desc:'Wire funds to EFIX Securitizadora using whichever rail is fastest for you. Once the deposit clears, SALRIO is delivered to your Base wallet. Most PIX allocations settle in minutes; ACH in 1-2 business days; international Wire typically same-day if sent before 15:00 UTC.',
-    on_h:'Request an allocation', on_sh:'Pick the rail that matches your currency. Banking details below are ready to copy; we send confirmation instructions by email.', on_secure:'Reg S · KYC on deposit',
-    rl_pix:'BRL · PIX', rl_pix_n:'Instant BRL', rl_pix_d:'Recommended for Brazilian accounts. Settles in minutes.',
-    rl_ach:'USD · ACH', rl_ach_n:'Domestic US transfer', rl_ach_d:'For U.S. accredited investors (1-2 business days).',
-    rl_wire:'USD · Wire', rl_wire_n:'International wire', rl_wire_d:'Any country, SWIFT. Same-day if sent before 15:00 UTC.',
-    bank_h:'Deposit to EFIX', bank_note:'Include the allocation reference (ALLOC-XXXX) shown after you submit this form in your payment memo so we can match your deposit to your wallet.',
-    form_h:'Your allocation',
-    fl_amt:'Amount', fl_amt_sub:'In BRL for PIX · USD for ACH/Wire. Minimum R$ 1,000 (or equivalent).',
-    fl_wal:'Your Base wallet address', fl_wal_sub:'SALRIO will be minted to this address once your payment clears. Must be an EVM address you control.',
-    fl_mail:'Email for confirmation', fl_mail_sub:'We email you a reference ID + KYC form within 1 business hour.',
-    fl_submit:'Request allocation →',
+    on_h:'Allocate via the EFIX wallet',
+    on_sh:"Same email-first flow as our <code>efix.finance/app/wallet</code>. Log in with your email, we generate a smart wallet on Base for you (no MetaMask, no gas), pick your rail, and EFIX's operator wallet receives your funds — SALRIO tokens are delivered to your smart wallet automatically.",
+    rl_pix:'BRL · PIX', rl_pix_n:'Instant BRL', rl_pix_d:'Recommended for Brazilian accounts. QR code generated in-app; settles in minutes.',
+    rl_ach:'USD · ACH / Wire', rl_ach_n:'Domestic US transfer', rl_ach_d:'Virtual bank details issued via Bridge.xyz. ACH: 1-2 business days. Wire: same-day.',
+    rl_wire:'EUR · SEPA', rl_wire_n:'EU transfer', rl_wire_d:'SEPA details via Bridge.xyz. Typical settlement: 1 business day.',
+    fs1_t:'Log in with email', fs1_d:'Alchemy Account Kit creates your ERC-4337 smart wallet on Base.',
+    fs2_t:'Pick PIX, ACH/Wire or SEPA', fs2_d:'PIX shows a QR. ACH/Wire/SEPA shows Bridge.xyz virtual bank details you own.',
+    fs3_t:'Operator wallet receives', fs3_d:"EFIX Securitizadora operator wallet receives your BRL/USD/EUR deposit.",
+    fs4_t:'SALRIO delivered', fs4_d:'Treasury transfers SALRIO to your smart wallet at par. Usually within minutes of PIX / same-day for ACH+Wire.',
+    fl_mail:'Your email', fl_submit:'Open wallet to allocate →',
+    op_note:"<strong>Operator wallet:</strong> BRL via PIX lands in EFIX Securitizadora's bank account (CNPJ <code>00.000.000/0001-00</code>); USD/EUR via Bridge.xyz is auto-converted to USDC and deposited to your smart wallet. Treasury then settles SALRIO at par — 1 SALRIO = R$ 1.00 — per your allocation size.",
     sec_contracts:'Smart Contracts · Base mainnet', contracts_title:'Fully verified on Basescan',
     contracts_desc:"Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path. See each contract's source and storage on Basescan.",
     sec_risk:'Risk & Compliance', risk_title:'Read before you allocate',
@@ -705,16 +647,17 @@ const i18n = {
     r3_period:'Mês 25+ · Operacional', r3_source:'Aluguel real', r3_yield:'~R$ 13k / mês', r3_detail:'Todos os 5 studios estabilizados em ~R$ 2,6k líquido por studio. Fase marcada <code>Operational</code>.',
     sec_onramp:'Alocar', on_title:'Comprar SALRIO — três rails de pagamento',
     on_desc:'Transfira fundos para a EFIX Securitizadora pelo rail mais rápido para você. Assim que o depósito compensar, SALRIO é entregue na sua carteira Base. PIX geralmente compensa em minutos; ACH em 1-2 dias úteis; Wire internacional em D+0 se enviado antes de 15:00 UTC.',
-    on_h:'Solicitar alocação', on_sh:'Escolha o rail que combina com sua moeda. Os dados bancários abaixo estão prontos para copiar; enviamos as instruções de confirmação por email.', on_secure:'Reg S · KYC no depósito',
-    rl_pix:'BRL · PIX', rl_pix_n:'BRL instantâneo', rl_pix_d:'Recomendado para contas brasileiras. Compensa em minutos.',
-    rl_ach:'USD · ACH', rl_ach_n:'Transferência US doméstica', rl_ach_d:'Para investidores accredited dos EUA (1-2 dias úteis).',
-    rl_wire:'USD · Wire', rl_wire_n:'Wire internacional', rl_wire_d:'Qualquer país, SWIFT. D+0 se enviado antes de 15:00 UTC.',
-    bank_h:'Depositar na EFIX', bank_note:'Inclua a referência da alocação (ALLOC-XXXX) mostrada após submeter este formulário no memo do pagamento para que possamos casar seu depósito com sua carteira.',
-    form_h:'Sua alocação',
-    fl_amt:'Valor', fl_amt_sub:'Em BRL para PIX · USD para ACH/Wire. Mínimo R$ 1.000 (ou equivalente).',
-    fl_wal:'Sua carteira Base', fl_wal_sub:'SALRIO será mintado nesse endereço quando seu pagamento compensar. Deve ser um endereço EVM que você controla.',
-    fl_mail:'Email para confirmação', fl_mail_sub:'Enviamos ID de referência + formulário KYC em até 1 hora útil.',
-    fl_submit:'Solicitar alocação →',
+    on_h:'Alocar via a carteira EFIX',
+    on_sh:'Mesmo fluxo email-first da nossa <code>efix.finance/app/wallet</code>. Entre com seu email, geramos uma smart wallet na Base para você (sem MetaMask, sem gas), escolha seu rail, e a carteira operadora da EFIX recebe seus fundos — os tokens SALRIO são entregues na sua smart wallet automaticamente.',
+    rl_pix:'BRL · PIX', rl_pix_n:'BRL instantâneo', rl_pix_d:'Recomendado para contas brasileiras. QR code gerado no app; compensa em minutos.',
+    rl_ach:'USD · ACH / Wire', rl_ach_n:'Transferência US', rl_ach_d:'Conta bancária virtual emitida via Bridge.xyz. ACH: 1-2 dias úteis. Wire: D+0.',
+    rl_wire:'EUR · SEPA', rl_wire_n:'Transferência EU', rl_wire_d:'Conta SEPA via Bridge.xyz. Compensação típica: 1 dia útil.',
+    fs1_t:'Entre com email', fs1_d:'Alchemy Account Kit cria sua smart wallet ERC-4337 na Base.',
+    fs2_t:'Escolha PIX, ACH/Wire ou SEPA', fs2_d:'PIX mostra um QR. ACH/Wire/SEPA mostra conta virtual Bridge.xyz em seu nome.',
+    fs3_t:'Carteira operadora recebe', fs3_d:'A carteira operadora da EFIX Securitizadora recebe seu depósito em BRL/USD/EUR.',
+    fs4_t:'SALRIO entregue', fs4_d:'A tesouraria transfere SALRIO para sua smart wallet ao par. Geralmente em minutos pós-PIX / D+0 para ACH+Wire.',
+    fl_mail:'Seu email', fl_submit:'Abrir carteira para alocar →',
+    op_note:'<strong>Carteira operadora:</strong> BRL via PIX cai na conta da EFIX Securitizadora (CNPJ <code>00.000.000/0001-00</code>); USD/EUR via Bridge.xyz é auto-convertido para USDC e depositado na sua smart wallet. A tesouraria então liquida SALRIO ao par — 1 SALRIO = R$ 1,00 — pelo tamanho da sua alocação.',
     sec_contracts:'Smart Contracts · Base mainnet', contracts_title:'Totalmente verificados na Basescan',
     contracts_desc:'Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. Todos imutáveis, sem proxy, sem caminho de upgrade. Veja o código-fonte e storage de cada contrato na Basescan.',
     sec_risk:'Riscos e Compliance', risk_title:'Leia antes de alocar',
