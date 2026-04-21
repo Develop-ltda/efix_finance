@@ -55,6 +55,8 @@ h1 span{background:linear-gradient(to right,#d97706,#7c3aed,#2563eb);background-
 .btn-amber:hover{background:#b45309;transform:translateY(-1px);box-shadow:0 4px 20px rgba(217,119,6,0.25)}
 .btn-blue{background:#2563eb;color:#fff}
 .btn-blue:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 4px 20px rgba(37,99,235,0.25)}
+.btn-dark{background:#0a0a0a;color:#fff}
+.btn-dark:hover{background:#262626;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
 .container{max-width:1100px;margin:0 auto;padding:0 2rem}
 
 /* Selector — minimalist, accent-by-hint */
@@ -208,15 +210,15 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
     </div>
     <h1 class="fade-up stagger-1" data-i18n="hero_title">Tokenized Build-to-Rent.<br><span>Two paths to own.</span></h1>
     <p class="subtitle fade-up stagger-2" data-i18n="hero_sub">
-      Fractional equity in Brazilian short-stay real estate, on Base. Pick the variant that matches your thesis:
-      <strong style="color:#d97706">Hybrid</strong> pays a CDI proxy during construction and rent after;
-      <strong style="color:#2563eb">Pure Equity</strong> waits for operations — and gives holders a 2/3 vote on sale.
+      Tokenized studios operated by Lobie. Properties developed for Lobie's STR (short-term rental) operation. Pick the variant that matches your thesis:
+      <strong style="color:#d97706">Hybrid</strong> pays CDI during construction and monthly pro-rata yield to token holders;
+      <strong style="color:#2563eb">Pure Equity</strong> pays nothing during construction — waits for operations.
     </p>
     <p class="hero-sub-pt fade-up stagger-2" data-i18n="hero_pt">
       Casa carioca, rendimento global — do seu jeito.
     </p>
     <div class="hero-actions fade-up stagger-3">
-      <a href="#variants" class="btn btn-amber" data-i18n="hero_cta1">Compare variants</a>
+      <a href="#variants" class="btn btn-dark" data-i18n="hero_cta1">Compare variants</a>
       <a href="/brle/" class="btn" style="background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4" data-i18n="hero_cta2">What's BRLE?</a>
     </div>
   </div>
@@ -451,7 +453,7 @@ const i18n = {
   en: { flag:'🇺🇸', code:'EN',
     nav_variants:'Variants', nav_compare:'Compare', nav_unlock:'Credit Unlock', nav_cta:'Explore Equity',
     hero_badge:'Two variants live on Base', hero_title:'Tokenized Build-to-Rent.<br><span>Two paths to own.</span>',
-    hero_sub:'Fractional equity in Brazilian short-stay real estate, on Base. Pick the variant that matches your thesis: <strong style="color:#d97706">Hybrid</strong> pays a CDI proxy during construction and rent after; <strong style="color:#2563eb">Pure Equity</strong> waits for operations — and gives holders a 2/3 vote on sale.',
+    hero_sub:'Tokenized studios operated by Lobie. Properties developed for Lobie\'s STR (short-term rental) operation. Pick the variant that matches your thesis: <strong style="color:#d97706">Hybrid</strong> pays CDI during construction and monthly pro-rata yield to token holders; <strong style="color:#2563eb">Pure Equity</strong> pays nothing during construction — waits for operations.',
     hero_pt:'Casa carioca, rendimento global — do seu jeito.', hero_cta1:'Compare variants', hero_cta2:"What's BRLE?",
     h_label:'Debt + Equity Variant', h_name:'Hybrid', h_symbol:'SALRIO · Sal Rio Residences Pool #1',
     h_desc:'A tokenized BTR share that pays monthly in BRLE from day one. During construction, the SPE parks IPO proceeds in sBRLE and distributes CDI yield as a proxy. After habite-se, holders receive real rental cashflow — same contract, tagged on-chain.',
@@ -493,7 +495,7 @@ const i18n = {
   pt: { flag:'🇧🇷', code:'PT',
     nav_variants:'Variantes', nav_compare:'Comparar', nav_unlock:'Destrave de Crédito', nav_cta:'Ver Equity',
     hero_badge:'Duas variantes ao vivo na Base', hero_title:'Build-to-Rent Tokenizado.<br><span>Duas formas de possuir.</span>',
-    hero_sub:'Equity fracionado em imóveis de temporada brasileiros, na Base. Escolha a variante que combina com sua tese: <strong style="color:#d97706">Híbrida</strong> paga proxy CDI durante a obra e aluguel depois; <strong style="color:#2563eb">Equity Puro</strong> espera a operação — e dá aos holders voto de 2/3 sobre a venda.',
+    hero_sub:'Studios tokenizados operados pela Lobie. Imóveis desenvolvidos para serem operados pelo Lobie na modalidade STR (locação de curta duração). Escolha a variante que combina com sua tese: <strong style="color:#d97706">Híbrida</strong> paga CDI durante a obra e rendimentos pro-rata para token holders todo mês; <strong style="color:#2563eb">Equity Puro</strong> não paga rendimento na fase de obra — espera a operação.',
     hero_pt:'Casa carioca, rendimento global — do seu jeito.', hero_cta1:'Comparar variantes', hero_cta2:'O que é BRLE?',
     h_label:'Variante Dívida + Equity', h_name:'Híbrida', h_symbol:'SALRIO · Sal Rio Residences Pool #1',
     h_desc:'Uma cota BTR tokenizada que paga mensalmente em BRLE desde o dia 1. Durante a obra, a SPE aplica os recursos do IPO em sBRLE e distribui rendimento CDI como proxy. Após o habite-se, os holders recebem aluguel real — mesmo contrato, marcado on-chain.',
