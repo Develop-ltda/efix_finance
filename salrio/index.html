@@ -125,6 +125,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 .bldg-arch-text{font-size:0.8rem;color:#525252;line-height:1.5}
 .bldg-arch-text strong{color:#0a0a0a}
 
+/* Institutional partners strip */
+.trust-strip{padding:3.5rem 2rem;background:#fff;border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5}
+.trust-inner{max-width:1100px;margin:0 auto;text-align:center}
+.trust-label{font-family:'Space Mono',monospace;font-size:0.62rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:2rem}
+.trust-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0;align-items:center;justify-items:center}
+.trust-item{display:flex;flex-direction:column;align-items:center;gap:0.5rem;padding:1rem;border-right:1px solid #f5f5f5;width:100%;transition:all .25s}
+.trust-item:last-child{border-right:none}
+.trust-item:hover{transform:translateY(-2px)}
+.trust-logo{height:36px;max-width:140px;object-fit:contain;filter:grayscale(100%) opacity(0.75);transition:filter .25s}
+.trust-item:hover .trust-logo{filter:grayscale(0%) opacity(1)}
+.trust-fallback{display:flex;align-items:center;justify-content:center;height:36px;font-weight:800;font-size:0.95rem;letter-spacing:-0.01em;color:#525252}
+.trust-role{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.1em}
+
 /* Partnership */
 .part-wrap{display:grid;grid-template-columns:1fr 2fr;gap:2rem;align-items:center;margin-top:2rem}
 .part-samba{padding:2rem;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #f3d2a7;border-radius:16px}
@@ -247,6 +260,9 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   .bldg-img{min-height:300px}
   .part-wrap{grid-template-columns:1fr}
   .part-logos{grid-template-columns:1fr}
+  .trust-grid{grid-template-columns:repeat(3,1fr)}
+  .trust-item:nth-child(3){border-right:none}
+  .trust-item:nth-child(1),.trust-item:nth-child(2),.trust-item:nth-child(3){border-bottom:1px solid #f5f5f5}
   .footer-inner{flex-direction:column}
   .footer-bottom{flex-direction:column;gap:0.5rem}
 }
@@ -533,6 +549,51 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
           <div class="part-logo-name">Pilar Capital</div>
           <p class="part-logo-p" data-i18n="pl3_p">Gestora estruturadora. Conecta investidores à tese imobiliária, desenha o funding e acompanha o desempenho do empreendimento.</p>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTITUTIONAL PARTNERS / TRUSTED INFRASTRUCTURE -->
+<section class="trust-strip">
+  <div class="trust-inner">
+    <div class="trust-label" data-i18n="trust_label">Backed by institutional-grade infrastructure</div>
+    <div class="trust-grid">
+      <div class="trust-item">
+        <img class="trust-logo" src="/salrio/assets/partners/openzeppelin.svg" alt="OpenZeppelin"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="trust-fallback" style="display:none">OpenZeppelin</div>
+        <div class="trust-role" data-i18n="tr_oz">Security audit</div>
+      </div>
+      <div class="trust-item">
+        <img class="trust-logo" src="/salrio/assets/partners/fireblocks.svg" alt="Fireblocks"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="trust-fallback" style="display:none">Fireblocks</div>
+        <div class="trust-role" data-i18n="tr_fb">Custody</div>
+      </div>
+      <div class="trust-item">
+        <img class="trust-logo" src="/salrio/assets/partners/bridge.svg" alt="Bridge.xyz"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="trust-fallback" style="display:none">Bridge</div>
+        <div class="trust-role" data-i18n="tr_br">USD/EUR onramp</div>
+      </div>
+      <div class="trust-item">
+        <img class="trust-logo" src="/salrio/assets/partners/coingecko.svg" alt="CoinGecko"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="trust-fallback" style="display:none">CoinGecko</div>
+        <div class="trust-role" data-i18n="tr_cg">Price feed</div>
+      </div>
+      <div class="trust-item">
+        <img class="trust-logo" src="/salrio/assets/partners/coinmarketcap.svg" alt="CoinMarketCap"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="trust-fallback" style="display:none">CoinMarketCap</div>
+        <div class="trust-role" data-i18n="tr_cmc">Listing</div>
+      </div>
+      <div class="trust-item">
+        <img class="trust-logo" src="/salrio/assets/partners/defillama.svg" alt="DefiLlama"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="trust-fallback" style="display:none">DefiLlama</div>
+        <div class="trust-role" data-i18n="tr_dl">TVL tracking</div>
       </div>
     </div>
   </div>
@@ -841,6 +902,8 @@ const i18n = {
     part_desc:'Three partners, one operation. Progress develops, CTV builds, Pilar Capital structures the funding, Lobie operates, and EFIX Securitizadora issues the token. Each piece already runs at scale in Rio — together, they turn a building into a tokenized, globally-composable asset with monthly cashflow.',
     pt_sh:'Uma mistura que dá samba',
     pt_sp:'Progress, CTV and Pilar Capital joined forces around the thesis of structuring developments with Lobie exposure — combining tradition and experience with agility in prototyping, quick response to market demand, and urban integration, for a fast return on investment.',
+    trust_label:'Backed by institutional-grade infrastructure',
+    tr_oz:'Security audit', tr_fb:'Custody', tr_br:'USD/EUR onramp', tr_cg:'Price feed', tr_cmc:'Listing', tr_dl:'TVL tracking',
     pl1_role:'Developer', pl1_p:'Carioca group with decades in residential, urban and hospitality development. Projects in Copacabana, Botafogo and Centro.',
     pl2_role:'Builder', pl2_p:'CTV is the general contractor. Specialized in retrofits and mixed-use projects in central Rio.',
     pl3_role:'Capital', pl3_p:'Structuring manager. Bridges investors to the real-estate thesis, designs the funding, and tracks project performance.',
@@ -932,6 +995,8 @@ const i18n = {
     part_desc:'Três parceiros, uma operação. Progress incorpora, CTV constrói, Pilar Capital estrutura o funding, Lobie opera e EFIX Securitizadora emite o token. Cada peça já roda em escala no Rio — juntas, elas transformam um edifício em um ativo tokenizado, globalmente composível, com cashflow mensal.',
     pt_sh:'Uma mistura que dá samba',
     pt_sp:'Progress, CTV e Pilar Capital se uniram com a tese de estruturar empreendimentos com exposição à Lobie — combinando tradição e experiência com agilidade em prototipação, resposta rápida às demandas do mercado e integração à cidade, em um rápido retorno do investimento.',
+    trust_label:'Suportado por infraestrutura institucional',
+    tr_oz:'Auditoria', tr_fb:'Custódia', tr_br:'Onramp USD/EUR', tr_cg:'Price feed', tr_cmc:'Listing', tr_dl:'Monitoramento TVL',
     pl1_role:'Incorporadora', pl1_p:'Grupo carioca com décadas em incorporação residencial, urbana e hoteleira. Responsável por projetos em Copacabana, Botafogo e Centro.',
     pl2_role:'Construtora', pl2_p:'CTV é a construtora responsável pela execução. Especialização em retrofits e projetos de uso misto no centro do Rio.',
     pl3_role:'Capital', pl3_p:'Gestora estruturadora. Conecta investidores à tese imobiliária, desenha o funding e acompanha o desempenho.',

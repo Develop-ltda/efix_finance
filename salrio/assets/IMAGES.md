@@ -20,6 +20,23 @@ Drop the following images into this folder (`efix_finance/salrio/assets/`) with 
 | `museu-amanha.jpg` | Museu do Amanhã close-up | Neighborhood accent | 1200×800 px |
 | `rio-star.jpg` | RioStar roda gigante | Neighborhood accent | 1200×800 px |
 
+## Institutional partner logos
+
+Drop these into `efix_finance/salrio/assets/partners/` — referenced in the "Backed by institutional-grade infrastructure" strip. Each one has a text fallback so the section looks clean even without the logos.
+
+| Filename | Download from |
+|---|---|
+| `openzeppelin.svg` | https://www.openzeppelin.com/brand-assets (use the "mark" or horizontal logo) |
+| `fireblocks.svg` | https://www.fireblocks.com/brand-guidelines/ |
+| `bridge.svg` | Bridge.xyz press kit — export their wordmark as SVG |
+| `coingecko.svg` | https://www.coingecko.com/en/branding |
+| `coinmarketcap.svg` | https://coinmarketcap.com/brand-assets/ |
+| `defillama.svg` | https://defillama.com — their llama mark (or export from their GitHub assets) |
+
+**Format**: prefer monochrome SVG wordmarks. The CSS applies grayscale + 0.75 opacity at rest, then removes the filter on hover (so black or darker logos look best). If SVG isn't available, use PNG at 2× density (360 px wide).
+
+**Sizing**: CSS caps logos at 36 px tall, max 140 px wide. Make sure the source has a bit of padding so nothing gets cropped.
+
 ## Source material
 
 All images should be pulled from the Lobie-provided Sal Rio material in your Downloads folder:
