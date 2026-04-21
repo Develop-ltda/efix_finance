@@ -53,9 +53,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 
 /* Hero stat card */
 .hero-card{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:2rem;box-shadow:0 8px 40px rgba(0,0,0,0.06)}
-.hero-card .hc-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:1rem;margin-bottom:1.25rem;border-bottom:1px solid #e5e5e5}
-.hero-card .hc-name{font-weight:800;font-size:0.95rem}
-.hero-card .hc-phase{font-family:'Space Mono',monospace;font-size:0.6rem;color:#fff;background:#d97706;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.08em}
+.hero-card .hc-brand{display:flex;align-items:center;gap:0.85rem;padding-bottom:1rem;margin-bottom:1.25rem;border-bottom:1px solid #e5e5e5}
+.hero-card .hc-logo{width:46px;height:46px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.hero-card .hc-brand-meta{flex:1;min-width:0}
+.hero-card .hc-name{font-weight:800;font-size:0.95rem;line-height:1.2}
+.hero-card .hc-brand-sub{font-family:'Space Mono',monospace;font-size:0.62rem;color:#a3a3a3;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px}
+.hero-card .hc-phase{font-family:'Space Mono',monospace;font-size:0.6rem;color:#fff;background:#d97706;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.08em;flex-shrink:0}
 .hc-rows{display:grid;gap:0.75rem}
 .hc-row{display:flex;justify-content:space-between;font-size:0.82rem}
 .hc-row .hc-label{color:#737373}
@@ -78,6 +81,61 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 .section-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem}
 .section-title{font-size:clamp(1.6rem,2.6vw,2.15rem);font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:0.75rem}
 .section-desc{color:#525252;font-size:0.95rem;max-width:680px;margin-bottom:2.5rem;line-height:1.75}
+
+/* Poetry splash — carioca atmosphere */
+.poetry{background:linear-gradient(180deg,#0a1a2e 0%,#1a365d 100%);color:#fff;padding:6rem 2rem;text-align:center;position:relative;overflow:hidden}
+.poetry-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.35;mix-blend-mode:luminosity}
+.poetry::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,26,46,0.6),rgba(26,54,93,0.8))}
+.poetry-inner{position:relative;z-index:1;max-width:720px;margin:0 auto}
+.poetry-label{font-family:'Space Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.25em;margin-bottom:2rem}
+.poetry-lines{font-family:'Syne',sans-serif;font-size:clamp(1.1rem,1.8vw,1.4rem);font-weight:400;line-height:2.1;color:rgba(255,255,255,0.95);font-style:italic}
+.poetry-lines strong{font-weight:600;color:#fff}
+.poetry-lines .stanza{display:block;margin-top:1.25rem}
+.poetry-tag{margin-top:2.5rem;font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.6);letter-spacing:0.15em;text-transform:uppercase}
+
+/* Neighborhood — amenity grid */
+.hood-hero{margin-top:2rem;height:260px;background:linear-gradient(135deg,#fbbf77 0%,#d97706 50%,#b45309 100%);background-size:cover;background-position:center;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:flex-end}
+.hood-hero-label{position:relative;z-index:1;padding:2rem;color:#fff}
+.hood-hero-tag{font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;opacity:0.85;margin-bottom:0.5rem}
+.hood-hero-title{font-size:clamp(1.4rem,2.2vw,1.8rem);font-weight:800;letter-spacing:-0.02em;line-height:1.15;max-width:560px}
+.hood-hero-cite{font-family:'Space Mono',monospace;font-size:0.7rem;opacity:0.8;margin-top:0.75rem}
+.hood-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.55) 100%);z-index:0}
+
+.hood-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;margin-top:1.5rem}
+.hood-cat{background:#fff;padding:1.5rem 1.35rem;transition:background .2s}
+.hood-cat:hover{background:#fffbeb}
+.hood-cat-h{font-family:'Space Mono',monospace;font-size:0.68rem;color:#d97706;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.85rem;font-weight:700}
+.hood-cat ul{list-style:none;padding:0;margin:0}
+.hood-cat li{font-size:0.8rem;color:#525252;padding:0.2rem 0;line-height:1.6}
+
+/* The Building section */
+.bldg-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;align-items:stretch;margin-top:2rem}
+.bldg-img{background:linear-gradient(135deg,#fef3c7,#fbbf77);background-size:cover;background-position:center;border-radius:16px;min-height:480px;position:relative;overflow:hidden}
+.bldg-img-label{position:absolute;bottom:1.5rem;left:1.5rem;color:#fff;background:rgba(0,0,0,0.55);padding:0.5rem 1rem;border-radius:8px;font-family:'Space Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.bldg-info{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:2rem;display:flex;flex-direction:column;justify-content:space-between}
+.bldg-tag{font-family:'Space Mono',monospace;font-size:0.7rem;color:#d97706;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:0.75rem}
+.bldg-name{font-size:1.6rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.25rem;line-height:1.15}
+.bldg-addr{font-family:'Space Mono',monospace;font-size:0.85rem;color:#737373;margin-bottom:1.5rem}
+.bldg-features{list-style:none;padding:0;margin:0 0 1.5rem}
+.bldg-features li{position:relative;padding-left:1.5rem;margin-bottom:0.65rem;font-size:0.88rem;color:#525252;line-height:1.6}
+.bldg-features li::before{content:'';position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:#d97706;opacity:0.7}
+.bldg-features li strong{color:#0a0a0a;font-weight:700}
+.bldg-arch{padding-top:1.25rem;border-top:1px solid #e5e5e5;display:flex;gap:0.85rem;align-items:center}
+.bldg-arch-img{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#d4d4d4,#a3a3a3);background-size:cover;flex-shrink:0}
+.bldg-arch-text{font-size:0.8rem;color:#525252;line-height:1.5}
+.bldg-arch-text strong{color:#0a0a0a}
+
+/* Partnership */
+.part-wrap{display:grid;grid-template-columns:1fr 2fr;gap:2rem;align-items:center;margin-top:2rem}
+.part-samba{padding:2rem;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #f3d2a7;border-radius:16px}
+.part-samba-h{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:#b45309;line-height:1.2;margin-bottom:1rem;letter-spacing:-0.01em}
+.part-samba-p{font-size:0.85rem;color:#525252;line-height:1.7}
+.part-logos{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.part-logo{background:#fff;padding:1.75rem 1.5rem;transition:background .2s}
+.part-logo:hover{background:#fafbfc}
+.part-logo-name{font-weight:800;font-size:1.1rem;letter-spacing:-0.01em;margin-bottom:0.25rem;color:#0a0a0a}
+.part-logo-role{font-family:'Space Mono',monospace;font-size:0.62rem;color:#d97706;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;font-weight:700}
+.part-logo-p{font-size:0.78rem;color:#737373;line-height:1.65}
 
 /* Opportunity grid */
 .opp-grid{display:grid;grid-template-columns:2fr 1fr;gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
@@ -184,6 +242,11 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
   .flow-steps{grid-template-columns:1fr 1fr}
   .start-row{grid-template-columns:1fr}
   .onramp-wrap{padding:1.5rem}
+  .hood-grid{grid-template-columns:1fr 1fr}
+  .bldg-wrap{grid-template-columns:1fr}
+  .bldg-img{min-height:300px}
+  .part-wrap{grid-template-columns:1fr}
+  .part-logos{grid-template-columns:1fr}
   .footer-inner{flex-direction:column}
   .footer-bottom{flex-direction:column;gap:0.5rem}
 }
@@ -198,10 +261,10 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
     <div style="display:flex;align-items:center;gap:12px">
       <ul class="nav-links">
         <li><a href="#opportunity" data-i18n="nav_opp">Opportunity</a></li>
-        <li><a href="#track" data-i18n="nav_track">Track</a></li>
+        <li><a href="#neighborhood" data-i18n="nav_hood">Hood</a></li>
+        <li><a href="#building" data-i18n="nav_bldg">Building</a></li>
         <li><a href="#returns" data-i18n="nav_ret">Returns</a></li>
         <li><a href="#onramp" data-i18n="nav_allocate">Allocate</a></li>
-        <li><a href="#contracts" data-i18n="nav_contracts">Contracts</a></li>
         <li><a href="#faq" data-i18n="nav_faq">FAQ</a></li>
       </ul>
       <a href="#onramp" class="nav-cta" data-i18n="nav_cta">Allocate now</a>
@@ -244,8 +307,12 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
     </div>
 
     <div class="hero-card fade-up stagger-2">
-      <div class="hc-header">
-        <span class="hc-name">SALRIO</span>
+      <div class="hc-brand">
+        <img src="/salrio/sal-logo.png" alt="Sal Rio Residences" class="hc-logo" onerror="this.style.display='none'">
+        <div class="hc-brand-meta">
+          <div class="hc-name">SALRIO</div>
+          <div class="hc-brand-sub">Sal Rio Residences</div>
+        </div>
         <span class="hc-phase" data-i18n="hc_phase">Open for allocation</span>
       </div>
       <div class="hc-rows">
@@ -262,6 +329,25 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
       <div class="hc-footer" data-i18n="hc_foot">Live at 0x4022…0D7c on Base · Chain 8453</div>
     </div>
 
+  </div>
+</section>
+
+<!-- POETRY SPLASH — carioca atmosphere from the book -->
+<section class="poetry">
+  <div class="poetry-img" style="background-image:url('/salrio/assets/pedra-do-sal.jpg')"></div>
+  <div class="poetry-inner">
+    <div class="poetry-label" data-i18n="po_label">Pedra do Sal · Saúde · Rio de Janeiro</div>
+    <p class="poetry-lines" data-i18n="po_text">
+      No Rio, tudo é ou já foi mar.<br>
+      A pele carioca é sol e sal.<br>
+      Gente iluminada, sem tempo ruim.
+      <span class="stanza">
+        Um povo que sobe sambando<br>
+        e desce a ladeira fazendo carnaval.<br>
+        Não perde a ginga, desenrola.
+      </span>
+    </p>
+    <div class="poetry-tag" data-i18n="po_tag">Descubra o encanto do Rio — com SAL</div>
   </div>
 </section>
 
@@ -311,6 +397,142 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
         <div class="opp-metric-label" data-i18n="opp_m1">Gordon Growth NPV</div>
         <div class="opp-metric-val">R$ <span class="big">1.86M</span></div>
         <div class="opp-metric-sub" data-i18n="opp_m1s">On-chain discount-model NPV of the 5 studios, continuously updated against Chainlink BRL/USD and Lobie's monthly cashflow observations.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEIGHBORHOOD — Porto Maravilha amenities -->
+<section class="section section-gray" id="neighborhood">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_hood">The Neighborhood</div>
+    <div class="section-title" data-i18n="hood_title">Saúde — Porto Maravilha</div>
+    <div class="section-desc" data-i18n="hood_desc">
+      Rio's waterfront district, reborn. From Museu do Amanhã to Pedra do Sal, from the Roda Gigante RioStar to Marina da Glória — Sal Rio Residences sits in the middle of Rio's most walkable cultural corridor, minutes from Santos Dumont airport and on the VLT line straight to Ipanema.
+    </div>
+
+    <div class="hood-hero" style="background-image:url('/salrio/assets/hood-porto.jpg')">
+      <div class="hood-hero-label">
+        <div class="hood-hero-tag" data-i18n="hh_tag">Porto Maravilha</div>
+        <div class="hood-hero-title" data-i18n="hh_title">"One of the coolest neighborhoods in the world"</div>
+        <div class="hood-hero-cite" data-i18n="hh_cite">— Time Out London</div>
+      </div>
+    </div>
+
+    <div class="hood-grid">
+      <div class="hood-cat">
+        <div class="hood-cat-h" data-i18n="hc1">Lazer</div>
+        <ul>
+          <li>Pedra do Sal</li>
+          <li>Praça Mauá</li>
+          <li>AquaRio</li>
+          <li>MAR — Museu de Arte do Rio</li>
+          <li>Museu do Amanhã</li>
+          <li>RioStar (Roda Gigante)</li>
+        </ul>
+      </div>
+      <div class="hood-cat">
+        <div class="hood-cat-h" data-i18n="hc2">Cultura</div>
+        <ul>
+          <li>Circo Voador</li>
+          <li>Biblioteca Nacional</li>
+          <li>Theatro Municipal</li>
+          <li>Cais do Valongo</li>
+          <li>Morro da Conceição</li>
+          <li>Sambódromo</li>
+        </ul>
+      </div>
+      <div class="hood-cat">
+        <div class="hood-cat-h" data-i18n="hc3">Gastronomia</div>
+        <ul>
+          <li>Beco do Rato</li>
+          <li>Bar do Rui</li>
+          <li>Mercado Municipal</li>
+          <li>Restaurante Cadeg</li>
+          <li>Boteco da Cidade Nova</li>
+          <li>Armazém 2</li>
+        </ul>
+      </div>
+      <div class="hood-cat">
+        <div class="hood-cat-h" data-i18n="hc4">Turismo</div>
+        <ul>
+          <li>Cristo Redentor</li>
+          <li>Marina da Glória</li>
+          <li>Aeroporto Santos Dumont</li>
+          <li>Estação VLT → Ipanema</li>
+          <li>Estação das Barcas (Niterói)</li>
+          <li>Lapa</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE BUILDING -->
+<section class="section section-border" id="building">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_bldg">The Building</div>
+    <div class="section-title" data-i18n="bldg_title">O primeiro retrofit do Porto Maravilha</div>
+    <div class="section-desc" data-i18n="bldg_desc">
+      Sal Rio Residences converts an existing structure into a purpose-built STR residence. Rooftop leisure, mirante with direct access to Pedra do Sal, 4 ground-floor shops, and studios engineered for short-stay operation. Architecture by CITÉ.
+    </div>
+
+    <div class="bldg-wrap">
+      <div class="bldg-img" style="background-image:url('/salrio/assets/building-render.jpg')">
+        <div class="bldg-img-label" data-i18n="bldg_img_label">Sal Rio Residences — Render</div>
+      </div>
+      <div class="bldg-info">
+        <div>
+          <div class="bldg-tag" data-i18n="bldg_tag">1° Retrofit do Porto Maravilha</div>
+          <div class="bldg-name">Sal Rio Residences</div>
+          <div class="bldg-addr">Rua Sacadura Cabral, 152 · Saúde · Rio de Janeiro</div>
+          <ul class="bldg-features">
+            <li data-i18n="bf1"><strong>Studios de 32 a 35 m²</strong> — compact, STR-optimized</li>
+            <li data-i18n="bf2"><strong>Sala/quarto de 29 a 30 m²</strong> — flexible layouts</li>
+            <li data-i18n="bf3"><strong>Rooftop exclusivo</strong> — pool, bar, deck</li>
+            <li data-i18n="bf4"><strong>Mirante com acesso à Pedra do Sal</strong> — private gateway to Rio's oldest samba corner</li>
+            <li data-i18n="bf5"><strong>4 lojas no térreo</strong> — ground-floor retail activates the street</li>
+            <li data-i18n="bf6">Áreas comuns: piscina, salão de festas, academia, spa, cinema, boulevard</li>
+          </ul>
+        </div>
+        <div class="bldg-arch">
+          <div class="bldg-arch-img" style="background-image:url('/salrio/assets/cite-arch.jpg')"></div>
+          <div class="bldg-arch-text" data-i18n="bldg_arch">Architecture by <strong>CITÉ</strong> (Catie Regis &amp; Fernando Cirelli) — carioca studio specialized in hospitality and mixed-use projects.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNERSHIP -->
+<section class="section section-gray" id="partnership">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_part">The Partnership</div>
+    <div class="section-title" data-i18n="part_title">Uma mistura que dá samba</div>
+    <div class="section-desc" data-i18n="part_desc">
+      Três parceiros, uma operação. Progress incorpora, CTV constrói, Pilar Capital estrutura o funding, Lobie opera e EFIX Securitizadora emite o token. Cada peça já roda em escala no Rio — juntas, elas transformam um edifício em um ativo tokenizado, globalmente composível, com cashflow mensal.
+    </div>
+    <div class="part-wrap">
+      <div class="part-samba">
+        <div class="part-samba-h" data-i18n="pt_sh">Uma mistura que dá samba</div>
+        <p class="part-samba-p" data-i18n="pt_sp">Progress, CTV e Pilar Capital se uniram com a tese de estruturar empreendimentos com exposição à Lobie, que combina tradição e experiência com agilidade em prototipação, resposta rápida às demandas do mercado e integração à cidade — em um rápido retorno do investimento.</p>
+      </div>
+      <div class="part-logos">
+        <div class="part-logo">
+          <div class="part-logo-role" data-i18n="pl1_role">Incorporadora</div>
+          <div class="part-logo-name">Progress</div>
+          <p class="part-logo-p" data-i18n="pl1_p">Grupo carioca com décadas em incorporação residencial, urbana e hoteleira. Responsável por projetos em Copacabana, Botafogo e Centro.</p>
+        </div>
+        <div class="part-logo">
+          <div class="part-logo-role" data-i18n="pl2_role">Construtora</div>
+          <div class="part-logo-name">CTV</div>
+          <p class="part-logo-p" data-i18n="pl2_p">CTV é a construtora responsável pela execução da obra. Especialização em retrofits e projetos de uso misto no centro do Rio.</p>
+        </div>
+        <div class="part-logo">
+          <div class="part-logo-role" data-i18n="pl3_role">Capital</div>
+          <div class="part-logo-name">Pilar Capital</div>
+          <p class="part-logo-p" data-i18n="pl3_p">Gestora estruturadora. Conecta investidores à tese imobiliária, desenha o funding e acompanha o desempenho do empreendimento.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -597,7 +819,31 @@ function startAllocation(event) {
 <script>
 const i18n = {
   en: { flag:'🇺🇸', code:'EN',
-    nav_opp:'Opportunity', nav_track:'Track', nav_ret:'Returns', nav_allocate:'Allocate', nav_contracts:'Contracts', nav_faq:'FAQ', nav_cta:'Allocate now',
+    nav_opp:'Opportunity', nav_hood:'Hood', nav_bldg:'Building', nav_track:'Track', nav_ret:'Returns', nav_allocate:'Allocate', nav_contracts:'Contracts', nav_faq:'FAQ', nav_cta:'Allocate now',
+    po_label:'Pedra do Sal · Saúde · Rio de Janeiro',
+    po_text:"No Rio, tudo é ou já foi mar.<br>A pele carioca é sol e sal.<br>Gente iluminada, sem tempo ruim.<span class=\"stanza\">Um povo que sobe sambando<br>e desce a ladeira fazendo carnaval.<br>Não perde a ginga, desenrola.</span>",
+    po_tag:'Descubra o encanto do Rio — com SAL',
+    sec_hood:'The Neighborhood', hood_title:'Saúde — Porto Maravilha',
+    hood_desc:"Rio's waterfront district, reborn. From Museu do Amanhã to Pedra do Sal, from the Roda Gigante RioStar to Marina da Glória — Sal Rio Residences sits in the middle of Rio's most walkable cultural corridor, minutes from Santos Dumont airport and on the VLT line straight to Ipanema.",
+    hh_tag:'Porto Maravilha', hh_title:'"One of the coolest neighborhoods in the world"', hh_cite:'— Time Out London',
+    hc1:'Lazer', hc2:'Cultura', hc3:'Gastronomia', hc4:'Turismo',
+    sec_bldg:'The Building', bldg_title:'O primeiro retrofit do Porto Maravilha',
+    bldg_desc:'Sal Rio Residences converts an existing structure into a purpose-built STR residence. Rooftop leisure, mirante with direct access to Pedra do Sal, 4 ground-floor shops, and studios engineered for short-stay operation. Architecture by CITÉ.',
+    bldg_img_label:'Sal Rio Residences — Render', bldg_tag:'1° Retrofit do Porto Maravilha',
+    bf1:'<strong>Studios de 32 a 35 m²</strong> — compact, STR-optimized',
+    bf2:'<strong>Sala/quarto de 29 a 30 m²</strong> — flexible layouts',
+    bf3:'<strong>Rooftop exclusivo</strong> — pool, bar, deck',
+    bf4:"<strong>Mirante com acesso à Pedra do Sal</strong> — private gateway to Rio's oldest samba corner",
+    bf5:'<strong>4 lojas no térreo</strong> — ground-floor retail activates the street',
+    bf6:'Áreas comuns: piscina, salão de festas, academia, spa, cinema, boulevard',
+    bldg_arch:'Architecture by <strong>CITÉ</strong> (Catie Regis &amp; Fernando Cirelli) — carioca studio specialized in hospitality and mixed-use projects.',
+    sec_part:'The Partnership', part_title:'Uma mistura que dá samba',
+    part_desc:'Three partners, one operation. Progress develops, CTV builds, Pilar Capital structures the funding, Lobie operates, and EFIX Securitizadora issues the token. Each piece already runs at scale in Rio — together, they turn a building into a tokenized, globally-composable asset with monthly cashflow.',
+    pt_sh:'Uma mistura que dá samba',
+    pt_sp:'Progress, CTV and Pilar Capital joined forces around the thesis of structuring developments with Lobie exposure — combining tradition and experience with agility in prototyping, quick response to market demand, and urban integration, for a fast return on investment.',
+    pl1_role:'Developer', pl1_p:'Carioca group with decades in residential, urban and hospitality development. Projects in Copacabana, Botafogo and Centro.',
+    pl2_role:'Builder', pl2_p:'CTV is the general contractor. Specialized in retrofits and mixed-use projects in central Rio.',
+    pl3_role:'Capital', pl3_p:'Structuring manager. Bridges investors to the real-estate thesis, designs the funding, and tracks project performance.',
     hero_badge:'Sal Rio Residences Pool #1 · Live on Base',
     hero_title:'Porto Maravilha studios,<br>operated by <span>Lobie</span>',
     hero_sub:'SALRIO is fractional equity in 5 studios of the Sal Rio Residences, in Porto Maravilha — central Rio de Janeiro, steps from Museu do Amanhã, Pedra do Sal and the Armazém 2 waterfront. Operated by Lobie (88-year-old group, +750 STR units, 85% average occupancy). Monthly BRLE distributions — CDI-proxy during construction, real rent after habite-se. Target dividend yield ~10.8% a.a. · Target IRR ~21% a.a. incl. capital gains.',
@@ -664,7 +910,31 @@ const i18n = {
     foot_legal:'EFIX Securitizadora S.A. — CVM Act 23.635/2025 — Reg S Cat 3 — No U.S. persons in primary'
   },
   pt: { flag:'🇧🇷', code:'PT',
-    nav_opp:'Oportunidade', nav_track:'Track', nav_ret:'Rendimento', nav_allocate:'Alocar', nav_contracts:'Contratos', nav_faq:'FAQ', nav_cta:'Alocar agora',
+    nav_opp:'Oportunidade', nav_hood:'Bairro', nav_bldg:'Edifício', nav_track:'Track', nav_ret:'Rendimento', nav_allocate:'Alocar', nav_contracts:'Contratos', nav_faq:'FAQ', nav_cta:'Alocar agora',
+    po_label:'Pedra do Sal · Saúde · Rio de Janeiro',
+    po_text:"No Rio, tudo é ou já foi mar.<br>A pele carioca é sol e sal.<br>Gente iluminada, sem tempo ruim.<span class=\"stanza\">Um povo que sobe sambando<br>e desce a ladeira fazendo carnaval.<br>Não perde a ginga, desenrola.</span>",
+    po_tag:'Descubra o encanto do Rio — com SAL',
+    sec_hood:'O Bairro', hood_title:'Saúde — Porto Maravilha',
+    hood_desc:'O waterfront central do Rio, renascido. Do Museu do Amanhã à Pedra do Sal, da Roda Gigante RioStar à Marina da Glória — o Sal Rio Residences fica no meio do corredor cultural mais caminhável do Rio, a minutos do Santos Dumont e na linha VLT direto para Ipanema.',
+    hh_tag:'Porto Maravilha', hh_title:'"Um dos bairros mais legais do mundo"', hh_cite:'— Time Out London',
+    hc1:'Lazer', hc2:'Cultura', hc3:'Gastronomia', hc4:'Turismo',
+    sec_bldg:'O Edifício', bldg_title:'O primeiro retrofit do Porto Maravilha',
+    bldg_desc:'O Sal Rio Residences transforma uma estrutura existente em residência STR purpose-built. Lazer no rooftop, mirante com acesso direto à Pedra do Sal, 4 lojas no térreo e studios engenheirados para operação de curta duração. Arquitetura CITÉ.',
+    bldg_img_label:'Sal Rio Residences — Render', bldg_tag:'1° Retrofit do Porto Maravilha',
+    bf1:'<strong>Studios de 32 a 35 m²</strong> — compactos, otimizados para STR',
+    bf2:'<strong>Sala/quarto de 29 a 30 m²</strong> — layouts flexíveis',
+    bf3:'<strong>Rooftop exclusivo</strong> — piscina, bar, deck',
+    bf4:'<strong>Mirante com acesso à Pedra do Sal</strong> — portal privado para o berço do samba',
+    bf5:'<strong>4 lojas no térreo</strong> — varejo ativa a rua',
+    bf6:'Áreas comuns: piscina, salão de festas, academia, spa, cinema, boulevard',
+    bldg_arch:'Arquitetura <strong>CITÉ</strong> (Catie Regis &amp; Fernando Cirelli) — escritório carioca especializado em hospitalidade e uso misto.',
+    sec_part:'A Parceria', part_title:'Uma mistura que dá samba',
+    part_desc:'Três parceiros, uma operação. Progress incorpora, CTV constrói, Pilar Capital estrutura o funding, Lobie opera e EFIX Securitizadora emite o token. Cada peça já roda em escala no Rio — juntas, elas transformam um edifício em um ativo tokenizado, globalmente composível, com cashflow mensal.',
+    pt_sh:'Uma mistura que dá samba',
+    pt_sp:'Progress, CTV e Pilar Capital se uniram com a tese de estruturar empreendimentos com exposição à Lobie — combinando tradição e experiência com agilidade em prototipação, resposta rápida às demandas do mercado e integração à cidade, em um rápido retorno do investimento.',
+    pl1_role:'Incorporadora', pl1_p:'Grupo carioca com décadas em incorporação residencial, urbana e hoteleira. Responsável por projetos em Copacabana, Botafogo e Centro.',
+    pl2_role:'Construtora', pl2_p:'CTV é a construtora responsável pela execução. Especialização em retrofits e projetos de uso misto no centro do Rio.',
+    pl3_role:'Capital', pl3_p:'Gestora estruturadora. Conecta investidores à tese imobiliária, desenha o funding e acompanha o desempenho.',
     hero_badge:'Sal Rio Residences Pool #1 · Ao vivo na Base',
     hero_title:'Studios no Porto Maravilha,<br>operados pela <span>Lobie</span>',
     hero_sub:'SALRIO é equity fracionado em 5 studios do Sal Rio Residences, no Porto Maravilha — zona central do Rio, a passos do Museu do Amanhã, Pedra do Sal e Armazém 2. Operados pela Lobie (grupo com 88 anos, +750 unidades em STR, 85% de ocupação média). Distribuições mensais em BRLE — proxy CDI durante a obra, aluguel real após o habite-se. Dividend yield alvo ~10,8% a.a. · TIR alvo ~21% a.a. com ganho de capital.',
