@@ -68,10 +68,15 @@ async function loginWithEmail(email) {
 /**
  * Step 1 of email OTP flow — sends a 6-digit code to the user's inbox.
  * Use this + verifyOTP() instead of loginWithEmail() for a step-wise UX.
+ *
+ * Matches the BRLE bundle's loginWithEmail pattern exactly — Alchemy
+ * Account Kit v4.86 defaults to OTP when { type: "email", email } is
+ * passed without emailMode. Specifying emailMode: "otp" explicitly
+ * caused the promise to hang waiting on verification.
  */
 async function sendOTP(email) {
   if (!_signer) init();
-  await _signer.authenticate({ type: "email", emailMode: "otp", email });
+  await _signer.authenticate({ type: "email", email });
   console.log("[EfixWallet] OTP sent to:", email);
   return "otp_sent";
 }
