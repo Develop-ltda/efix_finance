@@ -356,27 +356,8 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
 <!-- Hidden iframe container required by Alchemy signer bundle -->
 <div id="alchemy-signer-iframe-container"></div>
 
-<!-- Prune broken Alchemy session state before bundle boots.
-     A session with state.session === null is a well-known SDK hang cause —
-     authenticate() waits forever on a stamper iframe handshake that never fires. -->
-<script>
-(function pruneBrokenAlchemySession() {
-  try {
-    const raw = localStorage.getItem('alchemy-signer-session');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && (!parsed.state || parsed.state.session === null)) {
-        localStorage.removeItem('alchemy-signer-session');
-        localStorage.removeItem('alchemy-signer-session:temporary');
-        console.log('[EfixWallet] Cleared broken Alchemy session state');
-      }
-    }
-  } catch (e) {
-    localStorage.removeItem('alchemy-signer-session');
-    localStorage.removeItem('alchemy-signer-session:temporary');
-  }
-})();
-</script>
+<!-- Auto-prune removed: cleared :temporary mid-flow, wiping in-flight OTP id.
+     Manual "Reset login state" button remains for users with stuck state. -->
 <!-- Reuse the existing Alchemy Account Kit bundle from /app/wallet/ — same apiKey = unified user database -->
 <script src="/app/wallet/efix-wallet-bundle-v3.js"></script>
 <script>

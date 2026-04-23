@@ -685,24 +685,9 @@
             <br><br>© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CVM Act 23.635/2025
         </div>
     </main>
-    <script>
-    (function pruneBrokenAlchemySession() {
-      try {
-        const raw = localStorage.getItem('alchemy-signer-session');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && (!parsed.state || parsed.state.session === null)) {
-            localStorage.removeItem('alchemy-signer-session');
-            localStorage.removeItem('alchemy-signer-session:temporary');
-            console.log('[EfixWallet] Cleared broken Alchemy session state');
-          }
-        }
-      } catch (e) {
-        localStorage.removeItem('alchemy-signer-session');
-        localStorage.removeItem('alchemy-signer-session:temporary');
-      }
-    })();
-    </script>
+    <!-- Auto-prune removed: it was clearing alchemy-signer-session:temporary
+         mid-flow, which holds the in-flight OTP id between send and verify.
+         Users with truly broken state click the "Reset login" button instead. -->
     <script src="efix-wallet-bundle-v3.js"></script>
     <script src="efix-auth.js"></script>
     <script src="/shared/js/config.js"></script>
