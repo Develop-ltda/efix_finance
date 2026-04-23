@@ -977,7 +977,7 @@
         }
         async function handleBrleBuy() {
             const amount = Number(document.getElementById('brleBuyAmount').value);
-            if (!amount || amount < 10) { toast?.('Mínimo R$ 10'); return; }
+            if (!amount || amount < 10) { document.getElementById('brle-buy-msg').textContent = 'Mínimo R$ 10'; return; }
             const btn = document.getElementById('btnBrleBuy');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span>Gerando...';
