@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="/shared/css/reset.css">
     <link rel="stylesheet" href="/shared/css/components.css">
     <link rel="stylesheet" href="/shared/css/lang-selector.css">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
         :root{--black:#0a0a0a;--white:#fafafa;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--gray-700:#404040;--gray-800:#262626;--gray-900:#171717;--green:#22c55e;--red:#ef4444;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--lang-bg:var(--gray-900);--lang-border:var(--gray-700);--lang-text:var(--gray-300);--lang-border-hover:var(--gray-500);--lang-menu-bg:var(--gray-900);--lang-shadow:rgba(0,0,0,.5);--lang-hover-bg:var(--gray-800);--lang-hover-text:var(--white);--lang-active:var(--green)}
@@ -363,6 +364,31 @@
                         <button class="btn btn-secondary" style="margin-top:12px;" onclick="resetBrleBuy()">Cancelar</button>
                     </div>
 
+                    <!-- Swap BRLE → USDC via Uniswap V3 (0.01% pool on Base) -->
+                    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-800);">
+                        <h3 style="margin-bottom:4px">Swap BRLE → USDC</h3>
+                        <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px;">
+                            Uniswap V3 · Base · pool 0.01% fee · smart-account userOp (gasless if policy covers Base)
+                        </p>
+                        <div class="amount-input-wrap">
+                            <input type="number" id="brleSwapAmount" placeholder="0,00" min="0.01" step="0.01" oninput="quoteBrleToUsdc(this.value)">
+                            <span class="currency">BRLE</span>
+                        </div>
+                        <div id="brleSwapQuote" style="font-size:12px;color:var(--gray-500);font-family:var(--font-mono);margin:8px 0 12px;text-align:center;min-height:16px;">
+                            Enter an amount to see the USDC quote
+                        </div>
+                        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+                            <label style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);">Slippage</label>
+                            <select id="brleSwapSlippage" style="padding:6px 10px;background:var(--gray-800);border:1px solid var(--gray-700);border-radius:8px;color:var(--white);font-family:var(--font-mono);font-size:12px;">
+                                <option value="0.5">0.5%</option>
+                                <option value="1" selected>1.0%</option>
+                                <option value="3">3.0%</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="btnBrleSwap" onclick="handleBrleSwap()">Swap BRLE for USDC</button>
+                        <div id="brleSwapMsg" style="margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);text-align:center;min-height:20px;"></div>
+                    </div>
+
                     <p style="margin-top:16px;font-size:11px;color:var(--gray-600);font-family:var(--font-mono);text-align:center;">
                         <a href="/brle/" style="color:var(--green);text-decoration:none">BRLE landing</a>
                         · Base · Contract <a href="https://basescan.org/token/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6" target="_blank" style="color:var(--green);text-decoration:none">0x7D12…82F6</a>
@@ -656,7 +682,7 @@
             <br><br>© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CVM Act 23.635/2025
         </div>
     </main>
-    <script src="efix-wallet-bundle.js"></script>
+    <script src="efix-wallet-bundle.js?v=2026-04-23-base"></script>
     <script src="efix-auth.js"></script>
     <script src="/shared/js/config.js"></script>
     <script src="/shared/js/formatters.js"></script>
@@ -1026,6 +1052,112 @@
             document.getElementById('brleBuyAmount').value = '';
             document.getElementById('brle-buy-msg').textContent = '';
         }
+
+        // ─── BRLE → USDC swap via Uniswap V3 ───────────────────
+        // Pool: 0xb9d4b6e911fdd6e10a603c1fb286a00aa7003310 (BRLE/USDC fee 100)
+        // Router (SwapRouter02): 0x2626664c2603336E57B271c5C0b26F421741e481
+        // Quoter V2: 0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a
+        const UNI_V3 = {
+            router: '0x2626664c2603336E57B271c5C0b26F421741e481',
+            quoter: '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a',
+            feeTier: 100,
+        };
+        let _brleSwapQuoteTimer = null;
+        let _brleLastQuote = null;
+
+        async function quoteBrleToUsdc(amountStr) {
+            clearTimeout(_brleSwapQuoteTimer);
+            const amt = Number(amountStr);
+            if (!amt || amt <= 0) {
+                document.getElementById('brleSwapQuote').textContent = 'Enter an amount to see the USDC quote';
+                _brleLastQuote = null;
+                return;
+            }
+            _brleSwapQuoteTimer = setTimeout(async () => {
+                try {
+                    const provider = new ethers.JsonRpcProvider(EFIX_CONFIG.rpc.base);
+                    const quoter = new ethers.Contract(UNI_V3.quoter, [
+                        'function quoteExactInputSingle((address tokenIn,address tokenOut,uint256 amountIn,uint24 fee,uint160 sqrtPriceLimitX96)) returns (uint256 amountOut, uint160, uint32, uint256)'
+                    ], provider);
+                    const amountIn = ethers.parseUnits(String(amt), 18);
+                    const res = await quoter.quoteExactInputSingle.staticCall({
+                        tokenIn: EFIX_CONFIG.brle.token,
+                        tokenOut: EFIX_CONFIG.contracts.usdcBase,
+                        amountIn,
+                        fee: UNI_V3.feeTier,
+                        sqrtPriceLimitX96: 0n,
+                    });
+                    const amountOut = res[0];
+                    const usdcOut = Number(ethers.formatUnits(amountOut, 6));
+                    const price = usdcOut / amt;
+                    document.getElementById('brleSwapQuote').textContent =
+                        `≈ ${usdcOut.toFixed(4)} USDC · 1 BRLE = ${price.toFixed(6)} USDC`;
+                    _brleLastQuote = { amountIn, amountOut, usdcOut };
+                } catch (err) {
+                    document.getElementById('brleSwapQuote').textContent = 'Quote failed: ' + err.message;
+                    _brleLastQuote = null;
+                }
+            }, 250);
+        }
+
+        async function handleBrleSwap() {
+            const amt = Number(document.getElementById('brleSwapAmount').value);
+            if (!amt || amt <= 0) { setBrleSwapMsg('Enter an amount'); return; }
+            if (!_brleLastQuote) { setBrleSwapMsg('Waiting on quote…'); return; }
+            if (!userAddress) { setBrleSwapMsg('Not logged in'); return; }
+
+            const slippagePct = Number(document.getElementById('brleSwapSlippage').value);
+            const slippageBps = BigInt(Math.round(slippagePct * 100));
+            const minOut = (_brleLastQuote.amountOut * (10000n - slippageBps)) / 10000n;
+            const amountIn = _brleLastQuote.amountIn;
+
+            const btn = document.getElementById('btnBrleSwap');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Preparing…';
+            setBrleSwapMsg('');
+
+            try {
+                if (!window.EfixWallet?.getBaseClient) {
+                    throw new Error('Base client missing — reload the page (new bundle needed)');
+                }
+                const client = await window.EfixWallet.getBaseClient();
+
+                const erc20 = new ethers.Interface(['function approve(address,uint256) returns (bool)']);
+                const router = new ethers.Interface([
+                    'function exactInputSingle((address tokenIn,address tokenOut,uint24 fee,address recipient,uint256 amountIn,uint256 amountOutMinimum,uint160 sqrtPriceLimitX96)) payable returns (uint256)'
+                ]);
+                const approveData = erc20.encodeFunctionData('approve', [UNI_V3.router, amountIn]);
+                const swapData = router.encodeFunctionData('exactInputSingle', [{
+                    tokenIn: EFIX_CONFIG.brle.token,
+                    tokenOut: EFIX_CONFIG.contracts.usdcBase,
+                    fee: UNI_V3.feeTier,
+                    recipient: userAddress,
+                    amountIn,
+                    amountOutMinimum: minOut,
+                    sqrtPriceLimitX96: 0n,
+                }]);
+
+                setBrleSwapMsg('Signing userOp…');
+                const { hash } = await client.sendUserOperation({
+                    uo: [
+                        { target: EFIX_CONFIG.brle.token, data: approveData, value: 0n },
+                        { target: UNI_V3.router, data: swapData, value: 0n },
+                    ],
+                });
+                setBrleSwapMsg('Waiting for confirmation…');
+                const txHash = await client.waitForUserOperationTransaction({ hash });
+                setBrleSwapMsg(`✓ Swapped — ${Number(ethers.formatUnits(minOut, 6)).toFixed(4)}+ USDC · tx ${txHash.slice(0,10)}…`);
+                document.getElementById('brleSwapAmount').value = '';
+                loadBrleBalance();
+                loadOfferings(userAddress);
+            } catch (err) {
+                setBrleSwapMsg('Swap failed: ' + (err.shortMessage || err.message));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Swap BRLE for USDC';
+            }
+        }
+        function setBrleSwapMsg(msg) { document.getElementById('brleSwapMsg').textContent = msg; }
         async function loadOfferings(address) {
             const container = document.getElementById('offeringsList');
             if (!container) return;

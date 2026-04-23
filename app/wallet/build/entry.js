@@ -3,7 +3,7 @@
 
 import { AlchemyWebSigner } from "@account-kit/signer";
 import { createSmartWalletClient } from "@account-kit/wallet-client";
-import { alchemy, polygon } from "@account-kit/infra";
+import { alchemy, polygon, base } from "@account-kit/infra";
 
 // ═══════════════════════════════════════════════════════════
 // EFIX WALLET SDK - Bundled for vanilla HTML
@@ -66,6 +66,28 @@ async function loginWithEmail(email) {
 }
 
 /**
+ * Step 1 of email OTP flow — sends a 6-digit code to the user's inbox.
+ * Use this + verifyOTP() instead of loginWithEmail() for a step-wise UX.
+ */
+async function sendOTP(email) {
+  if (!_signer) init();
+  await _signer.authenticate({ type: "email", emailMode: "otp", email });
+  console.log("[EfixWallet] OTP sent to:", email);
+  return "otp_sent";
+}
+
+/**
+ * Step 2 of email OTP flow — submits the 6-digit code.
+ */
+async function verifyOTP(otpCode) {
+  if (!_signer) throw new Error("Call sendOTP first");
+  await _signer.authenticate({ type: "otp", otpCode });
+  _signerAddress = await _signer.getAddress();
+  console.log("[EfixWallet] OTP verified. Signer:", _signerAddress);
+  return _signerAddress;
+}
+
+/**
  * Complete email auth with magic link bundle (from URL param)
  * @param {string} bundle - The bundle from magic link redirect
  */
@@ -109,18 +131,35 @@ async function checkSession() {
  */
 async function getClient() {
   if (!_signer) throw new Error("Signer not initialized");
-  
+
   if (!_client) {
     const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
-    
+
     _client = createSmartWalletClient({
       transport,
       chain: EFIX_CONFIG.chain,
       signer: _signer,
     });
   }
-  
+
   return _client;
+}
+
+// Base-chain smart wallet client (for BRLE, SALRIO, Bridge-Base USDC, etc.).
+// Same signer + same deterministic LightAccount v2 = same smart account address
+// as the Polygon client. Only the userOp destination chain differs.
+let _baseClient = null;
+async function getBaseClient() {
+  if (!_signer) throw new Error("Signer not initialized");
+  if (!_baseClient) {
+    const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
+    _baseClient = createSmartWalletClient({
+      transport,
+      chain: base,
+      signer: _signer,
+    });
+  }
+  return _baseClient;
 }
 
 /**
@@ -239,9 +278,13 @@ function getSigner() {
 window.EfixWallet = {
   init,
   loginWithEmail,
+  sendOTP,
+  verifyOTP,
   completeAuth,
   checkSession,
   getClient,
+  getSmartClient: getClient,  // alias used by /app/wallet/admin + /app/offerings
+  getBaseClient,
   getAddress,
   getBalance,
   disconnect,
