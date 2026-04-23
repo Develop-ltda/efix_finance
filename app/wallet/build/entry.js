@@ -67,29 +67,58 @@ async function loginWithEmail(email) {
 
 /**
  * Step 1 of email OTP flow — sends a 6-digit code to the user's inbox.
- * Use this + verifyOTP() instead of loginWithEmail() for a step-wise UX.
  *
- * Matches the BRLE bundle's loginWithEmail pattern exactly — Alchemy
- * Account Kit v4.86 defaults to OTP when { type: "email", email } is
- * passed without emailMode. Specifying emailMode: "otp" explicitly
- * caused the promise to hang waiting on verification.
+ * IMPORTANT: this FIRES authenticate() without awaiting it. The promise from
+ * `authenticate({type:'email'})` resolves only after the whole flow (OTP
+ * verify or magic-link bundle) completes — so await-ing here would block
+ * forever. We sleep 1.5s to give the Alchemy backend time to enqueue the
+ * email, then return.
+ *
+ * The background promise stores the final address in _signerAddress via the
+ * .then() handler; verifyOTP() uses that as a fallback if its own
+ * authenticate({type:'otp'}) fails (happens when magic link was used).
+ *
+ * De-minified from the last-known-good bundle (commit d014531) — do NOT
+ * simplify to a direct await.
  */
 async function sendOTP(email) {
   if (!_signer) init();
-  await _signer.authenticate({ type: "email", email });
-  console.log("[EfixWallet] OTP sent to:", email);
-  return "otp_sent";
+  _signer.authenticate({ type: "email", email })
+    .then(async () => {
+      try {
+        _signerAddress = await _signer.getAddress();
+        console.log("[EfixWallet] Auth auto-completed. Address:", _signerAddress);
+        if (window._efixAuthCallback) window._efixAuthCallback(_signerAddress);
+      } catch (e) {
+        console.error("[EfixWallet] Post-auth error:", e);
+      }
+    })
+    .catch((e) => {
+      console.error("[EfixWallet] Auth promise rejected:", e);
+      if (window._efixAuthError) window._efixAuthError(e);
+    });
+  await new Promise((r) => setTimeout(r, 1500));
+  console.log("[EfixWallet] OTP email initiated for:", email);
+  return true;
 }
 
 /**
  * Step 2 of email OTP flow — submits the 6-digit code.
+ * Falls back to the background promise from sendOTP if verify itself fails.
  */
 async function verifyOTP(otpCode) {
-  if (!_signer) throw new Error("Call sendOTP first");
-  await _signer.authenticate({ type: "otp", otpCode });
-  _signerAddress = await _signer.getAddress();
-  console.log("[EfixWallet] OTP verified. Signer:", _signerAddress);
-  return _signerAddress;
+  if (!_signer) throw new Error("Signer not initialized");
+  try {
+    await _signer.authenticate({ type: "otp", otpCode });
+    _signerAddress = await _signer.getAddress();
+    console.log("[EfixWallet] OTP verified. Address:", _signerAddress);
+    return _signerAddress;
+  } catch (e) {
+    console.log("[EfixWallet] verifyOTP fallback - waiting for background auth...", e.message);
+    await new Promise((r) => setTimeout(r, 3000));
+    if (_signerAddress) return _signerAddress;
+    throw e;
+  }
 }
 
 /**
