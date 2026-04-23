@@ -1153,7 +1153,7 @@
 
             try {
                 if (!window.EfixWallet?.getBaseClient) {
-                    throw new Error('Base client missing — reload the page (new bundle needed)');
+                    throw new Error('Base swap temporarily disabled — bundle does not expose getBaseClient. Use /brle/operator/ for swap until Base client is re-added.');
                 }
                 const client = await window.EfixWallet.getBaseClient();
 
