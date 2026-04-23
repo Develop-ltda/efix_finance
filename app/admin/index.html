@@ -8,6 +8,7 @@
 <link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shared/css/reset.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--amber:#d97706;--amber-dark:#b45309;--amber-soft:#fef3c7;--amber-border:#f3d2a7}
 body{font-family:'Inter',-apple-system,sans-serif;background:#f5f5f5;color:#0a0a0a;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -117,15 +118,37 @@ tbody tr:hover{background:#fffbeb}
 <div id="login-screen" class="login-wrap">
   <div class="login-card">
     <div class="login-title">efix<span style="color:#d97706">.</span>admin</div>
-    <div class="login-sub">Enter your admin bearer token. Stored in sessionStorage until tab close.</div>
-    <form onsubmit="doLogin(event)">
-      <div class="field">
-        <label>Admin token</label>
-        <input id="login-token" type="password" required autocomplete="off" placeholder="eb64a62d…">
-      </div>
-      <button class="btn-primary" type="submit">Sign in →</button>
-      <div id="login-alert"></div>
-    </form>
+    <div class="login-sub">Offerings Backoffice · Reg S Cat 3 · CVM Res 88</div>
+
+    <div id="g_id_onload"
+      data-client_id="299439946528-3vqe63ie5l318h3g73t3lv0d8f0ahd1v.apps.googleusercontent.com"
+      data-callback="handleGoogleLogin"
+      data-auto_prompt="false"
+      data-context="signin"
+      data-ux_mode="popup">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-shape="rectangular"
+      data-theme="outline"
+      data-text="signin_with"
+      data-size="large"
+      data-logo_alignment="left"
+      data-width="360"
+      style="display:flex;justify-content:center;margin-bottom:16px">
+    </div>
+
+    <details style="margin-top:1.5rem">
+      <summary style="font-size:0.7rem;color:#737373;cursor:pointer;font-family:'Space Mono',monospace;letter-spacing:0.08em;text-transform:uppercase">Admin Key (legacy)</summary>
+      <form onsubmit="doLegacyLogin(event)" style="margin-top:0.85rem">
+        <div class="field">
+          <label>Admin token</label>
+          <input id="login-token" type="password" autocomplete="off" placeholder="eb64a62d…">
+        </div>
+        <button class="btn-primary" type="submit">Sign in →</button>
+      </form>
+    </details>
+    <div id="login-alert"></div>
   </div>
 </div>
 
@@ -138,6 +161,8 @@ tbody tr:hover{background:#fffbeb}
     </div>
     <div class="nav-right">
       <span id="nav-health"><span class="indicator"></span>Checking…</span>
+      <img id="nav-pic" style="width:24px;height:24px;border-radius:50%;display:none;border:1px solid #525252">
+      <span id="nav-user" style="font-size:0.7rem;color:#d4d4d4"></span>
       <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
   </nav>
@@ -276,9 +301,13 @@ tbody tr:hover{background:#fffbeb}
 
 <script>
 const API_BASE = (new URLSearchParams(location.search).get('api')) || 'https://efix-offerings-backend-production.up.railway.app';
-const LS_TOKEN = 'efix.admin.token';
+// Shared keys with /app/wallet/admin so a Google login on either side carries over
+const LS_TOKEN = 'efixAdminToken';
+const LS_EMAIL = 'efixAdminEmail';
+const LS_NAME = 'efixAdminName';
+const LS_PIC = 'efixAdminPic';
 
-let TOKEN = sessionStorage.getItem(LS_TOKEN);
+let TOKEN = sessionStorage.getItem(LS_TOKEN) || localStorage.getItem(LS_TOKEN);
 let POLL_HEALTH_TIMER = null;
 
 function authHeaders() { return TOKEN ? { authorization: 'Bearer ' + TOKEN } : {}; }
@@ -302,7 +331,32 @@ async function api(path, opts = {}) {
 }
 
 // ───────── Auth
-async function doLogin(e) {
+async function handleGoogleLogin(response) {
+  const alertEl = document.getElementById('login-alert');
+  alertEl.innerHTML = `<div class="alert" style="background:#fef3c7;color:#b45309;border:1px solid #f3d2a7">Authenticating…</div>`;
+  try {
+    const r = await fetch(API_BASE + '/v1/admin/auth/google', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.message || d.error || 'Not authorized');
+    TOKEN = d.token;
+    sessionStorage.setItem(LS_TOKEN, d.token);
+    localStorage.setItem(LS_TOKEN, d.token);
+    sessionStorage.setItem(LS_EMAIL, d.email);
+    localStorage.setItem(LS_EMAIL, d.email);
+    sessionStorage.setItem(LS_NAME, d.name || '');
+    sessionStorage.setItem(LS_PIC, d.picture || '');
+    showApp(d.name, d.picture);
+  } catch (err) {
+    document.getElementById('login-alert').innerHTML = `<div class="alert alert-err">${escape(err.message)}</div>`;
+  }
+}
+window.handleGoogleLogin = handleGoogleLogin;
+
+async function doLegacyLogin(e) {
   e.preventDefault();
   const tok = document.getElementById('login-token').value.trim();
   if (!tok) return;
@@ -310,7 +364,8 @@ async function doLogin(e) {
   try {
     await api('/v1/admin/stats');
     sessionStorage.setItem(LS_TOKEN, tok);
-    showApp();
+    localStorage.setItem(LS_TOKEN, tok);
+    showApp('Admin', '');
   } catch (err) {
     TOKEN = null;
     document.getElementById('login-alert').innerHTML = `<div class="alert alert-err">${escape(err.message)}</div>`;
@@ -320,14 +375,26 @@ async function doLogin(e) {
 function logout() {
   TOKEN = null;
   sessionStorage.removeItem(LS_TOKEN);
+  localStorage.removeItem(LS_TOKEN);
+  sessionStorage.removeItem(LS_EMAIL);
+  sessionStorage.removeItem(LS_NAME);
+  sessionStorage.removeItem(LS_PIC);
   document.getElementById('app-screen').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
   if (POLL_HEALTH_TIMER) clearInterval(POLL_HEALTH_TIMER);
 }
 
-function showApp() {
+function showApp(name, pic) {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app-screen').classList.remove('hidden');
+  const displayName = name || sessionStorage.getItem(LS_NAME) || '';
+  const displayPic = pic || sessionStorage.getItem(LS_PIC) || '';
+  if (displayName) document.getElementById('nav-user').textContent = displayName;
+  if (displayPic) {
+    const img = document.getElementById('nav-pic');
+    img.src = displayPic;
+    img.style.display = 'inline-block';
+  }
   loadOverview();
   loadHealth();
   POLL_HEALTH_TIMER = setInterval(loadHealth, 30000);
@@ -577,7 +644,11 @@ function toast(msg, err = false) {
 // ───────── Boot
 if (TOKEN) {
   // Validate token still works
-  api('/v1/admin/stats').then(showApp).catch(() => { TOKEN = null; sessionStorage.removeItem(LS_TOKEN); });
+  api('/v1/admin/stats').then(() => showApp()).catch(() => {
+    TOKEN = null;
+    sessionStorage.removeItem(LS_TOKEN);
+    localStorage.removeItem(LS_TOKEN);
+  });
 }
 </script>
 
