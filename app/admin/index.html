@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EFIX Admin · Offerings</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/reset.css">
+<style>
+:root{--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--amber:#d97706;--amber-dark:#b45309;--amber-soft:#fef3c7;--amber-border:#f3d2a7}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f5f5f5;color:#0a0a0a;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:#0a0a0a;color:#fff}
+
+nav{background:#0a0a0a;color:#fff;padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.02em}
+.nav-brand .dot{color:#d97706}
+.nav-brand-sub{font-family:'Space Mono',monospace;font-size:0.6rem;color:#737373;letter-spacing:0.15em;text-transform:uppercase;margin-left:0.75rem}
+.nav-right{display:flex;gap:1rem;align-items:center;font-family:'Space Mono',monospace;font-size:0.7rem;color:#a3a3a3;letter-spacing:0.1em;text-transform:uppercase}
+.nav-right .indicator{width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;margin-right:6px}
+.btn-logout{background:none;border:1px solid #525252;color:#a3a3a3;padding:6px 14px;border-radius:6px;font-family:'Space Mono',monospace;font-size:0.65rem;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;transition:all .2s}
+.btn-logout:hover{border-color:#d97706;color:#d97706}
+
+main{max-width:1400px;margin:0 auto;padding:2rem}
+
+/* Tabs */
+.tabs{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:1px solid #e5e5e5}
+.tab{padding:0.85rem 1.25rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;font-weight:700}
+.tab:hover{color:#0a0a0a}
+.tab.active{color:#d97706;border-bottom-color:#d97706}
+
+/* Cards */
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.card-title{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;font-weight:700}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem}
+.stat-card .k{font-family:'Space Mono',monospace;font-size:0.62rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem}
+.stat-card .v{font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700;color:#0a0a0a}
+.stat-card .sub{font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373;margin-top:0.25rem}
+.stat-card.accent .v{color:#d97706}
+
+/* Tables */
+.table-wrap{background:#fff;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.table-toolbar{padding:0.85rem 1.25rem;border-bottom:1px solid #e5e5e5;display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;background:#fafafa}
+.table-toolbar select, .table-toolbar input{padding:0.5rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.8rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a}
+.table-toolbar label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-right:0.35rem}
+.table-toolbar .spacer{flex:1}
+.table-toolbar .count{font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373}
+
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;padding:0.7rem 1.25rem;font-family:'Space Mono',monospace;font-size:0.62rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;background:#fafafa;border-bottom:1px solid #e5e5e5;font-weight:700;white-space:nowrap}
+tbody td{padding:0.75rem 1.25rem;font-size:0.82rem;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+tbody tr:hover{background:#fffbeb}
+.mono{font-family:'Space Mono',monospace;font-size:0.75rem}
+.muted{color:#a3a3a3}
+.num{font-family:'Space Mono',monospace;font-weight:700;text-align:right}
+.email-cell{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.addr-cell{font-family:'Space Mono',monospace;font-size:0.72rem;color:#525252;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.pill{display:inline-block;padding:2px 10px;border-radius:20px;font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;white-space:nowrap}
+.pill.pending{background:#fef3c7;color:#b45309}
+.pill.kyc_review{background:#fef3c7;color:#b45309}
+.pill.kyc_approved{background:#dbeafe;color:#1e40af}
+.pill.awaiting_deposit{background:#dbeafe;color:#1e40af}
+.pill.deposit_received{background:#e0e7ff;color:#3730a3}
+.pill.ready_to_settle{background:#f3e8ff;color:#6b21a8}
+.pill.settled{background:#d1fae5;color:#065f46}
+.pill.rejected, .pill.expired{background:#fee2e2;color:#991b1b}
+.pill.approved{background:#d1fae5;color:#065f46}
+.pill.in_review{background:#fef3c7;color:#b45309}
+.pill.matched{background:#d1fae5;color:#065f46}
+.pill.over_paid, .pill.under_paid{background:#fef3c7;color:#b45309}
+
+.actions-cell{white-space:nowrap}
+.btn-action{padding:4px 10px;font-size:0.7rem;border:1px solid #e5e5e5;border-radius:5px;background:#fff;cursor:pointer;margin-right:4px;font-family:inherit;color:#0a0a0a;transition:all .15s}
+.btn-action:hover{border-color:#d97706;color:#d97706;background:#fffbeb}
+.btn-action.danger:hover{border-color:#b91c1c;color:#b91c1c;background:#fef2f2}
+.btn-action.primary{background:#d97706;color:#fff;border-color:#d97706}
+.btn-action.primary:hover{background:#b45309;border-color:#b45309;color:#fff}
+
+/* Login screen */
+.login-wrap{max-width:440px;margin:10vh auto;padding:2rem}
+.login-card{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:2.5rem;box-shadow:0 8px 40px rgba(0,0,0,0.06)}
+.login-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.5rem}
+.login-sub{color:#737373;font-size:0.85rem;margin-bottom:1.5rem}
+.login-card .field{margin-bottom:1rem}
+.login-card .field label{display:block;font-family:'Space Mono',monospace;font-size:0.62rem;color:#737373;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem}
+.login-card .field input{width:100%;padding:0.8rem 1rem;font-family:'Space Mono',monospace;font-size:0.85rem;border:1px solid #e5e5e5;border-radius:8px}
+.login-card .field input:focus{outline:none;border-color:#d97706}
+.login-card .btn-primary{width:100%;background:#d97706;color:#fff;padding:0.8rem;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-size:0.88rem}
+.login-card .btn-primary:hover{background:#b45309}
+
+.alert{padding:0.8rem 1rem;border-radius:8px;font-size:0.82rem;margin-top:1rem}
+.alert-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+
+.loading{display:inline-block;width:12px;height:12px;border:2px solid #d4d4d4;border-top-color:#d97706;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.empty{text-align:center;padding:3rem;color:#a3a3a3;font-family:'Space Mono',monospace;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase}
+
+.hidden{display:none !important}
+
+.progress-bar{height:6px;background:#e5e5e5;border-radius:3px;overflow:hidden;margin-top:0.5rem}
+.progress-bar .fill{height:100%;background:#d97706;border-radius:3px;transition:width .3s}
+
+.toast{position:fixed;bottom:2rem;right:2rem;background:#0a0a0a;color:#fff;padding:0.85rem 1.25rem;border-radius:10px;font-size:0.85rem;z-index:200;animation:slideUp 0.2s ease-out;max-width:320px}
+.toast.err{background:#991b1b}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-title">efix<span style="color:#d97706">.</span>admin</div>
+    <div class="login-sub">Enter your admin bearer token. Stored in sessionStorage until tab close.</div>
+    <form onsubmit="doLogin(event)">
+      <div class="field">
+        <label>Admin token</label>
+        <input id="login-token" type="password" required autocomplete="off" placeholder="eb64a62d…">
+      </div>
+      <button class="btn-primary" type="submit">Sign in →</button>
+      <div id="login-alert"></div>
+    </form>
+  </div>
+</div>
+
+<!-- Main admin UI -->
+<div id="app-screen" class="hidden">
+  <nav>
+    <div>
+      <span class="nav-brand">efix<span class="dot">.</span>admin</span>
+      <span class="nav-brand-sub">Offerings Backoffice</span>
+    </div>
+    <div class="nav-right">
+      <span id="nav-health"><span class="indicator"></span>Checking…</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="tabs">
+      <button class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+      <button class="tab" data-tab="allocations" onclick="switchTab('allocations')">Allocations</button>
+      <button class="tab" data-tab="investors" onclick="switchTab('investors')">Investors</button>
+      <button class="tab" data-tab="deposits" onclick="switchTab('deposits')">Deposits</button>
+      <button class="tab" data-tab="compliance" onclick="switchTab('compliance')">CVM 88</button>
+    </div>
+
+    <!-- Overview -->
+    <div id="tab-overview">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="k">Loading…</div><div class="v">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Poll worker</div>
+        <div id="poll-status" class="mono muted">—</div>
+      </div>
+    </div>
+
+    <!-- Allocations -->
+    <div id="tab-allocations" class="hidden">
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <label>Status</label>
+          <select id="f-alloc-status" onchange="loadAllocations()">
+            <option value="">All</option>
+            <option value="pending">pending</option>
+            <option value="kyc_review">kyc_review</option>
+            <option value="kyc_approved">kyc_approved</option>
+            <option value="awaiting_deposit">awaiting_deposit</option>
+            <option value="deposit_received">deposit_received</option>
+            <option value="ready_to_settle">ready_to_settle</option>
+            <option value="settled">settled</option>
+            <option value="rejected">rejected</option>
+            <option value="expired">expired</option>
+          </select>
+          <label>Rail</label>
+          <select id="f-alloc-rail" onchange="loadAllocations()">
+            <option value="">All</option>
+            <option value="pix">pix</option>
+            <option value="ach">ach</option>
+            <option value="wire">wire</option>
+            <option value="sepa">sepa</option>
+          </select>
+          <label>Email</label>
+          <input id="f-alloc-email" placeholder="filter by email…" oninput="debouncedLoadAllocations()">
+          <div class="spacer"></div>
+          <span class="count" id="alloc-count">—</span>
+        </div>
+        <table>
+          <thead><tr><th>Created</th><th>Email</th><th>Offering</th><th>Rail</th><th class="num">Amount BRL</th><th>Status</th><th>Wallet</th><th>Actions</th></tr></thead>
+          <tbody id="alloc-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Investors -->
+    <div id="tab-investors" class="hidden">
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <label>KYC</label>
+          <select id="f-inv-kyc" onchange="loadInvestors()">
+            <option value="">All</option>
+            <option value="pending">pending</option>
+            <option value="in_review">in_review</option>
+            <option value="approved">approved</option>
+            <option value="rejected">rejected</option>
+            <option value="expired">expired</option>
+          </select>
+          <label>Email</label>
+          <input id="f-inv-email" placeholder="filter by email…" oninput="debouncedLoadInvestors()">
+          <div class="spacer"></div>
+          <span class="count" id="inv-count">—</span>
+        </div>
+        <table>
+          <thead><tr><th>Created</th><th>Email</th><th>Wallet</th><th>KYC</th><th>Qualified</th><th>Allocs</th><th class="num">YTD R$</th><th class="num">Cap left R$</th><th>Actions</th></tr></thead>
+          <tbody id="inv-tbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Deposits -->
+    <div id="tab-deposits" class="hidden">
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <label>Recon status</label>
+          <select id="f-dep-recon" onchange="loadDeposits()">
+            <option value="">All</option>
+            <option value="pending">pending</option>
+            <option value="matched">matched</option>
+            <option value="over_paid">over_paid</option>
+            <option value="under_paid">under_paid</option>
+            <option value="rejected">rejected</option>
+          </select>
+          <label>Provider</label>
+          <select id="f-dep-provider" onchange="loadDeposits()">
+            <option value="">All</option>
+            <option value="hausbank">hausbank</option>
+            <option value="bridge">bridge</option>
+            <option value="openpix">openpix</option>
+          </select>
+          <div class="spacer"></div>
+          <span class="count" id="dep-count">—</span>
+        </div>
+        <table>
+          <thead><tr><th>Received</th><th>Provider</th><th>Rail</th><th class="num">Amount</th><th>Recon</th><th>Alloc status</th><th>Investor</th><th>Provider ref</th></tr></thead>
+          <tbody id="dep-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CVM 88 -->
+    <div id="tab-compliance" class="hidden">
+      <div class="card">
+        <div class="card-title">Issuer annual cap · R$ 15,000,000</div>
+        <div class="mono" id="cvm-issuer-used">—</div>
+        <div class="progress-bar"><div class="fill" id="cvm-issuer-fill" style="width:0%"></div></div>
+        <div class="muted mono" style="margin-top:0.5rem;font-size:0.7rem" id="cvm-issuer-pct">0 %</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Per-investor default cap · R$ 20,000/yr</div>
+        <div class="muted" style="font-size:0.85rem;margin-top:0.5rem">Investors over 50 % of their cap are flagged in the Investors tab.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cooling-off</div>
+        <div class="muted" style="font-size:0.85rem;margin-top:0.5rem">5-day cooling-off between <code>deposit_received</code> and <code>settled</code>. Enforcement via allocation <code>cooling_off_until</code> timestamp — admin advance currently bypasses. Automation pending.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const API_BASE = (new URLSearchParams(location.search).get('api')) || 'https://efix-offerings-backend-production.up.railway.app';
+const LS_TOKEN = 'efix.admin.token';
+
+let TOKEN = sessionStorage.getItem(LS_TOKEN);
+let POLL_HEALTH_TIMER = null;
+
+function authHeaders() { return TOKEN ? { authorization: 'Bearer ' + TOKEN } : {}; }
+
+async function api(path, opts = {}) {
+  const r = await fetch(API_BASE + path, {
+    ...opts,
+    headers: { 'content-type': 'application/json', ...authHeaders(), ...(opts.headers || {}) },
+  });
+  const ct = r.headers.get('content-type') || '';
+  const body = ct.includes('application/json') ? await r.json() : await r.text();
+  if (r.status === 401) {
+    logout();
+    throw new Error('Unauthorized');
+  }
+  if (!r.ok) {
+    const msg = typeof body === 'object' ? (body.message || body.error) : body;
+    throw new Error(msg || ('HTTP ' + r.status));
+  }
+  return body;
+}
+
+// ───────── Auth
+async function doLogin(e) {
+  e.preventDefault();
+  const tok = document.getElementById('login-token').value.trim();
+  if (!tok) return;
+  TOKEN = tok;
+  try {
+    await api('/v1/admin/stats');
+    sessionStorage.setItem(LS_TOKEN, tok);
+    showApp();
+  } catch (err) {
+    TOKEN = null;
+    document.getElementById('login-alert').innerHTML = `<div class="alert alert-err">${escape(err.message)}</div>`;
+  }
+}
+
+function logout() {
+  TOKEN = null;
+  sessionStorage.removeItem(LS_TOKEN);
+  document.getElementById('app-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  if (POLL_HEALTH_TIMER) clearInterval(POLL_HEALTH_TIMER);
+}
+
+function showApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+  loadOverview();
+  loadHealth();
+  POLL_HEALTH_TIMER = setInterval(loadHealth, 30000);
+}
+
+// ───────── Tabs
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+  ['overview','allocations','investors','deposits','compliance'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
+  });
+  if (name === 'overview') loadOverview();
+  if (name === 'allocations') loadAllocations();
+  if (name === 'investors') loadInvestors();
+  if (name === 'deposits') loadDeposits();
+  if (name === 'compliance') loadCompliance();
+}
+
+// ───────── Overview
+async function loadOverview() {
+  try {
+    const s = await api('/v1/admin/stats');
+    const grid = document.getElementById('stats-grid');
+    const byStatus = s.allocations.byStatus || {};
+    const amtSum = (st) => Math.round(byStatus[st]?.sumBrl || 0).toLocaleString('pt-BR');
+    const cnt = (st) => byStatus[st]?.count || 0;
+    grid.innerHTML = `
+      <div class="stat-card"><div class="k">Investors</div><div class="v">${s.investors.total}</div><div class="sub">${s.investors.kycApproved} KYC approved</div></div>
+      <div class="stat-card"><div class="k">Allocations</div><div class="v">${s.allocations.total}</div><div class="sub">${cnt('settled')} settled · ${cnt('awaiting_deposit')+cnt('deposit_received')+cnt('ready_to_settle')} in flight</div></div>
+      <div class="stat-card accent"><div class="k">YTD raised · BRL</div><div class="v">R$ ${Math.round(s.compliance.annualRaisedBrl).toLocaleString('pt-BR')}</div><div class="sub">of R$ ${(s.compliance.annualIssuerCapBrl/1e6)}M cap (CVM 88)</div></div>
+      <div class="stat-card"><div class="k">Deposits</div><div class="v">${s.deposits.total}</div><div class="sub">${s.deposits.matched} matched</div></div>
+      <div class="stat-card"><div class="k">Pending KYC review</div><div class="v">${cnt('kyc_review')}</div><div class="sub">R$ ${amtSum('kyc_review')}</div></div>
+      <div class="stat-card"><div class="k">Awaiting deposit</div><div class="v">${cnt('awaiting_deposit')}</div><div class="sub">R$ ${amtSum('awaiting_deposit')}</div></div>
+      <div class="stat-card"><div class="k">Ready to settle</div><div class="v">${cnt('ready_to_settle')}</div><div class="sub">R$ ${amtSum('ready_to_settle')}</div></div>
+      <div class="stat-card"><div class="k">Settled</div><div class="v">${cnt('settled')}</div><div class="sub">R$ ${amtSum('settled')}</div></div>
+    `;
+  } catch (err) { toast(err.message, true); }
+
+  try {
+    const p = await api('/v1/admin/poll/status');
+    document.getElementById('poll-status').textContent = p.running
+      ? `running · every ${p.intervalMs/1000}s · cycles=${p.cyclesRan} · matched=${p.totalMatched}${p.lastError ? ' · ERROR: ' + p.lastError : ''}`
+      : `disabled · ${p.reason || 'not configured'}`;
+  } catch {
+    document.getElementById('poll-status').textContent = 'unavailable';
+  }
+}
+
+async function loadHealth() {
+  try {
+    const r = await fetch(API_BASE + '/health/deep');
+    const d = await r.json();
+    const chainOk = d.chain?.ok, dbOk = d.db?.ok;
+    const el = document.getElementById('nav-health');
+    const color = chainOk && dbOk ? '#10b981' : '#f59e0b';
+    el.innerHTML = `<span class="indicator" style="background:${color}"></span>Block ${d.chain?.baseBlockNumber || '?'} · DB ${dbOk ? 'ok' : 'down'}`;
+  } catch { document.getElementById('nav-health').innerHTML = '<span class="indicator" style="background:#ef4444"></span>offline'; }
+}
+
+// ───────── Allocations
+const debouncedLoadAllocations = debounce(() => loadAllocations(), 250);
+async function loadAllocations() {
+  const params = new URLSearchParams();
+  const s = document.getElementById('f-alloc-status').value;
+  const r = document.getElementById('f-alloc-rail').value;
+  const e = document.getElementById('f-alloc-email').value.trim();
+  if (s) params.set('status', s);
+  if (r) params.set('rail', r);
+  if (e) params.set('email', e);
+  params.set('limit', '100');
+  try {
+    const data = await api('/v1/admin/allocations?' + params.toString());
+    document.getElementById('alloc-count').textContent = `${data.items.length} of ${data.total}`;
+    renderAllocations(data.items);
+  } catch (err) { toast(err.message, true); }
+}
+function renderAllocations(items) {
+  const tbody = document.getElementById('alloc-tbody');
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">No allocations.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = items.map(it => `
+    <tr>
+      <td class="mono">${new Date(it.createdAt).toLocaleString('en-GB').slice(0,17)}</td>
+      <td class="email-cell" title="${escape(it.investorEmail || '')}">${escape(it.investorEmail || '—')}</td>
+      <td class="mono">${escape(it.offeringId)}</td>
+      <td class="mono">${escape(it.rail.toUpperCase())}</td>
+      <td class="num">${Number(it.amountBrl).toLocaleString('pt-BR', { maximumFractionDigits:0 })}</td>
+      <td><span class="pill ${it.status}">${escape(it.status)}</span></td>
+      <td class="addr-cell" title="${escape(it.investorWallet || '')}">${escape(it.investorWallet || '—')}</td>
+      <td class="actions-cell">${allocActions(it)}</td>
+    </tr>`).join('');
+}
+function allocActions(it) {
+  const next = {
+    pending: 'awaiting_deposit',
+    kyc_review: 'kyc_approved',
+    kyc_approved: 'awaiting_deposit',
+    awaiting_deposit: 'deposit_received',
+    deposit_received: 'ready_to_settle',
+    ready_to_settle: 'settled',
+  }[it.status];
+  if (!next) return '<span class="muted mono">—</span>';
+  const label = next === 'settled' ? 'Settle' : next.replace(/_/g, ' ');
+  const cls = next === 'settled' ? 'primary' : '';
+  return `<button class="btn-action ${cls}" onclick="advanceAlloc('${it.id}', '${next}')">→ ${label}</button><button class="btn-action danger" onclick="rejectAlloc('${it.id}')">reject</button>`;
+}
+async function advanceAlloc(id, status) {
+  const body = { status };
+  if (status === 'settled') {
+    const tx = prompt('On-chain tx hash (optional)');
+    if (tx) body.on_chain_tx = tx;
+  }
+  try {
+    await api(`/v1/admin/allocations/${id}/advance`, { method: 'POST', body: JSON.stringify(body) });
+    toast(`→ ${status}`);
+    loadAllocations();
+  } catch (err) { toast(err.message, true); }
+}
+async function rejectAlloc(id) {
+  const reason = prompt('Rejection reason');
+  if (!reason) return;
+  try {
+    await api(`/v1/admin/allocations/${id}/advance`, { method: 'POST', body: JSON.stringify({ status: 'rejected', reason }) });
+    toast('rejected');
+    loadAllocations();
+  } catch (err) { toast(err.message, true); }
+}
+
+// ───────── Investors
+const debouncedLoadInvestors = debounce(() => loadInvestors(), 250);
+async function loadInvestors() {
+  const params = new URLSearchParams();
+  const k = document.getElementById('f-inv-kyc').value;
+  const e = document.getElementById('f-inv-email').value.trim();
+  if (k) params.set('kyc_status', k);
+  if (e) params.set('email', e);
+  params.set('limit', '100');
+  try {
+    const data = await api('/v1/admin/investors?' + params.toString());
+    document.getElementById('inv-count').textContent = `${data.items.length} of ${data.total}`;
+    renderInvestors(data.items);
+  } catch (err) { toast(err.message, true); }
+}
+function renderInvestors(items) {
+  const tbody = document.getElementById('inv-tbody');
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">No investors.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = items.map(it => `
+    <tr>
+      <td class="mono">${new Date(it.createdAt).toLocaleDateString('en-GB')}</td>
+      <td class="email-cell" title="${escape(it.email)}">${escape(it.email)}</td>
+      <td class="addr-cell" title="${escape(it.walletAddress || '')}">${escape(it.walletAddress || '—')}</td>
+      <td><span class="pill ${it.kycStatus}">${escape(it.kycStatus)}</span></td>
+      <td class="mono">${it.qualified ? '✓' : '—'}</td>
+      <td class="num">${it.allocationCount}</td>
+      <td class="num">${Math.round(it.ytdRaisedBrl).toLocaleString('pt-BR')}</td>
+      <td class="num">${Math.round(it.capRemainingBrl).toLocaleString('pt-BR')}</td>
+      <td class="actions-cell">${invActions(it)}</td>
+    </tr>`).join('');
+}
+function invActions(it) {
+  const approveBtn = `<button class="btn-action primary" onclick="kycAction('${it.id}', 'approved')">approve</button>`;
+  const rejectBtn = `<button class="btn-action danger" onclick="kycAction('${it.id}', 'rejected')">reject</button>`;
+  if (it.kycStatus === 'approved') return rejectBtn;
+  if (it.kycStatus === 'rejected') return approveBtn;
+  return approveBtn + rejectBtn;
+}
+async function kycAction(id, status) {
+  const provider = 'admin-override';
+  try {
+    await api(`/v1/admin/investors/${id}/kyc`, { method: 'POST', body: JSON.stringify({ status, provider }) });
+    toast(`KYC → ${status}`);
+    loadInvestors();
+  } catch (err) { toast(err.message, true); }
+}
+
+// ───────── Deposits
+async function loadDeposits() {
+  const params = new URLSearchParams();
+  const r = document.getElementById('f-dep-recon').value;
+  const p = document.getElementById('f-dep-provider').value;
+  if (r) params.set('reconciliation_status', r);
+  if (p) params.set('provider', p);
+  params.set('limit', '100');
+  try {
+    const data = await api('/v1/admin/deposits?' + params.toString());
+    document.getElementById('dep-count').textContent = `${data.items.length} of ${data.total}`;
+    renderDeposits(data.items);
+  } catch (err) { toast(err.message, true); }
+}
+function renderDeposits(items) {
+  const tbody = document.getElementById('dep-tbody');
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">No deposits recorded.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = items.map(it => {
+    const amt = it.amountBrl ? `R$ ${Math.round(Number(it.amountBrl)).toLocaleString('pt-BR')}` : it.amountUsd ? `$${Math.round(Number(it.amountUsd)).toLocaleString('en-US')}` : '—';
+    return `<tr>
+      <td class="mono">${it.receivedAt ? new Date(it.receivedAt).toLocaleString('en-GB').slice(0,17) : '—'}</td>
+      <td class="mono">${escape(it.provider)}</td>
+      <td class="mono">${escape(it.rail.toUpperCase())}</td>
+      <td class="num">${amt}</td>
+      <td><span class="pill ${it.reconciliationStatus}">${escape(it.reconciliationStatus)}</span></td>
+      <td>${it.allocationStatus ? `<span class="pill ${it.allocationStatus}">${escape(it.allocationStatus)}</span>` : '<span class="muted mono">—</span>'}</td>
+      <td class="email-cell" title="${escape(it.investorEmail || '')}">${escape(it.investorEmail || '—')}</td>
+      <td class="mono" style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${escape(it.providerReference || '—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ───────── Compliance
+async function loadCompliance() {
+  try {
+    const s = await api('/v1/admin/stats');
+    const used = s.compliance.annualRaisedBrl;
+    const cap = s.compliance.annualIssuerCapBrl;
+    const pct = Math.min(100, (used / cap) * 100);
+    document.getElementById('cvm-issuer-used').textContent = `R$ ${Math.round(used).toLocaleString('pt-BR')} used · R$ ${Math.round(cap-used).toLocaleString('pt-BR')} remaining`;
+    document.getElementById('cvm-issuer-fill').style.width = pct + '%';
+    document.getElementById('cvm-issuer-pct').textContent = pct.toFixed(2) + ' %';
+  } catch (err) { toast(err.message, true); }
+}
+
+// ───────── Utils
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+function escape(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function toast(msg, err = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (err ? ' err' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ───────── Boot
+if (TOKEN) {
+  // Validate token still works
+  api('/v1/admin/stats').then(showApp).catch(() => { TOKEN = null; sessionStorage.removeItem(LS_TOKEN); });
+}
+</script>
+
+</body>
+</html>

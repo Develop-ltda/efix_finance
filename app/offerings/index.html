@@ -126,6 +126,25 @@ main{max-width:960px;margin:0 auto;padding:7rem 2rem 5rem}
 .status-pill.ok{background:#d1fae5;color:#065f46}
 .status-pill.err{background:#fee2e2;color:#991b1b}
 
+/* 4-step progress — mirrors /app/wallet deposit progress */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-top:1.5rem}
+.step{background:#f5f5f5;border:1px solid #e5e5e5;border-radius:10px;padding:0.85rem 0.75rem;position:relative;transition:all .2s}
+.step.active{border-color:#d97706;background:#fffbeb}
+.step.done{border-color:#10b981;background:#ecfdf5}
+.step-icon{width:26px;height:26px;border-radius:50%;background:#d4d4d4;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;margin-bottom:0.45rem}
+.step.active .step-icon{background:#d97706}
+.step.active .step-icon::after{content:'';position:absolute;top:0.85rem;left:0.75rem;width:26px;height:26px;border-radius:50%;border:2px solid #d97706;animation:pulseRing 1.2s infinite}
+.step.done .step-icon{background:#10b981}
+.step-label{font-family:'Space Mono',monospace;font-size:0.62rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;line-height:1.35}
+.step.active .step-label{color:#b45309}
+.step.done .step-label{color:#065f46}
+@keyframes pulseRing{0%{transform:scale(1);opacity:1}100%{transform:scale(1.4);opacity:0}}
+
+.paid-cta{display:flex;gap:0.75rem;margin-top:1.25rem;align-items:center;flex-wrap:wrap}
+.paid-msg{flex:1;font-family:'Space Mono',monospace;font-size:0.72rem;color:#737373;min-height:1rem}
+.paid-msg.active{color:#b45309}
+.paid-msg.done{color:#065f46}
+
 .loading{display:inline-block;width:14px;height:14px;border:2px solid #d4d4d4;border-top-color:#d97706;border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -614,9 +633,23 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
         </div>
         ${statusCol}
       </div>
+
+      <div class="steps" id="pi-steps">
+        <div class="step" id="pi-step-1"><div class="step-icon">1</div><div class="step-label">PIX QR generated</div></div>
+        <div class="step" id="pi-step-2"><div class="step-icon">2</div><div class="step-label">Deposit matched</div></div>
+        <div class="step" id="pi-step-3"><div class="step-icon">3</div><div class="step-label">Operator approves</div></div>
+        <div class="step" id="pi-step-4"><div class="step-icon">4</div><div class="step-label">SALRIO delivered</div></div>
+      </div>
+
+      <div class="paid-cta">
+        <button class="btn btn-primary" id="btn-paid" onclick="handleIPaid()" style="width:auto;flex:0 0 auto">Já paguei o PIX ✓</button>
+        <span class="paid-msg" id="paid-msg"></span>
+      </div>
+
       <div class="alert alert-info" style="margin-top:1rem">
-        ✓ Send <strong>exactly ${amountStr}</strong> — the HausBank poll worker matches by amount (±R$ 0.01) within 15 minutes. Your allocation will auto-advance to <code>deposit_received</code>.
+        Send <strong>exactly ${amountStr}</strong>. The HausBank poll worker matches by amount (±R$ 0.01) within 15 minutes. Click <em>Já paguei</em> to check now.
       </div>`;
+    updateStepsFromStatus(alloc.status);
     return;
   }
 
@@ -658,25 +691,126 @@ async function refreshStatus() {
   await showPaymentInstructions(CURRENT_ALLOC_ID);
 }
 
-function startPolling() {
+// Maps allocation status to 4-step progress state.
+function updateStepsFromStatus(status) {
+  const mark = (id, state) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('active', 'done');
+    const icon = el.querySelector('.step-icon');
+    if (state === 'done') {
+      el.classList.add('done');
+      if (icon) icon.textContent = '✓';
+    } else if (state === 'active') {
+      el.classList.add('active');
+      if (icon) icon.textContent = icon.dataset.n || icon.textContent;
+    }
+  };
+  // Set reset icons first
+  [1,2,3,4].forEach(n => {
+    const el = document.getElementById('pi-step-' + n);
+    if (!el) return;
+    const icon = el.querySelector('.step-icon');
+    if (icon && !icon.dataset.n) icon.dataset.n = icon.textContent;
+  });
+
+  switch (status) {
+    case 'kyc_review':
+    case 'pending':
+    case 'kyc_approved':
+    case 'awaiting_deposit':
+      mark('pi-step-1', 'done');
+      mark('pi-step-2', 'active');
+      break;
+    case 'deposit_received':
+      mark('pi-step-1', 'done');
+      mark('pi-step-2', 'done');
+      mark('pi-step-3', 'active');
+      break;
+    case 'ready_to_settle':
+      mark('pi-step-1', 'done');
+      mark('pi-step-2', 'done');
+      mark('pi-step-3', 'done');
+      mark('pi-step-4', 'active');
+      break;
+    case 'settled':
+      mark('pi-step-1', 'done');
+      mark('pi-step-2', 'done');
+      mark('pi-step-3', 'done');
+      mark('pi-step-4', 'done');
+      break;
+    case 'rejected':
+    case 'expired':
+      // leave step colors at the point of failure
+      break;
+  }
+
+  // Status pill sync
+  const pill = document.querySelector('.pi-status-row .v .status-pill');
+  if (pill) {
+    pill.className = 'status-pill ' + pillClass(status);
+    pill.textContent = status;
+  }
+}
+
+function setPaidMsg(msg, kind) {
+  const el = document.getElementById('paid-msg');
+  if (!el) return;
+  el.className = 'paid-msg' + (kind ? ' ' + kind : '');
+  el.textContent = msg || '';
+}
+
+async function handleIPaid() {
+  const btn = document.getElementById('btn-paid');
+  if (!btn || !CURRENT_ALLOC_ID) return;
+  btn.disabled = true;
+  const origLabel = btn.textContent;
+  btn.innerHTML = '<span class="loading"></span> Verificando...';
+  setPaidMsg('Querying HausBank — deposits typically settle in < 60 s', 'active');
+  startPollingFast();
+}
+
+function startPolling() { startPollingFast(); }
+
+// Polls /v1/allocations/:id every 5 s, updates steps, stops on terminal state.
+function startPollingFast() {
   if (POLL_TIMER) clearInterval(POLL_TIMER);
+  let attempts = 0;
+  const MAX_ATTEMPTS = 60; // ~5 minutes at 5s
   POLL_TIMER = setInterval(async () => {
     if (!CURRENT_ALLOC_ID) return;
+    attempts++;
     try {
       const r = await fetch(`${API_BASE}/v1/allocations/${CURRENT_ALLOC_ID}`);
       if (!r.ok) return;
       const data = await r.json();
-      const pill = document.querySelector('.pi-status-row .v .status-pill');
-      if (pill) {
-        pill.className = 'status-pill ' + pillClass(data.allocation.status);
-        pill.textContent = data.allocation.status;
-      }
-      if (['settled', 'rejected', 'expired'].includes(data.allocation.status)) {
+      const st = data.allocation.status;
+      updateStepsFromStatus(st);
+
+      if (st === 'deposit_received') {
+        setPaidMsg('✓ HausBank matched your deposit — operator will settle shortly', 'done');
+      } else if (st === 'ready_to_settle') {
+        setPaidMsg('✓ Queued for Safe settlement', 'done');
+      } else if (st === 'settled') {
+        setPaidMsg('✓ SALRIO delivered to your wallet on Base', 'done');
+        const btn = document.getElementById('btn-paid');
+        if (btn) btn.style.display = 'none';
         clearInterval(POLL_TIMER);
         POLL_TIMER = null;
+      } else if (['rejected', 'expired'].includes(st)) {
+        setPaidMsg('Status: ' + st, 'active');
+        clearInterval(POLL_TIMER);
+        POLL_TIMER = null;
+      } else if (attempts >= MAX_ATTEMPTS) {
+        // Stop pounding the backend but keep button ready
+        clearInterval(POLL_TIMER);
+        POLL_TIMER = null;
+        const btn = document.getElementById('btn-paid');
+        if (btn) { btn.disabled = false; btn.textContent = 'Check again'; }
+        setPaidMsg('Still waiting on HausBank — try again in a minute or refresh.');
       }
     } catch {}
-  }, 10000);
+  }, 5000);
 }
 
 function copyEmv(btn) {

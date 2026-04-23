@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EFIX Originator · SALRIO</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/reset.css">
+<style>
+:root{--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--amber:#d97706;--amber-dark:#b45309;--amber-soft:#fef3c7;--amber-border:#f3d2a7}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f5f5f5;color:#0a0a0a;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+nav{background:#0a0a0a;color:#fff;padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.02em}
+.nav-brand .dot{color:#d97706}
+.nav-brand-sub{font-family:'Space Mono',monospace;font-size:0.6rem;color:#737373;letter-spacing:0.15em;text-transform:uppercase;margin-left:0.75rem}
+.nav-right{display:flex;gap:1rem;align-items:center;font-family:'Space Mono',monospace;font-size:0.7rem;color:#a3a3a3}
+.btn-logout{background:none;border:1px solid #525252;color:#a3a3a3;padding:6px 14px;border-radius:6px;font-family:'Space Mono',monospace;font-size:0.65rem;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase}
+.btn-logout:hover{border-color:#d97706;color:#d97706}
+
+main{max-width:1400px;margin:0 auto;padding:2rem}
+
+.offering-hero{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:2rem;margin-bottom:1.5rem;display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.off-logo{width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,#d97706,#b45309);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Space Mono',monospace;font-size:1rem;font-weight:700}
+.off-name{font-family:'Syne',sans-serif;font-size:1.75rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.25rem}
+.off-meta{font-family:'Space Mono',monospace;font-size:0.72rem;color:#737373;letter-spacing:0.1em;text-transform:uppercase}
+.off-addr{font-family:'Space Mono',monospace;font-size:0.72rem;color:#525252;margin-top:0.35rem}
+.off-addr a{color:#d97706;text-decoration:none}
+.off-addr a:hover{text-decoration:underline}
+.off-pills{display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end}
+.off-pill{font-family:'Space Mono',monospace;font-size:0.62rem;color:#fff;background:#d97706;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.1em;font-weight:700}
+.off-pill.dark{background:#0a0a0a}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem}
+.stat-card .k{font-family:'Space Mono',monospace;font-size:0.62rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem}
+.stat-card .v{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;color:#0a0a0a}
+.stat-card .sub{font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373;margin-top:0.25rem}
+.stat-card.accent .v{color:#d97706}
+
+.queue-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.card-title{font-family:'Space Mono',monospace;font-size:0.68rem;color:#0a0a0a;text-transform:uppercase;letter-spacing:0.1em;font-weight:700}
+.card-count{font-family:'Space Mono',monospace;font-size:0.65rem;color:#d97706;background:#fef3c7;padding:3px 10px;border-radius:20px;letter-spacing:0.08em}
+
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;padding:0.55rem 0.75rem;font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid #e5e5e5;font-weight:700}
+tbody td{padding:0.6rem 0.75rem;font-size:0.8rem;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+tbody tr:hover{background:#fffbeb}
+.mono{font-family:'Space Mono',monospace;font-size:0.72rem}
+.muted{color:#a3a3a3}
+.num{font-family:'Space Mono',monospace;font-weight:700;text-align:right}
+.email-cell{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;white-space:nowrap}
+.pill.pending, .pill.kyc_review{background:#fef3c7;color:#b45309}
+.pill.kyc_approved, .pill.awaiting_deposit{background:#dbeafe;color:#1e40af}
+.pill.deposit_received{background:#e0e7ff;color:#3730a3}
+.pill.ready_to_settle{background:#f3e8ff;color:#6b21a8}
+.pill.settled{background:#d1fae5;color:#065f46}
+.pill.rejected, .pill.expired{background:#fee2e2;color:#991b1b}
+
+.btn-action{padding:4px 12px;font-size:0.68rem;border:1px solid #e5e5e5;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;color:#0a0a0a;transition:all .15s}
+.btn-action:hover{border-color:#d97706;color:#d97706;background:#fffbeb}
+.btn-action.primary{background:#d97706;color:#fff;border-color:#d97706}
+.btn-action.primary:hover{background:#b45309;border-color:#b45309;color:#fff}
+
+.empty{text-align:center;padding:2.5rem;color:#a3a3a3;font-family:'Space Mono',monospace;font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase}
+
+.login-wrap{max-width:440px;margin:10vh auto;padding:2rem}
+.login-card{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:2.5rem;box-shadow:0 8px 40px rgba(0,0,0,0.06)}
+.login-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.5rem}
+.login-sub{color:#737373;font-size:0.85rem;margin-bottom:1.5rem}
+.login-card .field{margin-bottom:1rem}
+.login-card .field label{display:block;font-family:'Space Mono',monospace;font-size:0.62rem;color:#737373;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem}
+.login-card .field input{width:100%;padding:0.8rem 1rem;font-family:'Space Mono',monospace;font-size:0.85rem;border:1px solid #e5e5e5;border-radius:8px}
+.login-card .field input:focus{outline:none;border-color:#d97706}
+.login-card .btn-primary{width:100%;background:#d97706;color:#fff;padding:0.8rem;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-size:0.88rem}
+.login-card .btn-primary:hover{background:#b45309}
+.alert{padding:0.8rem 1rem;border-radius:8px;font-size:0.82rem;margin-top:1rem}
+.alert-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+
+.hidden{display:none !important}
+
+.toast{position:fixed;bottom:2rem;right:2rem;background:#0a0a0a;color:#fff;padding:0.85rem 1.25rem;border-radius:10px;font-size:0.85rem;z-index:200;max-width:320px}
+.toast.err{background:#991b1b}
+
+@media (max-width: 900px) {
+  .offering-hero{grid-template-columns:1fr;gap:1rem}
+  .off-pills{flex-direction:row;align-items:flex-start}
+  .queue-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-title">efix<span style="color:#d97706">.</span>originator</div>
+    <div class="login-sub">Sal Rio Pool #1 operator view. Paste your operator bearer token.</div>
+    <form onsubmit="doLogin(event)">
+      <div class="field">
+        <label>Operator token</label>
+        <input id="login-token" type="password" required autocomplete="off" placeholder="eb64a62d…">
+      </div>
+      <button class="btn-primary" type="submit">Sign in →</button>
+      <div id="login-alert"></div>
+    </form>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app-screen" class="hidden">
+  <nav>
+    <div>
+      <span class="nav-brand">efix<span class="dot">.</span>originator</span>
+      <span class="nav-brand-sub">Sal Rio Pool #1</span>
+    </div>
+    <div class="nav-right">
+      <span id="nav-phase" class="mono">—</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Offering hero -->
+    <div class="offering-hero">
+      <div class="off-logo">SAL</div>
+      <div>
+        <div class="off-name" id="off-name">Loading…</div>
+        <div class="off-meta" id="off-meta">—</div>
+        <div class="off-addr">
+          <a href="https://basescan.org/address/0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c" target="_blank" rel="noopener">0x40229B95…5f0D7c ↗</a> ·
+          <a href="https://app.safe.global/base:0xa09d5E0001d1FdD2b59072E96c91aa79ed3e40D6" target="_blank" rel="noopener">operator Safe ↗</a>
+        </div>
+      </div>
+      <div class="off-pills">
+        <span class="off-pill" id="pill-phase">Open</span>
+        <span class="off-pill dark" id="pill-chain">Base · 8453</span>
+      </div>
+    </div>
+
+    <!-- Chain stats -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="k">Total supply</div><div class="v" id="s-supply">—</div><div class="sub" id="s-supply-sub">SALRIO</div></div>
+      <div class="stat-card accent"><div class="k">Dividends paid</div><div class="v" id="s-div">R$ 0</div><div class="sub" id="s-dists">0 distributions</div></div>
+      <div class="stat-card"><div class="k">Non-excluded supply</div><div class="v" id="s-nonex">—</div><div class="sub">entitled to dividends</div></div>
+      <div class="stat-card"><div class="k">Last distribution</div><div class="v" id="s-last">—</div><div class="sub">timestamp</div></div>
+      <div class="stat-card"><div class="k">Year-to-date raised</div><div class="v" id="s-ytd">R$ —</div><div class="sub">CVM 88 issuer cap R$ 15M</div></div>
+      <div class="stat-card"><div class="k">Open allocations</div><div class="v" id="s-open">—</div><div class="sub" id="s-open-sub">across all states</div></div>
+    </div>
+
+    <!-- Settlement queue -->
+    <div class="queue-grid">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Deposit received · awaiting operator</div>
+          <span class="card-count" id="q-depreceived-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>Investor</th><th class="num">Amount</th><th>Rail</th><th>Received</th><th>Action</th></tr></thead>
+          <tbody id="q-depreceived"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Ready to settle · operator must send Safe tx</div>
+          <span class="card-count" id="q-ready-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>Investor</th><th class="num">Amount</th><th>Wallet</th><th>Age</th><th>Action</th></tr></thead>
+          <tbody id="q-ready"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent all -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Recent activity · Sal Rio Pool #1</div>
+        <span class="card-count" id="q-all-count">0</span>
+      </div>
+      <table>
+        <thead><tr><th>Created</th><th>Investor</th><th>Rail</th><th class="num">R$</th><th>Status</th><th>On-chain tx</th></tr></thead>
+        <tbody id="q-all"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Operator playbook -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">Operator playbook · SALRIO settlement</div></div>
+      <ol style="margin:0;padding-left:1.25rem;font-size:0.85rem;line-height:1.8;color:#525252">
+        <li>For each row in the <strong>Deposit received</strong> queue, confirm the HausBank cash-in matches expectations, then click <strong>→ ready</strong>. (Poll worker auto-advances <code>awaiting_deposit → deposit_received</code> once a PIX matches; use this step to verify before committing the Safe tx.)</li>
+        <li>For each row in <strong>Ready to settle</strong>, open Safe UI (<a href="https://app.safe.global/base:0xa09d5E0001d1FdD2b59072E96c91aa79ed3e40D6" target="_blank" rel="noopener">operator Safe ↗</a>) and sign <code>share.transfer(investor_wallet, amount × 10^18)</code>. Copy the tx hash and paste it into the <strong>→ settle</strong> dialog.</li>
+        <li>Once settlement hash is recorded, the allocation moves to <code>settled</code> and the investor holds SALRIO on Base.</li>
+      </ol>
+    </div>
+  </main>
+</div>
+
+<script>
+const API_BASE = (new URLSearchParams(location.search).get('api')) || 'https://efix-offerings-backend-production.up.railway.app';
+const OFFERING_ID = 'salrio';
+const LS_TOKEN = 'efix.originator.token';
+
+let TOKEN = sessionStorage.getItem(LS_TOKEN);
+let REFRESH_TIMER = null;
+
+function authHeaders() { return TOKEN ? { authorization: 'Bearer ' + TOKEN } : {}; }
+
+async function api(path, opts = {}) {
+  const r = await fetch(API_BASE + path, {
+    ...opts,
+    headers: { 'content-type': 'application/json', ...authHeaders(), ...(opts.headers || {}) },
+  });
+  const body = r.headers.get('content-type')?.includes('json') ? await r.json() : await r.text();
+  if (r.status === 401) { logout(); throw new Error('Unauthorized'); }
+  if (!r.ok) throw new Error((typeof body === 'object' ? (body.message || body.error) : body) || ('HTTP ' + r.status));
+  return body;
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const tok = document.getElementById('login-token').value.trim();
+  if (!tok) return;
+  TOKEN = tok;
+  try {
+    await api('/v1/admin/stats');
+    sessionStorage.setItem(LS_TOKEN, tok);
+    showApp();
+  } catch (err) {
+    TOKEN = null;
+    document.getElementById('login-alert').innerHTML = `<div class="alert alert-err">${escape(err.message)}</div>`;
+  }
+}
+
+function logout() {
+  TOKEN = null;
+  sessionStorage.removeItem(LS_TOKEN);
+  document.getElementById('app-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  if (REFRESH_TIMER) clearInterval(REFRESH_TIMER);
+}
+
+function showApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+  refreshAll();
+  REFRESH_TIMER = setInterval(refreshAll, 20000);
+}
+
+async function refreshAll() {
+  await Promise.all([loadOffering(), loadStats(), loadQueues()]);
+}
+
+async function loadOffering() {
+  try {
+    const off = await fetch(`${API_BASE}/v1/offerings/${OFFERING_ID}`).then(r => r.json());
+    const chain = off.chain || {};
+    document.getElementById('off-name').textContent = off.name || '—';
+    document.getElementById('off-meta').textContent = `${(off.symbol||'').toUpperCase()} · ${(off.variant||'').toUpperCase()} · Par R$ ${Number(off.parPriceBrl||1).toFixed(2)}`;
+    document.getElementById('pill-phase').textContent = chain.paused ? 'Paused' : 'Open for allocation';
+    document.getElementById('s-supply').textContent = chain.totalSupplyFormatted ? Number(chain.totalSupplyFormatted).toLocaleString('en-US', { maximumFractionDigits:0 }) : '—';
+    document.getElementById('s-div').textContent = chain.totalDividendsDistributedFormatted ? 'R$ ' + Number(chain.totalDividendsDistributedFormatted).toLocaleString('pt-BR', { maximumFractionDigits:2 }) : 'R$ 0';
+    document.getElementById('s-dists').textContent = `${chain.distributionCount || 0} distributions`;
+    document.getElementById('s-nonex').textContent = chain.nonExcludedSupplyFormatted ? Number(chain.nonExcludedSupplyFormatted).toLocaleString('en-US', { maximumFractionDigits:0 }) : '—';
+    document.getElementById('s-last').textContent = chain.lastDistributionTimestamp && Number(chain.lastDistributionTimestamp) > 0
+      ? new Date(Number(chain.lastDistributionTimestamp) * 1000).toLocaleDateString('en-GB')
+      : 'never';
+    document.getElementById('nav-phase').textContent = chain.paused ? 'paused' : 'live · block ' + (chain.blockNumber || '?');
+  } catch (err) { toast(err.message, true); }
+}
+
+async function loadStats() {
+  try {
+    const s = await api('/v1/admin/stats');
+    document.getElementById('s-ytd').textContent = 'R$ ' + Math.round(s.compliance.annualRaisedBrl).toLocaleString('pt-BR');
+    const by = s.allocations.byStatus || {};
+    const open = ['pending','kyc_review','kyc_approved','awaiting_deposit','deposit_received','ready_to_settle'].reduce((a,k)=>a+(by[k]?.count||0),0);
+    document.getElementById('s-open').textContent = open;
+    document.getElementById('s-open-sub').textContent = `${by.settled?.count||0} settled`;
+  } catch (err) { toast(err.message, true); }
+}
+
+async function loadQueues() {
+  try {
+    const [depRec, ready, recent] = await Promise.all([
+      api(`/v1/admin/allocations?offering_id=${OFFERING_ID}&status=deposit_received&limit=20`),
+      api(`/v1/admin/allocations?offering_id=${OFFERING_ID}&status=ready_to_settle&limit=20`),
+      api(`/v1/admin/allocations?offering_id=${OFFERING_ID}&limit=15`),
+    ]);
+
+    document.getElementById('q-depreceived-count').textContent = depRec.total;
+    const tbDep = document.getElementById('q-depreceived');
+    tbDep.innerHTML = depRec.items.length === 0
+      ? '<tr><td colspan="5" class="empty">Nothing awaiting.</td></tr>'
+      : depRec.items.map(it => `
+        <tr>
+          <td class="email-cell" title="${escape(it.investorEmail||'')}">${escape(it.investorEmail||'—')}</td>
+          <td class="num">R$ ${Math.round(Number(it.amountBrl)).toLocaleString('pt-BR')}</td>
+          <td class="mono">${escape(it.rail.toUpperCase())}</td>
+          <td class="mono">${new Date(it.createdAt).toLocaleDateString('en-GB')}</td>
+          <td><button class="btn-action" onclick="advanceAlloc('${it.id}', 'ready_to_settle')">→ ready</button></td>
+        </tr>`).join('');
+
+    document.getElementById('q-ready-count').textContent = ready.total;
+    const tbReady = document.getElementById('q-ready');
+    tbReady.innerHTML = ready.items.length === 0
+      ? '<tr><td colspan="5" class="empty">Queue clear.</td></tr>'
+      : ready.items.map(it => {
+        const ageMs = Date.now() - new Date(it.createdAt).getTime();
+        const days = Math.floor(ageMs / 86400000);
+        return `
+          <tr>
+            <td class="email-cell" title="${escape(it.investorEmail||'')}">${escape(it.investorEmail||'—')}</td>
+            <td class="num">R$ ${Math.round(Number(it.amountBrl)).toLocaleString('pt-BR')}</td>
+            <td class="mono" style="max-width:140px;overflow:hidden;text-overflow:ellipsis">${escape(it.investorWallet||'—')}</td>
+            <td class="mono">${days}d</td>
+            <td><button class="btn-action primary" onclick="settleAlloc('${it.id}')">→ settle</button></td>
+          </tr>`;
+      }).join('');
+
+    document.getElementById('q-all-count').textContent = recent.total;
+    const tbAll = document.getElementById('q-all');
+    tbAll.innerHTML = recent.items.length === 0
+      ? '<tr><td colspan="6" class="empty">No allocations yet.</td></tr>'
+      : recent.items.map(it => `
+        <tr>
+          <td class="mono">${new Date(it.createdAt).toLocaleString('en-GB').slice(0,17)}</td>
+          <td class="email-cell" title="${escape(it.investorEmail||'')}">${escape(it.investorEmail||'—')}</td>
+          <td class="mono">${escape(it.rail.toUpperCase())}</td>
+          <td class="num">${Math.round(Number(it.amountBrl)).toLocaleString('pt-BR')}</td>
+          <td><span class="pill ${it.status}">${escape(it.status)}</span></td>
+          <td class="mono">${it.onChainTx ? `<a href="https://basescan.org/tx/${escape(it.onChainTx)}" target="_blank" rel="noopener" style="color:#d97706">${escape(it.onChainTx.slice(0,10))}…</a>` : '—'}</td>
+        </tr>`).join('');
+  } catch (err) { toast(err.message, true); }
+}
+
+async function advanceAlloc(id, status) {
+  try {
+    await api(`/v1/admin/allocations/${id}/advance`, { method: 'POST', body: JSON.stringify({ status }) });
+    toast(`→ ${status}`);
+    refreshAll();
+  } catch (err) { toast(err.message, true); }
+}
+
+async function settleAlloc(id) {
+  const tx = prompt('Base mainnet tx hash from Safe settlement (0x…)');
+  if (!tx) return;
+  if (!/^0x[a-fA-F0-9]{64}$/.test(tx)) { toast('Invalid tx hash', true); return; }
+  try {
+    await api(`/v1/admin/allocations/${id}/advance`, { method: 'POST', body: JSON.stringify({ status: 'settled', on_chain_tx: tx }) });
+    toast('settled ✓');
+    refreshAll();
+  } catch (err) { toast(err.message, true); }
+}
+
+function escape(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function toast(msg, err = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (err ? ' err' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+if (TOKEN) {
+  api('/v1/admin/stats').then(showApp).catch(() => { TOKEN = null; sessionStorage.removeItem(LS_TOKEN); });
+}
+</script>
+
+</body>
+</html>
