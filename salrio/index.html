@@ -865,15 +865,13 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-// Onramp flow mirrors /app/wallet/ — email auth → smart wallet → PIX/ACH/Wire → operator wallet → SALRIO delivered.
-// We deep-link into the wallet app with an `intent=salrio` hint so the wallet UI can show SALRIO context
-// once the backend supports it. For now the wallet handles auth + deposit; treasury settles SALRIO manually.
+// Onramp flow: /app/offerings/ — email auth (shared Alchemy AA with /app/wallet/) → PIX/ACH/Wire → operator wallet → SALRIO delivered.
 function startAllocation(event) {
   event.preventDefault();
   const email = document.getElementById('fld-email').value.trim();
   if (!email) return;
   const params = new URLSearchParams({ intent: 'salrio', email });
-  window.location.href = `/app/wallet/?${params.toString()}`;
+  window.location.href = `/app/offerings/?${params.toString()}`;
 }
 </script>
 

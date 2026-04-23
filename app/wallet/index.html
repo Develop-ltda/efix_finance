@@ -7,6 +7,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>efixDI+ | Renda Fixa Tokenizada</title>
+    <script>
+      // Intent-based bounce: `?intent=salrio` belongs on /app/offerings/, not here.
+      // Runs before any other script to avoid briefly loading the efixDI+ UI.
+      (function () {
+        try {
+          var q = new URLSearchParams(location.search);
+          var intent = q.get('intent');
+          if (intent && intent !== 'efixdi') {
+            location.replace('/app/offerings/?' + q.toString());
+          }
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" href="/assets/efixDI-token-32x32.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/shared/css/reset.css">
     <link rel="stylesheet" href="/shared/css/components.css">
