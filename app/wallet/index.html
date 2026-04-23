@@ -27,6 +27,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
         :root{--black:#0a0a0a;--white:#fafafa;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--gray-700:#404040;--gray-800:#262626;--gray-900:#171717;--green:#22c55e;--red:#ef4444;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--lang-bg:var(--gray-900);--lang-border:var(--gray-700);--lang-text:var(--gray-300);--lang-border-hover:var(--gray-500);--lang-menu-bg:var(--gray-900);--lang-shadow:rgba(0,0,0,.5);--lang-hover-bg:var(--gray-800);--lang-hover-text:var(--white);--lang-active:var(--green)}
+        /* Light theme — invert the palette. --black/--white swap, gray scale flips direction.
+           Keep --green/--red brand tokens the same. Apply via html[data-theme="light"]. */
+        html[data-theme="light"]{--black:#fafafa;--white:#0a0a0a;--gray-100:#171717;--gray-200:#262626;--gray-300:#404040;--gray-400:#525252;--gray-500:#737373;--gray-600:#a3a3a3;--gray-700:#d4d4d4;--gray-800:#e5e5e5;--gray-900:#f5f5f5;--lang-shadow:rgba(0,0,0,.08)}
+        html[data-theme="light"] body{background:#ffffff;color:#0a0a0a}
+        html[data-theme="light"] .btn-primary{background:#0a0a0a;color:#fafafa}
+        html[data-theme="light"] .apy-badge{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3)}
+        .theme-toggle{background:none;border:1px solid var(--gray-700);border-radius:100px;padding:4px;display:flex;gap:2px;cursor:pointer;align-items:center}
+        .theme-toggle button{background:none;border:none;cursor:pointer;padding:4px 8px;font-size:14px;border-radius:100px;color:var(--gray-500);line-height:1}
+        .theme-toggle button.active{background:var(--gray-800);color:var(--white)}
+        html[data-theme="light"] .theme-toggle button.active{background:var(--gray-200);color:var(--black)}
         body{font-family:var(--font-display);background:var(--black);color:var(--white);min-height:100vh;-webkit-font-smoothing:antialiased}
         header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--gray-800)}
         .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
@@ -181,6 +191,10 @@
             <a href="/">Protocol</a>
             <a href="/card/">Card</a>
             <div class="user-pill" id="userPill"><span class="dot"></span><span id="userPillAddr">0x...</span></div>
+            <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark">
+                <button id="btnThemeDark" class="active">🌙</button>
+                <button id="btnThemeLight">☀️</button>
+            </div>
             <div class="lang-sel">
                 <div class="lang-btn" onclick="document.querySelector('.lang-menu').classList.toggle('open')">
                     <span id="langFlag">🇧🇷</span><span id="langCode">PT</span>
@@ -882,6 +896,22 @@
             // Sync balance to backend (async, non-blocking)
             EfixAuth.syncBalance().catch(() => {});
         }
+
+        // ─── Theme toggle (dark default, light opt-in) — persisted in localStorage ───
+        function applyTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            document.getElementById('btnThemeDark')?.classList.toggle('active', t === 'dark');
+            document.getElementById('btnThemeLight')?.classList.toggle('active', t === 'light');
+        }
+        function toggleTheme() {
+            const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = cur === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+            try { localStorage.setItem('efixTheme', next); } catch {}
+        }
+        (function initTheme(){
+            try { applyTheme(localStorage.getItem('efixTheme') || 'dark'); } catch { applyTheme('dark'); }
+        })();
 
         // Fetch user's SALRIO / BRLE / future pool holdings on Base via the offerings backend.
         // Same smart-account address (Alchemy LightAccount v2 deterministic) on Polygon + Base.
