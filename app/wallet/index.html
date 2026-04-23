@@ -559,6 +559,17 @@
             </div><!-- /desktop-right -->
             </div><!-- /desktop-grid -->
 
+            <!-- EFIX Offerings holdings on Base (SALRIO + future pools) -->
+            <div style="margin-top:32px;" id="offeringsSection">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h3 style="font-size:14px;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin:0;">Meus Ativos · Base</h3>
+                    <a href="/app/offerings/?intent=salrio" style="font-size:11px;color:var(--green);text-decoration:none;font-family:var(--font-mono);">Allocate →</a>
+                </div>
+                <div id="offeringsList" style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="text-align:center;color:var(--gray-600);font-size:13px;font-family:var(--font-mono);padding:20px;">Carregando…</div>
+                </div>
+            </div>
+
             <button class="btn btn-secondary" style="margin-top:24px;" onclick="handleDisconnect()" data-i18n="btn_disconnect">Desconectar</button>
 
             <!-- Transaction History -->
@@ -810,10 +821,70 @@
             document.getElementById('userPill').classList.add('active');
             await refreshBalance(address);
             loadHistory(address);
+            loadOfferings(address);
             // Deploy smart account in background if needed
             ensureAccountDeployed(address);
             // Sync balance to backend (async, non-blocking)
             EfixAuth.syncBalance().catch(() => {});
+        }
+
+        // Fetch user's SALRIO / BRLE / future pool holdings on Base via the offerings backend.
+        // Same smart-account address (Alchemy LightAccount v2 deterministic) on Polygon + Base.
+        const OFFERINGS_API = 'https://efix-offerings-backend-production.up.railway.app';
+        async function loadOfferings(address) {
+            const container = document.getElementById('offeringsList');
+            if (!container) return;
+            try {
+                const res = await fetch(`${OFFERINGS_API}/v1/holders/${encodeURIComponent(address)}`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                const positions = (data.positions || []).filter(p => p && !p.error && Number(p.balanceFormatted || 0) > 0);
+                const brle = data.dividendAssetBalance;
+                const brleOk = brle && !brle.error && Number(brle.balanceFormatted || 0) > 0;
+                if (positions.length === 0 && !brleOk) {
+                    container.innerHTML = `
+                        <div style="padding:16px;border:1px dashed var(--gray-700);border-radius:10px;text-align:center;color:var(--gray-600);font-size:12px;font-family:var(--font-mono);">
+                            No SALRIO or other offerings in this wallet on Base.<br>
+                            <a href="/app/offerings/?intent=salrio" style="color:var(--green);text-decoration:none">Allocate into SALRIO →</a>
+                        </div>`;
+                    return;
+                }
+                const rows = positions.map(p => `
+                    <div style="padding:12px 14px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                        <div>
+                            <div style="font-family:var(--font-display);font-weight:700;font-size:14px;">${escapeHtml(p.symbol)}</div>
+                            <div style="font-size:10px;color:var(--gray-600);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase;">Base · SALRIO pool</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-family:var(--font-mono);font-weight:700;font-size:14px;">${Number(p.balanceFormatted).toLocaleString('pt-BR', { maximumFractionDigits:4 })}</div>
+                            <div style="font-size:10px;color:${Number(p.pendingDividendsFormatted||0)>0?'var(--green)':'var(--gray-600)'};font-family:var(--font-mono);">
+                                ${Number(p.pendingDividendsFormatted||0) > 0
+                                    ? '+' + Number(p.pendingDividendsFormatted).toLocaleString('pt-BR', { maximumFractionDigits:2 }) + ' ' + p.dividendAssetSymbol + ' pending'
+                                    : 'R$ ' + Number(p.balanceFormatted).toLocaleString('pt-BR', { maximumFractionDigits:2 }) + ' NAV'}
+                            </div>
+                        </div>
+                    </div>`).join('');
+                const brleRow = brleOk ? `
+                    <div style="padding:12px 14px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                        <div>
+                            <div style="font-family:var(--font-display);font-weight:700;font-size:14px;">BRLE</div>
+                            <div style="font-size:10px;color:var(--gray-600);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase;">Base · BRL stablecoin</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-family:var(--font-mono);font-weight:700;font-size:14px;">${Number(brle.balanceFormatted).toLocaleString('pt-BR', { maximumFractionDigits:2 })}</div>
+                            <div style="font-size:10px;color:var(--gray-600);font-family:var(--font-mono);">BRLE</div>
+                        </div>
+                    </div>` : '';
+                container.innerHTML = rows + brleRow;
+            } catch (err) {
+                container.innerHTML = `
+                    <div style="padding:16px;border:1px dashed var(--red);border-radius:10px;text-align:center;color:var(--gray-600);font-size:11px;font-family:var(--font-mono);">
+                        Failed to load Base holdings: ${escapeHtml(String(err.message || err))}
+                    </div>`;
+            }
+        }
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
         }
 
         async function loadHistory(address) {

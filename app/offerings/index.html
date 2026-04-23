@@ -361,9 +361,20 @@ const OFFERING_ID = (new URLSearchParams(location.search).get('intent')) || 'sal
 const LS_KEY = 'efix.offerings.alloc.' + OFFERING_ID;
 
 let USER_EMAIL = null;
-let USER_ADDRESS = null;   // EOA from Alchemy signer — same address on every chain
+let USER_ADDRESS = null;   // ERC-4337 smart account address — deterministic across EVM chains via Alchemy LightAccount v2.
+                           // Same address the user sees in /app/wallet/ (Polygon) and on Base — one identity, one address.
 let CURRENT_ALLOC_ID = null;
 let POLL_TIMER = null;
+
+// Get the smart-account address (not the signer EOA). Works because Alchemy LightAccount v2
+// produces the same counterfactual address across all EVM chains for the same signer.
+async function getSmartAccountAddress() {
+  if (!window.EfixWallet) throw new Error('Wallet bundle not loaded');
+  const client = await (window.EfixWallet.getSmartClient
+    ? window.EfixWallet.getSmartClient()
+    : window.EfixWallet.getClient());
+  return client.account.address;
+}
 
 // ─────────────────────────────────────────────────────────
 // Bootstrap: load offering, try session restore, handle deep link
@@ -386,9 +397,9 @@ async function bootstrap() {
   try {
     if (!window.EfixWallet) throw new Error('Wallet bundle failed to load');
     window.EfixWallet.init();
-    const existing = await window.EfixWallet.checkSession();
-    if (existing) {
-      USER_ADDRESS = existing;
+    const signerAddr = await window.EfixWallet.checkSession();
+    if (signerAddr) {
+      USER_ADDRESS = await getSmartAccountAddress();
       // Try to read email from signer details
       try {
         const det = await window.EfixWallet.getSigner().getAuthDetails();
@@ -468,7 +479,7 @@ async function verifyOtp() {
 
   try {
     await window.EfixWallet.verifyOTP(code);
-    USER_ADDRESS = await window.EfixWallet.getAddress();
+    USER_ADDRESS = await getSmartAccountAddress();
     showAuthenticated();
   } catch (err) {
     showAlert('auth-alert', 'err', err.message || 'Verification failed');
