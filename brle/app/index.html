@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BRLE | Stablecoin com Rendimento</title>
+<script>
+  // BRLE wallet has moved to the unified wallet at /app/wallet/#brle.
+  // Append ?legacy=1 to bypass the redirect and use the old standalone BRLE wallet.
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.get('legacy') !== '1') {
+        location.replace('/app/wallet/#brle' + (location.hash || ''));
+      }
+    } catch (e) {}
+  })();
+</script>
 <link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
 <link rel="stylesheet" href="/shared/css/reset.css">
 <style>

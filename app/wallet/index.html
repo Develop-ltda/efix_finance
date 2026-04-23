@@ -254,6 +254,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('deposit', this)" data-i18n="tab_deposit">Depositar</button>
                 <button class="tab" onclick="switchTab('withdraw', this)" data-i18n="tab_withdraw">Sacar</button>
+                <button class="tab" onclick="switchTab('brle', this); initBrle();">BRLE</button>
                 <button class="tab" onclick="switchTab('send', this); initSendTab();">Deposit USD/EUR</button>
                 <button class="tab" onclick="switchTab('invest', this); loadInvestPosition();">Invest</button>
                 <button class="tab" onclick="switchTab('card', this)">Card</button>
@@ -298,6 +299,60 @@
                         <input type="text" id="pixKey" placeholder="Chave PIX (CPF, email, telefone)" data-i18n-placeholder="pix_key_placeholder">
                     </div>
                     <button class="btn btn-primary" onclick="handleWithdraw()" data-i18n="btn_withdraw">Solicitar Saque</button>
+                </div>
+            </div>
+
+            <!-- BRLE Panel (Base · PIX → BRLE mint via brle-protocol backend) -->
+            <div class="tab-panel" id="panel-brle">
+                <div class="action-card">
+                    <h3>BRLE · BRL Stablecoin on Base</h3>
+                    <p style="font-size:13px;color:var(--gray-400);margin-bottom:14px;line-height:1.5;">
+                        Deposite BRL via PIX → receba BRLE na sua wallet na Base. 1 BRLE = R$ 1,00. Stake sBRLE para render DI.
+                    </p>
+
+                    <!-- BRLE balance summary -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+                        <div style="padding:12px;border:1px solid var(--gray-800);border-radius:10px;background:var(--gray-900);">
+                            <div style="font-size:10px;color:var(--gray-500);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.5px;">BRLE</div>
+                            <div id="brleWalletBalance" style="font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:4px;">—</div>
+                        </div>
+                        <div style="padding:12px;border:1px solid var(--gray-800);border-radius:10px;background:var(--gray-900);">
+                            <div style="font-size:10px;color:var(--gray-500);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.5px;">sBRLE <span style="color:var(--green)">~DI</span></div>
+                            <div id="brleSbrleBalance" style="font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:4px;">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Buy BRLE -->
+                    <div id="brle-buy-form">
+                        <div class="amount-input-wrap">
+                            <input type="number" id="brleBuyAmount" placeholder="0,00" min="10" step="0.01">
+                            <span class="currency">BRL</span>
+                        </div>
+                        <button class="btn btn-primary" id="btnBrleBuy" onclick="handleBrleBuy()">Gerar PIX para comprar BRLE</button>
+                    </div>
+
+                    <!-- Buy BRLE QR view -->
+                    <div id="brle-buy-qr" style="display:none;">
+                        <div style="background:var(--white);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px;">
+                            <p style="color:var(--black);font-size:14px;font-weight:600;margin-bottom:12px;">Escaneie com seu app bancário</p>
+                            <img id="brleQrImage" src="" alt="QR Code PIX" style="width:200px;height:200px;border-radius:8px;">
+                            <p id="brleBuyPixCode" style="color:var(--gray-600);font-size:11px;font-family:var(--font-mono);margin-top:12px;word-break:break-all;max-height:60px;overflow:hidden;cursor:pointer;" onclick="brleCopyPix()">...</p>
+                            <button class="btn btn-secondary" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;width:auto;padding:8px 20px;font-size:13px;" onclick="brleCopyPix()">Copiar código PIX</button>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;" id="brleBuySteps">
+                            <div class="prog-step done"><span class="prog-icon">✓</span><span> QR Code gerado</span></div>
+                            <div class="prog-step" id="brle-step-2"><span class="prog-icon">2</span><span> Pagamento PIX confirmado</span></div>
+                            <div class="prog-step" id="brle-step-3"><span class="prog-icon">3</span><span> Mintando BRLE</span></div>
+                            <div class="prog-step" id="brle-step-4"><span class="prog-icon">4</span><span> BRLE creditado!</span></div>
+                        </div>
+                        <div id="brle-buy-msg" style="margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);text-align:center;min-height:20px;"></div>
+                        <button class="btn btn-secondary" style="margin-top:12px;" onclick="resetBrleBuy()">Cancelar</button>
+                    </div>
+
+                    <p style="margin-top:16px;font-size:11px;color:var(--gray-600);font-family:var(--font-mono);text-align:center;">
+                        <a href="/brle/" style="color:var(--green);text-decoration:none">BRLE landing</a>
+                        · Base · Contract <a href="https://basescan.org/token/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6" target="_blank" style="color:var(--green);text-decoration:none">0x7D12…82F6</a>
+                    </p>
                 </div>
             </div>
 
@@ -831,6 +886,116 @@
         // Fetch user's SALRIO / BRLE / future pool holdings on Base via the offerings backend.
         // Same smart-account address (Alchemy LightAccount v2 deterministic) on Polygon + Base.
         const OFFERINGS_API = 'https://efix-offerings-backend-production.up.railway.app';
+        const BRLE_API = 'https://brle-protocol-production.up.railway.app';
+
+        // ─────────────────────────────────────────────────────────
+        // BRLE tab — buy BRLE with PIX via brle-protocol backend.
+        // Same smart-account address on Base as on Polygon, so userAddress works.
+        // ─────────────────────────────────────────────────────────
+        let _brleCurrentOrder = null;
+        let _brlePollTimer = null;
+        async function initBrle() {
+            await loadBrleBalance();
+        }
+        async function loadBrleBalance() {
+            try {
+                const res = await fetch(`${OFFERINGS_API}/v1/holders/${encodeURIComponent(userAddress)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const brle = data.dividendAssetBalance;
+                document.getElementById('brleWalletBalance').textContent =
+                    (brle && !brle.error) ? Number(brle.balanceFormatted).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : '0';
+                // sBRLE — read via direct chain call
+                const sbrle = await readSbrleBalance(userAddress).catch(() => '0');
+                document.getElementById('brleSbrleBalance').textContent = sbrle;
+            } catch {}
+        }
+        async function readSbrleBalance(address) {
+            const rpc = EFIX_CONFIG.rpc.base;
+            const padded = address.toLowerCase().replace('0x', '').padStart(64, '0');
+            const data = '0x70a08231' + padded; // balanceOf(address)
+            const r = await fetch(rpc, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_call', params: [{ to: EFIX_CONFIG.brle.sbrle, data }, 'latest'], id: 1 }) });
+            const j = await r.json();
+            const raw = BigInt(j.result || '0x0');
+            return (Number(raw) / 1e18).toFixed(2);
+        }
+        async function handleBrleBuy() {
+            const amount = Number(document.getElementById('brleBuyAmount').value);
+            if (!amount || amount < 10) { toast?.('Mínimo R$ 10'); return; }
+            const btn = document.getElementById('btnBrleBuy');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Gerando...';
+            try {
+                const r = await fetch(`${BRLE_API}/api/mint/initiate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, walletAddress: userAddress }),
+                });
+                const d = await r.json();
+                if (!r.ok || !d.orderId) throw new Error(d.error || 'Failed to initiate mint');
+                _brleCurrentOrder = d;
+                document.getElementById('brle-buy-form').style.display = 'none';
+                document.getElementById('brle-buy-qr').style.display = 'block';
+                if (d.qrImageUrl) {
+                    document.getElementById('brleQrImage').src = d.qrImageUrl;
+                } else if (d.pixCode) {
+                    document.getElementById('brleQrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(d.pixCode);
+                }
+                document.getElementById('brleBuyPixCode').textContent = d.pixCode || '';
+                brleStartPolling(d.orderId);
+            } catch (err) {
+                document.getElementById('brle-buy-msg').textContent = 'Erro: ' + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Gerar PIX para comprar BRLE';
+            }
+        }
+        function brleCopyPix() {
+            const code = _brleCurrentOrder?.pixCode || document.getElementById('brleBuyPixCode').textContent;
+            if (!code) return;
+            navigator.clipboard.writeText(code);
+            document.getElementById('brle-buy-msg').textContent = '✓ PIX code copiado';
+        }
+        function brleStartPolling(orderId) {
+            if (_brlePollTimer) clearInterval(_brlePollTimer);
+            _brlePollTimer = setInterval(async () => {
+                try {
+                    const r = await fetch(`${BRLE_API}/api/mint/${orderId}/status`);
+                    const d = await r.json();
+                    brleUpdateSteps(d.status);
+                    if (d.status === 'mint_confirmed') {
+                        clearInterval(_brlePollTimer); _brlePollTimer = null;
+                        document.getElementById('brle-buy-msg').textContent = '✓ BRLE creditado na sua wallet!';
+                        loadBrleBalance();
+                        loadOfferings(userAddress); // refresh the Base holdings card too
+                    } else if (d.status === 'failed') {
+                        clearInterval(_brlePollTimer); _brlePollTimer = null;
+                        document.getElementById('brle-buy-msg').textContent = 'Falha: ' + (d.error || 'unknown');
+                    }
+                } catch {}
+            }, 3000);
+        }
+        function brleUpdateSteps(s) {
+            const map = { pending: 1, pix_received: 2, mint_requested: 3, mint_confirmed: 4 };
+            const cur = map[s] || 1;
+            for (let i = 2; i <= 4; i++) {
+                const el = document.getElementById('brle-step-' + i);
+                if (!el) continue;
+                const icon = el.querySelector('.prog-icon');
+                el.classList.remove('done', 'active');
+                if (i < cur) { el.classList.add('done'); icon.textContent = '✓'; }
+                else if (i === cur) { el.classList.add('active'); icon.textContent = i; }
+                else { icon.textContent = i; }
+            }
+        }
+        function resetBrleBuy() {
+            if (_brlePollTimer) { clearInterval(_brlePollTimer); _brlePollTimer = null; }
+            _brleCurrentOrder = null;
+            document.getElementById('brle-buy-form').style.display = 'block';
+            document.getElementById('brle-buy-qr').style.display = 'none';
+            document.getElementById('brleBuyAmount').value = '';
+            document.getElementById('brle-buy-msg').textContent = '';
+        }
         async function loadOfferings(address) {
             const container = document.getElementById('offeringsList');
             if (!container) return;
