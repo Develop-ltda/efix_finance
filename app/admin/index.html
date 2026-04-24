@@ -181,9 +181,21 @@ tbody tr:hover{background:#fffbeb}
       <div class="stats-grid" id="stats-grid">
         <div class="stat-card"><div class="k">Loading…</div><div class="v">—</div></div>
       </div>
-      <div class="card">
-        <div class="card-title">Poll worker</div>
-        <div id="poll-status" class="mono muted">—</div>
+      <div class="workers-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem">
+        <div class="card" style="margin-bottom:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+            <div class="card-title" style="margin-bottom:0">PIX poll worker</div>
+            <button id="btn-run-poll" class="btn-action" onclick="runWorker('poll')">Run now</button>
+          </div>
+          <div id="poll-status" class="mono muted" style="font-size:0.78rem;line-height:1.5">—</div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+            <div class="card-title" style="margin-bottom:0">Settlement worker</div>
+            <button id="btn-run-settlement" class="btn-action primary" onclick="runWorker('settlement')">Run now</button>
+          </div>
+          <div id="settlement-status" class="mono muted" style="font-size:0.78rem;line-height:1.5">—</div>
+        </div>
       </div>
     </div>
 
@@ -434,13 +446,49 @@ async function loadOverview() {
     `;
   } catch (err) { toast(err.message, true); }
 
+  loadWorkers();
+}
+
+async function loadWorkers() {
   try {
     const p = await api('/v1/admin/poll/status');
-    document.getElementById('poll-status').textContent = p.running
-      ? `running · every ${p.intervalMs/1000}s · cycles=${p.cyclesRan} · matched=${p.totalMatched}${p.lastError ? ' · ERROR: ' + p.lastError : ''}`
-      : `disabled · ${p.reason || 'not configured'}`;
+    document.getElementById('poll-status').innerHTML = p.running
+      ? `<span style="color:#059669">● running</span> · every ${p.intervalMs/1000}s · cycles=${p.cyclesRan} · matched=${p.totalMatched}${p.lastError ? `<br><span style="color:#b91c1c">ERROR: ${p.lastError}</span>` : ''}`
+      : `<span style="color:#737373">○ disabled</span> · ${p.reason || 'not configured'}`;
   } catch {
     document.getElementById('poll-status').textContent = 'unavailable';
+  }
+  try {
+    const s = await api('/v1/admin/settlement/status');
+    const dot = s.running ? '<span style="color:#059669">● running</span>' : '<span style="color:#737373">○ idle</span>';
+    const bal = s.distributorBalanceFormatted != null
+      ? `${s.distributorBalanceFormatted} SALRIO${s.lastSkippedInsufficient ? ' <span style="color:#b45309">(below min ' + s.minBalance + ')</span>' : ''}`
+      : '—';
+    const err = s.lastError ? `<br><span style="color:#b91c1c">ERROR: ${s.lastError}</span>` : '';
+    document.getElementById('settlement-status').innerHTML = s.enabled
+      ? `${dot} · every ${s.intervalMs/1000}s · cycles=${s.cyclesRan} · settled=${s.totalSettled}<br>distributor: <code>${s.distributorAddress ? s.distributorAddress.slice(0,10) + '…' + s.distributorAddress.slice(-4) : '—'}</code> · balance: ${bal}${err}`
+      : `<span style="color:#737373">○ disabled</span> · ${s.distributorAddress ? 'no interval configured' : 'DISTRIBUTOR_PRIVATE_KEY not set'}`;
+  } catch {
+    document.getElementById('settlement-status').textContent = 'unavailable';
+  }
+}
+
+async function runWorker(kind) {
+  const btnId = kind === 'poll' ? 'btn-run-poll' : 'btn-run-settlement';
+  const btn = document.getElementById(btnId);
+  const prev = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  try {
+    await api(`/v1/admin/${kind}/run`, { method: 'POST' });
+    toast(`${kind} worker ran`);
+    await loadWorkers();
+    if (kind === 'settlement') loadAllocations();
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prev;
   }
 }
 
