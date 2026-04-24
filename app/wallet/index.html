@@ -780,9 +780,18 @@
         function T(key) { return (i18n[currentLang] && i18n[currentLang][key]) || key; }
 
         // Resolve smart account address (this is where tokens must live + where UserOps execute from)
+        // @account-kit/wallet-client exposes requestAccount(); there is no client.account on the decorator.
         async function getSmartAccountAddress() {
             const client = await EfixWallet.getSmartClient();
-            const smartAddr = client.account.address;
+            let smartAddr;
+            if (typeof client.requestAccount === 'function') {
+                const acct = await client.requestAccount();
+                smartAddr = acct.address;
+            } else if (client.account?.address) {
+                smartAddr = client.account.address;
+            } else {
+                throw new Error('Could not resolve smart account address');
+            }
             console.log('[EfixWallet] Smart account address:', smartAddr);
             return smartAddr;
         }

@@ -373,12 +373,18 @@ let POLL_TIMER = null;
 
 // Get the smart-account address (not the signer EOA). Works because Alchemy LightAccount v2
 // produces the same counterfactual address across all EVM chains for the same signer.
+// @account-kit/wallet-client exposes requestAccount() — NOT client.account.
 async function getSmartAccountAddress() {
   if (!window.EfixWallet) throw new Error('Wallet bundle not loaded');
   const client = await (window.EfixWallet.getSmartClient
     ? window.EfixWallet.getSmartClient()
     : window.EfixWallet.getClient());
-  return client.account.address;
+  if (typeof client.requestAccount === 'function') {
+    const acct = await client.requestAccount();
+    return acct.address;
+  }
+  if (client.account?.address) return client.account.address;
+  throw new Error('Could not resolve smart account address');
 }
 
 // ─────────────────────────────────────────────────────────
