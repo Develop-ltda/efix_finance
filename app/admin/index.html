@@ -553,13 +553,28 @@ function allocActions(it) {
   return `<button class="btn-action ${cls}" onclick="advanceAlloc('${it.id}', '${next}')">→ ${label}</button><button class="btn-action danger" onclick="rejectAlloc('${it.id}')">reject</button>`;
 }
 async function advanceAlloc(id, status) {
-  const body = { status };
   if (status === 'settled') {
-    const tx = prompt('On-chain tx hash (optional)');
-    if (tx) body.on_chain_tx = tx;
+    const tx = prompt('On-chain tx hash — leave empty to auto-transfer from distributor EOA (bypasses cooling-off)');
+    if (tx === null) return; // user cancelled
+    const trimmed = tx.trim();
+    if (!trimmed) {
+      try {
+        const r = await api(`/v1/admin/allocations/${id}/force-settle`, { method: 'POST' });
+        toast(`settled · ${r.txHash ? r.txHash.slice(0, 10) + '…' : 'ok'}`);
+        loadAllocations();
+        loadWorkers();
+      } catch (err) { toast(err.message, true); }
+      return;
+    }
+    try {
+      await api(`/v1/admin/allocations/${id}/advance`, { method: 'POST', body: JSON.stringify({ status, on_chain_tx: trimmed }) });
+      toast('→ settled');
+      loadAllocations();
+    } catch (err) { toast(err.message, true); }
+    return;
   }
   try {
-    await api(`/v1/admin/allocations/${id}/advance`, { method: 'POST', body: JSON.stringify(body) });
+    await api(`/v1/admin/allocations/${id}/advance`, { method: 'POST', body: JSON.stringify({ status }) });
     toast(`→ ${status}`);
     loadAllocations();
   } catch (err) { toast(err.message, true); }
