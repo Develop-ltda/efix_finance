@@ -587,6 +587,15 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
       body: JSON.stringify(body),
     });
     const data = await r.json();
+    if (r.status === 409 && data.error === 'wallet_mismatch') {
+      const onRecord = data.on_record || '—';
+      showAlert(
+        'f-alert',
+        'err',
+        `This email is already linked to wallet ${onRecord.slice(0, 10)}…${onRecord.slice(-4)}, but you're signed in as ${(data.submitted || body.wallet_address).slice(0, 10)}…${(data.submitted || body.wallet_address).slice(-4)}. Prior settlements went to the address on record. If this is your wallet on a different login, sign in with that email. Otherwise contact support to rebind.`,
+      );
+      return;
+    }
     if (!r.ok) throw new Error(data.message || data.error || 'Allocation failed');
     localStorage.setItem(LS_KEY, JSON.stringify({ id: data.allocation.id, email: body.email }));
     await showPaymentInstructions(data.allocation.id);
