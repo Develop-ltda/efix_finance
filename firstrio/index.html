@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
+<script src="/shared/js/ga4.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIRST · Studio no Humaitá tokenizado · efix.finance</title>
+<meta name="description" content="FIRST · 1 studio do First Life Friendly em Humaitá, operado pela Lobie. R$ 680.000 em equity fracionária a R$ 1,00/cota · dividendos mensais em BRLE · TIR-alvo 22% a.a.">
+<meta property="og:title" content="FIRST · Studio no Humaitá tokenizado">
+<meta property="og:description" content="Equity fracionária em 1 studio do First Life Friendly. Operação Lobie, dividendos em BRLE, mercados secundários globais.">
+<meta property="og:image" content="https://efix.finance/firstrio/assets/renders/facade-night.jpg">
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/reset.css">
+<style>
+:root{
+  --white:#ffffff;
+  --black:#0a0a0a;
+  --gray-100:#f5f5f5;
+  --gray-200:#e5e5e5;
+  --gray-300:#d4d4d4;
+  --gray-400:#a3a3a3;
+  --gray-500:#737373;
+  --gray-600:#525252;
+  --gray-700:#404040;
+  --accent:#10b981;
+  --accent-dark:#047857;
+  --accent-mid:#34d399;
+  --accent-soft:#d1fae5;
+  --accent-vsoft:#ecfdf5;
+  --accent-border:#86efac;
+  /* Backwards-compat aliases used throughout the file */
+  --black-soft:#fafbfc;
+  --black-card:#ffffff;
+  --line:#e5e5e5;
+  --gray:#737373;
+  --gray-soft:#525252;
+  --white-78:#525252;
+  --white-55:#a3a3a3;
+  --green:#10b981;
+  --green-dim:#047857;
+  --font-display:'Syne',-apple-system,system-ui,sans-serif;
+  --font-head:'Inter','Helvetica Neue',-apple-system,system-ui,sans-serif;
+  --font-mono:'Space Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-display);background:var(--white);color:var(--black);line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:'ss01','cv11'}
+::selection{background:var(--black);color:var(--white)}
+img{max-width:100%;display:block}
+
+/* ============ NAV ============ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--gray-200);height:64px}
+.nav-content{max-width:1280px;height:100%;margin:0 auto;padding:0 clamp(20px,4vw,48px);display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.nav-logo{font-weight:800;font-size:18px;text-decoration:none;color:var(--black);letter-spacing:-.02em;display:flex;align-items:center;gap:.5rem}
+.nav-logo .dot{color:var(--accent)}
+.nav-logo .ticker{font-family:var(--font-mono);font-size:11px;color:var(--gray-500);letter-spacing:.08em;font-weight:400;margin-left:.4rem}
+.nav-links{display:flex;gap:1.4rem;align-items:center;list-style:none;margin:0;padding:0}
+.nav-links a{color:var(--gray-500);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transition:color .25s}
+.nav-links a:hover{color:var(--black)}
+.nav-cta{padding:.6rem 1.25rem;border-radius:8px;font-size:12px;letter-spacing:.06em;font-weight:700;text-decoration:none;transition:all .25s;background:var(--black);color:var(--white);text-transform:uppercase;border:none;cursor:pointer}
+.nav-cta:hover{background:var(--gray-700);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+@media(max-width:900px){.nav-links{display:none}}
+
+/* ============ HERO ============ */
+.hero{position:relative;min-height:min(92vh,860px);overflow:hidden;color:var(--black);display:flex;background:linear-gradient(180deg,var(--accent-vsoft) 0%,#fff 60%)}
+.hero::before{content:'';position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(0,0,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 30% 40%,black 10%,transparent 65%);-webkit-mask-image:radial-gradient(ellipse at 30% 40%,black 10%,transparent 65%)}
+.hero__media{position:absolute;right:-10%;top:0;bottom:0;width:55%;z-index:0;opacity:.9;mask-image:linear-gradient(90deg,transparent 0%,black 30%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,black 30%)}
+.hero__media img{width:100%;height:100%;object-fit:cover;border-radius:0}
+.hero__veil{display:none}
+.hero__content{position:relative;z-index:2;max-width:1280px;width:100%;margin:0 auto;padding:clamp(120px,16vh,180px) clamp(20px,4vw,48px) clamp(64px,10vh,120px);display:flex;flex-direction:column;justify-content:flex-end;min-height:inherit}
+.hero__eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gray-500);margin-bottom:24px;display:flex;align-items:center;gap:.6rem}
+.hero__eyebrow .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hero__title{font-family:var(--font-head);font-weight:500;font-size:clamp(40px,7vw,88px);line-height:1.02;letter-spacing:-.035em;margin:0 0 24px;max-width:14ch;color:var(--black)}
+.hero__title em{font-style:normal;font-weight:600;background:linear-gradient(to right,#a3a3a3,var(--accent),#a3a3a3);background-size:200% auto;color:transparent;-webkit-background-clip:text;background-clip:text;animation:shine 4s linear infinite}
+@keyframes shine{to{background-position:200% center}}
+.hero__lede{max-width:620px;font-size:clamp(15px,1.4vw,18px);line-height:1.7;color:var(--gray-600);margin:0 0 36px}
+.hero__cta{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.95rem 1.6rem;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.04em;text-decoration:none;border-radius:8px;border:none;cursor:pointer;transition:all .25s;text-transform:uppercase}
+.btn--primary{background:var(--accent);color:var(--white)}
+.btn--primary:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 6px 24px rgba(16,185,129,.28)}
+.btn--ghost{background:transparent;color:var(--black);border:1.5px solid var(--gray-300)}
+.btn--ghost:hover{border-color:var(--black);background:rgba(0,0,0,.02)}
+
+/* ============ SPECS GRID ============ */
+.specs{padding:clamp(60px,8vw,96px) 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--black-soft)}
+.specs__grid{max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,48px);display:grid;grid-template-columns:repeat(4,1fr)}
+.spec{padding:24px 28px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);margin:0}
+.spec:nth-child(4n){border-right:none}
+.spec:nth-last-child(-n+4){border-bottom:none}
+.spec dt{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gray-500);margin-bottom:10px}
+.spec dd{font-family:var(--font-head);font-weight:600;font-size:clamp(18px,2vw,24px);line-height:1.15;letter-spacing:-.02em;color:var(--black);margin:0}
+.spec dd{font-family:var(--font-head);font-weight:600}
+.spec dd span{font-family:var(--font-mono);font-size:11px;font-weight:400;color:var(--gray-500);margin-left:6px}
+@media(max-width:780px){
+  .specs__grid{grid-template-columns:repeat(2,1fr)}
+  .spec:nth-child(2n){border-right:none}
+  .spec:nth-child(4n){border-right:none}
+  .spec{border-right:1px solid var(--line)}
+  .spec:nth-last-child(-n+4){border-bottom:1px solid var(--line)}
+  .spec:nth-last-child(-n+2){border-bottom:none}
+}
+
+/* ============ SHOWCASE / SECTION SHARED ============ */
+.section{max-width:1280px;margin:0 auto;padding:clamp(80px,10vw,140px) clamp(20px,4vw,48px)}
+.section--dark{background:var(--black-soft);border-top:1px solid var(--line)}
+.section--full{max-width:none;padding-left:0;padding-right:0}
+.section__intro{max-width:760px;margin-bottom:64px;padding:0 clamp(20px,4vw,48px)}
+.kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--green);margin:0 0 16px;display:block}
+.h2{font-family:var(--font-head);font-weight:600;font-size:clamp(32px,4.5vw,52px);line-height:1.1;letter-spacing:-.03em;margin:0 0 20px;color:var(--black)}
+.h2 em{font-style:normal;font-weight:700;color:var(--accent-dark)}
+.lede{font-size:clamp(15px,1.3vw,17px);line-height:1.7;color:var(--gray-600);max-width:62ch;margin:0}
+.lede strong{color:var(--black);font-weight:600}
+figcaption{font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;color:var(--gray);margin-top:12px}
+
+/* Building showcase */
+.showcase__hero{margin:0 0 32px}
+.showcase__hero img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:2px}
+.showcase__grid{display:grid;grid-template-columns:1.4fr 1fr;gap:24px}
+.showcase__grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:2px;background:var(--black-card)}
+@media(max-width:780px){.showcase__grid{grid-template-columns:1fr}}
+
+/* Opportunity (existing copy reformatted) */
+.opp{display:grid;grid-template-columns:1.6fr 1fr;gap:48px;align-items:start}
+.opp__main{}
+.opp__main p{color:var(--gray-600);font-size:15px;line-height:1.8;margin:0 0 1rem}
+.opp__main p strong{color:var(--black);font-weight:600}
+.opp__list{list-style:none;padding:0;margin:1.5rem 0 0;border-top:1px solid var(--gray-200)}
+.opp__list li{padding:14px 0;border-bottom:1px solid var(--gray-200);font-size:14px;color:var(--gray-600);line-height:1.7}
+.opp__list li strong{color:var(--black);font-weight:600}
+.opp__side{padding:32px;background:linear-gradient(135deg,var(--accent-vsoft),#fff);border:1px solid var(--accent-border);border-radius:14px;position:sticky;top:96px;box-shadow:0 8px 32px rgba(16,185,129,.06)}
+.opp__metric-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gray-500);margin-bottom:12px}
+.opp__metric-val{font-family:var(--font-head);font-weight:700;font-size:48px;letter-spacing:-.03em;line-height:1;margin-bottom:8px;color:var(--black)}
+.opp__metric-val em{font-style:normal;color:var(--accent-dark)}
+.opp__metric-sub{font-size:13px;color:var(--gray-600);line-height:1.65;margin:8px 0 0}
+@media(max-width:900px){.opp{grid-template-columns:1fr}.opp__side{position:static}}
+
+/* ============ AMENITIES ============ */
+.amenities{background:linear-gradient(180deg,var(--accent-vsoft) 0%,#fff 60%);padding:clamp(80px,10vw,140px) clamp(20px,4vw,48px);border-top:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}
+.amenities__inner{max-width:1280px;margin:0 auto}
+.amenities__intro{max-width:760px;margin:0 auto 64px}
+.amenities__plan{margin:0;max-width:1100px;margin-inline:auto}
+.amenities__plan img{width:100%;display:block;border-radius:12px;background:var(--white);padding:24px;box-sizing:border-box;box-shadow:0 12px 48px rgba(0,0,0,.06);border:1px solid var(--gray-200)}
+.amenities__plan figcaption{text-align:center;margin-top:16px}
+.amenities__legend{max-width:1100px;margin:64px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:48px}
+.amenities__floor{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 8px}
+.amenities__view{font-family:var(--font-head);font-weight:600;font-size:18px;letter-spacing:-.01em;margin:0 0 16px;color:var(--black)}
+.amenities__list{list-style:none;padding:0;margin:0;border-top:1px solid var(--gray-200)}
+.amenities__list li{padding:12px 0;border-bottom:1px solid var(--gray-200);font-size:14px;color:var(--gray-600);font-family:var(--font-mono)}
+@media(max-width:780px){.amenities__legend{grid-template-columns:1fr;gap:32px}}
+
+/* ============ UNITS + RETAIL ANCHOR ============ */
+.units__grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:24px;align-items:start}
+.unit{background:var(--white);border:1px solid var(--gray-200);border-radius:14px;overflow:hidden;transition:all .25s ease}
+.unit:hover{border-color:var(--accent-border);box-shadow:0 12px 32px rgba(16,185,129,.08);transform:translateY(-2px)}
+.unit__plan{margin:0;background:var(--gray-100)}
+.unit__plan img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover}
+.unit--feature .unit__plan img{aspect-ratio:5/4}
+.unit__body{padding:24px}
+.unit__tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 8px}
+.unit__name{font-family:var(--font-head);font-weight:600;font-size:24px;line-height:1.1;letter-spacing:-.02em;margin:0 0 16px;color:var(--black)}
+.unit__specs{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-family:var(--font-mono);font-size:13px;margin:0}
+.unit__specs dt{color:var(--gray-500)}
+.unit__specs dd{color:var(--black);text-align:right;margin:0}
+.unit__highlight{color:var(--accent-dark);font-weight:700}
+.unit__caption{padding:14px 18px;font-family:var(--font-mono);font-size:12px;color:var(--gray-600)}
+.units__source{font-family:var(--font-mono);font-size:11px;color:var(--gray-400);text-align:center;margin:48px 0 0}
+@media(max-width:900px){.units__grid{grid-template-columns:1fr}}
+
+/* Retail anchor table */
+.retail-anchor{margin:48px 0 0;padding:32px;background:linear-gradient(135deg,var(--accent-vsoft),#fff);border:1px solid var(--accent-border);border-radius:14px}
+.retail-anchor__title{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 20px}
+.retail-anchor__table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:13px}
+.retail-anchor__table th{text-align:left;padding:8px 0;color:var(--gray-500);font-weight:400;border-bottom:1px solid var(--gray-200);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.retail-anchor__table th.num{text-align:right}
+.retail-anchor__table td{padding:14px 0;color:var(--black);border-bottom:1px solid var(--gray-200)}
+.retail-anchor__table td.num{text-align:right;font-weight:700}
+.retail-anchor__table tbody tr:last-child td{border-bottom:none}
+.retail-anchor__cta{margin:20px 0 0;padding-top:20px;border-top:1px solid var(--accent);font-family:var(--font-mono);font-size:13px;color:var(--gray-600)}
+.retail-anchor__cta strong{color:var(--accent-dark);font-weight:700}
+
+/* ============ NEIGHBORHOOD ============ */
+.hood__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border:1px solid var(--gray-200);border-radius:12px;overflow:hidden;background:var(--gray-200);margin-top:32px}
+.hood__col{padding:1.5rem 1.35rem;background:var(--white);transition:background .2s}
+.hood__col:hover{background:var(--accent-vsoft)}
+.hood__col-h{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 16px;font-weight:700}
+.hood__col ul{list-style:none;margin:0;padding:0}
+.hood__col li{padding:8px 0;font-size:13px;color:var(--gray-600);font-family:var(--font-mono);border-bottom:1px solid var(--gray-200)}
+.hood__col li:last-child{border-bottom:none}
+.hood__map{margin:32px 0 0}
+.hood__map iframe{width:100%;aspect-ratio:21/9;border:1px solid var(--gray-200);border-radius:12px}
+@media(max-width:900px){.hood__grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.hood__grid{grid-template-columns:1fr}}
+
+/* ============ RETURNS TIMELINE ============ */
+.returns__rail{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--gray-200);border:1px solid var(--gray-200);border-radius:12px;overflow:hidden;margin-top:32px;position:relative}
+.return-card{position:relative;padding:24px;background:var(--white);transition:background .2s}
+.return-card:hover{background:var(--accent-vsoft)}
+.return-card__dot{display:none}
+.return-card__period{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gray-500);margin:0 0 12px}
+.return-card__yield{font-family:var(--font-head);font-weight:700;font-size:32px;line-height:1;letter-spacing:-.03em;color:var(--accent-dark);margin:0 0 12px}
+.return-card__source{font-weight:600;font-size:14px;margin:0 0 8px;color:var(--black)}
+.return-card__detail{font-size:13px;color:var(--gray-600);line-height:1.65;margin:0}
+.return-card__detail code{font-family:var(--font-mono);font-size:11px;color:var(--accent-dark);background:var(--accent-vsoft);padding:1px 6px;border-radius:3px}
+.returns__foot{font-size:13px;color:var(--gray-500);margin:32px 0 0;line-height:1.75}
+.returns__foot strong{color:var(--black)}
+@media(max-width:780px){.returns__rail{grid-template-columns:1fr}.returns__rail::before{display:none}}
+
+/* ============ ONRAMP ============ */
+.onramp{background:var(--white);border:1px solid var(--gray-200);border-radius:16px;padding:48px;margin-top:32px;box-shadow:0 12px 48px rgba(16,185,129,.05)}
+.onramp__title{font-family:var(--font-head);font-weight:600;font-size:24px;letter-spacing:-.02em;margin:0 0 12px;color:var(--black)}
+.onramp__sub{color:var(--gray-600);font-size:14px;line-height:1.7;margin:0 0 32px;max-width:700px}
+.onramp__sub code{font-family:var(--font-mono);font-size:12px;color:var(--accent-dark);background:var(--accent-vsoft);padding:1px 6px;border-radius:3px}
+.rails{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 32px}
+.rail{padding:20px;border:1.5px solid var(--gray-200);border-radius:12px;background:var(--white);transition:all .25s}
+.rail:hover{border-color:var(--accent-border);background:var(--accent-vsoft)}
+.rail__glyph{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--accent-dark);margin-bottom:14px;background:var(--white)}
+.rail__name{font-weight:700;font-size:14px;margin:0 0 4px;color:var(--black)}
+.rail__sub{font-family:var(--font-mono);font-size:11px;color:var(--gray-500);margin:0 0 8px;letter-spacing:.05em}
+.rail__desc{font-size:12px;color:var(--gray-600);line-height:1.6;margin:0}
+.start-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;padding:1.5rem;background:var(--accent-vsoft);border:1px solid var(--accent-border);border-radius:12px}
+.start-row label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gray-600);margin-bottom:8px;font-weight:700}
+.start-row input{width:100%;padding:14px 16px;background:var(--white);border:1.5px solid var(--accent-soft);border-radius:8px;color:var(--black);font-family:var(--font-mono);font-size:14px;transition:border-color .25s}
+.start-row input:focus{outline:none;border-color:var(--accent)}
+.start-row button{padding:14px 22px;background:var(--accent);color:var(--white);border:none;border-radius:8px;font-family:inherit;font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.start-row button:hover{background:var(--accent-dark);box-shadow:0 6px 24px rgba(16,185,129,.25)}
+.op-note{margin-top:20px;padding:16px 20px;background:var(--gray-100);border-left:3px solid var(--gray-300);border-radius:0 10px 10px 0;font-size:12px;color:var(--gray-600);line-height:1.7}
+.op-note strong{color:var(--black)}
+.op-note code{font-family:var(--font-mono);font-size:11px;color:var(--accent-dark);background:var(--white);padding:1px 5px;border-radius:3px;border:1px solid var(--gray-200)}
+@media(max-width:780px){.rails{grid-template-columns:1fr}.start-row{grid-template-columns:1fr}.onramp{padding:32px}}
+
+/* ============ CONTRACTS ============ */
+.chain{border:1px solid var(--gray-200);border-radius:12px;background:var(--white);max-width:780px;overflow:hidden;margin-top:32px}
+.chain__h{padding:16px 24px;border-bottom:1px solid var(--gray-200);background:var(--gray-100);display:flex;align-items:center;gap:.6rem}
+.chain__h-name{font-weight:700;font-size:14px;color:var(--black)}
+.chain__h-id{font-family:var(--font-mono);font-size:11px;color:var(--gray-400);margin-left:auto}
+.chain__row{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--gray-200);transition:background .2s;gap:1rem}
+.chain__row:last-child{border-bottom:none}
+.chain__row:hover{background:var(--accent-vsoft)}
+.chain__label{font-size:13px;color:var(--gray-600);flex:0 0 auto}
+.chain__addr{font-family:var(--font-mono);font-size:11px;color:var(--black);text-decoration:none;transition:color .2s;text-align:right}
+.chain__addr:hover{color:var(--accent-dark)}
+.chain__tbd{font-family:var(--font-mono);font-size:10px;color:var(--gray-400);background:var(--gray-100);padding:3px 10px;border-radius:4px;letter-spacing:.04em}
+.lifecycle{margin:32px 0 0;padding:1.75rem 1.5rem 1.5rem;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:14px;max-width:780px}
+.lifecycle__h{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 32px;font-weight:700}
+.lc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;position:relative}
+.lc-grid::before{content:'';position:absolute;top:8px;left:10%;right:10%;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent-border),var(--accent));z-index:0}
+.lc-step{position:relative;z-index:1;text-align:center}
+.lc-dot{width:18px;height:18px;border-radius:50%;background:var(--white);border:3px solid var(--accent);margin:0 auto 16px;box-sizing:border-box}
+.lc-dot--featured{background:var(--accent);box-shadow:0 0 0 4px rgba(16,185,129,.18)}
+.lc-date{font-family:var(--font-mono);font-size:11px;color:var(--accent-dark);text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px;font-weight:700}
+.lc-title{font-weight:700;font-size:14px;line-height:1.3;margin:0 0 6px;color:var(--black)}
+.lc-desc{font-size:12px;color:var(--gray-600);line-height:1.55;margin:0;padding:0 4px}
+@media(max-width:780px){.lc-grid{grid-template-columns:1fr;gap:24px}.lc-grid::before{top:0;bottom:0;left:8px;width:2px;height:auto;right:auto;background:linear-gradient(180deg,var(--accent),var(--accent-border),var(--accent))}.lc-step{display:grid;grid-template-columns:auto 1fr;gap:1rem;text-align:left;align-items:start}.lc-dot{margin:0}.lc-date,.lc-title,.lc-desc{grid-column:2}.lc-desc{padding:0}}
+
+/* ============ PARTNERS ============ */
+.partners{padding:clamp(60px,8vw,96px) clamp(20px,4vw,48px);border-top:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200);background:var(--white)}
+.partners__inner{max-width:1280px;margin:0 auto;text-align:center}
+.partners__h{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gray-400);margin:0 0 32px}
+.partners__grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0;align-items:center;justify-items:center}
+.partner{padding:1.25rem 1rem;border-right:1px solid var(--gray-100);width:100%;display:flex;flex-direction:column;align-items:center;gap:.5rem;transition:all .25s}
+.partner:last-child{border-right:none}
+.partner:hover{transform:translateY(-2px)}
+.partner__logo{height:32px;width:auto;max-width:130px;object-fit:contain;filter:grayscale(100%) opacity(.6);transition:filter .25s}
+.partner:hover .partner__logo{filter:grayscale(0%) opacity(1)}
+.partner__name{font-weight:700;font-size:14px;color:var(--gray-600);letter-spacing:-.01em}
+.partner__role{font-family:var(--font-mono);font-size:10px;color:var(--gray-400);text-transform:uppercase;letter-spacing:.1em}
+@media(max-width:900px){.partners__grid{grid-template-columns:repeat(3,1fr)}.partner:nth-child(3){border-right:none}.partner:nth-child(-n+3){border-bottom:1px solid var(--gray-100)}}
+@media(max-width:520px){.partners__grid{grid-template-columns:repeat(2,1fr)}.partner{border-right:1px solid var(--gray-100)!important}.partner:nth-child(2n){border-right:none!important}}
+
+/* The two main partners — Fator + Lobie */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:1px;border:1px solid var(--gray-200);border-radius:14px;overflow:hidden;background:var(--gray-200);margin-top:32px}
+.duo__col{padding:2.25rem 2rem;background:var(--white);transition:background .2s}
+.duo__col:hover{background:var(--accent-vsoft)}
+.duo__role{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 16px;font-weight:700}
+.duo__name{font-family:var(--font-head);font-weight:700;font-size:28px;letter-spacing:-.025em;line-height:1.05;margin:0 0 8px;color:var(--black)}
+.duo__since{font-family:var(--font-mono);font-size:11px;color:var(--gray-400);margin:0 0 20px;letter-spacing:.05em}
+.duo__desc{font-size:14px;color:var(--gray-600);line-height:1.75;margin:0}
+@media(max-width:780px){.duo{grid-template-columns:1fr}.duo__col{border-right:none;border-bottom:1px solid var(--line)}.duo__col:last-child{border-bottom:none}}
+
+/* ============ RISK + FAQ ============ */
+.risk-box{border-left:3px solid var(--accent);padding:1.5rem 1.75rem;background:var(--accent-vsoft);border-radius:0 12px 12px 0;margin-top:32px}
+.risk-box h4{font-family:var(--font-head);font-weight:700;font-size:15px;margin:0 0 12px;color:var(--accent-dark);letter-spacing:-.01em}
+.risk-box p{font-size:13px;color:var(--gray-700);line-height:1.7;margin:0 0 10px}
+.risk-box p:last-child{margin-bottom:0}
+.risk-box strong{color:var(--black);font-weight:600}
+.faq-item{border:1px solid var(--gray-200);border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:.75rem;transition:border-color .2s}
+.faq-item:hover{border-color:var(--accent-border)}
+.faq-q{font-family:var(--font-head);font-weight:600;font-size:15px;margin:0 0 8px;color:var(--black);letter-spacing:-.01em}
+.faq-a{font-size:14px;color:var(--gray-600);line-height:1.7;margin:0}
+.faq-a code{font-family:var(--font-mono);font-size:12px;color:var(--accent-dark);background:var(--accent-vsoft);padding:1px 6px;border-radius:3px}
+
+/* ============ CTA + FOOTER ============ */
+.cta{padding:clamp(80px,10vw,140px) clamp(20px,4vw,48px);text-align:center;border-top:1px solid var(--gray-200);background:linear-gradient(180deg,#fff 0%,var(--accent-vsoft) 100%)}
+.cta__inner{max-width:720px;margin:0 auto}
+.cta__title{font-family:var(--font-head);font-weight:600;font-size:clamp(32px,4.5vw,52px);letter-spacing:-.03em;line-height:1.1;margin:0 0 20px;color:var(--black)}
+.cta__title em{font-style:normal;font-weight:700;color:var(--accent-dark)}
+.cta__desc{font-size:15px;color:var(--gray-600);line-height:1.7;margin:0 0 32px}
+.cta__cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+footer{padding:48px clamp(20px,4vw,48px) 32px;border-top:1px solid var(--gray-200);background:var(--white)}
+.footer-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:start;gap:48px;flex-wrap:wrap}
+.footer-brand{font-size:13px;color:var(--gray-600);margin:1rem 0 0;max-width:320px;line-height:1.7}
+.footer-cols{display:flex;gap:48px;flex-wrap:wrap}
+.footer-col h4{font-family:var(--font-mono);font-size:10px;color:var(--gray-400);text-transform:uppercase;letter-spacing:.18em;margin:0 0 16px;font-weight:400}
+.footer-col a{display:block;color:var(--gray-600);text-decoration:none;font-size:13px;padding:6px 0;transition:color .2s}
+.footer-col a:hover{color:var(--accent-dark)}
+.footer-bottom{max-width:1280px;margin:32px auto 0;padding-top:24px;border-top:1px solid var(--gray-200);font-family:var(--font-mono);font-size:11px;color:var(--gray-400);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+@media(max-width:780px){.footer-inner{flex-direction:column}}
+
+/* ============ MOTION ============ */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .8s ease,transform .8s ease}
+.reveal.in-view{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <div class="nav-content">
+    <a href="/btr/" class="nav-logo" title="Voltar ao hub BTR">BTR<span class="dot">.</span><span class="ticker">/ FIRSTRIO</span></a>
+    <ul class="nav-links">
+      <li><a href="#opportunity">Oportunidade</a></li>
+      <li><a href="#building">Edifício</a></li>
+      <li><a href="#amenities">Amenidades</a></li>
+      <li><a href="#unit-types">Unidade</a></li>
+      <li><a href="#hood">Bairro</a></li>
+      <li><a href="#returns">Rendimento</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a href="#onramp" class="nav-cta">Reservar</a>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero__media">
+    <img src="assets/renders/facade-night.jpg" alt="First Life Friendly à noite — Largo dos Leões 15">
+  </div>
+  <div class="hero__veil"></div>
+  <div class="hero__content">
+    <p class="hero__eyebrow"><span class="dot"></span>First Life Friendly · Pool #2 · Maio 2026</p>
+    <h1 class="hero__title">Studio no Humaitá,<br>operado pela <em>Lobie</em>.</h1>
+    <p class="hero__lede">FIRST é equity fracionária em 1 studio do First Life Friendly, no Humaitá — o bairro mais querido do Rio, com vista para o Cristo e a 7 minutos da Lagoa. Operação Lobie, distribuições mensais em BRLE, dividend yield-alvo ~13% a.a., TIR-alvo ~22% a.a. com ganho de capital. Negociável em mercados secundários globais.</p>
+    <div class="hero__cta">
+      <a href="#onramp" class="btn btn--primary">Reservar alocação</a>
+      <a href="#opportunity" class="btn btn--ghost">Ver a oportunidade</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SPECS GRID ============ -->
+<section class="specs" aria-label="Pool specifications">
+  <div class="specs__grid">
+    <dl class="spec"><dt>Pool NAV</dt><dd>R$ 680.000</dd></dl>
+    <dl class="spec"><dt>Par price</dt><dd>R$ 1,00 <span>/ cota</span></dd></dl>
+    <dl class="spec"><dt>Total supply</dt><dd>680.000 <span>FIRST</span></dd></dl>
+    <dl class="spec"><dt>Backing</dt><dd>1 studio · 36,58 m²</dd></dl>
+    <dl class="spec"><dt>Localização</dt><dd>Humaitá · Rio</dd></dl>
+    <dl class="spec"><dt>Incorporação</dt><dd>Fator Realty <span>desde 1956</span></dd></dl>
+    <dl class="spec"><dt>Operadora</dt><dd>Lobie <span>88 anos · 750+ STR</span></dd></dl>
+    <dl class="spec"><dt>Habite-se</dt><dd>Jan 2027</dd></dl>
+  </div>
+</section>
+
+<!-- ============ OPPORTUNITY ============ -->
+<section class="section reveal" id="opportunity">
+  <div class="section__intro" style="margin-bottom:48px;padding:0">
+    <span class="kicker">A Oportunidade</span>
+    <h2 class="h2">Humaitá, o bairro residencial mais querido do <em>Rio</em>.</h2>
+    <p class="lede">First Life Friendly fica entre Botafogo, Lagoa e Jardim Botânico — bairro caminhável, arborizado, com vista do Cristo Redentor e a Cobal no centro. FIRST tokeniza equity fracionária em 1 studio do edifício para investidores globais capturarem a economia STR de um endereço premium do Rio.</p>
+  </div>
+  <div class="opp">
+    <div class="opp__main">
+      <p>Permanência média 4–5 dias, diárias R$ 280–350 (alto padrão Zona Sul). A <strong>Lobie</strong> roda a operação inteira: reservas em +100 canais, precificação dinâmica, concierge 24h, limpeza, manutenção. <strong>Botafogo Privilege</strong> ao lado — mesmo corredor, mesmo padrão construtivo — atingiu 92% de ocupação e +184% de valorização em 18 meses.</p>
+      <ul class="opp__list">
+        <li><strong>1 studio</strong> · linha 10, pavimento alto · 36,58 m² no First Life Friendly (159 unidades · 19 andares · 157 residenciais + 2 lojas)</li>
+        <li>Incorporação <strong>Fator Realty</strong> · arquitetura FEU Arquitetura · interiores Inspira Interiores · habite-se Jan/2027</li>
+        <li>Operação <strong>Lobie</strong> · grupo de 88 anos · 750+ STR sob gestão · 85% ocupação média no Rio</li>
+        <li>Lastro on-chain via <strong>1 NFT Lobie Unit</strong> · observações mensais auditadas por Harris &amp; Trotter</li>
+        <li>DeFi-componível · negociável Uniswap V3 · colateral Morpho Blue (62,5% LLTV)</li>
+      </ul>
+    </div>
+    <aside class="opp__side">
+      <div class="opp__metric-label">Tamanho do pool</div>
+      <div class="opp__metric-val">R$ <em>680k</em></div>
+      <p class="opp__metric-sub">680.000 cotas FIRST a R$ 1,00 par. O menor pool do catálogo BTR — porta de entrada limpa para novos alocadores. NAV continuamente verificado contra Chainlink BRL/USD.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ BUILDING SHOWCASE ============ -->
+<section class="section reveal" id="building">
+  <header class="section__intro" style="padding:0">
+    <span class="kicker">O Prédio</span>
+    <h2 class="h2">19 andares de Humaitá <em>vivendo</em>.</h2>
+    <p class="lede">First Life Friendly · 159 unidades · arquitetura <strong>FEU Arquitetura</strong> · interiores <strong>Inspira Interiores</strong>. Retrofit alto padrão Fator Realty, registrado sob a Matrícula nº <strong>5.356</strong> do 3º RGI/RJ. Endereço: Largo dos Leões, 15 · Humaitá.</p>
+  </header>
+  <figure class="showcase__hero">
+    <img src="assets/renders/facade-night.jpg" alt="First Life Friendly à noite — fachada Largo dos Leões" loading="lazy">
+    <figcaption>Largo dos Leões, 15 · vista noturna</figcaption>
+  </figure>
+  <div class="showcase__grid">
+    <figure>
+      <img src="assets/renders/hero-skyline.jpg" alt="First Life Friendly em meio à Zona Sul carioca" loading="lazy">
+      <figcaption>Volume entre Pão de Açúcar e Corcovado</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/plants/section-high-floors.png" alt="Pavimento tipo 8º ao 16º — 13 unidades por andar" loading="lazy">
+      <figcaption>Pavimento tipo · 8º ao 16º · 13 unidades</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ AMENITIES ============ -->
+<section class="amenities reveal" id="amenities">
+  <div class="amenities__inner">
+    <header class="amenities__intro">
+      <span class="kicker">Amenidades</span>
+      <h2 class="h2">Três andares só para <em>viver</em>.</h2>
+      <p class="lede">Mais que um studio: acesso completo ao <strong>Rooftop</strong> com piscina, pool bar e Spa, ao <strong>PUC</strong> (7º andar) com salão gourmet, coworking, lounge de jogos e brinquedoteca, e ao <strong>Térreo</strong> com lobby, delivery center e duas lojas. Operado pela <strong>Lobie</strong> para garantir 85% de ocupação ao longo do ano.</p>
+    </header>
+    <figure class="amenities__plan">
+      <img src="assets/masterplan/full.png" alt="Masterplan First Life Friendly — Rooftop, PUC e Térreo" loading="lazy">
+      <figcaption>Masterplan oficial · Fator Realty</figcaption>
+    </figure>
+    <div class="amenities__legend">
+      <div>
+        <h3 class="amenities__floor">Rooftop · 17º andar</h3>
+        <p class="amenities__view">Vista Cristo Redentor + Pão de Açúcar</p>
+        <ul class="amenities__list">
+          <li>Piscina + Pool Bar</li>
+          <li>Academia + Espaço Funcional</li>
+          <li>Spa · sala de massagem</li>
+          <li>Sauna a vapor + Repouso</li>
+          <li>Hidromassagem int. + ext.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="amenities__floor">PUC · 7º andar</h3>
+        <p class="amenities__view">Lazer, trabalho e convivência</p>
+        <ul class="amenities__list">
+          <li>Salão de Festas Gourmet</li>
+          <li>Coworking + Studio Podcast</li>
+          <li>Sala Gamer + Lounge Jogos</li>
+          <li>Brinquedoteca</li>
+          <li>Pet Care + Mini Market</li>
+          <li>Lavanderia self-service</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="amenities__floor">Térreo</h3>
+        <p class="amenities__view">Acesso pelo Largo dos Leões</p>
+        <ul class="amenities__list">
+          <li>Lobby de recepção</li>
+          <li>Delivery Center</li>
+          <li>2 Lojas comerciais</li>
+          <li>Bicicletário · subsolo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ UNIT TYPES + RETAIL ANCHOR ============ -->
+<section class="section reveal" id="unit-types">
+  <header class="section__intro" style="padding:0">
+    <span class="kicker">A unidade subjacente</span>
+    <h2 class="h2">Studio de 36,58 m², pavimento <em>alto</em>.</h2>
+    <p class="lede">FIRST tokeniza 1 studio do tipo subjacente — 36,58 m² de área privativa, varanda com vista para a Rua Conde de Irajá e o Pão de Açúcar. Andares altos (8º ao 16º) negociados <strong>no varejo da Fator entre R$ 742k e R$ 816k</strong>. O pool de R$ 680k é entrada com desconto sobre o preço de tabela.</p>
+  </header>
+
+  <div class="units__grid">
+    <article class="unit unit--feature">
+      <figure class="unit__plan">
+        <img src="assets/plants/studio-10.jpg" alt="Studio tipo 10 — render interior" loading="lazy">
+      </figure>
+      <div class="unit__body">
+        <p class="unit__tag">Tipo subjacente · referência</p>
+        <h3 class="unit__name">Studio 36,58 m²</h3>
+        <dl class="unit__specs">
+          <dt>Estúdio</dt><dd>25,80 m²</dd>
+          <dt>Varanda</dt><dd>3,14 m²</dd>
+          <dt>Banho</dt><dd>3,06 m²</dd>
+          <dt>Andares</dt><dd>8º ao 16º</dd>
+          <dt>Faixa varejo Fator</dt><dd>R$ 742k–816k</dd>
+          <dt>Pool token</dt><dd class="unit__highlight">R$ 680k</dd>
+        </dl>
+      </div>
+    </article>
+    <article class="unit">
+      <figure class="unit__plan"><img src="assets/plants/studio-08.jpg" alt="Studio 08" loading="lazy"></figure>
+      <div class="unit__caption">Studio linha 08 · 36,58 m²</div>
+    </article>
+    <article class="unit">
+      <figure class="unit__plan"><img src="assets/plants/studio-09.jpg" alt="Studio 09" loading="lazy"></figure>
+      <div class="unit__caption">Studio linha 09 · 36,58 m²</div>
+    </article>
+  </div>
+
+  <aside class="retail-anchor">
+    <p class="retail-anchor__title">Tabela retail Fator · abr/2026</p>
+    <table class="retail-anchor__table">
+      <thead><tr>
+        <th>Unid.</th><th>Tipologia</th><th>Área</th><th class="num">Preço varejo</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>810</td><td>Studio com varanda</td><td>36,58 m²</td><td class="num">R$ 742.054</td></tr>
+        <tr><td>1010</td><td>Studio com varanda</td><td>36,58 m²</td><td class="num">R$ 757.121</td></tr>
+        <tr><td>1208</td><td>Studio com varanda</td><td>36,58 m²</td><td class="num">R$ 772.500</td></tr>
+        <tr><td>1410</td><td>Studio com varanda</td><td>36,58 m²</td><td class="num">R$ 788.180</td></tr>
+        <tr><td>1510</td><td>Studio com varanda</td><td>36,58 m²</td><td class="num">R$ 816.516</td></tr>
+      </tbody>
+    </table>
+    <p class="retail-anchor__cta">Pool FIRST: <strong>R$ 680.000</strong> para a unidade integral · entrada fracionada a partir de R$ 1.000.</p>
+  </aside>
+
+  <p class="units__source">Fontes: Tabela de venda Fator Realty 2026-04 (20-80) · Memorial de Incorporação Mat. 5.356 · 3º RGI/RJ.</p>
+</section>
+
+<!-- ============ NEIGHBORHOOD ============ -->
+<section class="section reveal" id="hood">
+  <header class="section__intro" style="padding:0">
+    <span class="kicker">O Bairro</span>
+    <h2 class="h2">Humaitá — entre a <em>Lagoa</em> e Botafogo.</h2>
+    <p class="lede">Bairro arborizado e caminhável da Zona Sul, com a Cobal no coração. Vista do Cristo Redentor da maioria dos andares. 7 minutos a pé até a Lagoa Rodrigo de Freitas, 10 minutos até a Praia de Botafogo, e o metrô Botafogo te leva a Ipanema em duas estações ou ao Centro em sete.</p>
+  </header>
+  <figure class="hood__map">
+    <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-43.2030,-22.9580,-43.1855,-22.9450&amp;layer=mapnik&amp;marker=-22.9514,-43.1942" loading="lazy" title="Mapa do Humaitá com o First Life Friendly"></iframe>
+    <figcaption>Largo dos Leões, 15 · 7 min a pé da Lagoa Rodrigo de Freitas</figcaption>
+  </figure>
+  <div class="hood__grid">
+    <div class="hood__col">
+      <div class="hood__col-h">Lazer</div>
+      <ul><li>Lagoa Rodrigo de Freitas</li><li>Parque Lage</li><li>Mirante Dona Marta</li><li>Praia de Botafogo</li><li>Praia do Flamengo</li><li>Parque da Catacumba</li></ul>
+    </div>
+    <div class="hood__col">
+      <div class="hood__col-h">Cultura</div>
+      <ul><li>Espaço Cultural Sérgio Porto</li><li>Trem do Corcovado</li><li>Casa de Rui Barbosa</li><li>Theatro Municipal</li><li>Cobal cultural events</li><li>Jardim Botânico</li></ul>
+    </div>
+    <div class="hood__col">
+      <div class="hood__col-h">Gastronomia</div>
+      <ul><li>Cobal do Humaitá</li><li>Aconchego Carioca</li><li>Galeto Sat's</li><li>Bar do Lado</li><li>Empório Jardim</li><li>Pizzaria Bráz</li></ul>
+    </div>
+    <div class="hood__col">
+      <div class="hood__col-h">Turismo</div>
+      <ul><li>Cristo Redentor</li><li>Pão de Açúcar</li><li>Jardim Botânico</li><li>PUC-Rio</li><li>Lagoa Rodrigo de Freitas</li><li>Metrô Botafogo</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PARTNERSHIP — FATOR + LOBIE ============ -->
+<section class="section reveal">
+  <header class="section__intro" style="padding:0">
+    <span class="kicker">A parceria</span>
+    <h2 class="h2">Tradição + tokenização, lado a <em>lado</em>.</h2>
+    <p class="lede">Dois parceiros, uma operação. <strong>Fator Realty</strong> incorpora e constrói, <strong>Lobie</strong> opera o STR floor, <strong>EFIX</strong> emite o token. Uma incorporadora carioca de 70 anos casada com a operação STR de ponta da Lobie — globalmente distribuída via rails on-chain.</p>
+  </header>
+  <div class="duo">
+    <div class="duo__col">
+      <div class="duo__role">Incorporadora · Construtora</div>
+      <div class="duo__name">Fator Realty</div>
+      <div class="duo__since">desde 1956 · 70 anos construindo o Rio</div>
+      <p class="duo__desc">Incorporadora carioca tradicional, com obras em Copacabana, Botafogo, Humaitá e Jardim Botânico. Responsável pela incorporação e construção do First Life Friendly, registrado sob a Matrícula nº 5.356 do 3º RGI/RJ.</p>
+    </div>
+    <div class="duo__col">
+      <div class="duo__role">Operadora STR</div>
+      <div class="duo__name">Lobie</div>
+      <div class="duo__since">grupo de 88 anos · 750+ contratos STR · 85% ocupação</div>
+      <p class="duo__desc">Operadora STR carioca, 45 mil unidades em gestão de condomínio, 750+ contratos de short-term rental ativos. Provê reservas em +100 canais, dynamic pricing, concierge 24h, limpeza e manutenção. Botafogo Privilege é a operação benchmark vizinha.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSTITUTIONAL PARTNERS ============ -->
+<section class="partners">
+  <div class="partners__inner">
+    <p class="partners__h">Suportado por infraestrutura institucional</p>
+    <div class="partners__grid">
+      <div class="partner">
+        <img class="partner__logo" src="/salrio/assets/partners/openzeppelin.svg" alt="OpenZeppelin" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <div class="partner__name" style="display:none">OpenZeppelin</div>
+        <div class="partner__role">Auditoria</div>
+      </div>
+      <div class="partner">
+        <img class="partner__logo" src="/salrio/assets/partners/fireblocks.svg" alt="Fireblocks" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <div class="partner__name" style="display:none">Fireblocks</div>
+        <div class="partner__role">Custódia</div>
+      </div>
+      <div class="partner">
+        <img class="partner__logo" src="/salrio/assets/partners/bridge.svg" alt="Bridge.xyz" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <div class="partner__name" style="display:none">Bridge</div>
+        <div class="partner__role">USD/EUR onramp</div>
+      </div>
+      <div class="partner">
+        <img class="partner__logo" src="/salrio/assets/partners/coingecko.svg" alt="CoinGecko" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <div class="partner__name" style="display:none">CoinGecko</div>
+        <div class="partner__role">Price feed</div>
+      </div>
+      <div class="partner">
+        <img class="partner__logo" src="/salrio/assets/partners/coinmarketcap.svg" alt="CoinMarketCap" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <div class="partner__name" style="display:none">CoinMarketCap</div>
+        <div class="partner__role">Listing</div>
+      </div>
+      <div class="partner">
+        <img class="partner__logo" src="/salrio/assets/partners/defillama.svg" alt="DefiLlama" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <div class="partner__name" style="display:none">DefiLlama</div>
+        <div class="partner__role">TVL tracking</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RETURNS ============ -->
+<section class="section reveal" id="returns">
+  <header class="section__intro" style="padding:0">
+    <span class="kicker">Rendimento esperado</span>
+    <h2 class="h2">Como você ganha, fase a <em>fase</em>.</h2>
+    <p class="lede">FIRST paga distribuições mensais em BRLE desde o fechamento da oferta. Durante a obra (~8 meses), a SPE aplica o capital do IPO em rendimento linkado ao BRLE (proxy CDI). Após o habite-se (Jan/2027), o mesmo contrato passa a rotear aluguel STR real — fase marcada on-chain.</p>
+  </header>
+  <div class="returns__rail">
+    <div class="return-card">
+      <div class="return-card__dot"></div>
+      <div class="return-card__period">Mês 1–8 · Construção (Mai/26 → Jan/27)</div>
+      <div class="return-card__yield">~14,4% a.a.</div>
+      <div class="return-card__source">Proxy CDI via BRLE</div>
+      <p class="return-card__detail">Tesouraria aplica os R$ 680k em rendimento CDI linkado ao BRLE. <strong>~R$ 8.160/mês</strong> distribuídos no pool. Fase marcada <code>ConstructionProxy</code>.</p>
+    </div>
+    <div class="return-card">
+      <div class="return-card__dot"></div>
+      <div class="return-card__period">Mês 9 · Ramp-up (Fev/27)</div>
+      <div class="return-card__yield">Transitório</div>
+      <div class="return-card__source">Habite-se + 1ª ocupação</div>
+      <p class="return-card__detail">Habite-se emitido. Mobília, listing, primeiros hóspedes. Fase <code>RampUp</code>. Proxy CDI parcial + primeira receita STR.</p>
+    </div>
+    <div class="return-card">
+      <div class="return-card__dot"></div>
+      <div class="return-card__period">Mês 10+ · Operacional (Mar/27 →)</div>
+      <div class="return-card__yield">~13% a.a.</div>
+      <div class="return-card__source">Aluguel STR real</div>
+      <p class="return-card__detail">Lobie estabiliza o studio em ~R$ 7.367/mês bruto. Diária ~R$ 280–350, 65–72% ocupação. Fase <code>Operational</code>.</p>
+    </div>
+  </div>
+  <p class="returns__foot"><strong>TIR-alvo de ~22% a.a. em 10 anos</strong> nominal, incluindo valorização do m². Faixa de sensibilidade ~12–14% de div yield dependendo de ocupação (60–75%) e diária (R$ 250–380). Fontes: Lobie Botafogo Privilege, estudo Fator Realty (abr/2026).</p>
+</section>
+
+<!-- ============ ONRAMP ============ -->
+<section class="section--dark" id="onramp">
+  <div class="section reveal">
+    <header class="section__intro" style="padding:0">
+      <span class="kicker">Alocar</span>
+      <h2 class="h2">Reservar FIRST — três rails de <em>pagamento</em>.</h2>
+      <p class="lede">FIRST abre alocação primária em maio de 2026. Reserve seu slot agora pelo rail mais rápido. PIX em minutos · ACH em 1–2 dias úteis · Wire internacional em D+0 antes de 15:00 UTC. Após o primário, FIRST é negociado em mercados secundários globais via Uniswap V3.</p>
+    </header>
+    <div class="onramp">
+      <div class="onramp__title">Reservar via a carteira EFIX</div>
+      <p class="onramp__sub">Mesmo fluxo email-first da nossa <code>efix.finance/app/wallet</code>. Entre com seu email, geramos uma smart wallet na Base (sem MetaMask, sem gas), escolha seu rail, e a carteira operadora da EFIX recebe seus fundos — os tokens FIRST são entregues automaticamente no fechamento da oferta.</p>
+      <div class="rails">
+        <div class="rail">
+          <div class="rail__glyph">R$</div>
+          <div class="rail__name">PIX · Brasil</div>
+          <div class="rail__sub">BRL instantâneo</div>
+          <p class="rail__desc">Recomendado para contas brasileiras. QR code gerado no app; compensa em minutos.</p>
+        </div>
+        <div class="rail">
+          <div class="rail__glyph">$</div>
+          <div class="rail__name">ACH / Wire · USA</div>
+          <div class="rail__sub">Conta virtual via Bridge.xyz</div>
+          <p class="rail__desc">ACH 1–2 dias úteis · Wire D+0 se enviado antes de 15:00 UTC.</p>
+        </div>
+        <div class="rail">
+          <div class="rail__glyph">€</div>
+          <div class="rail__name">SEPA · Europa</div>
+          <div class="rail__sub">Conta SEPA via Bridge.xyz</div>
+          <p class="rail__desc">Compensação típica em 1 dia útil em qualquer banco da zona euro.</p>
+        </div>
+      </div>
+      <form class="start-row" onsubmit="startAllocation(event)">
+        <div>
+          <label for="fld-email">Seu email</label>
+          <input type="email" id="fld-email" placeholder="voce@exemplo.com" required>
+        </div>
+        <button type="submit">Reservar alocação →</button>
+      </form>
+      <div class="op-note"><strong>Carteira operadora:</strong> BRL via PIX cai na conta da EFIX Plataforma de Tokenização e Crowdfunding Ltda (CNPJ <code>60.756.859/0001-57</code>); USD/EUR via Bridge.xyz é auto-convertido para USDC e depositado na sua smart wallet. A tesouraria liquida FIRST ao par — 1 FIRST = R$ 1,00 — pelo tamanho da sua alocação no fechamento.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTRACTS + LIFECYCLE ============ -->
+<section class="section reveal" id="contracts">
+  <header class="section__intro" style="padding:0">
+    <span class="kicker">Smart Contracts · Base mainnet</span>
+    <h2 class="h2">Contratos a serem implantados na <em>abertura</em>.</h2>
+    <p class="lede">Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. Todos imutáveis, sem proxy, sem caminho de upgrade. Mesmo framework auditado do SALRIO Pool #1, com instâncias específicas do FIRST.</p>
+  </header>
+  <div class="chain">
+    <div class="chain__h"><span style="font-size:18px">🔵</span><span class="chain__h-name">Base Mainnet</span><span class="chain__h-id">Chain 8453</span></div>
+    <div class="chain__row"><span class="chain__label">HausBTRShare (FIRST)</span><span class="chain__tbd">0x0000…0000 · TBD</span></div>
+    <div class="chain__row"><span class="chain__label">FirstOracleV1</span><span class="chain__tbd">0x0000…0000 · TBD</span></div>
+    <div class="chain__row"><span class="chain__label">Uniswap V3 Pool (FIRST/BRLE 0.3%)</span><span class="chain__tbd">0x0000…0000 · TBD</span></div>
+    <div class="chain__row"><span class="chain__label">Morpho Blue Market</span><span class="chain__tbd">0x0000…0000 · TBD</span></div>
+    <div class="chain__row"><span class="chain__label">Lobie-Haus-Btr Safe (2-of-3)</span><a href="https://app.safe.global/base:0xa09d5E0001d1FdD2b59072E96c91aa79ed3e40D6" target="_blank" rel="noopener" class="chain__addr">0xa09d…40D6</a></div>
+    <div class="chain__row"><span class="chain__label">Lobie Unit Registry</span><a href="https://basescan.org/address/0xd8C32a417B5317D34f783CE4e959850465AD4638#code" target="_blank" rel="noopener" class="chain__addr">0xd8C3…4638</a></div>
+    <div class="chain__row"><span class="chain__label">BTROfferingRegistry</span><a href="https://basescan.org/address/0x1287AcaCC52153DE507C46867e66Fdbf02b101Fe#code" target="_blank" rel="noopener" class="chain__addr">0x1287…01Fe</a></div>
+    <div class="chain__row"><span class="chain__label">BRLE (dividend asset)</span><a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank" rel="noopener" class="chain__addr">0x7D12…82F6</a></div>
+  </div>
+  <div class="lifecycle">
+    <div class="lifecycle__h">Ciclo de vida on-chain do FIRST</div>
+    <div class="lc-grid">
+      <div class="lc-step">
+        <div class="lc-dot"></div>
+        <div class="lc-date">Mai / 2026</div>
+        <div class="lc-title">Deploy &amp; IPO</div>
+        <div class="lc-desc">Token FIRST + FirstOracleV1 deployam. Alocação primária abre; ConstructionProxy começa.</div>
+      </div>
+      <div class="lc-step">
+        <div class="lc-dot"></div>
+        <div class="lc-date">Jun / 2026</div>
+        <div class="lc-title">Liquidez online</div>
+        <div class="lc-desc">Pool Uniswap V3 FIRST/BRLE 0.3% seedado ao par; mercado Morpho Blue abre LLTV 62,5%.</div>
+      </div>
+      <div class="lc-step">
+        <div class="lc-dot"></div>
+        <div class="lc-date">Dez / 2026</div>
+        <div class="lc-title">Conclusão da obra</div>
+        <div class="lc-desc">Fator entrega. Compradores retail enfrentam parcelas finais; titulares FIRST não.</div>
+      </div>
+      <div class="lc-step">
+        <div class="lc-dot lc-dot--featured"></div>
+        <div class="lc-date">Jan / 2027 →</div>
+        <div class="lc-title">Habite-se &amp; ramp STR</div>
+        <div class="lc-desc">Lobie instala mobília, lista o studio, primeiros hóspedes. Fase Operational em Fev/27.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RISK ============ -->
+<section class="section--dark">
+  <div class="section reveal" id="risk">
+    <header class="section__intro" style="padding:0">
+      <span class="kicker">Riscos &amp; Compliance</span>
+      <h2 class="h2">Leia antes de <em>alocar</em>.</h2>
+      <p class="lede">FIRST é uma oferta Regulation S Categoria 3. A distribuição primária é restrita: nenhum americano pode participar na oferta inicial. EFIX é a emissora; Lobie é a operadora; Harris &amp; Trotter audita as observações de cashflow antes de entrarem on-chain. Os tokens FIRST serão livremente negociados em mercados secundários globais após o período de 12 meses Reg S.</p>
+    </header>
+    <div class="risk-box">
+      <h4>Riscos principais</h4>
+      <p><strong>Risco de construção:</strong> habite-se (alvo Jan/2027) pode atrasar. Durante atraso, o rendimento proxy CDI continua em ~14,4% a.a.</p>
+      <p><strong>Risco de demanda STR:</strong> aluguel operacional depende da demanda STR no Rio, sazonal e sensível a fatores macro/turísticos. Botafogo Privilege sugere ocupação 65–92% no corredor.</p>
+      <p><strong>Concentração de unidade:</strong> FIRST é lastreado por 1 studio. Vacância ou manutenção afetam a distribuição mensal de todo o pool.</p>
+      <p><strong>Risco regulatório:</strong> mudanças da CVM, BCB, ou Reg S podem alterar a estrutura.</p>
+      <p><strong>Risco de smart contract:</strong> imutáveis e auditados; nenhum smart contract é livre de risco.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section reveal" id="faq">
+  <header class="section__intro" style="padding:0">
+    <span class="kicker">FAQ</span>
+    <h2 class="h2">Perguntas <em>frequentes</em>.</h2>
+    <p class="lede">Se sua pergunta não estiver aqui, escreva para <a href="mailto:contato@efix.finance" style="color:var(--green);text-decoration:none">contato@efix.finance</a>.</p>
+  </header>
+  <div>
+    <div class="faq-item"><div class="faq-q">Quando abre a oferta?</div><p class="faq-a">A oferta primária do FIRST abre em maio de 2026. Reserve seu slot pelo formulário acima; tokens entregues no fechamento.</p></div>
+    <div class="faq-item"><div class="faq-q">Qual é a alocação mínima?</div><p class="faq-a">R$ 1.000 (ou ~$200 USD equivalente). Sem máximo no primário.</p></div>
+    <div class="faq-item"><div class="faq-q">Americanos podem comprar FIRST?</div><p class="faq-a">Não na primária (Reg S Cat 3). Apenas no secundário (Uniswap V3) após o período de 12 meses de compliance de distribuição.</p></div>
+    <div class="faq-item"><div class="faq-q">Como os dividendos são pagos?</div><p class="faq-a">Em BRLE (stablecoin BRL na Base). Operador chama <code>depositDividend()</code> mensalmente; você chama <code>claim()</code> da sua carteira.</p></div>
+    <div class="faq-item"><div class="faq-q">Posso tomar empréstimo contra FIRST?</div><p class="faq-a">Sim — uma vez aberto o mercado Morpho Blue, deposite FIRST como colateral e tome USDC até ~62,5% LTV.</p></div>
+    <div class="faq-item"><div class="faq-q">Como FIRST difere do SALRIO?</div><p class="faq-a">Ambos são pools BTR Hybrid na Base. SALRIO é 5 studios no Porto Maravilha (R$ 1,86M); FIRST é 1 studio no Humaitá (R$ 680k) — mesmo operador, mesmo dividendo BRLE, mesma framework Reg S Cat 3.</p></div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta">
+  <div class="cta__inner">
+    <h2 class="cta__title">Reserve sua fatia do <em>Humaitá</em>.</h2>
+    <p class="cta__desc">680.000 cotas FIRST a R$ 1,00 par. Equity fracionária em 1 studio do Humaitá, dividendos mensais em BRLE, DeFi-componível, globalmente negociável.</p>
+    <div class="cta__cta">
+      <a href="#onramp" class="btn btn--primary">Reservar alocação</a>
+      <a href="/btr/" class="btn btn--ghost">← Voltar ao BTR hub</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="nav-logo">BTR<span class="dot">.</span><span class="ticker">/ FIRSTRIO</span></div>
+      <p class="footer-brand">First Life Friendly Pool #2 — equity fracionária em 1 studio no Humaitá, operado pela Lobie, emitido pela EFIX. Dividendos mensais em BRLE. Em breve maio 2026 na Base.</p>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h4>Oferta</h4>
+        <a href="#opportunity">Oportunidade</a>
+        <a href="#building">Edifício</a>
+        <a href="#amenities">Amenidades</a>
+        <a href="#unit-types">Unidade</a>
+        <a href="#returns">Rendimento</a>
+        <a href="#onramp">Alocar</a>
+        <a href="#risk">Riscos</a>
+      </div>
+      <div class="footer-col">
+        <h4>Pools BTR</h4>
+        <a href="/btr/">BTR Hub</a>
+        <a href="/salrio/">SALRIO · Pool #1</a>
+        <a href="/first/">FIRST · v1</a>
+        <a href="/firstrio/">FIRST · Rio</a>
+      </div>
+      <div class="footer-col">
+        <h4>EFIX</h4>
+        <a href="https://x.com/efix_finance" target="_blank" rel="noopener">Twitter</a>
+        <a href="https://github.com/Develop-ltda" target="_blank" rel="noopener">GitHub</a>
+        <a href="/app/wallet/">Carteira</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>EFIX Plataforma de Tokenização e Crowdfunding Ltda · CVM Ato 23.635/2025 · Reg S Cat 3 · Sem americanos no primário</span>
+    <span>CNPJ 60.756.859/0001-57</span>
+  </div>
+</footer>
+
+<script>
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+function startAllocation(event){
+  event.preventDefault();
+  const email = document.getElementById('fld-email').value.trim();
+  if(!email) return;
+  const params = new URLSearchParams({ intent: 'first', email });
+  window.location.href = `/app/offerings/?${params.toString()}`;
+}
+</script>
+
+</body>
+</html>
