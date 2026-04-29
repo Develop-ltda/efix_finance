@@ -237,7 +237,9 @@ async function loadUnits() {
       allUnits.push({
         tokenId: tokenId.toString(), name, building, unitCode,
         buildingId: Number(unit.buildingId), obsCount, ttmAvg: ttm,
-        lastPeriod: lastYM > 0 ? `${Math.floor(lastYM/12)}-${String(lastYM%12).padStart(2,'0')}` : '—',
+        // Contract packs YM as year*12 + month with month ∈ [1,12], so Dec packs as
+        // year*12+12 which would naively unpack to (year+1, 0). Shift by 1 to invert correctly.
+        lastPeriod: lastYM > 0 ? `${Math.floor((lastYM-1)/12)}-${String(((lastYM-1)%12)+1).padStart(2,'0')}` : '—',
         npv,
       });
     }
