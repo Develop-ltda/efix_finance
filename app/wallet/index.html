@@ -180,6 +180,39 @@
                 padding: 20px 60px;
             }
         }
+
+        /* Wide desktop — give Lobie Units / BTR cards room to breathe.
+           Left column is the wallet (balance + address); right column is
+           the tab strip + active panel content. Sticky left so the wallet
+           stays in view as you scroll through 10+ unit cards. */
+        @media (min-width: 1280px) {
+            main {
+                max-width: 1400px;
+                padding: 56px 48px 80px;
+            }
+            .desktop-grid {
+                grid-template-columns: minmax(360px, 1fr) minmax(0, 2fr);
+                gap: 32px;
+            }
+            .desktop-left {
+                position: sticky;
+                top: 24px;
+                align-self: start;
+            }
+        }
+        @media (min-width: 1600px) {
+            main {
+                max-width: 1680px;
+                padding: 64px 64px 96px;
+            }
+            .desktop-grid {
+                grid-template-columns: minmax(380px, 1fr) minmax(0, 2.2fr);
+                gap: 40px;
+            }
+            header {
+                padding: 24px 80px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -276,7 +309,7 @@
                 <button class="tab" onclick="switchTab('brle', this); initBrle();">BRLE</button>
                 <button class="tab" onclick="switchTab('send', this); initSendTab();">Deposit USD/EUR</button>
                 <button class="tab" onclick="switchTab('invest', this); loadInvestPosition();">Invest</button>
-                <button class="tab" id="tabImoveis" style="display:none" onclick="switchTab('imoveis', this); loadOwnerProperties();">Imóveis</button>
+                <button class="tab" id="tabImoveis" style="display:none" onclick="switchTab('imoveis', this); loadOwnerProperties();">Lobie Units</button>
                 <button class="tab" id="tabCotas"   style="display:none" onclick="switchTab('cotas',   this); loadOwnerBTR();">Cotas BTR</button>
                 <button class="tab" onclick="switchTab('card', this)">Card</button>
             </div>
@@ -680,10 +713,10 @@
                 </div>
             </div>
 
-            <!-- Imóveis: portfolio de imóveis Lobie do proprietário. -->
+            <!-- Lobie Units: portfolio de unidades sob gestão Lobie. -->
             <div class="tab-panel" id="panel-imoveis">
                 <div class="ownership-section-header">
-                    <h3>Meus Imóveis</h3>
+                    <h3>Lobie Units</h3>
                     <p class="ownership-section-hint">
                         Suas unidades sob gestão Lobie e os repasses mensais auditados.
                         Cada unidade pode ser tokenizada para acesso a crédito e liquidez secundária — sem custo para você.

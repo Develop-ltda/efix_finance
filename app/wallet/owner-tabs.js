@@ -61,6 +61,46 @@
     return res.json();
   }
 
+  // ── Card visual: banner (image OR stylized gradient) + map pin overlay ──
+  function _hashStr(s) {
+    let h = 5381;
+    for (let i = 0; i < (s || "").length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+  function bannerHTML(p) {
+    if (p.imgBanner && /^https?:\/\//.test(p.imgBanner)) {
+      return `<div class="property-banner" style="background-image:url('${escHtml(p.imgBanner)}')"></div>`;
+    }
+    // Stylized gradient — hash building+neighborhood for stable color seed.
+    const seed = _hashStr((p.buildingName || "") + "|" + (p.neighborhood || ""));
+    const hue1 = seed % 360;
+    const hue2 = (hue1 + 32) % 360;
+    const initials = (p.buildingName || "—").split(/\s+/).map(w => w[0] || "").join("").slice(0, 3).toUpperCase();
+    return `<div class="property-banner stylized" style="background:linear-gradient(135deg, hsl(${hue1},45%,68%) 0%, hsl(${hue2},55%,42%) 100%)">
+      <span class="property-banner-initials">${escHtml(initials)}</span>
+    </div>`;
+  }
+  function mapPinHTML(latLng, neighborhood) {
+    if (!latLng || !isFinite(latLng.lat) || !isFinite(latLng.lng)) return "";
+    const href = `https://www.google.com/maps?q=${latLng.lat},${latLng.lng}`;
+    return `<a class="property-map-pin" target="_blank" rel="noopener" href="${href}" title="Ver no mapa · ${escHtml(neighborhood || "")}">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+        <path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
+      </svg>
+    </a>`;
+  }
+  // Always brand the card with "Lobie · {empreendimento}" — strip any
+  // existing "Lobie" prefix/suffix from the empreendimento name to avoid
+  // duplication ("Lobie · Lobie Nova Iguaçu" → "Lobie · Nova Iguaçu").
+  function lobieDisplayName(rawName) {
+    if (!rawName) return "—";
+    const cleaned = String(rawName)
+      .replace(/^lobie\s+/i, "")
+      .replace(/\s+lobie$/i, "")
+      .trim();
+    return cleaned || rawName;
+  }
+
   // ── Mini sparkline (inline SVG; cheap; no library) ───────────────────────
   function sparklineHTML(values) {
     if (!values || values.length === 0) return "";
@@ -281,14 +321,16 @@
     const lastObs = (p.observations && p.observations[0]) || null;
     const isVirtual = p.tokenized === false;
 
-    // Header lines
-    const headerLine = p.buildingName
-      ? `${escHtml(p.buildingName)}${p.neighborhood ? " · " + escHtml(p.neighborhood) : ""}`
-      : (p.tokenId ? `Unidade #${escHtml(p.tokenId)}` : `Unidade ${escHtml(p.unitCode || "")}`);
+    // Header — always "Lobie · {empreendimento}" (deduped)
+    const lobieName = lobieDisplayName(p.buildingName);
+    const headerLine = `Lobie · ${escHtml(lobieName)}`;
+    const neighborhoodLine = p.neighborhood ? escHtml(p.neighborhood) : "";
 
     const subLine = isVirtual
-      ? `Unidade ${escHtml(p.unitCode || "")}`
-      : (p.unitCode ? `Unidade ${escHtml(p.unitCode)} · Token ${escHtml(String(p.tokenId).slice(0, 10))}…` : `Token ${escHtml(String(p.tokenId).slice(0, 14))}…`);
+      ? (p.unitCode ? `Unidade ${escHtml(p.unitCode)}${neighborhoodLine ? " · " + neighborhoodLine : ""}` : neighborhoodLine)
+      : (p.unitCode
+          ? `Unidade ${escHtml(p.unitCode)}${neighborhoodLine ? " · " + neighborhoodLine : ""} · Token ${escHtml(String(p.tokenId).slice(0, 10))}…`
+          : `${neighborhoodLine ? neighborhoodLine + " · " : ""}Token ${escHtml(String(p.tokenId).slice(0, 14))}…`);
 
     // Ownership badge
     const ownershipBadge = isVirtual && p.participacao !== null && p.participacao !== undefined
@@ -302,13 +344,28 @@
         ? `<div class="property-attestation attested"><span class="dot"></span><span>Atestado · ${fmtYearMonth(lastObs.yearMonth)}</span></div>`
         : `<div class="property-attestation"><span class="dot"></span><span>Atestação pendente</span></div>`);
 
-    // Metric block
+    // Metric block — NPV first (most relevant value signal), NOI second.
+    const npvForCard = isVirtual ? p.estimatedNpvBRL : p.npvBRL;
+    const valueLabel = isVirtual ? "NPV estimado" : "NPV (Gordon 6%/3%)";
+    const valueValue = npvForCard ? fmtBRL(npvForCard) : "—";
     const noiLabel  = isVirtual ? "Aluguel 12m (sua parte)" : "NOI 12m";
     const noiValue  = isVirtual && p.ownerTrailing12NOI ? fmtBRL(p.ownerTrailing12NOI) : fmtBRL(p.trailing12NOI);
-    const valueLabel = isVirtual ? "Última leitura" : "NPV (Gordon 6%/3%)";
-    const valueValue = isVirtual
-      ? (lastObs ? fmtYearMonth(lastObs.yearMonth) : "—")
-      : fmtBRL(p.npvBRL);
+
+    // Credit availability — NPV × LTV in BRL, converted to USDC via the
+    // BRL/USD rate cached on the portfolio (or 5.0 if unavailable).
+    const market = (window.__ownershipPortfolio && window.__ownershipPortfolio.market) || {};
+    const brlPerUsd = Number(market.brlPerUSD) || 5.0;
+    const creditBRL = Number(p.creditCapBRL) || 0;
+    const creditUSD = creditBRL > 0 ? creditBRL / brlPerUsd : 0;
+    const ltvPct = p.ltvBps ? (Number(p.ltvBps) / 100).toFixed(0) : "—";
+    const rateHint = p.rateHint || "a partir de ~6% a.a.";
+    const creditHtml = creditBRL > 0 ? `
+      <div class="property-credit">
+        <div class="property-credit-label">Crédito disponível em USDC</div>
+        <div class="property-credit-amount">USDC ${creditUSD.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+        <div class="property-credit-hint">${ltvPct}% LTV · ${escHtml(rateHint)}</div>
+      </div>
+    ` : "";
 
     // Action row
     const actions = isVirtual
@@ -326,6 +383,8 @@
 
     return `
       <div class="property-card ${isVirtual ? "virtual" : "tokenized"}">
+        ${bannerHTML(p)}
+        ${mapPinHTML(p.latLng, p.neighborhood)}
         <div class="property-card-header">
           <div>
             <strong>${headerLine}</strong>
@@ -344,6 +403,7 @@
             <div class="property-metric-value muted">${noiValue}</div>
           </div>
         </div>
+        ${creditHtml}
         ${sparklineValues.length > 0 ? sparklineHTML(sparklineValues) : ""}
         <div class="property-card-actions">
           ${actions}

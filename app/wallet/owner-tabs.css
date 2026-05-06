@@ -137,10 +137,76 @@
     background: var(--gray-900);
     border: 1px solid var(--gray-800);
     border-radius: 16px;
-    padding: 18px 20px 16px;
+    padding: 0 0 16px;          /* banner is full-bleed on top */
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     position: relative;
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 1px 2px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+}
+.property-card > .property-card-header,
+.property-card > .property-attestation,
+.property-card > .property-metrics,
+.property-card > .property-credit,
+.property-card > .property-sparkline,
+.property-card > .property-card-actions {
+    margin-left: 18px;
+    margin-right: 18px;
+}
+.property-card > .property-card-header { margin-top: 14px; }
+
+/* Banner — image when available, stylized gradient otherwise. */
+.property-banner {
+    height: 96px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--gray-800);
+    border-bottom: 1px solid var(--gray-800);
+    position: relative;
+}
+.property-banner.stylized {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.property-banner-initials {
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 28px;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+html[data-theme="light"] .property-banner {
+    border-bottom-color: #ececec;
+    background-color: #ececec;
+}
+html[data-theme="light"] .property-banner-initials {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Map pin overlay — top-right of banner, links to Google Maps. */
+.property-map-pin {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(255, 255, 255, 0.92);
+    border-radius: 100%;
+    text-decoration: none;
+    transition: transform 0.15s ease, background 0.15s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 2;
+}
+.property-map-pin:hover {
+    transform: scale(1.08);
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
 }
 .property-card::before {
     /* Top accent line — subtle structural border that adds craft. */
@@ -341,6 +407,44 @@ html[data-theme="light"] .property-metric {
     font-family: var(--font-mono);
     margin-top: 2px;
     letter-spacing: 0.3px;
+}
+
+/* Credit availability — emphasis row between metrics and sparkline. */
+.property-credit {
+    margin: 8px 0 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.10) 0%, rgba(34, 197, 94, 0.04) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.property-credit-label {
+    font-size: 9px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.property-credit-amount {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: -0.3px;
+}
+.property-credit-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--gray-500);
+    margin-top: 2px;
+    letter-spacing: 0.3px;
+}
+html[data-theme="light"] .property-credit {
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(22, 163, 74, 0.02) 100%);
+    border-color: rgba(22, 163, 74, 0.20);
+}
+html[data-theme="light"] .property-credit-amount {
+    color: #16a34a;
 }
 
 /* Sparkline — 12 monthly bars under the card metrics. */
