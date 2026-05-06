@@ -89,16 +89,11 @@
       </svg>
     </a>`;
   }
-  // Always brand the card with "Lobie · {empreendimento}" — strip any
-  // existing "Lobie" prefix/suffix from the empreendimento name to avoid
-  // duplication ("Lobie · Lobie Nova Iguaçu" → "Lobie · Nova Iguaçu").
+  // Always brand the card with "Lobie · {empreendimento}". The empreendimento
+  // name is rendered as-is — no information is stripped, even when "Lobie"
+  // is already part of it ("Lobie · Botafogo Privilege Lobie" stays as-is).
   function lobieDisplayName(rawName) {
-    if (!rawName) return "—";
-    const cleaned = String(rawName)
-      .replace(/^lobie\s+/i, "")
-      .replace(/\s+lobie$/i, "")
-      .trim();
-    return cleaned || rawName;
+    return rawName || "—";
   }
 
   // ── Mini sparkline (inline SVG; cheap; no library) ───────────────────────
