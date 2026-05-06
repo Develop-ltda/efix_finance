@@ -1,0 +1,318 @@
+/* =========================================================================
+ *  owner-tabs.css
+ *  Phase 4 — ownership wallet styles. Reuses existing tokens (--gray-N00,
+ *  --green, --red, --font-mono, --font-display) so dark/light themes follow
+ *  automatically.
+ * ========================================================================= */
+
+/* ── Pill above the tabs: "Patrimônio na rede: R$ 487.230" ─────────────── */
+.ownership-pill {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, rgba(34, 197, 94, 0.02) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 12px;
+    font-family: var(--font-mono);
+    flex-wrap: wrap;
+}
+.ownership-pill-label {
+    font-size: 11px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+.ownership-pill-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.5px;
+    flex: 1;
+}
+.ownership-pill-hint {
+    font-size: 11px;
+    color: var(--gray-500);
+}
+
+/* ── Section headers inside Imóveis / Cotas tabs ───────────────────────── */
+.ownership-section-header {
+    margin-bottom: 16px;
+}
+.ownership-section-header h3 {
+    font-size: 14px;
+    color: var(--gray-300);
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.3px;
+}
+.ownership-section-hint {
+    font-size: 12px;
+    color: var(--gray-500);
+    line-height: 1.5;
+    margin: 0 0 12px 0;
+}
+.ownership-loading {
+    text-align: center;
+    color: var(--gray-600);
+    font-size: 13px;
+    font-family: var(--font-mono);
+    padding: 24px 0;
+}
+
+/* ── Property cards (Imóveis) ──────────────────────────────────────────── */
+.property-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+}
+.property-card {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: border-color 0.18s ease;
+}
+.property-card:hover {
+    border-color: var(--gray-700);
+}
+.property-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.property-card-header strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.2px;
+    line-height: 1.3;
+}
+.property-card-header small {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+}
+.property-token-badge {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--gray-400);
+    background: var(--gray-800);
+    padding: 3px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+}
+.property-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.property-metric {
+    padding: 8px 10px;
+    background: var(--black);
+    border-radius: 8px;
+    border: 1px solid var(--gray-800);
+}
+.property-metric-label {
+    font-size: 9px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+.property-metric-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--white);
+    margin-top: 2px;
+}
+.property-metric-value.muted {
+    color: var(--gray-400);
+}
+.property-attestation {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--gray-500);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.property-attestation .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gray-600);
+}
+.property-attestation.attested .dot {
+    background: var(--green);
+}
+.property-attestation.attested {
+    color: var(--green);
+}
+.property-card-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.property-card-actions a,
+.property-card-actions button {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-800);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--gray-300);
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+.property-card-actions a:hover,
+.property-card-actions button:hover:not(:disabled) {
+    border-color: var(--gray-600);
+    color: var(--white);
+}
+.property-card-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Sparkline — 12 monthly bars under the card metrics. */
+.property-sparkline {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 28px;
+    margin-bottom: 12px;
+    padding: 0 2px;
+}
+.property-sparkline-bar {
+    flex: 1;
+    background: var(--green);
+    opacity: 0.4;
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    transition: opacity 0.15s;
+}
+.property-sparkline-bar.recent {
+    opacity: 0.9;
+}
+
+/* ── BTR rows (Cotas) ──────────────────────────────────────────────────── */
+.btr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.btr-row {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+    transition: border-color 0.18s ease;
+}
+.btr-row:hover {
+    border-color: var(--gray-700);
+}
+.btr-info strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.3px;
+    margin-bottom: 3px;
+}
+.btr-info .muted {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+}
+.btr-pending {
+    text-align: right;
+}
+.btr-pending-label {
+    font-size: 10px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+.btr-pending-value {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    margin-top: 2px;
+}
+.btr-pending-value.has-pending {
+    color: var(--green);
+}
+.btr-row-link {
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+    font-size: 18px;
+    text-decoration: none;
+    padding: 0 6px;
+    transition: color 0.15s;
+}
+.btr-row-link:hover {
+    color: var(--white);
+}
+
+/* "Reivindicar todas" CTA */
+.ownership-claim-btn {
+    margin-top: 8px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    font-size: 14px;
+    width: auto;
+    background: var(--green);
+    color: var(--black);
+    border-radius: 10px;
+    font-weight: 700;
+}
+.ownership-claim-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    opacity: 0.95;
+}
+#claimAllBtnAmount {
+    font-family: var(--font-mono);
+    margin-left: 6px;
+    opacity: 0.85;
+}
+.ownership-claim-status {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+    min-height: 18px;
+}
+.ownership-claim-status.success { color: var(--green); }
+.ownership-claim-status.error   { color: var(--red); }
+
+/* ── Tablet/mobile adjustments ─────────────────────────────────────────── */
+@media (max-width: 540px) {
+    .property-grid { grid-template-columns: 1fr; }
+    .btr-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    .btr-pending { text-align: left; }
+    .btr-row-link { display: none; }
+    .ownership-pill-value { font-size: 16px; }
+}

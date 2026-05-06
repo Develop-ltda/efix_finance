@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="/shared/css/reset.css">
     <link rel="stylesheet" href="/shared/css/components.css">
     <link rel="stylesheet" href="/shared/css/lang-selector.css">
+    <link rel="stylesheet" href="owner-tabs.css">
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
@@ -275,7 +276,16 @@
                 <button class="tab" onclick="switchTab('brle', this); initBrle();">BRLE</button>
                 <button class="tab" onclick="switchTab('send', this); initSendTab();">Deposit USD/EUR</button>
                 <button class="tab" onclick="switchTab('invest', this); loadInvestPosition();">Invest</button>
+                <button class="tab" id="tabImoveis" style="display:none" onclick="switchTab('imoveis', this); loadOwnerProperties();">Imóveis</button>
+                <button class="tab" id="tabCotas"   style="display:none" onclick="switchTab('cotas',   this); loadOwnerBTR();">Cotas BTR</button>
                 <button class="tab" onclick="switchTab('card', this)">Card</button>
+            </div>
+
+            <!-- Phase 4: ownership pill (lens-backed). Hidden until portfolio loads. -->
+            <div id="ownershipPill" class="ownership-pill" style="display:none">
+                <span class="ownership-pill-label">Patrimônio na rede</span>
+                <span class="ownership-pill-value" id="ownershipPillValue">—</span>
+                <span class="ownership-pill-hint" id="ownershipPillHint"></span>
             </div>
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">
@@ -654,6 +664,39 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Phase 4: Imóveis tab — Lobie unit owners. Conditional. -->
+            <div class="tab-panel" id="panel-imoveis">
+                <div class="ownership-section-header">
+                    <h3>Meus Imóveis · cashflows tokenizados</h3>
+                    <p class="ownership-section-hint">
+                        Cada NFT representa os direitos sobre o fluxo de caixa de uma unidade.
+                        Observações mensais auditadas via EAS attestation.
+                    </p>
+                </div>
+                <div id="propertiesGrid" class="property-grid">
+                    <div class="ownership-loading">Carregando…</div>
+                </div>
+            </div>
+
+            <!-- Phase 4: Cotas BTR tab — BTR token holders. Conditional. -->
+            <div class="tab-panel" id="panel-cotas">
+                <div class="ownership-section-header">
+                    <h3>Minhas Cotas BTR</h3>
+                    <p class="ownership-section-hint">
+                        Cada cota representa equity numa SPE Build-to-Rent. Distribuições mensais em BRLE.
+                    </p>
+                    <button class="btn btn-primary ownership-claim-btn" id="claimAllBtn"
+                            onclick="claimAllBTRDividends()" style="display:none">
+                        Reivindicar todas as distribuições <span id="claimAllBtnAmount"></span>
+                    </button>
+                </div>
+                <div id="btrPositionsList" class="btr-list">
+                    <div class="ownership-loading">Carregando…</div>
+                </div>
+                <div id="claimAllStatus" class="ownership-claim-status"></div>
+            </div>
+
             </div><!-- /desktop-right -->
             </div><!-- /desktop-grid -->
 
@@ -685,6 +728,41 @@
             <br><br>© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CVM Act 23.635/2025
         </div>
     </main>
+
+    <!-- Send modal (token transfer from smart account) -->
+    <div id="sendModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)closeSendModal()">
+      <div style="background:var(--black);border:1px solid var(--gray-700);border-radius:16px;padding:24px;max-width:420px;width:100%;font-family:var(--font-display);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <h3 id="sendModalTitle" style="font-size:18px;font-weight:700;margin:0">Enviar SALRIO</h3>
+          <button onclick="closeSendModal()" style="background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:20px;line-height:1">×</button>
+        </div>
+        <div id="sendModalBalance" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-400);margin-bottom:16px">Disponível: — </div>
+        <label style="display:block;font-size:11px;color:var(--gray-400);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Destinatário</label>
+        <input id="sendModalRecipient" type="text" placeholder="0x…" autocomplete="off" style="width:100%;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:8px;padding:12px;color:var(--white);font-family:var(--font-mono);font-size:13px;margin-bottom:12px">
+        <label style="display:block;font-size:11px;color:var(--gray-400);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Quantidade</label>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="sendModalAmount" type="text" inputmode="decimal" placeholder="0.00" style="flex:1;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:8px;padding:12px;color:var(--white);font-family:var(--font-mono);font-size:13px">
+          <button onclick="sendModalSetMax()" style="background:var(--gray-800);border:1px solid var(--gray-700);border-radius:8px;padding:0 14px;color:var(--white);font-family:var(--font-mono);font-size:11px;cursor:pointer">MAX</button>
+        </div>
+        <div id="sendModalMsg" style="min-height:18px;font-family:var(--font-mono);font-size:12px;color:var(--gray-400);margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px">
+          <button id="sendModalConfirm" onclick="sendModalSubmit()" style="flex:1;background:var(--green);color:var(--black);border:none;border-radius:10px;padding:14px;font-family:var(--font-display);font-weight:700;cursor:pointer">Enviar</button>
+          <button onclick="closeSendModal()" style="background:var(--gray-800);border:1px solid var(--gray-700);border-radius:10px;padding:0 18px;color:var(--white);font-family:var(--font-display);cursor:pointer">Cancelar</button>
+        </div>
+        <div style="margin-top:14px;font-family:var(--font-mono);font-size:10px;color:var(--gray-600);line-height:1.5">
+          Transações na Base · assinatura via ERC-4337 · o smart account precisa ter ETH na Base (ou política de gas sponsorship) para executar.
+        </div>
+      </div>
+    </div>
+
+    <!-- Wallet binding warning banner (shown when signed-in smart account ≠ on-record investor wallet) -->
+    <div id="bindingWarn" style="display:none;position:fixed;bottom:16px;left:16px;right:16px;max-width:720px;margin:0 auto;background:#78350f;color:#fff;border:1px solid #b45309;border-radius:12px;padding:12px 16px;z-index:900;font-family:var(--font-mono);font-size:12px;line-height:1.5;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+      <div style="display:flex;align-items:start;gap:12px">
+        <div style="flex:1" id="bindingWarnText">…</div>
+        <button onclick="document.getElementById('bindingWarn').style.display='none'" style="background:none;border:none;color:#fde68a;cursor:pointer;font-size:16px">×</button>
+      </div>
+    </div>
+
     <!-- Auto-prune removed: it was clearing alchemy-signer-session:temporary
          mid-flow, which holds the in-flight OTP id between send and verify.
          Users with truly broken state click the "Reset login" button instead. -->
@@ -694,6 +772,7 @@
     <script src="/shared/js/formatters.js"></script>
     <script src="/shared/js/ui.js"></script>
     <script src="wallet.js"></script>
+    <script src="owner-tabs.js"></script>
     <script>
         const BACKEND_URL = EFIX_CONFIG.backend;
 
@@ -778,6 +857,131 @@
             }
         }
         function T(key) { return (i18n[currentLang] && i18n[currentLang][key]) || key; }
+
+        // ═══ SEND MODAL — ERC-20 transfer from the smart account on Base via sendCalls ═══
+        let _sendCtx = null;
+        function openSendModal(payload) {
+            _sendCtx = payload;
+            document.getElementById('sendModalTitle').textContent = `Enviar ${payload.symbol}`;
+            document.getElementById('sendModalBalance').textContent =
+                `Disponível: ${Number(payload.balance).toLocaleString('pt-BR', { maximumFractionDigits:4 })} ${payload.symbol} · contrato ${payload.contract.slice(0,10)}…${payload.contract.slice(-4)}`;
+            document.getElementById('sendModalRecipient').value = '';
+            document.getElementById('sendModalAmount').value = '';
+            document.getElementById('sendModalMsg').textContent = '';
+            document.getElementById('sendModalConfirm').disabled = false;
+            document.getElementById('sendModalConfirm').textContent = 'Enviar';
+            document.getElementById('sendModal').style.display = 'flex';
+        }
+        function closeSendModal() {
+            document.getElementById('sendModal').style.display = 'none';
+            _sendCtx = null;
+        }
+        function sendModalSetMax() {
+            if (!_sendCtx) return;
+            document.getElementById('sendModalAmount').value = String(_sendCtx.balance);
+        }
+        async function sendModalSubmit() {
+            if (!_sendCtx) return;
+            const recipient = document.getElementById('sendModalRecipient').value.trim();
+            const amountStr = document.getElementById('sendModalAmount').value.trim();
+            const msg = document.getElementById('sendModalMsg');
+            const btn = document.getElementById('sendModalConfirm');
+
+            if (!ethers.isAddress(recipient)) {
+                msg.style.color = 'var(--red)';
+                msg.textContent = 'Endereço destinatário inválido';
+                return;
+            }
+            let amountWei;
+            try {
+                amountWei = ethers.parseUnits(amountStr, _sendCtx.decimals || 18);
+                if (amountWei <= 0n) throw new Error('zero');
+            } catch {
+                msg.style.color = 'var(--red)';
+                msg.textContent = 'Quantidade inválida';
+                return;
+            }
+            if (Number(amountStr) > Number(_sendCtx.balance) + 1e-9) {
+                msg.style.color = 'var(--red)';
+                msg.textContent = `Saldo insuficiente (disponível ${_sendCtx.balance})`;
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Enviando…';
+            msg.style.color = 'var(--gray-400)';
+            msg.textContent = 'Preparando userOp…';
+
+            try {
+                if (!window.EfixWallet?.getBaseClient) {
+                    throw new Error('Base client indisponível neste bundle.');
+                }
+                const client = await window.EfixWallet.getBaseClient();
+                const from = await getSmartAccountAddress();
+
+                const erc20 = new ethers.Interface(['function transfer(address,uint256) returns (bool)']);
+                const data = erc20.encodeFunctionData('transfer', [ethers.getAddress(recipient), amountWei]);
+
+                msg.textContent = 'Assinando…';
+
+                let callId, txHash;
+                if (typeof client.sendCalls === 'function') {
+                    const res = await client.sendCalls({
+                        from,
+                        calls: [{ to: _sendCtx.contract, data, value: '0x0' }],
+                    });
+                    callId = res.id || res.preparedCallIds?.[0] || res;
+                    msg.textContent = 'Aguardando confirmação…';
+                    if (typeof client.waitForCallsStatus === 'function') {
+                        const status = await client.waitForCallsStatus({ id: callId });
+                        txHash = status?.receipts?.[0]?.transactionHash || status?.transactionHash || null;
+                    }
+                } else if (typeof client.sendUserOperation === 'function') {
+                    const op = await client.sendUserOperation({
+                        uo: { target: _sendCtx.contract, data, value: 0n },
+                    });
+                    msg.textContent = 'Aguardando confirmação…';
+                    txHash = await client.waitForUserOperationTransaction(op);
+                } else {
+                    throw new Error('Bundle não expõe sendCalls nem sendUserOperation.');
+                }
+
+                msg.style.color = 'var(--green)';
+                msg.textContent = txHash
+                    ? `✓ Enviado · tx ${String(txHash).slice(0,10)}…`
+                    : '✓ Enviado';
+                setTimeout(() => { closeSendModal(); loadOfferings(userAddress); }, 1800);
+            } catch (err) {
+                msg.style.color = 'var(--red)';
+                msg.textContent = 'Falhou: ' + (err.shortMessage || err.details || err.message || String(err));
+                btn.disabled = false;
+                btn.textContent = 'Enviar';
+            }
+        }
+
+        // ═══ EMAIL ↔ WALLET BINDING CHECK ═══
+        // When the user signs in, confirm the smart account address we resolved
+        // matches the on-record wallet the EFIX backend has for this email.
+        // Prior allocations pay dividends + settle to that on-record wallet, so a
+        // mismatch means the signed-in wallet is a different identity — warn.
+        async function checkWalletBinding(email, smartAddr) {
+            try {
+                const res = await fetch(`${OFFERINGS_API}/v1/investor-lookup?email=${encodeURIComponent(email)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const onRecord = data && data.walletAddress;
+                if (!onRecord) return;
+                if (onRecord.toLowerCase() === String(smartAddr).toLowerCase()) return;
+                const el = document.getElementById('bindingWarn');
+                const txt = document.getElementById('bindingWarnText');
+                txt.innerHTML =
+                    `<b>Atenção — wallet diferente da registrada.</b><br>` +
+                    `Este email está vinculado a <code>${onRecord.slice(0,10)}…${onRecord.slice(-4)}</code> no sistema EFIX Offerings, ` +
+                    `mas você entrou como <code>${smartAddr.slice(0,10)}…${smartAddr.slice(-4)}</code>.<br>` +
+                    `Alocações anteriores e settlements foram para a wallet registrada. Se são wallets diferentes, transfira aqui para consolidar.`;
+                el.style.display = 'block';
+            } catch {}
+        }
 
         // Resolve smart account address (this is where tokens must live + where UserOps execute from)
         // @account-kit/wallet-client exposes requestAccount(); there is no client.account on the decorator.
@@ -950,6 +1154,10 @@
             ensureAccountDeployed(address);
             // Sync balance to backend (async, non-blocking)
             EfixAuth.syncBalance().catch(() => {});
+            // Warn if this wallet differs from the EFIX Offerings on-record wallet for this email
+            if (userEmail) checkWalletBinding(userEmail, address).catch(() => {});
+            // Phase 4: lens-backed ownership tabs (Imóveis + Cotas BTR appear only if held)
+            if (typeof window.loadOwnership === 'function') window.loadOwnership(address).catch(() => {});
         }
 
         // ─── Theme toggle (dark default, light opt-in) — persisted in localStorage ───
@@ -1205,30 +1413,46 @@
                         </div>`;
                     return;
                 }
-                const rows = positions.map(p => `
+                const rows = positions.map(p => {
+                    const sendPayload = JSON.stringify({
+                        symbol: p.symbol,
+                        contract: p.contractAddress,
+                        decimals: 18,
+                        balance: p.balanceFormatted,
+                    }).replace(/"/g, '&quot;');
+                    return `
                     <div style="padding:12px 14px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
                         <div>
                             <div style="font-family:var(--font-display);font-weight:700;font-size:14px;">${escapeHtml(p.symbol)}</div>
                             <div style="font-size:10px;color:var(--gray-600);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase;">Base · SALRIO pool</div>
                         </div>
-                        <div style="text-align:right">
+                        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
                             <div style="font-family:var(--font-mono);font-weight:700;font-size:14px;">${Number(p.balanceFormatted).toLocaleString('pt-BR', { maximumFractionDigits:4 })}</div>
                             <div style="font-size:10px;color:${Number(p.pendingDividendsFormatted||0)>0?'var(--green)':'var(--gray-600)'};font-family:var(--font-mono);">
                                 ${Number(p.pendingDividendsFormatted||0) > 0
                                     ? '+' + Number(p.pendingDividendsFormatted).toLocaleString('pt-BR', { maximumFractionDigits:2 }) + ' ' + p.dividendAssetSymbol + ' pending'
                                     : 'R$ ' + Number(p.balanceFormatted).toLocaleString('pt-BR', { maximumFractionDigits:2 }) + ' NAV'}
                             </div>
+                            <button onclick='openSendModal(${sendPayload})' style="background:var(--gray-800);border:1px solid var(--gray-700);border-radius:6px;padding:4px 10px;color:var(--white);font-family:var(--font-mono);font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px">Enviar →</button>
                         </div>
-                    </div>`).join('');
+                    </div>`;
+                }).join('');
+                const brlePayload = brleOk ? JSON.stringify({
+                    symbol: 'BRLE',
+                    contract: EFIX_CONFIG.brle.token,
+                    decimals: 18,
+                    balance: brle.balanceFormatted,
+                }).replace(/"/g, '&quot;') : '';
                 const brleRow = brleOk ? `
                     <div style="padding:12px 14px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
                         <div>
                             <div style="font-family:var(--font-display);font-weight:700;font-size:14px;">BRLE</div>
                             <div style="font-size:10px;color:var(--gray-600);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase;">Base · BRL stablecoin</div>
                         </div>
-                        <div style="text-align:right">
+                        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
                             <div style="font-family:var(--font-mono);font-weight:700;font-size:14px;">${Number(brle.balanceFormatted).toLocaleString('pt-BR', { maximumFractionDigits:2 })}</div>
                             <div style="font-size:10px;color:var(--gray-600);font-family:var(--font-mono);">BRLE</div>
+                            <button onclick='openSendModal(${brlePayload})' style="background:var(--gray-800);border:1px solid var(--gray-700);border-radius:6px;padding:4px 10px;color:var(--white);font-family:var(--font-mono);font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px">Enviar →</button>
                         </div>
                     </div>` : '';
                 container.innerHTML = rows + brleRow;
