@@ -334,6 +334,23 @@
                     <button id="adminTrayClear" type="button" class="muted">Limpar</button>
                 </div>
                 <div class="admin-tray-hint" id="adminTrayHint"></div>
+
+                <!-- Phase 5.6 — banner backfill: pick a building, paste a URL,
+                     preview, save. Uses /admin/buildings + /admin/buildings/:emp_id/banner. -->
+                <div class="admin-tray-divider"></div>
+                <div class="admin-tray-row">
+                    <label for="adminBannerSelect">Banner do prédio</label>
+                    <select id="adminBannerSelect" disabled>
+                        <option value="">Carregando…</option>
+                    </select>
+                </div>
+                <div class="admin-tray-row admin-tray-banner-row">
+                    <input id="adminBannerUrl" type="url" placeholder="https://… (cole a URL da foto)" disabled />
+                    <button id="adminBannerSave" type="button" disabled>Salvar</button>
+                    <button id="adminBannerClear" type="button" class="muted" disabled>Remover</button>
+                </div>
+                <div class="admin-tray-hint" id="adminBannerHint"></div>
+                <div id="adminBannerPreview" class="admin-tray-banner-preview" style="display:none"></div>
             </div>
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">

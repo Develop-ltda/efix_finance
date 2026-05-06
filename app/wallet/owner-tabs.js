@@ -196,6 +196,182 @@
       url.searchParams.delete("as_address");
       window.location.href = url.toString();
     };
+
+    // Phase 5.6 — banner backfill section. Populates a dropdown of all 17
+    // buildings with their banner state, lets the admin paste a URL, preview,
+    // and save (POST /admin/buildings/:emp_id/banner) or clear the override.
+    setupAdminBanners(token).catch(e => console.warn("[admin-banners]", e));
+  }
+
+  // ── Banner backfill (Phase 5.6) ──────────────────────────────────────────
+  async function fetchAdminBuildings(token) {
+    const url = backendUrl() + "/admin/buildings";
+    const r = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+  async function setupAdminBanners(token) {
+    const select  = document.getElementById("adminBannerSelect");
+    const input   = document.getElementById("adminBannerUrl");
+    const save    = document.getElementById("adminBannerSave");
+    const clearB  = document.getElementById("adminBannerClear");
+    const hint    = document.getElementById("adminBannerHint");
+    const preview = document.getElementById("adminBannerPreview");
+    if (!select || !input || !save || !clearB || !hint || !preview) return;
+
+    const setHint = (msg, cls) => {
+      hint.textContent = msg;
+      hint.className = "admin-tray-hint" + (cls ? " " + cls : "");
+    };
+
+    let buildings = [];
+    let byEmp = new Map();
+
+    function refreshButtonStates() {
+      const empId = parseInt(select.value, 10);
+      const b = byEmp.get(empId);
+      const url = input.value.trim();
+      const looksOk = /^https:\/\/.+/.test(url);
+      save.disabled   = !empId || !looksOk;
+      clearB.disabled = !empId || !b?.hasOverride;
+      input.disabled  = !empId;
+    }
+
+    function showPreview(url) {
+      if (!url) { preview.style.display = "none"; preview.className = "admin-tray-banner-preview"; return; }
+      // Render via Image() to detect 4xx/CORS without leaving a broken bg.
+      const probe = new Image();
+      probe.onload = () => {
+        preview.style.display = "block";
+        preview.className = "admin-tray-banner-preview";
+        preview.style.backgroundImage = `url('${url.replace(/'/g, "%27")}')`;
+      };
+      probe.onerror = () => {
+        preview.style.display = "block";
+        preview.className = "admin-tray-banner-preview broken";
+        preview.style.backgroundImage = "";
+      };
+      probe.src = url;
+    }
+
+    function selectBuilding(empId) {
+      const b = byEmp.get(empId);
+      if (!b) {
+        input.value = "";
+        showPreview(null);
+        setHint("");
+        refreshButtonStates();
+        return;
+      }
+      input.value = b.imgBanner || "";
+      showPreview(b.imgBanner);
+      const tag = b.source === "override" ? "Override admin"
+              : b.source === "lobie_pms" ? "Foto da Lobie (PMS)"
+              : "Sem foto · gradient fallback";
+      setHint(`${b.name}${b.neighborhood ? " · " + b.neighborhood : ""} — ${tag}`);
+      refreshButtonStates();
+    }
+
+    async function reload() {
+      try {
+        const data = await fetchAdminBuildings(token);
+        buildings = (data.buildings || []).slice().sort((a, b) => {
+          // Missing-photo first, then by name. Helps the admin spot what needs work.
+          if (!!a.imgBanner !== !!b.imgBanner) return a.imgBanner ? 1 : -1;
+          return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
+        });
+        byEmp = new Map(buildings.map(b => [b.empId, b]));
+
+        const opts = ['<option value="">— escolher prédio —</option>'].concat(
+          buildings.map(b => {
+            const status = b.source === "override" ? "● override"
+                        : b.source === "lobie_pms" ? "● foto"
+                        : "○ sem foto";
+            const lbl = `${escHtml(b.name)}${b.neighborhood ? " · " + escHtml(b.neighborhood) : ""} ${status}`;
+            return `<option value="${b.empId}">${lbl}</option>`;
+          })
+        );
+        select.innerHTML = opts.join("");
+        select.disabled = false;
+        const c = data.counts || {};
+        setHint(`${c.withPhoto}/${c.total} prédios com foto · ${c.withOverride} via override · ${c.gradientOnly} ainda em gradient`);
+      } catch (e) {
+        setHint("Não foi possível carregar a lista de prédios.", "error");
+        console.warn("[admin-banners] load failed", e);
+      }
+    }
+
+    select.onchange = () => selectBuilding(parseInt(select.value, 10));
+    input.oninput = () => {
+      const url = input.value.trim();
+      showPreview(/^https:\/\/.+/.test(url) ? url : null);
+      refreshButtonStates();
+    };
+
+    save.onclick = async () => {
+      const empId = parseInt(select.value, 10);
+      const url   = input.value.trim();
+      if (!empId || !/^https:\/\/.+/.test(url)) return;
+      save.disabled = true;
+      setHint("Salvando…");
+      try {
+        const r = await fetch(backendUrl() + `/admin/buildings/${empId}/banner`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ url }),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          const msg = ({
+            invalid_url:    "URL inválida (precisa começar com https://).",
+            not_https:      "URL precisa ser HTTPS.",
+            not_image_url:  "Essa URL não retorna uma imagem.",
+            building_not_found: "Prédio não encontrado.",
+            pg_not_configured: "Banco de overrides indisponível.",
+          })[data.error] || (data.detail || data.error || `HTTP ${r.status}`);
+          setHint("Erro: " + msg, "error");
+          return;
+        }
+        setHint(`Salvo ✓ · ${data.building}`, "success");
+        await reload();
+        select.value = String(empId);
+        selectBuilding(empId);
+      } catch (e) {
+        setHint("Erro: " + (e.message || e), "error");
+      } finally {
+        refreshButtonStates();
+      }
+    };
+
+    clearB.onclick = async () => {
+      const empId = parseInt(select.value, 10);
+      if (!empId) return;
+      if (!confirm("Remover o override e voltar ao banner do PMS Lobie (ou gradient se vazio)?")) return;
+      clearB.disabled = true;
+      setHint("Removendo…");
+      try {
+        const r = await fetch(backendUrl() + `/admin/buildings/${empId}/banner`, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token },
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          setHint("Erro: " + (data.detail || data.error || `HTTP ${r.status}`), "error");
+          return;
+        }
+        setHint("Override removido ✓", "success");
+        await reload();
+        select.value = String(empId);
+        selectBuilding(empId);
+      } catch (e) {
+        setHint("Erro: " + (e.message || e), "error");
+      } finally {
+        refreshButtonStates();
+      }
+    };
+
+    await reload();
+    refreshButtonStates();
   }
 
   // ── Public entry: called once after the user authenticates ───────────────

@@ -68,6 +68,75 @@
     color: var(--gray-500);
     font-family: var(--font-mono);
     letter-spacing: 0.4px;
+    transition: color 120ms ease;
+}
+.admin-tray-hint.error   { color: #ef4444; font-weight: 600; }
+.admin-tray-hint.success { color: #16a34a; font-weight: 600; }
+
+/* Phase 5.6 banner section */
+.admin-tray-divider {
+    margin: 12px 0 10px;
+    height: 1px;
+    background: var(--gray-700);
+    opacity: 0.5;
+}
+.admin-tray-banner-row {
+    margin-top: 8px;
+}
+.admin-tray-banner-row input[type="url"] {
+    flex: 1 1 320px;
+    padding: 8px 10px;
+    background: var(--gray-800);
+    border: 1px solid var(--gray-700);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    outline: none;
+    min-width: 0;
+}
+.admin-tray-banner-row input[type="url"]:focus { border-color: var(--gray-500); }
+.admin-tray-banner-row input[type="url"]:disabled { opacity: 0.6; }
+.admin-tray-banner-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+.admin-tray-banner-preview {
+    margin-top: 8px;
+    height: 96px;
+    border-radius: 10px;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    border: 1px solid var(--gray-700);
+    background-color: var(--gray-800);
+    transition: opacity 120ms ease;
+}
+.admin-tray-banner-preview.broken {
+    background: repeating-linear-gradient(45deg, var(--gray-800) 0 8px, var(--gray-700) 8px 16px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+.admin-tray-banner-preview.broken::before {
+    content: "imagem inacessível ou sem permissão de origem";
+}
+
+/* Light theme overrides */
+body.light-theme .admin-tray-divider { background: var(--gray-300); }
+body.light-theme .admin-tray-banner-row input[type="url"] {
+    background: var(--white);
+    border-color: var(--gray-300);
+    color: var(--black);
+}
+body.light-theme .admin-tray-banner-row input[type="url"]:focus { border-color: var(--gray-500); }
+body.light-theme .admin-tray-banner-preview {
+    border-color: var(--gray-300);
+    background-color: var(--gray-100);
+}
+body.light-theme .admin-tray-banner-preview.broken {
+    background: repeating-linear-gradient(45deg, var(--gray-100) 0 8px, var(--gray-200) 8px 16px);
+    color: var(--gray-500);
 }
 
 /* ── Pill above the tabs: "Patrimônio na rede: R$ 487.230" ─────────────── */
