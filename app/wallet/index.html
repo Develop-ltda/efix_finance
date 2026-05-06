@@ -287,6 +287,21 @@
                 <span class="ownership-pill-value" id="ownershipPillValue">—</span>
                 <span class="ownership-pill-hint" id="ownershipPillHint"></span>
             </div>
+
+            <!-- Admin tray: visible only to admins (session token in sessionStorage).
+                 Lets the admin pick any Lobie client to render the dashboard as,
+                 without OTP'ing into their inbox. -->
+            <div id="adminTray" class="admin-tray" style="display:none">
+                <div class="admin-tray-row">
+                    <label for="adminClientSelect">Visualizar como cliente</label>
+                    <select id="adminClientSelect" disabled>
+                        <option value="">Carregando…</option>
+                    </select>
+                    <button id="adminTrayApply" type="button">Aplicar</button>
+                    <button id="adminTrayClear" type="button" class="muted">Limpar</button>
+                </div>
+                <div class="admin-tray-hint" id="adminTrayHint"></div>
+            </div>
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">
                     <h3 data-i18n="deposit_title">Depositar via PIX</h3>
@@ -1174,7 +1189,7 @@
             try { localStorage.setItem('efixTheme', next); } catch {}
         }
         (function initTheme(){
-            try { applyTheme(localStorage.getItem('efixTheme') || 'dark'); } catch { applyTheme('dark'); }
+            try { applyTheme(localStorage.getItem('efixTheme') || 'light'); } catch { applyTheme('light'); }
         })();
 
         // Fetch user's SALRIO / BRLE / future pool holdings on Base via the offerings backend.

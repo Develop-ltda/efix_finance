@@ -5,6 +5,71 @@
  *  automatically.
  * ========================================================================= */
 
+/* ── Admin tray (visible only to admins; populated from /admin/lobie-clients) ─ */
+.admin-tray {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-700);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+}
+.admin-tray-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.admin-tray-row label {
+    font-size: 11px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 700;
+    margin-right: 4px;
+}
+.admin-tray-row select {
+    flex: 1 1 240px;
+    padding: 8px 10px;
+    background: var(--gray-800);
+    border: 1px solid var(--gray-700);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    outline: none;
+}
+.admin-tray-row select:focus {
+    border-color: var(--gray-500);
+}
+.admin-tray-row select:disabled {
+    opacity: 0.6;
+}
+.admin-tray-row button {
+    padding: 8px 14px;
+    background: var(--white);
+    border: 1px solid var(--white);
+    color: var(--black);
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.admin-tray-row button:hover { opacity: 0.85; }
+.admin-tray-row button.muted {
+    background: transparent;
+    color: var(--gray-400);
+    border-color: var(--gray-700);
+}
+.admin-tray-hint {
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+    letter-spacing: 0.4px;
+}
+
 /* ── Pill above the tabs: "Patrimônio na rede: R$ 487.230" ─────────────── */
 .ownership-pill {
     display: flex;
@@ -71,21 +136,56 @@
 .property-card {
     background: var(--gray-900);
     border: 1px solid var(--gray-800);
-    border-radius: 14px;
-    padding: 16px 18px;
-    transition: border-color 0.18s ease;
+    border-radius: 16px;
+    padding: 18px 20px 16px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     position: relative;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.property-card::before {
+    /* Top accent line — subtle structural border that adds craft. */
+    content: "";
+    position: absolute;
+    top: 0; left: 16px; right: 16px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
 }
 .property-card:hover {
     border-color: var(--gray-700);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 4px 14px rgba(0, 0, 0, 0.45);
+    transform: translateY(-1px);
 }
-/* Virtual cards (operational, not yet tokenized) — subtle warm accent. */
+/* Tokenized — green accent strip on left edge */
+.property-card.tokenized {
+    border-left: 3px solid var(--green);
+}
+/* Virtual cards (operational, not yet tokenized) — warm amber accent strip. */
 .property-card.virtual {
-    border-color: rgba(217, 119, 6, 0.25);
-    background: linear-gradient(180deg, rgba(217, 119, 6, 0.025) 0%, var(--gray-900) 80%);
+    border-left: 3px solid rgba(217, 119, 6, 0.55);
+    background: linear-gradient(180deg, rgba(217, 119, 6, 0.03) 0%, var(--gray-900) 80%);
 }
 .property-card.virtual:hover {
-    border-color: rgba(217, 119, 6, 0.45);
+    border-color: var(--gray-700);
+    border-left-color: rgba(217, 119, 6, 0.75);
+}
+
+/* Light theme overrides — paper-like cards with crisp borders */
+html[data-theme="light"] .property-card {
+    background: #ffffff;
+    border-color: #e5e5e5;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+html[data-theme="light"] .property-card::before {
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.04), transparent);
+}
+html[data-theme="light"] .property-card:hover {
+    border-color: #d4d4d4;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.02), 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] .property-card.tokenized { border-left-color: #16a34a; }
+html[data-theme="light"] .property-card.virtual {
+    background: linear-gradient(180deg, rgba(217, 119, 6, 0.04) 0%, #ffffff 80%);
+    border-left-color: #d97706;
 }
 .property-card-header {
     display: flex;
@@ -129,10 +229,14 @@
     margin-bottom: 12px;
 }
 .property-metric {
-    padding: 8px 10px;
+    padding: 10px 12px;
     background: var(--black);
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid var(--gray-800);
+}
+html[data-theme="light"] .property-metric {
+    background: #fafafa;
+    border-color: #ececec;
 }
 .property-metric-label {
     font-size: 9px;

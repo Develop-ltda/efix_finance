@@ -41,7 +41,17 @@
   };
 
   function backendUrl() {
-    return (window.EFIX_CONFIG && window.EFIX_CONFIG.backend) || "";
+    // EFIX_CONFIG is declared with `const` in /shared/js/config.js so it's
+    // a global script-scope binding (not a window property). Read it via
+    // the indirect `globalThis` lookup so this IIFE works in any context.
+    try {
+      const cfg = (typeof EFIX_CONFIG !== "undefined") ? EFIX_CONFIG
+        : (typeof globalThis !== "undefined" && globalThis.EFIX_CONFIG) ? globalThis.EFIX_CONFIG
+        : null;
+      return (cfg && cfg.backend) || "";
+    } catch (_) {
+      return "";
+    }
   }
 
   async function getJson(path) {
@@ -63,9 +73,10 @@
     return `<div class="property-sparkline" title="Últimos ${values.length} meses">${bars}</div>`;
   }
 
-  // ── Email override via ?as=X URL param. Used for previewing the dashboard
-  //    as another proprietário without OTP'ing into their inbox. The UI
-  //    is identical either way — there is no separate "demo" state.
+  // ── URL overrides: ?as=email@x.com and/or ?as_address=0x... let an
+  //    operator preview the dashboard as another user (different email,
+  //    different on-chain address, or both) without re-authing. The UI is
+  //    identical either way — there is no separate "demo" state.
   function getEmailOverride() {
     try {
       const url = new URL(window.location.href);
@@ -74,13 +85,94 @@
     } catch (_) {}
     return null;
   }
+  function getAddressOverride() {
+    try {
+      const url = new URL(window.location.href);
+      const a = url.searchParams.get("as_address");
+      if (a && /^0x[a-fA-F0-9]{40}$/.test(a)) return a;
+    } catch (_) {}
+    return null;
+  }
+
+  // ── Admin session helpers ────────────────────────────────────────────────
+  function getAdminToken() {
+    try { return sessionStorage.getItem("efixAdminToken") || null; } catch { return null; }
+  }
+  async function fetchAdminClients() {
+    const token = getAdminToken();
+    if (!token) return null;
+    const url = backendUrl() + "/admin/lobie-clients?limit=500";
+    const r = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+
+  // Mount the admin tray once on first auth — populates the dropdown if
+  // an admin token is present. Otherwise, no-op.
+  async function setupAdminTray() {
+    const tray   = document.getElementById("adminTray");
+    if (!tray) return;
+    const token  = getAdminToken();
+    if (!token) { tray.style.display = "none"; return; }
+
+    const select = document.getElementById("adminClientSelect");
+    const apply  = document.getElementById("adminTrayApply");
+    const clear  = document.getElementById("adminTrayClear");
+    const hint   = document.getElementById("adminTrayHint");
+    tray.style.display = "block";
+
+    try {
+      const data = await fetchAdminClients();
+      if (!data) return;
+      const clients = data.clients || [];
+      // Sort already done server-side by units desc.
+      const opts = ['<option value="">— escolher cliente —</option>'].concat(
+        clients.map(c => {
+          const lbl = `${escHtml(c.nome || c.email)} · ${c.unitCount} ${c.unitCount === 1 ? "unidade" : "unidades"}`;
+          return `<option value="${escHtml(c.email)}">${lbl}</option>`;
+        })
+      );
+      select.innerHTML = opts.join("");
+      select.disabled = false;
+      hint.textContent = `${clients.length} ${clients.length === 1 ? "cliente" : "clientes"} disponíveis`;
+
+      // Pre-select the active ?as= email if present
+      const current = getEmailOverride();
+      if (current) {
+        const found = clients.find(c => c.email === current);
+        if (found) select.value = current;
+      }
+    } catch (e) {
+      hint.textContent = "Não foi possível carregar a lista de clientes.";
+      console.warn("[admin-tray]", e);
+    }
+
+    apply.onclick = () => {
+      const email = select.value;
+      if (!email) return;
+      const url = new URL(window.location.href);
+      url.searchParams.set("as", email);
+      url.searchParams.delete("as_address");
+      window.location.href = url.toString();
+    };
+    clear.onclick = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("as");
+      url.searchParams.delete("as_address");
+      window.location.href = url.toString();
+    };
+  }
 
   // ── Public entry: called once after the user authenticates ───────────────
   // index.html's `showApp(address)` calls `window.loadOwnership(address)`
   // explicitly, so the address is passed in. We also fall back to the global
   // `userAddress` in case some other call path triggers init first.
   async function loadOwnership(address) {
-    const addr = address || (typeof window.userAddress === "string" ? window.userAddress : null);
+    // URL address override wins; otherwise use the passed-in address (from
+    // the auth flow) or the global userAddress.
+    const overrideAddr = getAddressOverride();
+    const addr = overrideAddr || address
+      || (typeof window.userAddress === "string" ? window.userAddress : null);
     if (!addr) return;
 
     // Resolve email: URL override > authenticated session email
@@ -149,6 +241,9 @@
     window.__ownershipAddress = addr;
     window.__ownershipPortfolio = portfolio;
     window.__ownershipPropertiesPreview = propertiesPreview;
+
+    // Mount the admin tray (no-op for non-admins).
+    setupAdminTray().catch(() => {});
   }
 
   // ── Imóveis tab loader ───────────────────────────────────────────────────
