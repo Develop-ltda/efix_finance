@@ -130,8 +130,43 @@
   }
 
   // ── Admin session helpers ────────────────────────────────────────────────
-  function getAdminToken() {
+  // Returns the raw admin token from sessionStorage, or null. Use only when
+  // you don't care whether the current OTP user matches the admin's email
+  // (e.g. /admin/* fetches that always re-validate server-side anyway).
+  function getRawAdminToken() {
     try { return sessionStorage.getItem("efixAdminToken") || null; } catch { return null; }
+  }
+  // Decode a JWT payload safely. Returns null on any parse error.
+  function _decodeJwt(token) {
+    try {
+      const parts = (token || "").split(".");
+      if (parts.length !== 3) return null;
+      return JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    } catch { return null; }
+  }
+  // Returns the admin token only if it's still valid for the current
+  // browser context — namely:
+  //   • token exists
+  //   • token's exp claim hasn't passed
+  //   • if an OTP user is logged in (EfixAuth.isLoggedIn), their email
+  //     must match the admin token's email — otherwise the admin tray /
+  //     inline editor would "bleed through" into a non-admin's session.
+  // Use this for any UI gating. The /admin/* endpoints re-validate server-side.
+  function getAdminToken() {
+    const token = getRawAdminToken();
+    if (!token) return null;
+    const payload = _decodeJwt(token);
+    if (!payload) return null;
+    if (payload.exp && payload.exp < Date.now() / 1000) return null;
+    const adminEmail = (payload.email || "").toLowerCase();
+    if (!adminEmail) return null;
+    try {
+      if (typeof EfixAuth !== "undefined" && EfixAuth.isLoggedIn && EfixAuth.isLoggedIn()) {
+        const userEmail = (EfixAuth.getUser?.()?.email || "").toLowerCase();
+        if (userEmail && userEmail !== adminEmail) return null;
+      }
+    } catch { /* don't break the tray on auth lookup errors */ }
+    return token;
   }
   async function fetchAdminClients() {
     const token = getAdminToken();
