@@ -196,182 +196,6 @@
       url.searchParams.delete("as_address");
       window.location.href = url.toString();
     };
-
-    // Phase 5.6 — banner backfill section. Populates a dropdown of all 17
-    // buildings with their banner state, lets the admin paste a URL, preview,
-    // and save (POST /admin/buildings/:emp_id/banner) or clear the override.
-    setupAdminBanners(token).catch(e => console.warn("[admin-banners]", e));
-  }
-
-  // ── Banner backfill (Phase 5.6) ──────────────────────────────────────────
-  async function fetchAdminBuildings(token) {
-    const url = backendUrl() + "/admin/buildings";
-    const r = await fetch(url, { headers: { Authorization: "Bearer " + token } });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  }
-  async function setupAdminBanners(token) {
-    const select  = document.getElementById("adminBannerSelect");
-    const input   = document.getElementById("adminBannerUrl");
-    const save    = document.getElementById("adminBannerSave");
-    const clearB  = document.getElementById("adminBannerClear");
-    const hint    = document.getElementById("adminBannerHint");
-    const preview = document.getElementById("adminBannerPreview");
-    if (!select || !input || !save || !clearB || !hint || !preview) return;
-
-    const setHint = (msg, cls) => {
-      hint.textContent = msg;
-      hint.className = "admin-tray-hint" + (cls ? " " + cls : "");
-    };
-
-    let buildings = [];
-    let byEmp = new Map();
-
-    function refreshButtonStates() {
-      const empId = parseInt(select.value, 10);
-      const b = byEmp.get(empId);
-      const url = input.value.trim();
-      const looksOk = /^https:\/\/.+/.test(url);
-      save.disabled   = !empId || !looksOk;
-      clearB.disabled = !empId || !b?.hasOverride;
-      input.disabled  = !empId;
-    }
-
-    function showPreview(url) {
-      if (!url) { preview.style.display = "none"; preview.className = "admin-tray-banner-preview"; return; }
-      // Render via Image() to detect 4xx/CORS without leaving a broken bg.
-      const probe = new Image();
-      probe.onload = () => {
-        preview.style.display = "block";
-        preview.className = "admin-tray-banner-preview";
-        preview.style.backgroundImage = `url('${url.replace(/'/g, "%27")}')`;
-      };
-      probe.onerror = () => {
-        preview.style.display = "block";
-        preview.className = "admin-tray-banner-preview broken";
-        preview.style.backgroundImage = "";
-      };
-      probe.src = url;
-    }
-
-    function selectBuilding(empId) {
-      const b = byEmp.get(empId);
-      if (!b) {
-        input.value = "";
-        showPreview(null);
-        setHint("");
-        refreshButtonStates();
-        return;
-      }
-      input.value = b.imgBanner || "";
-      showPreview(b.imgBanner);
-      const tag = b.source === "override" ? "Override admin"
-              : b.source === "lobie_pms" ? "Foto da Lobie (PMS)"
-              : "Sem foto · gradient fallback";
-      setHint(`${b.name}${b.neighborhood ? " · " + b.neighborhood : ""} — ${tag}`);
-      refreshButtonStates();
-    }
-
-    async function reload() {
-      try {
-        const data = await fetchAdminBuildings(token);
-        buildings = (data.buildings || []).slice().sort((a, b) => {
-          // Missing-photo first, then by name. Helps the admin spot what needs work.
-          if (!!a.imgBanner !== !!b.imgBanner) return a.imgBanner ? 1 : -1;
-          return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
-        });
-        byEmp = new Map(buildings.map(b => [b.empId, b]));
-
-        const opts = ['<option value="">— escolher prédio —</option>'].concat(
-          buildings.map(b => {
-            const status = b.source === "override" ? "● override"
-                        : b.source === "lobie_pms" ? "● foto"
-                        : "○ sem foto";
-            const lbl = `${escHtml(b.name)}${b.neighborhood ? " · " + escHtml(b.neighborhood) : ""} ${status}`;
-            return `<option value="${b.empId}">${lbl}</option>`;
-          })
-        );
-        select.innerHTML = opts.join("");
-        select.disabled = false;
-        const c = data.counts || {};
-        setHint(`${c.withPhoto}/${c.total} prédios com foto · ${c.withOverride} via override · ${c.gradientOnly} ainda em gradient`);
-      } catch (e) {
-        setHint("Não foi possível carregar a lista de prédios.", "error");
-        console.warn("[admin-banners] load failed", e);
-      }
-    }
-
-    select.onchange = () => selectBuilding(parseInt(select.value, 10));
-    input.oninput = () => {
-      const url = input.value.trim();
-      showPreview(/^https:\/\/.+/.test(url) ? url : null);
-      refreshButtonStates();
-    };
-
-    save.onclick = async () => {
-      const empId = parseInt(select.value, 10);
-      const url   = input.value.trim();
-      if (!empId || !/^https:\/\/.+/.test(url)) return;
-      save.disabled = true;
-      setHint("Salvando…");
-      try {
-        const r = await fetch(backendUrl() + `/admin/buildings/${empId}/banner`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-          body: JSON.stringify({ url }),
-        });
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) {
-          const msg = ({
-            invalid_url:    "URL inválida (precisa começar com https://).",
-            not_https:      "URL precisa ser HTTPS.",
-            not_image_url:  "Essa URL não retorna uma imagem.",
-            building_not_found: "Prédio não encontrado.",
-            pg_not_configured: "Banco de overrides indisponível.",
-          })[data.error] || (data.detail || data.error || `HTTP ${r.status}`);
-          setHint("Erro: " + msg, "error");
-          return;
-        }
-        setHint(`Salvo ✓ · ${data.building}`, "success");
-        await reload();
-        select.value = String(empId);
-        selectBuilding(empId);
-      } catch (e) {
-        setHint("Erro: " + (e.message || e), "error");
-      } finally {
-        refreshButtonStates();
-      }
-    };
-
-    clearB.onclick = async () => {
-      const empId = parseInt(select.value, 10);
-      if (!empId) return;
-      if (!confirm("Remover o override e voltar ao banner do PMS Lobie (ou gradient se vazio)?")) return;
-      clearB.disabled = true;
-      setHint("Removendo…");
-      try {
-        const r = await fetch(backendUrl() + `/admin/buildings/${empId}/banner`, {
-          method: "DELETE",
-          headers: { Authorization: "Bearer " + token },
-        });
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) {
-          setHint("Erro: " + (data.detail || data.error || `HTTP ${r.status}`), "error");
-          return;
-        }
-        setHint("Override removido ✓", "success");
-        await reload();
-        select.value = String(empId);
-        selectBuilding(empId);
-      } catch (e) {
-        setHint("Erro: " + (e.message || e), "error");
-      } finally {
-        refreshButtonStates();
-      }
-    };
-
-    await reload();
-    refreshButtonStates();
   }
 
   // ── Public entry: called once after the user authenticates ───────────────
@@ -552,10 +376,42 @@
         ${p.basescan ? `<a href="${p.basescan}" target="_blank" rel="noopener">Comprovante</a>` : ""}
       `;
 
+    // Admin-only inline banner edit. Card carries data-emp-id so the inline
+    // form can address the building without a global state lookup.
+    const isAdmin = !!getAdminToken();
+    const empId = p.empId ?? null;
+    const bannerSrc = p.imgBannerSource || "none";
+    const adminEditHtml = (isAdmin && empId) ? `
+      <button class="property-banner-edit-btn"
+              type="button"
+              title="Editar banner deste prédio (admin)"
+              onclick="openCardBannerEditor(${empId})">✎</button>
+      <div class="property-banner-edit-form" id="bannerEdit-${empId}">
+        <input type="url" placeholder="https://… cole a URL da foto"
+               value="${escHtml(p.imgBanner || "")}"
+               oninput="cardBannerUrlChanged(${empId})" />
+        <div class="property-banner-edit-source ${bannerSrc}">${
+          bannerSrc === "override" ? "atual: override admin" :
+          bannerSrc === "lobie_pms" ? "atual: foto do PMS Lobie" :
+          "atual: gradient (sem foto)"
+        }</div>
+        <div class="property-banner-edit-actions">
+          <button type="button" class="save"
+                  onclick="saveCardBanner(${empId})" disabled>Salvar</button>
+          <button type="button" class="remove ${bannerSrc === "override" ? "" : "hidden"}"
+                  onclick="removeCardBanner(${empId})">Remover override</button>
+          <button type="button" class="cancel"
+                  onclick="closeCardBannerEditor(${empId})">×</button>
+        </div>
+        <div class="property-banner-edit-hint" id="bannerEditHint-${empId}"></div>
+      </div>
+    ` : "";
+
     return `
-      <div class="property-card ${isVirtual ? "virtual" : "tokenized"}">
+      <div class="property-card ${isVirtual ? "virtual" : "tokenized"}" data-emp-id="${empId ?? ""}">
         ${bannerHTML(p)}
         ${mapPinHTML(p.latLng, p.neighborhood)}
+        ${adminEditHtml}
         <div class="property-card-header">
           <div>
             <strong>${headerLine}</strong>
@@ -581,6 +437,101 @@
         </div>
       </div>
     `;
+  }
+
+  // ── Inline banner editor (admin-only, lives on each card) ────────────────
+  function _findCard(empId) {
+    return document.querySelector(`.property-card[data-emp-id="${empId}"]`);
+  }
+  function openCardBannerEditor(empId) {
+    const card = _findCard(empId);
+    if (!card) return;
+    card.classList.add("banner-editing");
+    const input = card.querySelector(".property-banner-edit-form input[type='url']");
+    if (input) { input.focus(); input.select(); }
+    cardBannerUrlChanged(empId);
+  }
+  function closeCardBannerEditor(empId) {
+    const card = _findCard(empId);
+    if (!card) return;
+    card.classList.remove("banner-editing");
+    const hint = document.getElementById(`bannerEditHint-${empId}`);
+    if (hint) { hint.textContent = ""; hint.className = "property-banner-edit-hint"; }
+  }
+  function cardBannerUrlChanged(empId) {
+    const card = _findCard(empId);
+    if (!card) return;
+    const input = card.querySelector(".property-banner-edit-form input[type='url']");
+    const save  = card.querySelector(".property-banner-edit-form button.save");
+    const url = (input?.value || "").trim();
+    if (save) save.disabled = !/^https:\/\/.+/.test(url);
+  }
+  async function saveCardBanner(empId) {
+    const token = getAdminToken();
+    if (!token) return;
+    const card = _findCard(empId);
+    if (!card) return;
+    const input = card.querySelector(".property-banner-edit-form input[type='url']");
+    const url = (input?.value || "").trim();
+    if (!/^https:\/\/.+/.test(url)) return;
+    const hint = document.getElementById(`bannerEditHint-${empId}`);
+    const setHint = (msg, cls) => {
+      if (!hint) return;
+      hint.textContent = msg;
+      hint.className = "property-banner-edit-hint" + (cls ? " " + cls : "");
+    };
+    setHint("Salvando…");
+    try {
+      const r = await fetch(backendUrl() + `/admin/buildings/${empId}/banner`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ url }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const msg = ({
+          invalid_url:        "URL inválida (precisa começar com https://).",
+          not_https:          "URL precisa ser HTTPS.",
+          not_image_url:      "Essa URL não retorna uma imagem.",
+          building_not_found: "Prédio não encontrado.",
+          pg_not_configured:  "Banco de overrides indisponível.",
+        })[data.error] || (data.detail || data.error || `HTTP ${r.status}`);
+        setHint("Erro: " + msg, "error");
+        return;
+      }
+      setHint("Salvo ✓ recarregando…", "success");
+      // Re-render: fresh data picks up the override and exposes imgBannerSource.
+      await loadOwnerProperties();
+    } catch (e) {
+      setHint("Erro: " + (e.message || e), "error");
+    }
+  }
+  async function removeCardBanner(empId) {
+    const token = getAdminToken();
+    if (!token) return;
+    if (!confirm("Remover o override e voltar ao banner do PMS Lobie (ou gradient se vazio)?")) return;
+    const hint = document.getElementById(`bannerEditHint-${empId}`);
+    const setHint = (msg, cls) => {
+      if (!hint) return;
+      hint.textContent = msg;
+      hint.className = "property-banner-edit-hint" + (cls ? " " + cls : "");
+    };
+    setHint("Removendo…");
+    try {
+      const r = await fetch(backendUrl() + `/admin/buildings/${empId}/banner`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token },
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setHint("Erro: " + (data.detail || data.error || `HTTP ${r.status}`), "error");
+        return;
+      }
+      setHint("Removido ✓ recarregando…", "success");
+      await loadOwnerProperties();
+    } catch (e) {
+      setHint("Erro: " + (e.message || e), "error");
+    }
   }
 
   // Live: POST /wallet/tokenize-unit signs mintUnit + safeTransferFrom from
@@ -774,6 +725,12 @@
   window.useAsCollateral = useAsCollateral;
   window.tokenizarUnidade = tokenizarUnidade;
   window.claimAllBTRDividends = claimAllBTRDividends;
+  // Phase 5.6 inline banner editor (admin-only)
+  window.openCardBannerEditor  = openCardBannerEditor;
+  window.closeCardBannerEditor = closeCardBannerEditor;
+  window.cardBannerUrlChanged  = cardBannerUrlChanged;
+  window.saveCardBanner        = saveCardBanner;
+  window.removeCardBanner      = removeCardBanner;
 
   // No auto-init: index.html's showApp(address) calls window.loadOwnership(address)
   // once auth resolves. That's the canonical entry point.

@@ -73,71 +73,130 @@
 .admin-tray-hint.error   { color: #ef4444; font-weight: 600; }
 .admin-tray-hint.success { color: #16a34a; font-weight: 600; }
 
-/* Phase 5.6 banner section */
-.admin-tray-divider {
-    margin: 12px 0 10px;
-    height: 1px;
-    background: var(--gray-700);
-    opacity: 0.5;
+/* Phase 5.6 — admin-only inline banner editor on each property card.
+   Pencil button overlays the banner top-left; clicking it toggles
+   .banner-editing on the card, which hides banner/map-pin/pencil
+   and shows the inline form occupying the same space. */
+.property-banner-edit-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 13px;
+    line-height: 24px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 4;
+    backdrop-filter: blur(6px);
+    transition: background 120ms ease, transform 120ms ease;
 }
-.admin-tray-banner-row {
-    margin-top: 8px;
+.property-banner-edit-btn:hover {
+    background: rgba(0, 0, 0, 0.75);
+    transform: scale(1.06);
 }
-.admin-tray-banner-row input[type="url"] {
-    flex: 1 1 320px;
-    padding: 8px 10px;
-    background: var(--gray-800);
-    border: 1px solid var(--gray-700);
-    border-radius: 8px;
-    color: var(--white);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    outline: none;
-    min-width: 0;
+.property-banner-edit-form {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 10px 12px;
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(10px);
+    border-radius: 12px 12px 0 0;
+    z-index: 5;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 96px;
 }
-.admin-tray-banner-row input[type="url"]:focus { border-color: var(--gray-500); }
-.admin-tray-banner-row input[type="url"]:disabled { opacity: 0.6; }
-.admin-tray-banner-row button:disabled { opacity: 0.5; cursor: not-allowed; }
-.admin-tray-banner-preview {
-    margin-top: 8px;
-    height: 96px;
-    border-radius: 10px;
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    border: 1px solid var(--gray-700);
-    background-color: var(--gray-800);
-    transition: opacity 120ms ease;
-}
-.admin-tray-banner-preview.broken {
-    background: repeating-linear-gradient(45deg, var(--gray-800) 0 8px, var(--gray-700) 8px 16px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--gray-500);
+.property-card.banner-editing .property-banner,
+.property-card.banner-editing .property-map-pin,
+.property-card.banner-editing .property-banner-edit-btn { display: none; }
+.property-card.banner-editing .property-banner-edit-form { display: flex; }
+
+.property-banner-edit-form input[type="url"] {
+    width: 100%;
+    padding: 7px 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    color: #fff;
     font-family: var(--font-mono);
     font-size: 11px;
+    outline: none;
+    box-sizing: border-box;
 }
-.admin-tray-banner-preview.broken::before {
-    content: "imagem inacessível ou sem permissão de origem";
+.property-banner-edit-form input[type="url"]:focus {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.12);
 }
+.property-banner-edit-source {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+.property-banner-edit-source.override { color: #fbbf24; }
+.property-banner-edit-source.lobie_pms { color: #34d399; }
+.property-banner-edit-source.none      { color: rgba(255, 255, 255, 0.45); }
+.property-banner-edit-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.property-banner-edit-actions button {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 120ms ease;
+    border: 1px solid transparent;
+}
+.property-banner-edit-actions button.save {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+.property-banner-edit-actions button.save:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.property-banner-edit-actions button.remove {
+    background: transparent;
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.5);
+}
+.property-banner-edit-actions button.remove.hidden { display: none; }
+.property-banner-edit-actions button.cancel {
+    margin-left: auto;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.65);
+    border-color: rgba(255, 255, 255, 0.2);
+    width: 28px;
+    height: 24px;
+    padding: 0;
+    font-size: 14px;
+    line-height: 22px;
+}
+.property-banner-edit-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    min-height: 12px;
+}
+.property-banner-edit-hint.error   { color: #fca5a5; font-weight: 600; }
+.property-banner-edit-hint.success { color: #86efac; font-weight: 600; }
 
-/* Light theme overrides */
-body.light-theme .admin-tray-divider { background: var(--gray-300); }
-body.light-theme .admin-tray-banner-row input[type="url"] {
-    background: var(--white);
-    border-color: var(--gray-300);
-    color: var(--black);
-}
-body.light-theme .admin-tray-banner-row input[type="url"]:focus { border-color: var(--gray-500); }
-body.light-theme .admin-tray-banner-preview {
-    border-color: var(--gray-300);
-    background-color: var(--gray-100);
-}
-body.light-theme .admin-tray-banner-preview.broken {
-    background: repeating-linear-gradient(45deg, var(--gray-100) 0 8px, var(--gray-200) 8px 16px);
-    color: var(--gray-500);
-}
+/* The form has the same dark-glass treatment in light mode — it's
+   anchored over the banner area which itself can be a photo or a
+   colored gradient. Forcing white-on-light would hurt contrast. */
 
 /* ── Pill above the tabs: "Patrimônio na rede: R$ 487.230" ─────────────── */
 .ownership-pill {
