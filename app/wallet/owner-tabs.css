@@ -407,6 +407,15 @@ html[data-theme="light"] .property-metric {
     font-family: var(--font-mono);
     margin-top: 2px;
     letter-spacing: 0.3px;
+    transition: color 120ms ease;
+}
+.property-action-hint.error {
+    color: #ef4444;
+    font-weight: 600;
+}
+.property-action-hint.success {
+    color: #16a34a;
+    font-weight: 600;
 }
 
 /* Credit availability — emphasis row between metrics and sparkline. */

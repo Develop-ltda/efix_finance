@@ -365,10 +365,10 @@
     // Action row
     const actions = isVirtual
       ? `
-        <button class="property-action-primary" onclick="tokenizarUnidade('${escHtml(String(p.empId))}', '${escHtml(p.unitCode || "")}', '${escHtml(p.expectedTokenId || "")}')" disabled title="Disponível em breve">
+        <button class="property-action-primary" onclick="tokenizarUnidade('${escHtml(String(p.empId))}', '${escHtml(p.unitCode || "")}', '${escHtml(p.expectedTokenId || "")}')" title="Mintar o NFT da minha unidade na minha carteira">
           Tokenizar minha unidade
         </button>
-        <span class="property-action-hint">Em breve · sem custo de gas para você</span>
+        <span class="property-action-hint" id="tokenizeHint-${escHtml(String(p.empId))}-${escHtml(p.unitCode || "")}">Sem custo de gas para você · ~5s</span>
       `
       : `
         <button onclick="useAsCollateral('${escHtml(p.tokenId)}')" disabled title="Em breve">Usar como colateral</button>
@@ -407,10 +407,66 @@
     `;
   }
 
-  // Stub — on-demand tokenization endpoint isn't wired yet (waiting on
-  // MINTER_ROLE on LobieUnitRegistry being granted to the backend operator).
-  function tokenizarUnidade(empId, unitCode, expectedTokenId) {
-    alert(`A tokenização da sua unidade (${empId}/${unitCode}) está em preparação.\nEm breve este botão minta o NFT diretamente para a sua carteira, sem custo de gas.`);
+  // Live: POST /wallet/tokenize-unit signs mintUnit + safeTransferFrom from
+  // the efixDI operator EOA (which holds RECORDER_ROLE on LobieUnitRegistry
+  // after the Phase 5.2 Safe op). NFT lands directly on the user's smart
+  // account, sponsored. Idempotent — safe to retry.
+  async function tokenizarUnidade(empId, unitCode, expectedTokenId) {
+    if (typeof EfixAuth === "undefined" || !EfixAuth.isLoggedIn || !EfixAuth.isLoggedIn()) {
+      alert("Faça login com seu email para tokenizar a unidade.");
+      return;
+    }
+    if (!confirm(`Tokenizar a unidade ${unitCode}?\n\nO NFT será mintado e transferido para a sua carteira em ~5 segundos. Sem custo de gas.`)) {
+      return;
+    }
+
+    const hintId = `tokenizeHint-${empId}-${unitCode}`;
+    const hint = document.getElementById(hintId);
+    const setHint = (msg, cls) => {
+      if (!hint) return;
+      hint.textContent = msg;
+      hint.className = "property-action-hint" + (cls ? " " + cls : "");
+    };
+
+    const btn = hint?.previousElementSibling || null;
+    if (btn && btn.tagName === "BUTTON") btn.disabled = true;
+
+    setHint("Mintando NFT na sua carteira…");
+    try {
+      const res = await fetch(backendUrl() + "/wallet/tokenize-unit", {
+        method: "POST",
+        headers: EfixAuth.headers(),
+        body: JSON.stringify({ empId: parseInt(empId, 10), unitCode }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = ({
+          not_owner_of_unit:    "Não conseguimos confirmar que você é o proprietário desta unidade no PMS da Lobie.",
+          token_owned_by_other: "Esta unidade já foi tokenizada em outra carteira. Fale com o suporte.",
+          tokenize_not_configured: "Tokenização ainda não configurada no servidor.",
+          mysql_unavailable:    "Banco de dados Lobie indisponível agora. Tente em alguns minutos.",
+          auth_missing_email:   "Sessão sem email — faça login novamente.",
+          auth_missing_address: "Sessão sem carteira — faça login novamente.",
+          tokenize_failed:      data.detail || "Falha ao tokenizar.",
+        })[data.error] || (data.error || `HTTP ${res.status}`);
+        setHint("Erro: " + msg, "error");
+        if (btn && btn.tagName === "BUTTON") btn.disabled = false;
+        return;
+      }
+
+      if (data.alreadyOwned) {
+        setHint("Você já possuía o NFT desta unidade ✓", "success");
+      } else if (data.resumed) {
+        setHint(`Transferido para a sua carteira ✓ · token #${String(data.tokenId).slice(0, 12)}…`, "success");
+      } else {
+        setHint(`Tokenizada ✓ · token #${String(data.tokenId).slice(0, 12)}…`, "success");
+      }
+      // Re-render the grid — the unit will now appear as a tokenized card.
+      await loadOwnerProperties();
+    } catch (e) {
+      setHint("Erro: " + (e.message || e), "error");
+      if (btn && btn.tagName === "BUTTON") btn.disabled = false;
+    }
   }
 
   // Stub — Morpho Lobie/USDC collateral market doesn't exist yet.
