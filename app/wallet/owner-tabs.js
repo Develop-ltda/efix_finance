@@ -63,6 +63,18 @@
     return `<div class="property-sparkline" title="Últimos ${values.length} meses">${bars}</div>`;
   }
 
+  // ── Email override via ?as=X URL param. Used for previewing the dashboard
+  //    as another proprietário without OTP'ing into their inbox. The UI
+  //    is identical either way — there is no separate "demo" state.
+  function getEmailOverride() {
+    try {
+      const url = new URL(window.location.href);
+      const e = url.searchParams.get("as");
+      if (e && /.+@.+\..+/.test(e)) return e.toLowerCase();
+    } catch (_) {}
+    return null;
+  }
+
   // ── Public entry: called once after the user authenticates ───────────────
   // index.html's `showApp(address)` calls `window.loadOwnership(address)`
   // explicitly, so the address is passed in. We also fall back to the global
@@ -70,6 +82,13 @@
   async function loadOwnership(address) {
     const addr = address || (typeof window.userAddress === "string" ? window.userAddress : null);
     if (!addr) return;
+
+    // Resolve email: URL override > authenticated session email
+    const overrideEmail = getEmailOverride();
+    const sessionEmail = (typeof window.userEmail === "string" && window.userEmail.includes("@"))
+      ? window.userEmail.toLowerCase() : null;
+    const effectiveEmail = overrideEmail || sessionEmail;
+    window.__ownershipEmail = effectiveEmail;
 
     let portfolio;
     try {
@@ -79,7 +98,20 @@
       return;
     }
 
-    const hasLobie = (portfolio.lobieUnits || []).length > 0;
+    // Probe properties endpoint (with email if available) so we know whether
+    // to show the Imóveis tab even when the user holds no NFTs yet but
+    // operationally owns Lobie units.
+    let propertiesPreview = { counts: { tokenized: 0, virtual: 0 } };
+    if (effectiveEmail) {
+      try {
+        propertiesPreview = await getJson(`/wallet/properties/${addr}?email=${encodeURIComponent(effectiveEmail)}`);
+      } catch (e) {
+        console.warn("[owner-tabs] properties preview failed", e.message);
+      }
+    }
+
+    const hasLobie = (portfolio.lobieUnits || []).length > 0
+                  || (propertiesPreview.counts?.virtual || 0) > 0;
     const hasBTR   = (portfolio.btrPositions || [])
       .some(b => parseFloat(b.balance) > 0);
 
@@ -88,15 +120,13 @@
     if (tabImoveis) tabImoveis.style.display = hasLobie ? "" : "none";
     if (tabCotas)   tabCotas.style.display   = hasBTR   ? "" : "none";
 
-    // Pill renders only when there's something on the lens (Lobie OR BTR).
+    // Pill renders only when there's something to show — on-chain or virtual.
     if (hasLobie || hasBTR) {
       const pill  = document.getElementById("ownershipPill");
       const value = document.getElementById("ownershipPillValue");
       const hint  = document.getElementById("ownershipPillHint");
       if (pill && value) {
-        // Lens net worth includes wallet balances — for the pill we want the
-        // RWA portion (Lobie + BTR + pending), since the existing balance card
-        // already shows efixDI. Compute manually.
+        // RWA portion (BTR + lens-priced Lobie + virtual-mode trailing rent).
         let rwaTotal = 0;
         for (const u of portfolio.lobieUnits || []) rwaTotal += parseFloat(u.npvBRL) || 0;
         for (const b of portfolio.btrPositions || []) {
@@ -105,8 +135,11 @@
         }
         value.textContent = fmtBRL(rwaTotal);
         const parts = [];
-        if (hasLobie) parts.push(`${portfolio.lobieUnits.length} unidade${portfolio.lobieUnits.length > 1 ? "s" : ""}`);
-        if (hasBTR)   parts.push(`${portfolio.btrPositions.filter(b => parseFloat(b.balance) > 0).length} série${portfolio.btrPositions.length > 1 ? "s" : ""} BTR`);
+        const tokCount = portfolio.lobieUnits.length;
+        const virtCount = propertiesPreview.counts?.virtual || 0;
+        if (tokCount > 0)  parts.push(`${tokCount} ${tokCount > 1 ? "unidades tokenizadas" : "unidade tokenizada"}`);
+        if (virtCount > 0) parts.push(`${virtCount} ${virtCount > 1 ? "unidades elegíveis" : "unidade elegível"}`);
+        if (hasBTR)        parts.push(`${portfolio.btrPositions.filter(b => parseFloat(b.balance) > 0).length} série${portfolio.btrPositions.length > 1 ? "s" : ""} BTR`);
         if (hint) hint.textContent = parts.join(" · ");
         pill.style.display = "flex";
       }
@@ -115,6 +148,7 @@
     // Save for downstream readers.
     window.__ownershipAddress = addr;
     window.__ownershipPortfolio = portfolio;
+    window.__ownershipPropertiesPreview = propertiesPreview;
   }
 
   // ── Imóveis tab loader ───────────────────────────────────────────────────
@@ -128,13 +162,19 @@
     }
     grid.innerHTML = '<div class="ownership-loading">Carregando…</div>';
     try {
-      const data = await getJson(`/wallet/properties/${addr}`);
+      const email = window.__ownershipEmail;
+      const url = email
+        ? `/wallet/properties/${addr}?email=${encodeURIComponent(email)}`
+        : `/wallet/properties/${addr}`;
+      const data = await getJson(url);
       const props = data.properties || [];
       if (props.length === 0) {
-        grid.innerHTML = '<div class="ownership-loading">Nenhuma unidade encontrada.</div>';
+        grid.innerHTML = '<div class="ownership-loading">Nenhum imóvel encontrado para este perfil.</div>';
         return;
       }
-      grid.innerHTML = props.map(propertyCard).join("");
+      // Tokenized first, then virtual.
+      const sorted = props.slice().sort((a, b) => (a.tokenized === b.tokenized) ? 0 : (a.tokenized ? -1 : 1));
+      grid.innerHTML = sorted.map(propertyCard).join("");
     } catch (e) {
       grid.innerHTML = `<div class="ownership-loading">Falha ao carregar imóveis: ${escHtml(e.message)}</div>`;
     }
@@ -144,52 +184,88 @@
     const obs = (p.observations || []).slice().reverse(); // chrono ASC
     const sparklineValues = obs.map(o => Math.max(0, Number(o.payout) || 0));
     const lastObs = (p.observations && p.observations[0]) || null;
-    const attestedClass = lastObs && lastObs.attested ? "attested" : "";
-    const attestedLabel = lastObs && lastObs.attested
-      ? `Atestado · ${fmtYearMonth(lastObs.yearMonth)}`
-      : "Atestação pendente";
+    const isVirtual = p.tokenized === false;
 
-    const buildingLine = p.buildingName
+    // Header lines
+    const headerLine = p.buildingName
       ? `${escHtml(p.buildingName)}${p.neighborhood ? " · " + escHtml(p.neighborhood) : ""}`
-      : `Unidade ${escHtml(p.tokenId)}`;
+      : (p.tokenId ? `Unidade #${escHtml(p.tokenId)}` : `Unidade ${escHtml(p.unitCode || "")}`);
+
+    const subLine = isVirtual
+      ? `Unidade ${escHtml(p.unitCode || "")}`
+      : (p.unitCode ? `Unidade ${escHtml(p.unitCode)} · Token ${escHtml(String(p.tokenId).slice(0, 10))}…` : `Token ${escHtml(String(p.tokenId).slice(0, 14))}…`);
+
+    // Ownership badge
+    const ownershipBadge = isVirtual && p.participacao !== null && p.participacao !== undefined
+      ? `<span class="property-token-badge participation">${Number(p.participacao).toFixed(0)}% seu</span>`
+      : (!isVirtual ? `<span class="property-token-badge">NFT</span>` : "");
+
+    // Status row
+    const statusHtml = isVirtual
+      ? `<div class="property-attestation virtual"><span class="dot"></span><span>Imóvel registrado · pronto para tokenizar</span></div>`
+      : (lastObs && lastObs.attested
+        ? `<div class="property-attestation attested"><span class="dot"></span><span>Atestado · ${fmtYearMonth(lastObs.yearMonth)}</span></div>`
+        : `<div class="property-attestation"><span class="dot"></span><span>Atestação pendente</span></div>`);
+
+    // Metric block
+    const noiLabel  = isVirtual ? "Aluguel 12m (sua parte)" : "NOI 12m";
+    const noiValue  = isVirtual && p.ownerTrailing12NOI ? fmtBRL(p.ownerTrailing12NOI) : fmtBRL(p.trailing12NOI);
+    const valueLabel = isVirtual ? "Última leitura" : "NPV (Gordon 6%/3%)";
+    const valueValue = isVirtual
+      ? (lastObs ? fmtYearMonth(lastObs.yearMonth) : "—")
+      : fmtBRL(p.npvBRL);
+
+    // Action row
+    const actions = isVirtual
+      ? `
+        <button class="property-action-primary" onclick="tokenizarUnidade('${escHtml(String(p.empId))}', '${escHtml(p.unitCode || "")}', '${escHtml(p.expectedTokenId || "")}')" disabled title="Disponível em breve">
+          Tokenizar minha unidade
+        </button>
+        <span class="property-action-hint">Em breve · sem custo de gas para você</span>
+      `
+      : `
+        <button onclick="useAsCollateral('${escHtml(p.tokenId)}')" disabled title="Em breve">Usar como colateral</button>
+        ${p.opensea  ? `<a href="${p.opensea}"  target="_blank" rel="noopener">OpenSea</a>` : ""}
+        ${p.basescan ? `<a href="${p.basescan}" target="_blank" rel="noopener">Comprovante</a>` : ""}
+      `;
 
     return `
-      <div class="property-card">
+      <div class="property-card ${isVirtual ? "virtual" : "tokenized"}">
         <div class="property-card-header">
           <div>
-            <strong>${buildingLine}</strong>
-            <small>Token #${escHtml(p.tokenId)}</small>
+            <strong>${headerLine}</strong>
+            <small>${subLine}</small>
           </div>
-          <span class="property-token-badge">NFT</span>
+          ${ownershipBadge}
         </div>
-        <div class="property-attestation ${attestedClass}">
-          <span class="dot"></span><span>${attestedLabel}</span>
-        </div>
+        ${statusHtml}
         <div class="property-metrics">
           <div class="property-metric">
-            <div class="property-metric-label">NPV (Gordon 6%/3%)</div>
-            <div class="property-metric-value">${fmtBRL(p.npvBRL)}</div>
+            <div class="property-metric-label">${valueLabel}</div>
+            <div class="property-metric-value">${valueValue}</div>
           </div>
           <div class="property-metric">
-            <div class="property-metric-label">NOI 12m</div>
-            <div class="property-metric-value muted">${fmtBRL(p.trailing12NOI)}</div>
+            <div class="property-metric-label">${noiLabel}</div>
+            <div class="property-metric-value muted">${noiValue}</div>
           </div>
         </div>
         ${sparklineValues.length > 0 ? sparklineHTML(sparklineValues) : ""}
         <div class="property-card-actions">
-          <button onclick="useAsCollateral('${escHtml(p.tokenId)}')" disabled title="Em breve — Phase 5">
-            Colateralizar
-          </button>
-          ${p.opensea  ? `<a href="${p.opensea}"  target="_blank" rel="noopener">OpenSea</a>` : ""}
-          ${p.basescan ? `<a href="${p.basescan}" target="_blank" rel="noopener">Basescan</a>` : ""}
+          ${actions}
         </div>
       </div>
     `;
   }
 
-  // Phase 5 stub — Morpho Lobie/USDC market doesn't exist yet.
+  // Stub — on-demand tokenization endpoint isn't wired yet (waiting on
+  // MINTER_ROLE on LobieUnitRegistry being granted to the backend operator).
+  function tokenizarUnidade(empId, unitCode, expectedTokenId) {
+    alert(`A tokenização da sua unidade (${empId}/${unitCode}) está em preparação.\nEm breve este botão minta o NFT diretamente para a sua carteira, sem custo de gas.`);
+  }
+
+  // Stub — Morpho Lobie/USDC collateral market doesn't exist yet.
   function useAsCollateral(tokenId) {
-    alert(`A colateralização de imóveis Lobie via Morpho chega na Phase 5.\nToken #${tokenId} já é elegível em conceito (NPV on-chain via Lens).`);
+    alert(`A colateralização de imóveis chega em breve.\nA unidade já tem NPV on-chain via PortfolioLens; falta o market Morpho Lobie/USDC ser ativado.`);
   }
 
   // ── Cotas BTR tab loader ─────────────────────────────────────────────────
@@ -314,6 +390,7 @@
   window.loadOwnerProperties = loadOwnerProperties;
   window.loadOwnerBTR = loadOwnerBTR;
   window.useAsCollateral = useAsCollateral;
+  window.tokenizarUnidade = tokenizarUnidade;
   window.claimAllBTRDividends = claimAllBTRDividends;
 
   // No auto-init: index.html's showApp(address) calls window.loadOwnership(address)
