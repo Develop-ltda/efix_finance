@@ -738,9 +738,39 @@
                         Você pode antecipar o recebimento via crédito HausBank — taxa transparente: 5% flat + 8% ao mês pro-rata-dia.
                     </p>
                 </div>
+                <div id="antecipationsRequestsBanner" class="antecipations-banner" style="display:none"></div>
                 <div id="receivablesSummary" class="receivables-summary" style="display:none"></div>
                 <div id="receivablesList" class="receivables-list">
                     <div class="ownership-loading">Carregando…</div>
+                </div>
+            </div>
+
+            <!-- Antecipação modal — shared across receivable rows + "antecipar todas" CTA -->
+            <div id="antecipateModalBg" class="antecipate-modal-bg" style="display:none" onclick="closeAntecipateModal(event)">
+                <div class="antecipate-modal" onclick="event.stopPropagation()">
+                    <h3>Antecipar reserva</h3>
+                    <div id="antecipateModalDetails" class="antecipate-details"></div>
+                    <div class="antecipate-form">
+                        <label>Tipo de chave PIX</label>
+                        <select id="antecipatePixType">
+                            <option value="cpf">CPF</option>
+                            <option value="cnpj">CNPJ</option>
+                            <option value="email">E-mail</option>
+                            <option value="phone">Telefone (E.164 com +55)</option>
+                            <option value="evp">Aleatória (EVP)</option>
+                        </select>
+                        <label>Chave PIX</label>
+                        <input type="text" id="antecipatePixKey" placeholder="Ex: 12345678900 (CPF sem máscara)" />
+                        <div id="antecipateModalHint" class="antecipate-hint"></div>
+                    </div>
+                    <div class="antecipate-actions">
+                        <button class="muted" onclick="closeAntecipateModal()">Cancelar</button>
+                        <button class="primary" id="antecipateConfirmBtn" onclick="submitAntecipation()">Solicitar</button>
+                    </div>
+                    <div class="antecipate-disclaimer">
+                        Após admin aprovar, o PIX cai na chave informada em até 24h.
+                        Sem emails enviados — você acompanha o status aqui mesmo.
+                    </div>
                 </div>
             </div>
 

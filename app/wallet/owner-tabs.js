@@ -724,6 +724,9 @@
 
       // Per-row card
       list.innerHTML = items.map(receivableRow).join("");
+
+      // Load active antecipation requests banner above the list
+      loadAntecipationsBanner().catch(() => {});
     } catch (e) {
       list.innerHTML = `<div class="ownership-loading">Falha ao carregar reservas: ${escHtml(e.message)}</div>`;
     }
@@ -731,10 +734,19 @@
 
   function receivableRow(r) {
     const days = r.daysUntilPayout ?? 0;
-    const overdue = days <= 0 ? "atrasado" : "";
     const payoutDay = r.payoutDayOfMonth ? ` (dia ${r.payoutDayOfMonth} do mês)` : "";
+    const dataAttrs = `data-receivable='${escHtml(JSON.stringify({
+      reservationDbId: r.reservationDbId,
+      buildingName:    r.buildingName,
+      unitCode:        r.unitCode,
+      ownerBRL:        r.ownerBRL,
+      totalFee:        r.antecipation.totalFee,
+      netNow:          r.antecipation.netNow,
+      effectivePct:    r.antecipation.effectivePct,
+      daysUntilPayout: days,
+    }))}'`;
     return `
-      <div class="receivable-card ${overdue}">
+      <div class="receivable-card">
         <div class="receivable-header">
           <div>
             <strong>Lobie · ${escHtml(r.buildingName || "—")}</strong>
@@ -746,7 +758,7 @@
           <span><span class="muted">check-in</span> ${fmtDate(r.checkinDate)}</span>
           <span class="receivable-arrow">→</span>
           <span><span class="muted">check-out</span> ${fmtDate(r.checkoutDate)}</span>
-          <span class="receivable-payout">${overdue ? "repasse atrasado" : `repasse em ${days} dia${days === 1 ? "" : "s"} · ${fmtFullDate(r.estimatedPayoutDate)}${payoutDay}`}</span>
+          <span class="receivable-payout">repasse em ${days} dia${days === 1 ? "" : "s"} · ${fmtFullDate(r.estimatedPayoutDate)}${payoutDay}</span>
         </div>
         <div class="receivable-amounts">
           <div class="receivable-amount">
@@ -767,13 +779,159 @@
           </div>
         </div>
         <div class="receivable-actions">
-          <button class="property-action-primary" disabled title="Em breve · funding HausBank">
-            Antecipar agora
+          <button class="property-action-primary"
+                  ${dataAttrs}
+                  onclick="openAntecipateModalForCard(this)">
+            Antecipar agora · ${fmtBRL(r.antecipation.netNow)}
           </button>
-          <span class="property-action-hint">Em breve · sem fricção, recebimento via PIX</span>
+          <span class="property-action-hint">PIX em até 24h após aprovação · sem custo de gas, sem email automático</span>
         </div>
       </div>
     `;
+  }
+
+  // ── Antecipate modal flow (Phase 6B v2) ──────────────────────────────────
+  let _antecipateContext = null;
+
+  function openAntecipateModalForCard(btn) {
+    if (typeof EfixAuth === "undefined" || !EfixAuth.isLoggedIn || !EfixAuth.isLoggedIn()) {
+      alert("Faça login com seu email para solicitar antecipação.");
+      return;
+    }
+    let r;
+    try { r = JSON.parse(btn.getAttribute("data-receivable") || "{}"); }
+    catch { return alert("Falha ao ler dados da reserva."); }
+    if (!r.reservationDbId) return alert("Reserva sem ID — não é possível antecipar.");
+
+    _antecipateContext = r;
+    const details = document.getElementById("antecipateModalDetails");
+    if (details) {
+      details.innerHTML = `
+        <div class="row"><span class="label">${escHtml(r.buildingName)} · Unidade ${escHtml(r.unitCode)}</span></div>
+        <div class="row"><span class="label">Sua parte estimada</span><span class="value">${fmtBRL(r.ownerBRL)}</span></div>
+        <div class="row"><span class="label">Custo de antecipar (${r.daysUntilPayout}d)</span><span class="value">${fmtBRL(r.totalFee)} · ${r.effectivePct.toFixed(1)}%</span></div>
+        <div class="row highlight"><span class="label">Você recebe hoje</span><span class="value">${fmtBRL(r.netNow)}</span></div>
+      `;
+    }
+    // Pre-fill with last used PIX info from localStorage
+    try {
+      const lastType = localStorage.getItem("efixAntecipationPixType");
+      const lastKey  = localStorage.getItem("efixAntecipationPixKey");
+      if (lastType) document.getElementById("antecipatePixType").value = lastType;
+      if (lastKey)  document.getElementById("antecipatePixKey").value  = lastKey;
+    } catch {}
+    const hint = document.getElementById("antecipateModalHint");
+    if (hint) { hint.textContent = ""; hint.className = "antecipate-hint"; }
+    document.getElementById("antecipateConfirmBtn").disabled = false;
+    document.getElementById("antecipateModalBg").style.display = "flex";
+  }
+
+  function closeAntecipateModal(ev) {
+    if (ev && ev.target.id !== "antecipateModalBg") return; // ignore clicks inside modal
+    if (!ev) {} // explicit close button
+    document.getElementById("antecipateModalBg").style.display = "none";
+    _antecipateContext = null;
+  }
+
+  async function submitAntecipation() {
+    if (!_antecipateContext) return;
+    const ctx = _antecipateContext;
+    const pixType = document.getElementById("antecipatePixType").value;
+    const pixKey  = document.getElementById("antecipatePixKey").value.trim();
+    const hint = document.getElementById("antecipateModalHint");
+    const setHint = (msg, cls) => {
+      if (!hint) return;
+      hint.textContent = msg;
+      hint.className = "antecipate-hint" + (cls ? " " + cls : "");
+    };
+    if (!pixKey) return setHint("Informe a chave PIX.", "error");
+
+    const btn = document.getElementById("antecipateConfirmBtn");
+    btn.disabled = true;
+    setHint("Enviando solicitação…");
+    try {
+      const res = await fetch(backendUrl() + "/wallet/antecipate-receivables", {
+        method: "POST",
+        headers: EfixAuth.headers(),
+        body: JSON.stringify({
+          reservationDbIds: [ctx.reservationDbId],
+          pixKey,
+          pixKeyType: pixType,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = ({
+          invalid_pix_key_format:        "Formato de chave PIX inválido para o tipo selecionado.",
+          invalid_pix_key_type:          "Tipo de chave PIX inválido.",
+          no_eligible_reservations_for_user: "Não conseguimos confirmar essa reserva como sua. Atualize a página e tente novamente.",
+          no_reservations_selected:      "Nenhuma reserva selecionada.",
+          pg_not_configured:             "Banco de dados indisponível agora. Tente em alguns minutos.",
+          mysql_unavailable:             "Banco Lobie indisponível agora.",
+          auth_missing_email:            "Sessão sem email — faça login novamente.",
+          auth_missing_address:          "Sessão sem carteira — faça login novamente.",
+        })[data.error] || (data.detail || data.error || `HTTP ${res.status}`);
+        setHint("Erro: " + msg, "error");
+        btn.disabled = false;
+        return;
+      }
+      // Persist PIX info for next time
+      try {
+        localStorage.setItem("efixAntecipationPixType", pixType);
+        localStorage.setItem("efixAntecipationPixKey", pixKey);
+      } catch {}
+      setHint(`Solicitação #${data.request.id} registrada ✓`, "success");
+      setTimeout(async () => {
+        document.getElementById("antecipateModalBg").style.display = "none";
+        _antecipateContext = null;
+        await loadOwnerReceivables();
+      }, 1200);
+    } catch (e) {
+      setHint("Erro: " + (e.message || e), "error");
+      btn.disabled = false;
+    }
+  }
+
+  // Render the active-requests banner above the receivables list when the
+  // user has any pending/approved/disbursed antecipations.
+  async function loadAntecipationsBanner() {
+    const banner = document.getElementById("antecipationsRequestsBanner");
+    if (!banner) return;
+    if (typeof EfixAuth === "undefined" || !EfixAuth.isLoggedIn || !EfixAuth.isLoggedIn()) {
+      banner.style.display = "none";
+      return;
+    }
+    try {
+      const res = await fetch(backendUrl() + "/wallet/antecipations/me", {
+        headers: EfixAuth.headers(),
+      });
+      if (!res.ok) { banner.style.display = "none"; return; }
+      const data = await res.json();
+      const reqs = data.requests || [];
+      const counts = reqs.reduce((acc, r) => {
+        acc[r.status] = (acc[r.status] || { count: 0, totalNet: 0 });
+        acc[r.status].count += 1;
+        acc[r.status].totalNet += Number(r.total_net_brl) || 0;
+        return acc;
+      }, {});
+      const parts = [];
+      const order = [
+        ["pending",   "Pendente",   "pending"],
+        ["approved",  "Aprovada",   "approved"],
+        ["disbursed", "Pago via PIX", "disbursed"],
+        ["disbursement_failed", "PIX falhou", "failed"],
+      ];
+      for (const [k, label, cls] of order) {
+        if (counts[k]?.count > 0) {
+          parts.push(`<span class="antecipations-banner-pill ${cls}">${counts[k].count} ${label} · ${fmtBRL(counts[k].totalNet)}</span>`);
+        }
+      }
+      if (parts.length === 0) { banner.style.display = "none"; return; }
+      banner.innerHTML = `<span style="opacity:.7">Suas solicitações:</span> ${parts.join(" ")}`;
+      banner.style.display = "flex";
+    } catch (e) {
+      banner.style.display = "none";
+    }
   }
 
   // ── Cotas BTR tab loader ─────────────────────────────────────────────────
@@ -907,6 +1065,10 @@
   window.cardBannerUrlChanged  = cardBannerUrlChanged;
   window.saveCardBanner        = saveCardBanner;
   window.removeCardBanner      = removeCardBanner;
+  // Phase 6B v2 antecipation flow
+  window.openAntecipateModalForCard = openAntecipateModalForCard;
+  window.closeAntecipateModal       = closeAntecipateModal;
+  window.submitAntecipation         = submitAntecipation;
 
   // No auto-init: index.html's showApp(address) calls window.loadOwnership(address)
   // once auth resolves. That's the canonical entry point.

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Antecipações Lobie · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#FAFBFD;color:#111827;font-size:14px}
+.mono{font-family:'JetBrains Mono',monospace}
+input,select,textarea{font-family:'Inter',sans-serif;font-size:13px;padding:8px 10px;border:1px solid #D1D5DB;border-radius:8px;outline:none;background:#fff;width:100%;transition:border .2s}
+input:focus,select:focus,textarea:focus{border-color:#7C3AED;box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6B7280;padding:10px 12px;border-bottom:1px solid #E5E7EB;background:#F9FAFB;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid #F3F4F6;font-size:12px;vertical-align:middle}
+tr:hover td{background:#F9FAFB}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px}
+.modal-bg{position:fixed;inset:0;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal{background:#fff;border-radius:14px;padding:22px;max-width:520px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.18)}
+@media(max-width:700px){.main{padding:14px!important}.g3{grid-template-columns:1fr 1fr!important}.g4,.g5{grid-template-columns:repeat(2,1fr)!important}}
+</style>
+</head><body><div id="root">Carregando…</div>
+<script src="/shared/js/config.js"></script>
+<script>
+const{createElement:h,useState,useEffect,Fragment}=React;
+
+/* ── Theme tokens (light only — admin panel) ── */
+const c={accent:"#7C3AED",green:"#10B981",red:"#EF4444",amber:"#F59E0B",purple:"#8B5CF6",blue:"#3B82F6",bg:"#FAFBFD",dim:"#6B7280",sec:"#9CA3AF",border:"#E5E7EB"};
+
+const fB=v=>"R$ "+Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fP=v=>Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})+"%";
+const fDt=d=>{if(!d)return"—";const dt=new Date(d);if(isNaN(dt))return"—";return dt.toLocaleString("pt-BR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})};
+const fDate=d=>{if(!d)return"—";const dt=new Date(d);if(isNaN(dt))return"—";return dt.toLocaleDateString("pt-BR")};
+
+/* ── API ── */
+const API_BASE = (typeof EFIX_CONFIG !== "undefined" && EFIX_CONFIG.backend) || "https://efixdi-backend-production.up.railway.app";
+function getAdminToken(){try{return sessionStorage.getItem("efixAdminToken")||localStorage.getItem("efixAdminToken")||null}catch{return null}}
+async function api(method,url,body){
+  const tok=getAdminToken();
+  if(!tok){window.location.href="/app/wallet/admin/";return{ok:false,error:"no_admin_token"}}
+  try{
+    const r=await fetch(API_BASE+url,{method,headers:{"Content-Type":"application/json","Authorization":"Bearer "+tok},body:body?JSON.stringify(body):undefined});
+    const data=await r.json().catch(()=>({}));
+    if(r.status===401){window.location.href="/app/wallet/admin/";return{ok:false,error:"unauthorized"}}
+    return r.ok?{ok:true,...data}:{ok:false,...data,status:r.status};
+  }catch(e){return{ok:false,error:e.message}}
+}
+
+/* ── Shared components ── */
+const Card=({children,style:s})=>h("div",{style:{background:"#fff",borderRadius:12,padding:16,border:"1px solid "+c.border,...s}},children);
+const Bg=({color:cl,children})=>h("span",{style:{display:"inline-block",padding:"3px 8px",borderRadius:6,fontSize:9,fontWeight:700,background:cl+"18",color:cl,textTransform:"uppercase",letterSpacing:".04em",whiteSpace:"nowrap"}},children);
+const Bt=({primary,small,children,onClick,disabled,color,style})=>h("button",{onClick,disabled,style:{padding:small?"4px 10px":"7px 14px",borderRadius:8,border:primary?"none":"1px solid "+c.border,background:primary?(color||c.accent):"#fff",color:primary?"#fff":"#374151",fontSize:small?10:12,fontWeight:600,cursor:disabled?"not-allowed":"pointer",opacity:disabled?.5:1,transition:"all .15s",whiteSpace:"nowrap",...style}},children);
+
+const STATUS_COLOR={pending:c.amber,approved:c.blue,disbursed:c.green,disbursement_failed:c.red,rejected:c.red,cancelled:c.sec};
+const STATUS_LABEL={pending:"Pendente",approved:"Aprovado",disbursed:"Pago via PIX",disbursement_failed:"PIX falhou",rejected:"Rejeitado",cancelled:"Cancelado"};
+
+/* ═══════════ APP ═══════════ */
+function App(){
+  const [tab,setTab]=useState("pending");
+  const [data,setData]=useState({summary:{},requests:[]});
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState("");
+  const [modal,setModal]=useState(null);
+  const [busyId,setBusyId]=useState(null);
+
+  async function reload(){
+    setLoading(true);setError("");
+    const r=await api("GET","/admin/antecipations?status="+tab+"&limit=200");
+    if(r.ok)setData({summary:r.summary||{},requests:r.requests||[]});
+    else setError(r.detail||r.error||"falha");
+    setLoading(false);
+  }
+  useEffect(()=>{reload()},[tab]);
+
+  async function approve(req){
+    setBusyId(req.id);
+    const r=await api("POST","/admin/antecipations/"+req.id+"/approve-and-disburse");
+    setBusyId(null);
+    if(r.ok){setModal(null);reload();alert("PIX enviado · "+(r.request?.disbursed_tx_id||"sem tx id"))}
+    else alert("Falha: "+(r.detail||r.error||"erro"))
+  }
+  async function reject(req,reason){
+    setBusyId(req.id);
+    const r=await api("POST","/admin/antecipations/"+req.id+"/reject",{reason});
+    setBusyId(null);
+    if(r.ok){setModal(null);reload()}
+    else alert("Falha: "+(r.detail||r.error||"erro"))
+  }
+
+  /* Stats roll-up across summaries */
+  const sumP=data.summary.pending||{count:0,totalNet:0};
+  const sumA=data.summary.approved||{count:0,totalNet:0};
+  const sumD=data.summary.disbursed||{count:0,totalNet:0,totalFee:0};
+  const sumF=data.summary.disbursement_failed||{count:0};
+  const sumR=data.summary.rejected||{count:0};
+
+  return h(Fragment,null,
+    /* Header */
+    h("header",{style:{background:"#fff",borderBottom:"1px solid "+c.border,padding:"14px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}},
+      h("div",null,
+        h("div",{style:{display:"flex",alignItems:"center",gap:10}},
+          h("div",{style:{width:32,height:32,borderRadius:8,background:c.accent,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}},"L"),
+          h("h1",{style:{fontSize:16,fontWeight:800}},"Antecipações Lobie"),
+        ),
+        h("p",{style:{fontSize:11,color:c.dim,marginTop:2}},"6B v2 · HausBank funding · 5% flat + 8%/mês pro-rata-die"),
+      ),
+      h("div",{style:{display:"flex",gap:6}},
+        h(Bt,{small:true,onClick:reload,disabled:loading},loading?"Carregando…":"Atualizar"),
+        h(Bt,{small:true,onClick:()=>{sessionStorage.removeItem("efixAdminToken");window.location.href="/app/wallet/admin/"}},"Sair"),
+      ),
+    ),
+
+    h("div",{className:"main",style:{padding:22,maxWidth:1400,margin:"0 auto"}},
+      /* Stats row */
+      h("div",{className:"g5",style:{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}},
+        Stat({l:"Pendentes",v:sumP.count,sub:fB(sumP.totalNet),cl:c.amber}),
+        Stat({l:"Aprovadas",v:sumA.count,sub:fB(sumA.totalNet),cl:c.blue}),
+        Stat({l:"Pagas via PIX",v:sumD.count,sub:fB(sumD.totalNet),cl:c.green}),
+        Stat({l:"Receita captada",v:fB(sumD.totalFee||0),sub:"das pagas",cl:c.purple,isText:true}),
+        Stat({l:"Rejeitadas / Falhas",v:(sumR.count||0)+(sumF.count||0),sub:sumF.count?"⚠ "+sumF.count+" PIX falhou":"—",cl:c.red}),
+      ),
+
+      /* Tabs */
+      h("div",{style:{display:"flex",gap:4,marginBottom:14,borderBottom:"1px solid "+c.border}},
+        ["pending","approved","disbursed","disbursement_failed","rejected","all"].map(t=>{
+          const lbl=t==="all"?"Todas":STATUS_LABEL[t];
+          const cnt=t==="all"?Object.values(data.summary).reduce((s,x)=>s+(x.count||0),0):(data.summary[t]?.count||0);
+          return h("button",{key:t,onClick:()=>setTab(t),style:{padding:"10px 14px",border:0,background:"transparent",cursor:"pointer",borderBottom:"2px solid "+(tab===t?c.accent:"transparent"),color:tab===t?c.accent:c.dim,fontWeight:tab===t?700:500,fontSize:12}},lbl+" ("+cnt+")")
+        })
+      ),
+
+      /* Table */
+      h(Card,{style:{padding:0,overflow:"hidden"}},
+        loading
+          ? h("div",{style:{padding:40,textAlign:"center",color:c.dim}},"Carregando…")
+          : error
+            ? h("div",{style:{padding:40,textAlign:"center",color:c.red,fontSize:12}},"Erro: "+error)
+            : data.requests.length===0
+              ? h("div",{style:{padding:40,textAlign:"center",color:c.dim,fontSize:13}},"Nenhuma solicitação nesta visão.")
+              : h("div",{style:{overflowX:"auto"}},
+                  h("table",null,
+                    h("thead",null,h("tr",null,["#","Email","Reservas","Total a receber","Custo","Receba hoje","Dias","Status","PIX","Solicitado","Ações"].map(t=>h("th",{key:t},t)))),
+                    h("tbody",null,
+                      data.requests.map(r=>h("tr",{key:r.id},
+                        h("td",{className:"mono",style:{color:c.accent,fontWeight:700}},"#"+r.id),
+                        h("td",{style:{maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.user_email),
+                        h("td",{className:"mono"},r.reservation_count),
+                        h("td",{className:"mono",style:{fontWeight:600}},fB(r.total_owner_brl)),
+                        h("td",{className:"mono",style:{color:c.amber}},fB(r.total_fee_brl)),
+                        h("td",{className:"mono",style:{color:c.green,fontWeight:700}},fB(r.total_net_brl)),
+                        h("td",{className:"mono",style:{textAlign:"center"}},r.avg_days_until_payout+"d"),
+                        h("td",null,h(Bg,{color:STATUS_COLOR[r.status]||c.sec},STATUS_LABEL[r.status]||r.status)),
+                        h("td",{className:"mono",style:{fontSize:10,color:c.dim,maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},title:r.pix_key},r.pix_key_type+" · "+(r.pix_key.length>15?r.pix_key.slice(0,12)+"…":r.pix_key)),
+                        h("td",{className:"mono",style:{fontSize:10,color:c.dim,whiteSpace:"nowrap"}},fDt(r.requested_at)),
+                        h("td",{style:{whiteSpace:"nowrap"}},
+                          r.status==="pending"
+                            ? h(Fragment,null,
+                                h(Bt,{small:true,primary:true,color:c.green,onClick:()=>setModal({type:"approve",req:r}),disabled:busyId===r.id,style:{marginRight:4}},busyId===r.id?"…":"Aprovar+PIX"),
+                                h(Bt,{small:true,onClick:()=>setModal({type:"reject",req:r}),disabled:busyId===r.id,style:{color:c.red,borderColor:c.red+"40"}},"Rejeitar")
+                              )
+                            : r.status==="disbursement_failed"
+                              ? h("span",{style:{color:c.red,fontSize:10},title:r.notes||""},"Ver notes")
+                              : h("span",{style:{color:c.sec,fontSize:10}},"—")
+                        )
+                      ))
+                    )
+                  )
+                )
+      ),
+
+      /* Notice — no emails */
+      h("div",{style:{marginTop:14,padding:"10px 14px",background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:8,fontSize:11,color:"#92400E"}},
+        "⚠ Sem emails ao cliente. Status só na wallet (UI). Comunicação por outros canais (Lobie próprio) se necessário."
+      ),
+    ),
+
+    /* Approve modal */
+    modal && modal.type==="approve" && h("div",{className:"modal-bg",onClick:()=>setModal(null)},
+      h("div",{className:"modal",onClick:e=>e.stopPropagation()},
+        h("h3",{style:{fontSize:16,fontWeight:800,marginBottom:6}},"Aprovar e enviar PIX"),
+        h("p",{style:{fontSize:12,color:c.dim,marginBottom:14}},"Esta ação envia um PIX agora pelo HausBank — IRREVERSÍVEL."),
+        h("div",{style:{background:c.bg,borderRadius:10,padding:14,marginBottom:14,border:"1px solid "+c.border}},
+          row("Solicitação","#"+modal.req.id),
+          row("Proprietário",modal.req.user_email),
+          row("Reservas",modal.req.reservation_count+" itens"),
+          row("Total bruto a receber",fB(modal.req.total_owner_brl)),
+          row("Custo de antecipar",fB(modal.req.total_fee_brl)+" ("+fP((modal.req.total_fee_brl/modal.req.total_owner_brl)*100)+")",c.amber),
+          row("Você envia agora",fB(modal.req.total_net_brl),c.green,true),
+          row("Para PIX",modal.req.pix_key_type+" · "+modal.req.pix_key,c.purple),
+          row("Janela média",modal.req.avg_days_until_payout+" dias até repasse Lobie"),
+        ),
+        h("div",{style:{display:"flex",gap:8,justifyContent:"flex-end"}},
+          h(Bt,{onClick:()=>setModal(null),disabled:busyId===modal.req.id},"Cancelar"),
+          h(Bt,{primary:true,color:c.green,onClick:()=>approve(modal.req),disabled:busyId===modal.req.id},busyId===modal.req.id?"Enviando PIX…":"Confirmar envio"),
+        ),
+      )
+    ),
+
+    /* Reject modal */
+    modal && modal.type==="reject" && h(RejectModal,{req:modal.req,onCancel:()=>setModal(null),onSubmit:reason=>reject(modal.req,reason),busy:busyId===modal.req.id}),
+  );
+}
+
+function row(label,value,cl,big){
+  return h("div",{style:{display:"flex",justifyContent:"space-between",padding:"5px 0",fontSize:big?13:12}},
+    h("span",{style:{color:c.dim,fontWeight:500}},label),
+    h("span",{className:"mono",style:{fontWeight:big?800:600,color:cl||"#111",fontSize:big?15:12}},value),
+  );
+}
+
+function Stat({l,v,sub,cl,isText}){
+  return h("div",{style:{background:"#fff",borderRadius:12,padding:14,border:"1px solid "+c.border}},
+    h("div",{style:{fontSize:9,fontWeight:700,color:c.dim,textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}},l),
+    h("div",{className:"mono",style:{fontSize:isText?16:22,fontWeight:800,color:cl,lineHeight:1.1}},v),
+    sub?h("div",{style:{fontSize:10,color:c.sec,marginTop:4}},sub):null,
+  );
+}
+
+function RejectModal({req,onCancel,onSubmit,busy}){
+  const [reason,setReason]=useState("");
+  return h("div",{className:"modal-bg",onClick:onCancel},
+    h("div",{className:"modal",onClick:e=>e.stopPropagation()},
+      h("h3",{style:{fontSize:16,fontWeight:800,marginBottom:6}},"Rejeitar solicitação #"+req.id),
+      h("p",{style:{fontSize:12,color:c.dim,marginBottom:12}},"O motivo fica registrado mas NÃO é enviado por email ao cliente."),
+      h("textarea",{value:reason,onChange:e=>setReason(e.target.value),placeholder:"Motivo (obrigatório, ≤500 chars)",rows:4,style:{width:"100%",padding:10,border:"1px solid "+c.border,borderRadius:8,fontSize:13,fontFamily:"inherit",resize:"vertical"}}),
+      h("div",{style:{display:"flex",gap:8,justifyContent:"flex-end",marginTop:14}},
+        h(Bt,{onClick:onCancel,disabled:busy},"Cancelar"),
+        h(Bt,{primary:true,color:c.red,onClick:()=>onSubmit(reason.trim()),disabled:busy||!reason.trim()},busy?"…":"Rejeitar"),
+      ),
+    )
+  );
+}
+
+/* Boot */
+const tok=getAdminToken();
+if(!tok){window.location.href="/app/wallet/admin/"}
+else{ReactDOM.createRoot(document.getElementById("root")).render(h(App))}
+</script>
+</body></html>

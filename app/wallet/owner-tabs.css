@@ -943,3 +943,182 @@ html[data-theme="light"] .receivable-badge {
     border-color: rgba(124, 58, 237, 0.25);
 }
 
+/* ────── Antecipation requests banner (status of pending/approved reqs) ── */
+.antecipations-banner {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+.antecipations-banner-pill {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--white);
+    font-weight: 600;
+}
+.antecipations-banner-pill.pending  { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24; }
+.antecipations-banner-pill.approved { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; }
+.antecipations-banner-pill.disbursed { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
+.antecipations-banner-pill.failed   { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+
+html[data-theme="light"] .antecipations-banner {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+html[data-theme="light"] .antecipations-banner-pill { background: #ffffff; border-color: #e5e7eb; color: #374151; }
+html[data-theme="light"] .antecipations-banner-pill.pending  { color: #b45309; background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.3); }
+html[data-theme="light"] .antecipations-banner-pill.approved { color: #1d4ed8; background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.3); }
+html[data-theme="light"] .antecipations-banner-pill.disbursed { color: #047857; background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); }
+
+/* ────── Antecipate modal ────── */
+.antecipate-modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+.antecipate-modal {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: 14px;
+    padding: 22px;
+    max-width: 480px;
+    width: 100%;
+    color: var(--white);
+}
+.antecipate-modal h3 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+.antecipate-details {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+}
+.antecipate-details .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+.antecipate-details .row.highlight {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+}
+.antecipate-details .row .label { color: var(--gray-500); }
+.antecipate-details .row .value { color: var(--white); }
+.antecipate-details .row.highlight .value { color: #22c55e; font-size: 14px; }
+.antecipate-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.antecipate-form label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.antecipate-form select,
+.antecipate-form input {
+    padding: 9px 11px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+}
+.antecipate-form select:focus,
+.antecipate-form input:focus { border-color: rgba(255, 255, 255, 0.4); }
+.antecipate-hint {
+    min-height: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gray-500);
+}
+.antecipate-hint.error   { color: #fca5a5; }
+.antecipate-hint.success { color: #6ee7b7; }
+.antecipate-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+.antecipate-actions button {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: opacity 120ms ease;
+}
+.antecipate-actions button.muted {
+    background: transparent;
+    color: var(--gray-300);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+.antecipate-actions button.primary {
+    background: #16a34a;
+    color: #fff;
+}
+.antecipate-actions button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.antecipate-disclaimer {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--gray-500);
+    line-height: 1.5;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 10px;
+}
+
+html[data-theme="light"] .antecipate-modal {
+    background: #ffffff;
+    border-color: #e5e7eb;
+    color: #0a0a0a;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+}
+html[data-theme="light"] .antecipate-details {
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+}
+html[data-theme="light"] .antecipate-details .row .value { color: #0a0a0a; }
+html[data-theme="light"] .antecipate-details .row.highlight { border-top-color: #e5e7eb; }
+html[data-theme="light"] .antecipate-form select,
+html[data-theme="light"] .antecipate-form input {
+    background: #ffffff;
+    border-color: #d1d5db;
+    color: #0a0a0a;
+}
+html[data-theme="light"] .antecipate-form label,
+html[data-theme="light"] .antecipate-hint,
+html[data-theme="light"] .antecipate-disclaimer { color: #6b7280; }
+html[data-theme="light"] .antecipate-actions button.muted {
+    color: #374151;
+    border-color: #d1d5db;
+}
+html[data-theme="light"] .antecipate-disclaimer { border-top-color: #e5e7eb; }
+
