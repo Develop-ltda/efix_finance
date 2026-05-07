@@ -732,6 +732,7 @@
   function receivableRow(r) {
     const days = r.daysUntilPayout ?? 0;
     const overdue = days <= 0 ? "atrasado" : "";
+    const payoutDay = r.payoutDayOfMonth ? ` (dia ${r.payoutDayOfMonth} do mês)` : "";
     return `
       <div class="receivable-card ${overdue}">
         <div class="receivable-header">
@@ -745,7 +746,7 @@
           <span><span class="muted">check-in</span> ${fmtDate(r.checkinDate)}</span>
           <span class="receivable-arrow">→</span>
           <span><span class="muted">check-out</span> ${fmtDate(r.checkoutDate)}</span>
-          <span class="receivable-payout">${overdue ? "repasse atrasado" : `repasse em ${days} dia${days === 1 ? "" : "s"} · ${fmtFullDate(r.estimatedPayoutDate)}`}</span>
+          <span class="receivable-payout">${overdue ? "repasse atrasado" : `repasse em ${days} dia${days === 1 ? "" : "s"} · ${fmtFullDate(r.estimatedPayoutDate)}${payoutDay}`}</span>
         </div>
         <div class="receivable-amounts">
           <div class="receivable-amount">
