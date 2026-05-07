@@ -310,6 +310,7 @@
                 <button class="tab" onclick="switchTab('send', this); initSendTab();">Deposit USD/EUR</button>
                 <button class="tab" onclick="switchTab('invest', this); loadInvestPosition();">Invest</button>
                 <button class="tab" id="tabImoveis" style="display:none" onclick="switchTab('imoveis', this); loadOwnerProperties();">Lobie Units</button>
+                <button class="tab" id="tabAntecipacao" style="display:none" onclick="switchTab('antecipacao', this); loadOwnerReceivables();">Antecipação</button>
                 <button class="tab" id="tabCotas"   style="display:none" onclick="switchTab('cotas',   this); loadOwnerBTR();">Cotas BTR</button>
                 <button class="tab" onclick="switchTab('card', this)">Card</button>
             </div>
@@ -723,6 +724,22 @@
                     </p>
                 </div>
                 <div id="propertiesGrid" class="property-grid">
+                    <div class="ownership-loading">Carregando…</div>
+                </div>
+            </div>
+
+            <!-- Antecipação: receba hoje pelas reservas com checkout feito.
+                 Crédito da HausBank · 5% flat + 8%/mês pro-rata-die. -->
+            <div class="tab-panel" id="panel-antecipacao">
+                <div class="ownership-section-header">
+                    <h3>Antecipação de reservas</h3>
+                    <p class="ownership-section-hint">
+                        Reservas com checkout já realizado, aguardando o repasse mensal da Lobie.
+                        Você pode antecipar o recebimento via crédito HausBank — taxa transparente: 5% flat + 8% ao mês pro-rata-dia.
+                    </p>
+                </div>
+                <div id="receivablesSummary" class="receivables-summary" style="display:none"></div>
+                <div id="receivablesList" class="receivables-list">
                     <div class="ownership-loading">Carregando…</div>
                 </div>
             </div>

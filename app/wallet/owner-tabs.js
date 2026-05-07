@@ -272,18 +272,34 @@
       }
     }
 
+    // Probe receivables — Phase 6B v1. Shows the "Antecipação" tab when a
+    // Lobie proprietário has reservations with checkout done but repasse
+    // pending. Same email scoping as /wallet/properties (Option C).
+    let receivablesPreview = { summary: { count: 0 } };
+    if (effectiveEmail) {
+      try {
+        receivablesPreview = await getJson(`/wallet/upcoming-receivables/${addr}?email=${encodeURIComponent(effectiveEmail)}`);
+      } catch (e) {
+        console.warn("[owner-tabs] receivables preview failed", e.message);
+      }
+    }
+    window.__ownershipReceivablesPreview = receivablesPreview;
+
     const hasLobie = (portfolio.lobieUnits || []).length > 0
                   || (propertiesPreview.counts?.virtual || 0) > 0;
     const hasBTR   = (portfolio.btrPositions || [])
       .some(b => parseFloat(b.balance) > 0);
+    const hasReceivables = (receivablesPreview.summary?.count || 0) > 0;
 
-    const tabImoveis = document.getElementById("tabImoveis");
-    const tabCotas   = document.getElementById("tabCotas");
-    if (tabImoveis) tabImoveis.style.display = hasLobie ? "" : "none";
-    if (tabCotas)   tabCotas.style.display   = hasBTR   ? "" : "none";
+    const tabImoveis     = document.getElementById("tabImoveis");
+    const tabAntecipacao = document.getElementById("tabAntecipacao");
+    const tabCotas       = document.getElementById("tabCotas");
+    if (tabImoveis)     tabImoveis.style.display     = hasLobie       ? "" : "none";
+    if (tabAntecipacao) tabAntecipacao.style.display = hasReceivables ? "" : "none";
+    if (tabCotas)       tabCotas.style.display       = hasBTR         ? "" : "none";
 
     // Pill renders only when there's something to show — on-chain or virtual.
-    if (hasLobie || hasBTR) {
+    if (hasLobie || hasBTR || hasReceivables) {
       const pill  = document.getElementById("ownershipPill");
       const value = document.getElementById("ownershipPillValue");
       const hint  = document.getElementById("ownershipPillHint");
@@ -299,8 +315,11 @@
         const parts = [];
         const tokCount = portfolio.lobieUnits.length;
         const virtCount = propertiesPreview.counts?.virtual || 0;
+        const recvCount = receivablesPreview.summary?.count || 0;
+        const recvOwnerTotal = Number(receivablesPreview.summary?.ownerTotal || 0);
         if (tokCount > 0)  parts.push(`${tokCount} ${tokCount > 1 ? "unidades tokenizadas" : "unidade tokenizada"}`);
         if (virtCount > 0) parts.push(`${virtCount} ${virtCount > 1 ? "unidades elegíveis" : "unidade elegível"}`);
+        if (recvCount > 0) parts.push(`${recvCount} ${recvCount > 1 ? "reservas antecipáveis" : "reserva antecipável"} · ${fmtBRL(recvOwnerTotal)}`);
         if (hasBTR)        parts.push(`${portfolio.btrPositions.filter(b => parseFloat(b.balance) > 0).length} série${portfolio.btrPositions.length > 1 ? "s" : ""} BTR`);
         if (hint) hint.textContent = parts.join(" · ");
         pill.style.display = "flex";
@@ -636,6 +655,126 @@
     alert(`A colateralização de imóveis chega em breve.\nA unidade já tem NPV on-chain via PortfolioLens; falta o market Morpho Lobie/USDC ser ativado.`);
   }
 
+  // ── Antecipação tab loader (Phase 6B v1) ─────────────────────────────────
+  function fmtDate(d) {
+    if (!d) return "—";
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt)) return "—";
+    return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  }
+  function fmtFullDate(d) {
+    if (!d) return "—";
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt)) return "—";
+    return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  }
+
+  async function loadOwnerReceivables() {
+    const list    = document.getElementById("receivablesList");
+    const summary = document.getElementById("receivablesSummary");
+    if (!list) return;
+    const addr  = window.__ownershipAddress;
+    const email = window.__ownershipEmail;
+    if (!addr) {
+      list.innerHTML = '<div class="ownership-loading">Conecte sua wallet primeiro.</div>';
+      return;
+    }
+    if (!email) {
+      list.innerHTML = '<div class="ownership-loading">Login com email necessário para ver as reservas.</div>';
+      return;
+    }
+    list.innerHTML = '<div class="ownership-loading">Carregando…</div>';
+    if (summary) summary.style.display = "none";
+    try {
+      const data = await getJson(`/wallet/upcoming-receivables/${addr}?email=${encodeURIComponent(email)}`);
+      const items = data.receivables || [];
+      if (items.length === 0) {
+        list.innerHTML = '<div class="ownership-loading">Nenhuma reserva aguardando repasse no momento.</div>';
+        if (summary) summary.style.display = "none";
+        return;
+      }
+
+      // Summary card on top
+      const s = data.summary || {};
+      if (summary) {
+        const flatPct    = ((data.rate?.flatPct    ?? 0.05) * 100).toFixed(0);
+        const monthlyPct = ((data.rate?.monthlyPct ?? 0.08) * 100).toFixed(0);
+        summary.innerHTML = `
+          <div class="receivables-summary-row">
+            <div class="receivables-summary-tile">
+              <div class="receivables-summary-label">Reservas elegíveis</div>
+              <div class="receivables-summary-value">${s.count || 0}</div>
+            </div>
+            <div class="receivables-summary-tile">
+              <div class="receivables-summary-label">Total a receber</div>
+              <div class="receivables-summary-value">${fmtBRL(s.ownerTotal)}</div>
+            </div>
+            <div class="receivables-summary-tile highlight">
+              <div class="receivables-summary-label">Receba hoje</div>
+              <div class="receivables-summary-value">${fmtBRL(s.netTotal)}</div>
+              <div class="receivables-summary-foot">custo total ${fmtBRL(s.feeTotal)} · ${flatPct}% flat + ${monthlyPct}%/mês</div>
+            </div>
+          </div>
+          <div class="receivables-summary-disclaimer">
+            Crédito da HausBank. Antecipação será habilitada após confirmação do funding (em breve).
+          </div>
+        `;
+        summary.style.display = "block";
+      }
+
+      // Per-row card
+      list.innerHTML = items.map(receivableRow).join("");
+    } catch (e) {
+      list.innerHTML = `<div class="ownership-loading">Falha ao carregar reservas: ${escHtml(e.message)}</div>`;
+    }
+  }
+
+  function receivableRow(r) {
+    const days = r.daysUntilPayout ?? 0;
+    const overdue = days <= 0 ? "atrasado" : "";
+    return `
+      <div class="receivable-card ${overdue}">
+        <div class="receivable-header">
+          <div>
+            <strong>Lobie · ${escHtml(r.buildingName || "—")}</strong>
+            <small>Unidade ${escHtml(r.unitCode || "—")} · ${r.nights} ${r.nights === 1 ? "diária" : "diárias"} · ${escHtml(r.bookingSource || "—")}</small>
+          </div>
+          <span class="receivable-badge">${r.participacaoPct}% seu</span>
+        </div>
+        <div class="receivable-dates">
+          <span><span class="muted">check-in</span> ${fmtDate(r.checkinDate)}</span>
+          <span class="receivable-arrow">→</span>
+          <span><span class="muted">check-out</span> ${fmtDate(r.checkoutDate)}</span>
+          <span class="receivable-payout">${overdue ? "repasse atrasado" : `repasse em ${days} dia${days === 1 ? "" : "s"} · ${fmtFullDate(r.estimatedPayoutDate)}`}</span>
+        </div>
+        <div class="receivable-amounts">
+          <div class="receivable-amount">
+            <div class="receivable-amount-label">Bruto</div>
+            <div class="receivable-amount-value muted">${fmtBRL(r.grossBRL)}</div>
+          </div>
+          <div class="receivable-amount">
+            <div class="receivable-amount-label">Sua parte (estimada)</div>
+            <div class="receivable-amount-value">${fmtBRL(r.ownerBRL)}</div>
+          </div>
+          <div class="receivable-amount">
+            <div class="receivable-amount-label">Custo de antecipar</div>
+            <div class="receivable-amount-value muted">${fmtBRL(r.antecipation.totalFee)} · ${r.antecipation.effectivePct.toFixed(1)}%</div>
+          </div>
+          <div class="receivable-amount highlight">
+            <div class="receivable-amount-label">Receba hoje</div>
+            <div class="receivable-amount-value">${fmtBRL(r.antecipation.netNow)}</div>
+          </div>
+        </div>
+        <div class="receivable-actions">
+          <button class="property-action-primary" disabled title="Em breve · funding HausBank">
+            Antecipar agora
+          </button>
+          <span class="property-action-hint">Em breve · sem fricção, recebimento via PIX</span>
+        </div>
+      </div>
+    `;
+  }
+
   // ── Cotas BTR tab loader ─────────────────────────────────────────────────
   async function loadOwnerBTR() {
     const list = document.getElementById("btrPositionsList");
@@ -757,6 +896,7 @@
   window.loadOwnership = loadOwnership;
   window.loadOwnerProperties = loadOwnerProperties;
   window.loadOwnerBTR = loadOwnerBTR;
+  window.loadOwnerReceivables = loadOwnerReceivables;
   window.useAsCollateral = useAsCollateral;
   window.tokenizarUnidade = tokenizarUnidade;
   window.claimAllBTRDividends = claimAllBTRDividends;

@@ -712,3 +712,209 @@ html[data-theme="light"] .property-credit-amount {
     .btr-row-link { display: none; }
     .ownership-pill-value { font-size: 16px; }
 }
+
+/* ────────── Phase 6B v1: Antecipação tab ────────── */
+
+.receivables-summary {
+    margin-bottom: 16px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(34, 197, 94, 0.04) 100%);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    border-radius: 14px;
+}
+.receivables-summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+.receivables-summary-tile {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+.receivables-summary-tile.highlight {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.04));
+    border-color: rgba(34, 197, 94, 0.4);
+}
+.receivables-summary-label {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+}
+.receivables-summary-value {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+}
+.receivables-summary-tile.highlight .receivables-summary-value {
+    color: #22c55e;
+}
+.receivables-summary-foot {
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--gray-500);
+}
+.receivables-summary-disclaimer {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+    letter-spacing: 0.3px;
+}
+
+.receivables-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.receivable-card {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-left: 3px solid #7c3aed;
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+.receivable-card.atrasado {
+    border-left-color: #f97316;
+}
+.receivable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.receivable-header strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--white);
+}
+.receivable-header small {
+    display: block;
+    margin-top: 2px;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+.receivable-badge {
+    flex-shrink: 0;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: #c4b5fd;
+    background: rgba(124, 58, 237, 0.2);
+    border: 1px solid rgba(124, 58, 237, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.receivable-dates {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 14px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--gray-300);
+}
+.receivable-dates .muted {
+    color: var(--gray-500);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-right: 4px;
+}
+.receivable-arrow {
+    color: var(--gray-600);
+}
+.receivable-payout {
+    margin-left: auto;
+    color: #fbbf24;
+    font-weight: 600;
+}
+.receivable-card.atrasado .receivable-payout {
+    color: #fb923c;
+}
+.receivable-amounts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.receivable-amount {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+.receivable-amount.highlight {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+.receivable-amount-label {
+    font-size: 9px;
+    color: var(--gray-500);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+}
+.receivable-amount-value {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--white);
+}
+.receivable-amount-value.muted { color: var(--gray-400); font-weight: 500; }
+.receivable-amount.highlight .receivable-amount-value {
+    color: #22c55e;
+}
+.receivable-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Light theme */
+html[data-theme="light"] .receivables-summary {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(34, 197, 94, 0.03));
+    border-color: rgba(124, 58, 237, 0.2);
+}
+html[data-theme="light"] .receivables-summary-tile {
+    background: var(--white);
+    border-color: var(--gray-300);
+}
+html[data-theme="light"] .receivables-summary-value { color: var(--black); }
+html[data-theme="light"] .receivable-card {
+    background: var(--white);
+    border-color: var(--gray-300);
+    border-left-color: #7c3aed;
+}
+html[data-theme="light"] .receivable-card.atrasado {
+    border-left-color: #f97316;
+}
+html[data-theme="light"] .receivable-header strong,
+html[data-theme="light"] .receivable-amount-value { color: var(--black); }
+html[data-theme="light"] .receivable-amount-value.muted { color: var(--gray-600); }
+html[data-theme="light"] .receivable-amount {
+    background: var(--gray-50);
+}
+html[data-theme="light"] .receivable-amount.highlight {
+    background: rgba(34, 197, 94, 0.06);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+html[data-theme="light"] .receivable-dates { color: var(--gray-700); }
+html[data-theme="light"] .receivable-badge {
+    color: #6d28d9;
+    background: rgba(124, 58, 237, 0.1);
+}
+
