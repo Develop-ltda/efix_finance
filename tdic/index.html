@@ -1,315 +1,610 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head>
-<!-- Google Analytics -->
+<html lang="pt-BR">
+<head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
 <script src="/shared/js/ga4.js"></script>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EFIX Plataforma de Tokenização e Crowdfunding Ltda</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-brand-title="{name} — Tokenização de Créditos com Eficiência Tributária">EFIX TDIC — Tokenização de Créditos com Eficiência Tributária</title>
+<meta name="description" content="TDIC — Token de Direito (Imobiliário) Creditório. Empresas de lucro real cedem direitos creditórios à EFIX Securitizadora e deduzem o deságio como despesa financeira, reduzindo IRPJ/CSLL. CVM 88.">
+<meta property="og:title" content="EFIX TDIC — Tokenização de Créditos">
+<meta property="og:description" content="Lucro real → deságio → despesa financeira → economia de até 34% em IRPJ/CSLL. Patrimônio segregado, regulação CVM.">
+<meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shared/css/reset.css">
+<link rel="stylesheet" href="/shared/css/lang-selector.css">
 <style>
-body{font-family:'Inter',sans-serif;background:#FAFBFD;color:#111827;font-size:14px}
-.mono{font-family:'JetBrains Mono',monospace}
-input,select,textarea{font-family:'Inter',sans-serif;font-size:13px;padding:8px 10px;border:1px solid #D1D5DB;border-radius:8px;outline:none;background:#fff;width:100%;transition:border .2s}
-input:focus,select:focus{border-color:#6366F1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
-input[type="date"]{cursor:pointer}
-input[type="checkbox"]{width:auto;cursor:pointer}
-table{width:100%;border-collapse:collapse}
-th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6B7280;padding:8px 10px;border-bottom:1px solid #E5E7EB;background:#F9FAFB;white-space:nowrap}
-td{padding:8px 10px;border-bottom:1px solid #F3F4F6;font-size:12px}
-tr:hover td{background:#F9FAFB}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px}
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%);position:fixed!important;z-index:100;top:0;left:0;height:100vh;transition:transform .3s}
-  .sidebar.open{transform:translateX(0)}
-  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
-  .overlay.open{display:block}
-  .mob-hdr{display:flex!important}
-  .main{padding:14px!important;padding-top:56px!important}
-  .g5,.g6,.g4{grid-template-columns:repeat(2,1fr)!important}
-  .g3,.g2{grid-template-columns:1fr!important}
-  .fh{flex-direction:column!important;gap:8px!important;align-items:flex-start!important}
-  .fg{grid-template-columns:1fr!important}
+:root{
+  --white:#fff;--black:#0a0a0a;
+  --gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;
+  --green:#22c55e;
+  --brand-primary:#22c55e;--brand-primary-dark:#16a34a;--brand-secondary:#0a0a0a;--brand-accent:#22c55e;
+  --lang-active:var(--brand-primary);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Syne',-apple-system,sans-serif;background:#fff;color:#0a0a0a;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:#0a0a0a;color:#fff}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(0,0,0,0.06);padding:0 2rem;height:56px}
+.nav-content{max-width:1200px;margin:0 auto;height:100%;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-weight:800;font-size:18px;text-decoration:none;color:#0a0a0a;letter-spacing:-0.5px;display:inline-flex;align-items:center;gap:8px}
+.nav-logo .mark{width:24px;height:24px;color:var(--brand-primary)}
+.nav-logo .name{display:inline-block}
+.nav-logo .dot{color:var(--brand-primary)}
+.nav-links{display:flex;gap:20px;align-items:center;list-style:none}
+.nav-links a{color:#737373;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;transition:color .3s}
+.nav-links a:hover{color:#0a0a0a}
+.nav-cta{padding:0.5rem 1.25rem;border-radius:6px;font-size:0.8rem;letter-spacing:0.01em;font-weight:600;text-decoration:none;transition:all .3s;cursor:pointer;border:none;font-family:inherit}
+.nav-cta-outline{background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4}
+.nav-cta-outline:hover{border-color:#0a0a0a;transform:translateY(-1px)}
+.nav-cta-primary{background:#0a0a0a;color:#fff;border:none}
+.nav-cta-primary:hover{background:#262626;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+
+/* Hero */
+.hero{padding:9rem 2rem 3rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 70%)}
+.hero::after{content:'';position:absolute;inset:0;opacity:0.3;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");pointer-events:none}
+.hero-content{position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:2.5rem}
+.hero-tag .dot{width:6px;height:6px;background:var(--brand-primary);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+h1{font-size:clamp(1.8rem,3.6vw,2.85rem);font-weight:700;color:#0a0a0a;margin-bottom:1.25rem;letter-spacing:-0.025em;line-height:1.2}
+h1 span.shine{background:linear-gradient(to right,#a3a3a3,var(--brand-primary),#a3a3a3);background-size:200% auto;color:transparent;-webkit-background-clip:text;background-clip:text;animation:shine 4s linear infinite}
+@keyframes shine{to{background-position:200% center}}
+.subtitle{color:#737373;font-size:0.95rem;font-weight:400;max-width:560px;margin:0 auto 2.5rem;line-height:1.75}
+.hero-actions{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap}
+.btn{padding:0.75rem 1.75rem;border-radius:8px;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all .3s;font-family:inherit;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;letter-spacing:0.01em}
+.btn-primary{background:#0a0a0a;color:#fff}
+.btn-primary:hover{background:#262626;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.btn-secondary{background:transparent;color:#0a0a0a;border:1.5px solid #d4d4d4}
+.btn-secondary:hover{border-color:#0a0a0a;transform:translateY(-1px)}
+.btn-brand{background:var(--brand-primary);color:#fff}
+.btn-brand:hover{background:var(--brand-primary-dark);transform:translateY(-1px);box-shadow:0 4px 20px color-mix(in srgb, var(--brand-primary) 25%, transparent)}
+.container{max-width:1100px;margin:0 auto;padding:0 2rem}
+
+/* Stats */
+.stats-strip{border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.stat-item{padding:1.75rem 2rem;border-right:1px solid #e5e5e5;transition:background .3s}
+.stat-item:last-child{border-right:none}
+.stat-item:hover{background:#f5f5f5}
+.stat-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem}
+.stat-value{font-family:'Space Mono',monospace;font-size:1.35rem;font-weight:700;color:#0a0a0a}
+
+/* Sections */
+.section{padding:5rem 0}
+.section-border{border-top:1px solid #e5e5e5}
+.section-gray{background:#f5f5f5}
+.section-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem}
+.section-title{font-size:clamp(1.5rem,2.5vw,2rem);font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:0.75rem}
+.section-desc{color:#737373;font-size:0.92rem;max-width:580px;margin-bottom:2.5rem;line-height:1.75}
+
+/* Flow grid */
+.flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.flow-step{padding:2rem 1.75rem;border-right:1px solid #e5e5e5;transition:background .3s;position:relative}
+.flow-step:last-child{border-right:none}
+.flow-step:hover{background:#f5f5f5}
+.flow-number{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.25rem}
+.flow-icon{font-size:1.4rem;margin-bottom:0.75rem;color:var(--brand-primary);font-weight:700;font-family:'Space Mono',monospace}
+.flow-title{font-weight:700;font-size:0.92rem;margin-bottom:0.4rem}
+.flow-desc{font-size:0.8rem;color:#737373;line-height:1.7}
+
+/* Tese (Card grid 2 col) */
+.tese-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.tese-card{background:#fff;padding:2rem 1.75rem;transition:background .3s}
+.tese-card:hover{background:#f5f5f5}
+.tese-card .icon{display:inline-flex;width:36px;height:36px;border-radius:8px;background:color-mix(in srgb, var(--brand-primary) 12%, transparent);color:var(--brand-primary);align-items:center;justify-content:center;font-weight:800;font-size:14px;margin-bottom:1rem;font-family:'Space Mono',monospace}
+.tese-card h3{font-size:0.95rem;font-weight:700;margin-bottom:0.4rem}
+.tese-card p{font-size:0.82rem;color:#737373;line-height:1.75}
+
+/* Calculadora */
+.calc-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:1.25rem;align-items:start}
+.calc-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.75rem}
+.calc-card h3{font-size:0.95rem;font-weight:700;margin-bottom:0.25rem}
+.calc-card .help{font-size:0.78rem;color:#737373;margin-bottom:1.25rem}
+.calc-row{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem}
+.calc-row label{font-family:'Space Mono',monospace;font-size:0.6rem;color:#737373;text-transform:uppercase;letter-spacing:0.08em}
+.calc-row input,.calc-row select{font-family:'Space Mono',monospace;font-size:0.95rem;padding:0.65rem 0.85rem;border:1px solid #d4d4d4;border-radius:8px;background:#fff;color:#0a0a0a;transition:border-color .2s}
+.calc-row input:focus,.calc-row select:focus{outline:none;border-color:var(--brand-primary);box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-primary) 15%, transparent)}
+.calc-out{background:#0a0a0a;color:#fff;border-radius:12px;padding:1.75rem;display:flex;flex-direction:column;gap:1rem}
+.calc-out .label{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem}
+.calc-out .value{font-family:'Space Mono',monospace;font-size:1.35rem;font-weight:700}
+.calc-out .value.brand{color:var(--brand-primary)}
+.calc-out .divider{height:1px;background:#262626;margin:0.25rem 0}
+.calc-out .small{font-size:0.72rem;color:#a3a3a3;line-height:1.65}
+
+/* Compliance grid */
+.reg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e5e5e5;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.reg-item{background:#fff;padding:1.5rem;transition:background .2s}
+.reg-item:hover{background:#f5f5f5}
+.reg-label{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.35rem}
+.reg-value{font-size:0.9rem;font-weight:700}
+.reg-value.mono{font-family:'Space Mono',monospace;font-size:0.78rem}
+
+/* Case study highlight */
+.case{display:grid;grid-template-columns:1.4fr 1fr;gap:1.25rem;align-items:center;background:linear-gradient(135deg,#0a0a0a,#171717);color:#fff;border-radius:14px;padding:2rem;overflow:hidden;position:relative}
+.case::before{content:'';position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(255,255,255,0.04) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse at 100% 50%,black 30%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse at 100% 50%,black 30%,transparent 80%);pointer-events:none}
+.case > *{position:relative}
+.case .tag{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--brand-primary);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.75rem}
+.case h3{font-size:1.45rem;font-weight:700;margin-bottom:0.5rem;letter-spacing:-0.02em}
+.case p{font-size:0.86rem;color:#a3a3a3;line-height:1.75;max-width:420px}
+.case-numbers{display:grid;grid-template-columns:1fr;gap:0.6rem}
+.case-row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #262626;padding-bottom:0.5rem}
+.case-row:last-child{border-bottom:none}
+.case-row .k{font-family:'Space Mono',monospace;font-size:0.62rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.08em}
+.case-row .v{font-family:'Space Mono',monospace;font-size:0.95rem;font-weight:700}
+.case-row .v.brand{color:var(--brand-primary)}
+
+/* CTA */
+.cta-section{padding:5rem 0;text-align:center;border-top:1px solid #e5e5e5}
+.cta-desc{color:#737373;font-size:0.92rem;margin:0 auto 2rem;max-width:480px}
+
+/* Footer */
+footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:start;gap:2rem;flex-wrap:wrap}
+.footer-brand{display:flex;flex-direction:column;gap:0.75rem}
+.footer-brand-logo{font-family:'Syne';font-weight:800;font-size:18px;color:#0a0a0a;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.footer-brand-logo .mark{width:22px;height:22px;color:var(--brand-primary)}
+.footer-brand-text{font-size:0.8rem;color:#737373;max-width:320px;line-height:1.7}
+.footer-links{display:flex;gap:3rem}
+.footer-col h4{font-family:'Space Mono',monospace;font-size:0.6rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem}
+.footer-col a{display:block;color:#525252;text-decoration:none;font-size:0.8rem;padding:0.3rem 0;transition:color .2s}
+.footer-col a:hover{color:#0a0a0a}
+.footer-bottom{max-width:1100px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid #e5e5e5;font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+
+/* Co-issuer badge (white-label cue) */
+.co-issuer{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.62rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.12em;padding:0.4rem 0.7rem;border:1px solid #e5e5e5;border-radius:50px;background:#fff;margin-top:0.75rem}
+.co-issuer .pip{width:5px;height:5px;background:var(--brand-primary);border-radius:50%}
+
+/* Animations */
+.fade-up{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.stagger-1{transition-delay:.05s}.stagger-2{transition-delay:.1s}.stagger-3{transition-delay:.15s}.stagger-4{transition-delay:.2s}
+
+/* Mobile */
+@media(max-width:900px){
+  .nav-links{display:none}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .stat-item:nth-child(2){border-right:none}
+  .stat-item:nth-child(1),.stat-item:nth-child(2){border-bottom:1px solid #e5e5e5}
+  .flow-grid{grid-template-columns:repeat(2,1fr)}
+  .flow-step:nth-child(2){border-right:none}
+  .flow-step:nth-child(1),.flow-step:nth-child(2){border-bottom:1px solid #e5e5e5}
+  .tese-grid{grid-template-columns:1fr}
+  .calc-wrap{grid-template-columns:1fr}
+  .reg-grid{grid-template-columns:1fr}
+  .case{grid-template-columns:1fr;padding:1.5rem}
+  .footer-inner{flex-direction:column}
+  .footer-bottom{flex-direction:column;gap:0.5rem}
 }
 </style>
-</head><body><div id="root"></div>
-<script src="/shared/js/config.js"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-content">
+    <a href="/tdic/" class="nav-logo">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="currentColor"/><g fill="#fff"><path d="M16 22h32v4H34v22h-4V26H16z"/><circle cx="48" cy="48" r="3"/></g></svg>
+      <span class="name" data-brand="displayName">EFIX TDIC</span>
+    </a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <ul class="nav-links">
+        <li><a href="#tese">Tese</a></li>
+        <li><a href="#fluxo">Fluxo</a></li>
+        <li><a href="#calc">Calculadora</a></li>
+        <li><a href="#compliance">Regulação</a></li>
+        <li><a href="/">EFIX</a></li>
+      </ul>
+      <a href="#" id="navAppLink" class="nav-cta nav-cta-primary">Acessar painel</a>
+      <div class="lang-sel">
+        <div class="lang-btn" onclick="document.getElementById('langMenu').classList.toggle('open')">
+          <span id="langFlag">🇧🇷</span><span id="langCode">PT</span>
+        </div>
+        <div class="lang-menu" id="langMenu">
+          <div class="lang-opt active" onclick="setLang('pt')">🇧🇷 Português</div>
+          <div class="lang-opt" onclick="setLang('en')">🇺🇸 English</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-tag fade-up">
+      <span class="dot"></span>
+      <span data-i18n="hero_badge">Patrimônio segregado · Resolução CVM 88 · Base mainnet</span>
+    </div>
+    <h1 class="fade-up stagger-1" data-i18n="hero_title">Tokenização de créditos com<br><span class="shine">eficiência tributária</span></h1>
+    <p class="subtitle fade-up stagger-2" data-i18n="hero_sub">
+      Empresas de lucro real cedem direitos creditórios à EFIX Securitizadora e deduzem o deságio
+      como despesa financeira — reduzindo a base de IRPJ/CSLL em até 34%. Token ERC-1155 emitido em
+      patrimônio segregado.
+    </p>
+    <div class="hero-actions fade-up stagger-3">
+      <a href="#" id="heroAppLink" class="btn btn-brand">Acessar painel</a>
+      <a href="#tese" class="btn btn-secondary">Entender a tese</a>
+    </div>
+    <div class="co-issuer fade-up stagger-4" id="coIssuerBadge" style="display:none">
+      <span class="pip"></span>
+      <span>Emissão</span>
+      <span data-brand-issuer="razaoSocial">EFIX Securitizadora S.A.</span>
+      <span>·</span>
+      <span data-brand-issuer="cnpj">60.756.859/0001-57</span>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-label">Ticket-alvo</div>
+      <div class="stat-value">R$ 5M – 100M</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Economia fiscal</div>
+      <div class="stat-value">até 34%</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Padrão</div>
+      <div class="stat-value">ERC-1155</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Rede</div>
+      <div class="stat-value">Base</div>
+    </div>
+  </div>
+</div>
+
+<!-- TESE -->
+<section class="section section-border" id="tese">
+  <div class="container">
+    <div class="section-label">A tese fiscal</div>
+    <div class="section-title">Lucro real → deságio → despesa financeira</div>
+    <div class="section-desc">
+      Empresas no regime de lucro real podem deduzir despesas financeiras da base de cálculo de IRPJ
+      e CSLL. Quando você cede um direito creditório com deságio à EFIX Securitizadora, esse deságio
+      é classificado como despesa financeira pelo regime contábil — reduzindo o imposto efetivo em
+      até 34% sobre o valor descontado.
+    </div>
+    <div class="tese-grid">
+      <div class="tese-card fade-up">
+        <div class="icon">01</div>
+        <h3>Cedente lucro real</h3>
+        <p>Empresa de médio porte com créditos a receber: confissões de dívida, duplicatas, contratos
+        de fornecimento ou mútuos intercompany. Ticket-alvo R$ 5M a R$ 100M.</p>
+      </div>
+      <div class="tese-card fade-up stagger-1">
+        <div class="icon">02</div>
+        <h3>Cessão à EFIX Securitizadora</h3>
+        <p>O direito creditório é cedido com deságio. A EFIX emite um Certificado de Recebíveis (CR)
+        em patrimônio segregado sob a Resolução CVM 88/2022 e Lei 14.430/2022.</p>
+      </div>
+      <div class="tese-card fade-up stagger-2">
+        <div class="icon">03</div>
+        <h3>Token ERC-1155 (TDIC)</h3>
+        <p>O CR é representado on-chain como TDIC — um token ERC-1155 com transferência restrita por
+        whitelist. Composabilidade futura com Morpho, BRLE e efixDI no ecossistema EFIX.</p>
+      </div>
+      <div class="tese-card fade-up stagger-3">
+        <div class="icon">04</div>
+        <h3>Deságio = despesa financeira</h3>
+        <p>O contador da cedente registra o deságio como despesa financeira no DRE, abatendo a base
+        de IRPJ e CSLL. A EFIX gera o relatório pronto para fechamento contábil.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CASE STUDY -->
+<section class="section">
+  <div class="container">
+    <div class="case fade-up">
+      <div>
+        <div class="tag">Case real · Siderquímica</div>
+        <h3>R$ 31,4M em confissões de dívida<br>R$ 8,9M em economia de IRPJ/CSLL</h3>
+        <p>Estrutura aplicada em 2025 para uma indústria química de Minas Gerais. As confissões de
+        dívida foram cedidas à EFIX Securitizadora com deságio de 84% sobre o valor face,
+        gerando despesa financeira dedutível na cedente.</p>
+      </div>
+      <div class="case-numbers">
+        <div class="case-row">
+          <span class="k">Valor face cedido</span>
+          <span class="v">R$ 31,4M</span>
+        </div>
+        <div class="case-row">
+          <span class="k">Deságio (despesa financeira)</span>
+          <span class="v">R$ 26,4M</span>
+        </div>
+        <div class="case-row">
+          <span class="k">Redução de base IRPJ/CSLL</span>
+          <span class="v">R$ 26,4M</span>
+        </div>
+        <div class="case-row">
+          <span class="k">Economia fiscal (34%)</span>
+          <span class="v brand">R$ 8,9M</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FLUXO -->
+<section class="section section-gray" id="fluxo">
+  <div class="container">
+    <div class="section-label">Como funciona</div>
+    <div class="section-title">Da cessão ao token em quatro etapas</div>
+    <div class="section-desc">
+      Onboarding KYB para a cedente, cadastro do crédito a ceder, aprovação pelo compliance EFIX e
+      mint do TDIC na carteira inteligente da cedente.
+    </div>
+    <div class="flow-grid">
+      <div class="flow-step fade-up">
+        <div class="flow-number">Etapa 01</div>
+        <div class="flow-icon">KYB</div>
+        <div class="flow-title">Cadastro PJ</div>
+        <div class="flow-desc">Login por e-mail (OTP). KYB completo: CNPJ, contrato social, regime
+        tributário e documentos. Smart wallet criada automaticamente.</div>
+      </div>
+      <div class="flow-step fade-up stagger-1">
+        <div class="flow-number">Etapa 02</div>
+        <div class="flow-icon">CRED</div>
+        <div class="flow-title">Cadastro do crédito</div>
+        <div class="flow-desc">Tipo (confissão, duplicata, contrato), valor face, vencimento, CNPJ
+        do devedor e documentação probatória do recebível.</div>
+      </div>
+      <div class="flow-step fade-up stagger-2">
+        <div class="flow-number">Etapa 03</div>
+        <div class="flow-icon">CR</div>
+        <div class="flow-title">Aprovação EFIX</div>
+        <div class="flow-desc">Compliance da EFIX Securitizadora analisa o crédito e emite o
+        Certificado de Recebíveis em patrimônio segregado (CVM 88).</div>
+      </div>
+      <div class="flow-step fade-up stagger-3">
+        <div class="flow-number">Etapa 04</div>
+        <div class="flow-icon">MINT</div>
+        <div class="flow-title">Mint do TDIC</div>
+        <div class="flow-desc">Token ERC-1155 emitido na smart wallet da cedente em Base mainnet.
+        Gasless via paymaster. Pronto para custódia, cessão ou colateralização.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULADORA -->
+<section class="section section-border" id="calc">
+  <div class="container">
+    <div class="section-label">Simule sua economia</div>
+    <div class="section-title">Calculadora de eficiência tributária</div>
+    <div class="section-desc">
+      Estime o impacto fiscal da cessão. A alíquota efetiva de 34% considera IRPJ (25%) + CSLL (9%)
+      sobre lucro real. Não substitui análise contábil formal.
+    </div>
+    <div class="calc-wrap">
+      <div class="calc-card">
+        <h3>Parâmetros da operação</h3>
+        <div class="help">Valores em reais. Use o deságio típico do seu caso (60–90%).</div>
+        <div class="calc-row">
+          <label for="calcFace">Valor face (R$)</label>
+          <input id="calcFace" type="number" inputmode="numeric" value="10000000" min="0" step="100000">
+        </div>
+        <div class="calc-row">
+          <label for="calcDiscount">Deságio (% sobre o face)</label>
+          <input id="calcDiscount" type="number" inputmode="numeric" value="80" min="0" max="100" step="1">
+        </div>
+        <div class="calc-row">
+          <label for="calcRate">Alíquota IRPJ + CSLL</label>
+          <select id="calcRate">
+            <option value="0.34" selected>34% (lucro real padrão)</option>
+            <option value="0.25">25% (apenas IRPJ)</option>
+            <option value="0.09">9% (apenas CSLL)</option>
+          </select>
+        </div>
+      </div>
+      <div class="calc-out">
+        <div>
+          <div class="label">Despesa financeira gerada</div>
+          <div id="calcOutDiscount" class="value">R$ 8.000.000</div>
+        </div>
+        <div>
+          <div class="label">Valor pago pela EFIX (líquido)</div>
+          <div id="calcOutNet" class="value">R$ 2.000.000</div>
+        </div>
+        <div class="divider"></div>
+        <div>
+          <div class="label">Redução estimada de IRPJ/CSLL</div>
+          <div id="calcOutSavings" class="value brand">R$ 2.720.000</div>
+        </div>
+        <div class="small">
+          A despesa financeira reduz a base de cálculo do imposto. A economia efetiva é a despesa
+          financeira × alíquota. Consulte seu contador antes de operar.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section class="section section-border" id="compliance">
+  <div class="container">
+    <div class="section-label">Regulação e estrutura</div>
+    <div class="section-title">Securitização regulada CVM</div>
+    <div class="section-desc">
+      A EFIX Securitizadora S.A. opera sob o regime de securitização da Lei 14.430/2022 e Resolução
+      CVM 88/2022. Cada CR é emitido em patrimônio segregado, isolado do balanço da emissora.
+    </div>
+    <div class="reg-grid">
+      <div class="reg-item">
+        <div class="reg-label">Emissora</div>
+        <div class="reg-value" data-brand-issuer="razaoSocial">EFIX Securitizadora S.A.</div>
+      </div>
+      <div class="reg-item">
+        <div class="reg-label">CNPJ</div>
+        <div class="reg-value mono" data-brand-issuer="cnpj">60.756.859/0001-57</div>
+      </div>
+      <div class="reg-item">
+        <div class="reg-label">Ato Declaratório CVM</div>
+        <div class="reg-value mono" data-brand-issuer="atoCVM">23.635/2025</div>
+      </div>
+      <div class="reg-item">
+        <div class="reg-label">Resolução</div>
+        <div class="reg-value">CVM 88/2022</div>
+      </div>
+      <div class="reg-item">
+        <div class="reg-label">Lei base</div>
+        <div class="reg-value">Lei 14.430/2022</div>
+      </div>
+      <div class="reg-item">
+        <div class="reg-label">Patrimônio</div>
+        <div class="reg-value">Segregado por CR</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2 style="font-size:clamp(1.5rem,2.5vw,2rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:0.75rem">Pronto para tokenizar seus créditos?</h2>
+    <p class="cta-desc">
+      Faça o KYB da PJ, cadastre os créditos a ceder e acompanhe a aprovação do CR em tempo real.
+      Acesso gasless via smart wallet — sem necessidade de gerenciar chaves privadas.
+    </p>
+    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+      <a href="#" id="ctaAppLink" class="btn btn-brand">Acessar painel</a>
+      <a href="mailto:tdic@efix.finance" class="btn btn-secondary" data-brand-attr="href:supportEmail">Falar com a EFIX</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="/tdic/" class="footer-brand-logo">
+        <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="currentColor"/><g fill="#fff"><path d="M16 22h32v4H34v22h-4V26H16z"/><circle cx="48" cy="48" r="3"/></g></svg>
+        <span data-brand="displayName">EFIX TDIC</span>
+      </a>
+      <p class="footer-brand-text">
+        TDIC é um produto da <strong data-brand-issuer="razaoSocial">EFIX Securitizadora S.A.</strong>,
+        operando sob Resolução CVM 88/2022. Emissão privada, restrita a investidores qualificados e
+        cedentes habilitados.
+      </p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Produto</h4>
+        <a href="#tese">A tese</a>
+        <a href="#fluxo">Fluxo</a>
+        <a href="#calc">Calculadora</a>
+        <a href="#compliance">Regulação</a>
+      </div>
+      <div class="footer-col">
+        <h4>Ecossistema EFIX</h4>
+        <a href="/">efixDI+</a>
+        <a href="/brle/">BRLE / sBRLE</a>
+        <a href="/btr-equity/">SALRIO / HausBTR</a>
+        <a href="/lobie/">Lobie Units</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contato</h4>
+        <a href="mailto:tdic@efix.finance" data-brand-attr="href:supportEmail">tdic@efix.finance</a>
+        <a href="https://efix.finance">efix.finance</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© <span id="copyYear">2026</span> EFIX Securitizadora S.A. · Todos os direitos reservados</span>
+    <span>Patrimônio segregado · CVM 88 · Lei 14.430/22</span>
+  </div>
+</footer>
+
+<!-- White-label theming -->
+<script src="/tdic/assets/theme.js"></script>
+
 <script>
-const{createElement:h,useState,useEffect,Fragment}=React;
-const c={accent:"#6366F1",green:"#10B981",red:"#EF4444",amber:"#F59E0B",purple:"#8B5CF6",blue:"#3B82F6",bg:"#FAFBFD",dim:"#6B7280",sec:"#9CA3AF",border:"#E5E7EB"};
-const LOGO=EFIX_CONFIG.securitizadora+"/efix-logo.png";
-const fB=v=>"R$ "+Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
-const fP=v=>Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})+"%";
-const fD=d=>{if(!d)return"\u2014";return new Date(d+"T12:00:00").toLocaleDateString("pt-BR")};
-const dA=d=>{if(!d)return 0;const h=new Date();h.setHours(0,0,0,0);return Math.ceil((new Date(d+"T12:00:00")-h)/864e5)};
-const hj=()=>new Date().toISOString().split("T")[0];
+// Year
+document.getElementById('copyYear').textContent = new Date().getFullYear();
 
-const API_BASE=EFIX_CONFIG.securitizadora;const api=async(m,u,b)=>{try{const r=await fetch(API_BASE+u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});return await r.json()}catch(e){return{ok:false,error:e.message}}};
+// App links carry ?c= forward
+(function () {
+  const slug = new URLSearchParams(location.search).get('c');
+  const qs = slug ? '?c=' + encodeURIComponent(slug) : '';
+  ['navAppLink', 'heroAppLink', 'ctaAppLink'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.href = '/tdic/app/' + qs;
+  });
+})();
 
-const SEED=[
-{id:"REC-001",dupl:"14550-5",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:51384.99,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-002",dupl:"14551-3",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:21433.54,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-003",dupl:"14552-1",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:14090.01,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-004",dupl:"14553-0",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:26096.38,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-005",dupl:"14554-8",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:2030.80,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-006",dupl:"14555-6",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:3347.01,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-007",dupl:"14556-4",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:161.15,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-008",dupl:"14557-2",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:168.02,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-009",dupl:"14558-1",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:1868.01,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-010",dupl:"14559-9",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:455.89,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-011",dupl:"14560-2",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0001-61",valor:3372.05,vencto:"2026-03-25",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-012",dupl:"14561-1",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"SIDERQUIMICA IND. E COM. DE PROD. QUIMICOS S/A",cnpjSacado:"73.586.976/0006-76",valor:656.05,vencto:"2026-03-23",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Siderqu\u00edmica",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-013",dupl:"14562-9",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"ROCHESA TINTAS E VERNIZES",cnpjSacado:"74.068.552/0001-78",valor:14049.36,vencto:"2026-03-16",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Mercado",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-014",dupl:"14563-7",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"ROCHESA TINTAS E VERNIZES",cnpjSacado:"74.068.552/0001-78",valor:12827.07,vencto:"2026-03-16",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Mercado",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-015",dupl:"14564-5",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"ROCHESA TINTAS E VERNIZES",cnpjSacado:"74.068.552/0001-78",valor:1233.10,vencto:"2026-03-16",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Mercado",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""},
-{id:"REC-016",dupl:"14565-3",cedente:"C2LOG TRANSPORTES LTDA",cnpjCedente:"04.876.970/0001-06",sacado:"ROCHESA TINTAS E VERNIZES",cnpjSacado:"74.068.552/0001-78",valor:549.79,vencto:"2026-03-16",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR",tel:"4121053838",endereco:"RODOVIA BR-376, 376",bairro:"SAO MARCOS",cidade:"SAO JOSE DOS PINHAIS",uf:"PR",cep:"83090-360",abatimento:0,status:"ativo",op:"Mercado",dataAquisicao:"2026-02-20",valorPago:0,dataLiquidacao:""}
-];
-const defP={txDesconto:2.50,royalty:1.00,prazoSider:30,prazoMercado:3,irRegressivo:[22.5,20,17.5,15],nomeSecuritizadora:"EFIX Plataforma de Tokenização e Crowdfunding Ltda",cnpjSecuritizadora:"60.756.859/0001-57",contaBanco:"Bco 332 Ag 0001 Conta Segregada"};
+// Show co-issuer badge when slug != default
+document.addEventListener('tdic:brand-ready', (e) => {
+  const brand = e.detail;
+  const badge = document.getElementById('coIssuerBadge');
+  if (brand && brand._slug && brand._slug !== 'default') {
+    badge.style.display = 'inline-flex';
+  }
+});
 
-/* ── Shared Components ── */
-const Card=({children,style:s,className:cn})=>h("div",{className:cn,style:{background:"#fff",borderRadius:12,padding:16,border:"1px solid "+c.border,...s}},children);
-const Bg=({color:cl,children})=>h("span",{style:{display:"inline-block",padding:"2px 7px",borderRadius:6,fontSize:9,fontWeight:700,background:cl+"18",color:cl,textTransform:"uppercase",letterSpacing:".04em",whiteSpace:"nowrap"}},children);
-const Bt=({primary:p,small:s,children,onClick:oc,disabled:d,color:cl,style:st})=>h("button",{onClick:oc,disabled:d,style:{padding:s?"4px 8px":"7px 14px",borderRadius:8,border:p?"none":"1px solid "+c.border,background:p?(cl||c.accent):"#fff",color:p?"#fff":"#374151",fontSize:s?10:12,fontWeight:600,cursor:d?"not-allowed":"pointer",opacity:d?.5:1,transition:"all .15s",whiteSpace:"nowrap",...st}},children);
-function In({label:l,value:v,onChange:oc,placeholder:ph,type:t,prefix:px,suffix:sx,style:s,disabled:d}){
-  return h("div",{style:s||{}},l&&h("label",{style:{display:"block",fontSize:10,fontWeight:600,color:c.dim,marginBottom:3,textTransform:"uppercase",letterSpacing:".04em"}},l),h("div",{style:{position:"relative"}},px&&h("span",{style:{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",fontSize:11,color:c.sec}},px),h("input",{type:t||"text",value:v||"",onChange:e=>oc(e.target.value),placeholder:ph,disabled:d,style:{paddingLeft:px?28:8,paddingRight:sx?28:8,background:d?"#F3F4F6":"#fff",fontSize:12}}),sx&&h("span",{style:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",fontSize:11,color:c.sec}},sx)));
+// Calculator
+(function () {
+  const face = document.getElementById('calcFace');
+  const disc = document.getElementById('calcDiscount');
+  const rate = document.getElementById('calcRate');
+  const outDiscount = document.getElementById('calcOutDiscount');
+  const outNet = document.getElementById('calcOutNet');
+  const outSavings = document.getElementById('calcOutSavings');
+  const fmt = (n) => 'R$ ' + Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+
+  function recalc() {
+    const f = Number(face.value) || 0;
+    const d = Math.max(0, Math.min(100, Number(disc.value) || 0)) / 100;
+    const r = Number(rate.value) || 0.34;
+    const discountAmount = f * d;
+    const net = f - discountAmount;
+    const savings = discountAmount * r;
+    outDiscount.textContent = fmt(discountAmount);
+    outNet.textContent = fmt(net);
+    outSavings.textContent = fmt(savings);
+  }
+  [face, disc, rate].forEach(el => el.addEventListener('input', recalc));
+  recalc();
+})();
+
+// Fade-up on scroll
+(function () {
+  const els = document.querySelectorAll('.fade-up');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  els.forEach(el => io.observe(el));
+})();
+
+// Lang stub (i18n full coverage for next pass)
+function setLang(lang) {
+  const codes = { pt: 'PT', en: 'EN' };
+  const flags = { pt: '🇧🇷', en: '🇺🇸' };
+  document.getElementById('langCode').textContent = codes[lang] || 'PT';
+  document.getElementById('langFlag').textContent = flags[lang] || '🇧🇷';
+  document.getElementById('langMenu').classList.remove('open');
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+  event && event.target && event.target.classList && event.target.classList.add('active');
 }
-
-function exportCSV(d,f){if(!d.length)return;const k=Object.keys(d[0]);const csv=[k.join(";"),...d.map(r=>k.map(x=>String(r[x]||"").replace(/;/g,",")).join(";"))].join("\n");const b=new Blob(["\uFEFF"+csv],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=f;a.click();URL.revokeObjectURL(u);}
-
-function gerarCR(rec,par){const html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>CR "+rec.dupl+"</title><style>body{font-family:Arial;max-width:800px;margin:40px auto;padding:20px;color:#333}h1{color:#6366F1;border-bottom:2px solid #6366F1;padding-bottom:10px}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border:1px solid #ddd;padding:8px 12px;text-align:left;font-size:13px}th{background:#F3F4F6}.ft{margin-top:40px;border-top:1px solid #ddd;padding-top:16px;font-size:11px;color:#888;text-align:center}</style></head><body><h1>CR "+rec.dupl+"</h1><p>"+par.nomeSecuritizadora+" CNPJ "+par.cnpjSecuritizadora+"</p><table><tr><th>Duplicata</th><td>"+rec.dupl+"</td><th>Op</th><td>"+rec.op+"</td></tr><tr><th>Valor</th><td>R$ "+(rec.valor||0).toLocaleString("pt-BR",{minimumFractionDigits:2})+"</td><th>Vencto</th><td>"+fD(rec.vencto)+"</td></tr><tr><th>Cedente</th><td>"+rec.cedente+"</td><th>CNPJ</th><td>"+rec.cnpjCedente+"</td></tr><tr><th>Sacado</th><td>"+rec.sacado+"</td><th>CNPJ</th><td>"+rec.cnpjSacado+"</td></tr><tr><th>Desconto</th><td>"+par.txDesconto+"%</td><th>Royalty</th><td>"+par.royalty+"%</td></tr><tr><th>Regime</th><td colspan='3'>"+(rec.op==="Siderqu\u00edmica"?"IR Regressivo":"Ganho Capital GCAP")+"</td></tr></table><div class='ft'>Gerado em "+new Date().toLocaleString("pt-BR")+"</div></body></html>";const b=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="CR-"+rec.dupl+".html";a.click();URL.revokeObjectURL(u);}
-
-const pages=["Dashboard","Opera\u00e7\u00f5es","Receb\u00edveis","Concilia\u00e7\u00e3o","On-Chain","Cadastros","Par\u00e2metros"];
-const icons={"Dashboard":"\u25c8","Opera\u00e7\u00f5es":"\u25c9","Receb\u00edveis":"\u25a4","Concilia\u00e7\u00e3o":"\u2713","On-Chain":"\u25c7","Cadastros":"\u25ce","Par\u00e2metros":"\u2699"};
-
-/* ═══════════ DASHBOARD ═══════════ */
-function Dashboard({recs,par,nfts,bal,nav}){
-  const tot=recs.reduce((s,r)=>s+r.valor,0);
-  const at=recs.filter(r=>r.status==="ativo");const tAt=at.reduce((s,r)=>s+r.valor,0);
-  const liq=recs.filter(r=>r.status==="liquidado");const tLi=liq.reduce((s,r)=>s+r.valor,0);
-  const sid=recs.filter(r=>r.op==="Siderqu\u00edmica");const tS=sid.reduce((s,r)=>s+r.valor,0);
-  const mer=recs.filter(r=>r.op==="Mercado");const tM=mer.reduce((s,r)=>s+r.valor,0);
-  const cx=bal||42850;
-  const v7=at.filter(r=>{const d=dA(r.vencto);return d>=0&&d<=7});
-  const v30=at.filter(r=>{const d=dA(r.vencto);return d>7&&d<=30});
-  const ven=at.filter(r=>dA(r.vencto)<0);
-  const ceds=[...new Set(recs.map(r=>r.cedente))];
-  const sacs=[...new Set(recs.map(r=>r.sacado))];
-  const pm=at.length>0?at.reduce((s,r)=>s+Math.max(0,dA(r.vencto)),0)/at.length:0;
-  const tk=at.length>0?tAt/at.length:0;
-  const rcB=tot*(par.txDesconto+par.royalty)/100;
-  const yld=tot>0?rcB/tot*100:0;
-  const vlP=tot*(1-par.txDesconto/100-par.royalty/100);
-  const tir=pm>0?((tot/vlP-1)*(365/pm)*100):0;
-
-  const Mt=({l,v,s,cl,b})=>h("div",{style:{textAlign:"center",minWidth:0}},h("div",{className:"mono",style:{fontSize:b?20:16,fontWeight:800,color:cl||"#111",lineHeight:1.2}},v),h("div",{style:{fontSize:9,color:c.dim,marginTop:3,fontWeight:600,textTransform:"uppercase",letterSpacing:".04em"}},l),s&&h("div",{style:{fontSize:10,color:c.sec,marginTop:1}},s));
-  const Mc=({l,v,cl,i})=>h("div",{style:{background:"#fff",borderRadius:8,padding:"8px 10px",border:"1px solid "+c.border,display:"flex",alignItems:"center",gap:6}},h("div",{style:{width:24,height:24,borderRadius:6,background:(cl||c.accent)+"14",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,flexShrink:0}},i),h("div",{style:{minWidth:0}},h("div",{style:{fontSize:8,color:c.dim,fontWeight:600}},l),h("div",{className:"mono",style:{fontSize:12,fontWeight:700,color:cl||"#111"}},v)));
-
-  return h("div",null,
-    h("div",{className:"fh",style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},h("div",null,h("h2",{style:{fontSize:18,fontWeight:800}},"Dashboard FIDC"),h("p",{style:{fontSize:11,color:c.dim}},"EFIX Plataforma de Tokenização e Crowdfunding Ltda")),h("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},h(Bt,{primary:true,onClick:()=>nav("Opera\u00e7\u00f5es")},"+ Cess\u00e3o"),h(Bt,{small:true,onClick:()=>nav("Concilia\u00e7\u00e3o")},"Conciliar"),h(Bt,{small:true,onClick:()=>nav("On-Chain")},"NFTs: "+nfts.length))),
-    h(Card,{className:"g5",style:{marginBottom:10,display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,padding:14}},h(Mt,{l:"Carteira",v:fB(tot),cl:"#111",b:true}),h(Mt,{l:"A Receber",v:fB(tAt),cl:c.accent,s:at.length+" t\u00edt"}),h(Mt,{l:"Liquidados",v:fB(tLi),cl:c.green,s:liq.length+" t\u00edt"}),h(Mt,{l:"Caixa",v:fB(cx),cl:c.blue,s:"iHold"}),h(Mt,{l:"PL Fundo",v:fB(tAt+cx),cl:c.purple})),
-    h("div",{className:"g6",style:{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:6,marginBottom:10}},h(Mc,{l:"Ativos",v:at.length,i:"\ud83d\udcc4",cl:c.accent}),h(Mc,{l:"Cedentes",v:ceds.length,i:"\ud83c\udfe2",cl:c.blue}),h(Mc,{l:"Sacados",v:sacs.length,i:"\ud83c\udfed",cl:c.purple}),h(Mc,{l:"Prazo M\u00e9d",v:Math.round(pm)+"d",i:"\ud83d\udcc5",cl:c.amber}),h(Mc,{l:"Ticket",v:fB(tk),i:"\ud83d\udcb0",cl:c.green}),h(Mc,{l:"Inadimpl.",v:fP(tot>0?ven.reduce((s,r)=>s+r.valor,0)/tot*100:0),i:"\ud83d\udee1",cl:ven.length?c.red:c.green})),
-    h(Card,{className:"g4",style:{marginBottom:10,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,padding:14}},h(Mt,{l:"Yield",v:fP(yld),cl:c.green,s:"Desc+Roy/Face"}),h(Mt,{l:"TIR Anual",v:fP(tir),cl:c.accent}),h(Mt,{l:"Receita Bruta",v:fB(rcB),cl:c.blue}),h(Mt,{l:"Resultado",v:fB(rcB*.95),cl:c.green})),
-    h("div",{className:"g2",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}},
-      h(Card,null,h("h3",{style:{fontSize:12,fontWeight:700,marginBottom:10}},"Composi\u00e7\u00e3o"),h("div",{style:{marginBottom:8}},h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}},h("span",{style:{fontWeight:600}},"Siderqu\u00edmica (CR)"),h("span",{className:"mono",style:{color:c.green,fontWeight:700}},fB(tS))),h("div",{style:{height:6,background:"#F3F4F6",borderRadius:3,overflow:"hidden"}},h("div",{style:{width:(tot>0?tS/tot*100:0)+"%",height:"100%",background:c.green}})),h("div",{style:{fontSize:10,color:c.dim,marginTop:2}},sid.length+" t\u00edt \u00b7 IR reg \u00b7 D+"+par.prazoSider)),h("div",null,h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}},h("span",{style:{fontWeight:600}},"Mercado (Cess\u00e3o)"),h("span",{className:"mono",style:{color:c.purple,fontWeight:700}},fB(tM))),h("div",{style:{height:6,background:"#F3F4F6",borderRadius:3,overflow:"hidden"}},h("div",{style:{width:(tot>0?tM/tot*100:0)+"%",height:"100%",background:c.purple}})),h("div",{style:{fontSize:10,color:c.dim,marginTop:2}},mer.length+" t\u00edt \u00b7 GCAP \u00b7 D+"+par.prazoMercado))),
-      h(Card,null,h("h3",{style:{fontSize:12,fontWeight:700,marginBottom:10}},"Aging"),h("div",{className:"g3",style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}},h("div",{style:{textAlign:"center",padding:8,background:ven.length?c.red+"10":"#F9FAFB",borderRadius:6}},h("div",{className:"mono",style:{fontSize:16,fontWeight:800,color:ven.length?c.red:c.sec}},ven.length),h("div",{style:{fontSize:8,color:c.dim,fontWeight:600}},"VENCIDOS")),h("div",{style:{textAlign:"center",padding:8,background:c.amber+"10",borderRadius:6}},h("div",{className:"mono",style:{fontSize:16,fontWeight:800,color:c.amber}},v7.length),h("div",{style:{fontSize:8,color:c.dim,fontWeight:600}},"7 DIAS")),h("div",{style:{textAlign:"center",padding:8,background:c.green+"10",borderRadius:6}},h("div",{className:"mono",style:{fontSize:16,fontWeight:800,color:c.green}},v30.length),h("div",{style:{fontSize:8,color:c.dim,fontWeight:600}},"8-30 DIAS"))))),
-    h(Card,{style:{padding:0,overflow:"hidden"}},h("div",{style:{padding:"10px 14px",borderBottom:"1px solid "+c.border,display:"flex",justifyContent:"space-between",alignItems:"center"}},h("h3",{style:{fontSize:12,fontWeight:700}},"Carteira ("+recs.length+")"),h("div",{style:{display:"flex",gap:4}},h(Bt,{small:true,onClick:()=>exportCSV(recs,"carteira.csv")},"CSV"),h(Bt,{small:true,onClick:()=>nav("Receb\u00edveis")},"Todos \u2192"))),h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["Dupl","Sacado","Op","Valor","Vencto","Dias","Status"].map(t=>h("th",{key:t},t)))),h("tbody",null,recs.slice(0,8).map(r=>h("tr",{key:r.id},h("td",{className:"mono",style:{color:c.accent,fontWeight:600}},r.dupl),h("td",{style:{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.sacado),h("td",null,h(Bg,{color:r.op==="Siderqu\u00edmica"?c.green:c.purple},r.op)),h("td",{className:"mono",style:{fontWeight:600}},fB(r.valor)),h("td",{className:"mono"},fD(r.vencto)),h("td",{className:"mono",style:{color:dA(r.vencto)<0?c.red:dA(r.vencto)<=7?c.amber:c.green}},dA(r.vencto)+"d"),h("td",null,h(Bg,{color:r.status==="ativo"?c.green:r.status==="liquidado"?c.blue:c.red},r.status)))))))));
-}
-
-/* ═══════════ OPERA\u00c7\u00d5ES ═══════════ */
-function Operacoes({recs,setRecs,par,nfts}){
-  const [show,setShow]=useState(false);const [step,setStep]=useState(0);const [tipo,setTipo]=useState("");
-  const blank={cedente:"",cnpjCedente:"",sacado:"",cnpjSacado:"",dupl:"",valor:"",vencto:"",email:"",tel:"",endereco:"",bairro:"",cidade:"",uf:"",cep:"",abatimento:"0",txDesconto:String(par.txDesconto),royalty:String(par.royalty)};
-  const [f,setF]=useState(blank);const up=(k,v)=>setF(s=>({...s,[k]:v}));
-  const txD=Number(f.txDesconto)||0;const txR=Number(f.royalty)||0;
-  const vb=Number(f.valor)||0;
-  /* Prazo = datediff(vencto, hoje) auto */
-  const praz=f.vencto?Math.max(0,dA(f.vencto)):0;
-  /* Desconto pro rata die: taxa mensal / 30 * dias */
-  const txDiaria=txD/30;
-  const desc=vb*(txDiaria*praz)/100;
-  const roy=vb*txR/100;
-  const vliq=Math.max(0,vb-desc-roy);
-  /* CET */
-  const cetTotal=vb>0?(desc+roy)/vb*100:0;
-  const cetMes=praz>0?cetTotal/praz*30:0;
-  const add=async()=>{if(!f.cedente||!f.valor||!f.sacado||!f.dupl||!f.vencto)return;const novo={...f,valor:vb,abatimento:Number(f.abatimento)||0,op:tipo,txDesconto:txD,royalty:txR,prazo:praz,desconto:desc,cetTotal,cetMes,dataAquisicao:hj(),status:"ativo",valorPago:0,dataLiquidacao:""};const r=await api("POST","/api/recebiveis",novo);if(r.ok)setRecs([r.data,...recs]);else setRecs([{...novo,id:"REC-"+String(recs.length+1).padStart(3,"0")},...recs]);setF({...blank,txDesconto:String(par.txDesconto),royalty:String(par.royalty)});setShow(false);setStep(0);setTipo("")};
-  const cancel=()=>{setF({...blank,txDesconto:String(par.txDesconto),royalty:String(par.royalty)});setShow(false);setStep(0);setTipo("")};
-  const mintNFT=async(r)=>{const res=await api("POST","/api/nft/mint",{recId:r.id});if(res.ok){setRecs(recs.map(x=>x.id===r.id?{...x,nftTokenId:res.tokenId,nftMode:res.mode}:x));alert("CR #"+r.dupl+" registrado como Token #"+res.tokenId+(res.mode==="on-chain"?" (Polygon)!":" (local - deploy contrato para gravar on-chain)"))}else if(res.error==="Already minted"){alert("J\u00e1 mintado!")}else{alert("Erro: "+(res.error||"falha"))}};
-
-  return h("div",null,
-    h("div",{className:"fh",style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},h("div",null,h("h2",{style:{fontSize:18,fontWeight:700}},"Opera\u00e7\u00f5es"),h("p",{style:{fontSize:11,color:c.dim}},"Cess\u00e3o de cr\u00e9ditos \u00b7 Lei 14.430/22")),h(Bt,{primary:true,onClick:()=>{setShow(!show);setStep(0);setTipo("")}},show?"Fechar":"+ Nova Cess\u00e3o")),
-    show&&step===0&&h(Card,{style:{marginBottom:10,border:"1px solid "+c.accent+"30"}},h("div",{style:{textAlign:"center",marginBottom:12}},h("h3",{style:{fontSize:14,fontWeight:700}},"Tipo de opera\u00e7\u00e3o")),h("div",{className:"g2",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,maxWidth:420,margin:"0 auto"}},...[["Siderqu\u00edmica","CR \u00b7 IR Reg \u00b7 D+"+par.prazoSider,c.green,"\ud83c\udfed"],["Mercado","Cess\u00e3o \u00b7 GCAP \u00b7 D+"+par.prazoMercado,c.purple,"\ud83d\udcc8"]].map(([t,s,cl,i])=>h("div",{key:t,onClick:()=>{setTipo(t);setStep(1)},style:{cursor:"pointer",padding:16,borderRadius:10,border:"2px solid "+c.border,textAlign:"center",transition:"all .2s"},onMouseEnter:e=>{e.currentTarget.style.borderColor=cl},onMouseLeave:e=>{e.currentTarget.style.borderColor=c.border}},h("div",{style:{fontSize:24,marginBottom:4}},i),h("div",{style:{fontSize:14,fontWeight:700,color:cl}},t),h("div",{style:{fontSize:10,color:c.dim,marginTop:3}},s))))),
-    show&&step===1&&h(Card,{style:{marginBottom:10,border:"1px solid "+c.accent+"30"}},h("div",{style:{display:"flex",alignItems:"center",gap:6,marginBottom:12}},h(Bg,{color:tipo==="Siderqu\u00edmica"?c.green:c.purple},tipo),h("span",{style:{fontSize:12,fontWeight:700}},"Nova Cess\u00e3o"),h("span",{style:{fontSize:10,color:c.dim}},"Desc "+fP(txD)+"/m\u00eas \u00b7 "+praz+"d \u00b7 pro rata die"),h(Bt,{small:true,onClick:()=>setStep(0),style:{marginLeft:"auto"}},"\u2190")),h("div",{className:"fg",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},h("div",null,h("div",{style:{fontSize:10,fontWeight:700,color:c.accent,letterSpacing:".05em",marginBottom:6,borderBottom:"1px solid "+c.accent+"20",paddingBottom:3}},"CEDENTE"),h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginBottom:10}},h(In,{label:"Nome",value:f.cedente,onChange:v=>up("cedente",v),style:{gridColumn:"1/3"}}),h(In,{label:"CNPJ",value:f.cnpjCedente,onChange:v=>up("cnpjCedente",v)}),h(In,{label:"E-mail",value:f.email,onChange:v=>up("email",v)})),h("div",{style:{fontSize:10,fontWeight:700,color:c.accent,letterSpacing:".05em",marginBottom:6,borderBottom:"1px solid "+c.accent+"20",paddingBottom:3}},"SACADO"),h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}},h(In,{label:"Nome",value:f.sacado,onChange:v=>up("sacado",v),style:{gridColumn:"1/3"}}),h(In,{label:"CNPJ",value:f.cnpjSacado,onChange:v=>up("cnpjSacado",v)}))),h("div",null,h("div",{style:{fontSize:10,fontWeight:700,color:c.accent,letterSpacing:".05em",marginBottom:6,borderBottom:"1px solid "+c.accent+"20",paddingBottom:3}},"T\u00cdTULO"),h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginBottom:10}},h(In,{label:"Duplicata",value:f.dupl,onChange:v=>up("dupl",v)}),h(In,{label:"Valor",value:f.valor,onChange:v=>up("valor",v),prefix:"R$"}),h(In,{label:"Vencimento",value:f.vencto,onChange:v=>up("vencto",v),type:"date"}),h(In,{label:"Abatimento",value:f.abatimento,onChange:v=>up("abatimento",v),prefix:"R$"})),h("div",{style:{fontSize:10,fontWeight:700,color:c.purple,letterSpacing:".05em",marginBottom:6,borderBottom:"1px solid "+c.purple+"20",paddingBottom:3}},"PAR\u00c2METROS DA CESS\u00c3O"),h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:4,marginBottom:10}},h(In,{label:"Tx Desconto a.m.",value:f.txDesconto,onChange:v=>up("txDesconto",v),suffix:"% /m"}),h(In,{label:"Royalty (flat)",value:f.royalty,onChange:v=>up("royalty",v),suffix:"%"}),h(In,{label:"Prazo (auto)",value:praz?String(praz)+"d":"\u2014",onChange:()=>{},disabled:true})),h("div",{style:{fontSize:10,fontWeight:700,color:c.accent,letterSpacing:".05em",marginBottom:6,borderBottom:"1px solid "+c.accent+"20",paddingBottom:3}},"RESUMO FINANCEIRO"),h("div",{style:{background:c.bg,borderRadius:8,padding:10,border:"1px solid "+c.border,fontSize:12}},h("div",{style:{display:"flex",justifyContent:"space-between",padding:"3px 0"}},h("span",null,"Valor Face:"),h("span",{className:"mono"},fB(vb))),h("div",{style:{display:"flex",justifyContent:"space-between",padding:"3px 0",color:c.sec}},h("span",null,"(-) Desc pro rata ("+fP(txD)+"/m \u00d7 "+praz+"d \u00f7 30):"),h("span",{className:"mono"},fB(desc))),h("div",{style:{display:"flex",justifyContent:"space-between",padding:"3px 0",color:c.sec}},h("span",null,"(-) Royalty "+fP(txR)+" flat:"),h("span",{className:"mono"},fB(roy))),h("div",{style:{borderTop:"1px solid "+c.border,marginTop:3,paddingTop:3,display:"flex",justifyContent:"space-between",fontWeight:700}},h("span",null,"Valor L\u00edquido:"),h("span",{className:"mono",style:{color:c.green,fontSize:14}},fB(vliq))),h("div",{style:{borderTop:"1px dashed "+c.border,marginTop:6,paddingTop:6,display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}},h("div",{style:{textAlign:"center",padding:6,background:"#fff",borderRadius:6,border:"1px solid "+c.border}},h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"CET TOTAL"),h("div",{className:"mono",style:{fontSize:14,fontWeight:800,color:c.accent}},fP(cetTotal))),h("div",{style:{textAlign:"center",padding:6,background:"#fff",borderRadius:6,border:"1px solid "+c.border}},h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"CET AO M\u00caS"),h("div",{className:"mono",style:{fontSize:14,fontWeight:800,color:c.purple}},fP(cetMes)))),h("div",{style:{marginTop:4,fontSize:9,color:c.sec}},"Tx di\u00e1ria: "+(txDiaria>0?txDiaria.toFixed(4):0)+"% \u00b7 "+(tipo==="Siderqu\u00edmica"?"IR Regressivo":"Ganho Capital GCAP"))))),h("div",{style:{display:"flex",gap:6,marginTop:10,justifyContent:"flex-end",borderTop:"1px solid "+c.border,paddingTop:10}},h(Bt,{onClick:cancel},"Cancelar"),h(Bt,{primary:true,color:c.green,onClick:add,disabled:!f.cedente||!f.valor||!f.sacado||!f.dupl||!f.vencto},"Registrar Cess\u00e3o"))),
-    h(Card,{style:{padding:0,overflow:"hidden"}},h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["Dupl","Sacado","Op","Valor","Vencto","Dias","Status","CR","NFT"].map(t=>h("th",{key:t},t)))),h("tbody",null,recs.map(r=>h("tr",{key:r.id},h("td",{className:"mono",style:{color:c.accent,fontWeight:600}},r.dupl),h("td",{style:{maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.sacado),h("td",null,h(Bg,{color:r.op==="Siderqu\u00edmica"?c.green:c.purple},r.op)),h("td",{className:"mono",style:{fontWeight:600}},fB(r.valor)),h("td",{className:"mono"},fD(r.vencto)),h("td",{className:"mono",style:{color:dA(r.vencto)<0?c.red:dA(r.vencto)<=7?c.amber:c.green}},dA(r.vencto)+"d"),h("td",null,h(Bg,{color:r.status==="ativo"?c.green:r.status==="liquidado"?c.blue:c.red},r.status)),h("td",null,r.op==="Siderqu\u00edmica"?h(Bt,{small:true,onClick:()=>gerarCR(r,par)},"\u2193"):"\u2014"),h("td",null,nfts.find(n=>n.recId===r.id)?h(Bg,{color:c.purple},"#"+(nfts.find(n=>n.recId===r.id).tokenId||"?")):h(Bt,{small:true,onClick:()=>mintNFT(r)},"\u25c7 Mint")))))))));
-}
-
-/* ═══════════ RECEB\u00cdVEIS ═══════════ */
-function Recebiveis({recs}){
-  const [ft,setFt]=useState("todos");const [bsc,setBsc]=useState("");
-  const fl=recs.filter(r=>{if(ft!=="todos"&&r.status!==ft)return false;if(bsc){const b=bsc.toLowerCase();return r.cedente.toLowerCase().includes(b)||r.sacado.toLowerCase().includes(b)||r.dupl.toLowerCase().includes(b)}return true});
-  return h("div",null,h("div",{className:"fh",style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},h("div",null,h("h2",{style:{fontSize:18,fontWeight:700}},"Receb\u00edveis"),h("p",{style:{fontSize:11,color:c.dim}},fl.length+" t\u00edt \u00b7 "+fB(fl.reduce((s,r)=>s+r.valor,0)))),h("div",{style:{display:"flex",gap:4,alignItems:"center",flexWrap:"wrap"}},h("input",{placeholder:"Buscar...",value:bsc,onChange:e=>setBsc(e.target.value),style:{width:160,padding:"5px 8px",borderRadius:6,border:"1px solid "+c.border,fontSize:11}}),["todos","ativo","liquidado"].map(f=>h(Bt,{key:f,small:true,primary:ft===f,onClick:()=>setFt(f)},f)),h(Bt,{small:true,onClick:()=>exportCSV(fl,"recebiveis.csv")},"CSV"))),h(Card,{style:{padding:0,overflow:"hidden"}},h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["Dupl","Cedente","Sacado","Op","Valor","Vencto","Dias","Status"].map(t=>h("th",{key:t},t)))),h("tbody",null,fl.map(r=>h("tr",{key:r.id},h("td",{className:"mono",style:{color:c.accent,fontWeight:600}},r.dupl),h("td",{style:{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.cedente),h("td",{style:{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.sacado),h("td",null,h(Bg,{color:r.op==="Siderqu\u00edmica"?c.green:c.purple},r.op)),h("td",{className:"mono",style:{fontWeight:600}},fB(r.valor)),h("td",{className:"mono"},fD(r.vencto)),h("td",{className:"mono",style:{color:dA(r.vencto)<0?c.red:dA(r.vencto)<=7?c.amber:c.green}},dA(r.vencto)+"d"),h("td",null,h(Bg,{color:r.status==="ativo"?c.green:r.status==="liquidado"?c.blue:c.red},r.status)))))))));
-}
-
-/* ═══════════ CONCILIA\u00c7\u00c3O ═══════════ */
-function Conciliacao({recs,setRecs}){
-  const [matches,setMatches]=useState([]);const [loading,setLoading]=useState(false);const [msg,setMsg]=useState("");
-  const [sel,setSel]=useState({});const [vp,setVp]=useState("");const [dl,setDl]=useState(hj());
-  const at=recs.filter(r=>r.status==="ativo");
-  const toggle=id=>setSel(s=>({...s,[id]:!s[id]}));
-  const selIds=Object.keys(sel).filter(k=>sel[k]);
-  const selTot=at.filter(r=>selIds.includes(r.id)).reduce((s,r)=>s+r.valor,0);
-
-  const autoRecon=async()=>{
-    setLoading(true);setMsg("Buscando extrato iHold e conciliando...");
-    const r=await api("POST","/api/reconcile",{apply:false});
-    if(r.ok&&r.matches>0){
-      setMatches(r.details||[]);setMsg("Encontrados "+r.matches+" matches de "+r.analyzed+" entradas");
-    }else if(r.ok){
-      setMsg("Nenhum match encontrado ("+r.analyzed+" entradas analisadas)");setMatches([]);
-    }else{
-      setMsg("API offline \u2014 use baixa manual abaixo");setMatches([]);
-    }
-    setLoading(false);
-  };
-
-  const confirmar=async()=>{
-    if(matches.length===0)return;
-    const r=await api("POST","/api/reconcile",{apply:true});
-    if(r.ok){
-      const ids=matches.map(m=>m.recId);
-      setRecs(recs.map(x=>ids.includes(x.id)?{...x,status:"liquidado",valorPago:matches.find(m=>m.recId===x.id).valorPago,dataLiquidacao:matches.find(m=>m.recId===x.id).date,conciliadoPor:"auto-ihold"}:x));
-      setMsg("Conciliados: "+r.matches+" t\u00edtulos");setMatches([]);
-    }
-  };
-
-  const liqManual=async()=>{
-    if(selIds.length===0)return;
-    const r=await api("POST","/api/liquidar",{ids:selIds,valorPago:Number(vp)||undefined,dataLiquidacao:dl});
-    if(r.ok){
-      setRecs(recs.map(x=>selIds.includes(x.id)?{...x,status:"liquidado",valorPago:Number(vp)||x.valor,dataLiquidacao:dl,conciliadoPor:"manual"}:x));
-      setSel({});setVp("");
-    }
-  };
-
-  const liqTodos=async()=>{
-    if(!confirm("Liquidar TODOS os "+at.length+" ativos?"))return;
-    const ids=at.map(r=>r.id);
-    const r=await api("POST","/api/liquidar",{ids,dataLiquidacao:dl});
-    if(r.ok)setRecs(recs.map(x=>x.status==="ativo"?{...x,status:"liquidado",valorPago:x.valor,dataLiquidacao:dl,conciliadoPor:"manual"}:x));
-  };
-
-  return h("div",null,
-    h("div",{className:"fh",style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},h("div",null,h("h2",{style:{fontSize:18,fontWeight:700}},"Concilia\u00e7\u00e3o"),h("p",{style:{fontSize:11,color:c.dim}},"Autom\u00e1tica via iHold + Baixa manual")),h("div",{style:{display:"flex",gap:4,flexWrap:"wrap"}},h(Bt,{primary:true,onClick:autoRecon,disabled:loading},loading?"\u23f3 ...":"\u26a1 Conciliar Auto"),h(Bt,{small:true,onClick:liqTodos,disabled:at.length===0},"Liquidar Todos"))),
-
-    msg&&h(Card,{style:{marginBottom:10,padding:10,background:matches.length>0?c.green+"08":c.amber+"08",border:"1px solid "+(matches.length>0?c.green:c.amber)+"30"}},h("div",{style:{fontSize:12,fontWeight:600}},msg)),
-
-    matches.length>0&&h(Card,{style:{marginBottom:10,border:"1px solid "+c.green+"40"}},h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}},h("h3",{style:{fontSize:13,fontWeight:700}},"Matches Encontrados ("+matches.length+")"),h(Bt,{primary:true,color:c.green,onClick:confirmar},"Confirmar e Liquidar")),h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["Dupl","Sacado","Valor Face","Valor Pago","Data","Conf"].map(t=>h("th",{key:t},t)))),h("tbody",null,matches.map(m=>h("tr",{key:m.recId,style:{background:c.green+"06"}},h("td",{className:"mono",style:{color:c.accent,fontWeight:600}},m.dupl),h("td",{style:{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},m.sacado),h("td",{className:"mono"},fB(m.valorFace)),h("td",{className:"mono",style:{fontWeight:600,color:c.green}},fB(m.valorPago)),h("td",{className:"mono"},fD(m.date)),h("td",null,h(Bg,{color:m.conf==="exact"?c.green:m.conf==="cnpj"?c.amber:c.red},m.conf)))))))),
-
-    selIds.length>0&&h(Card,{style:{marginBottom:10,border:"1px solid "+c.blue+"40",background:c.blue+"06"}},h("div",{className:"fh",style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}},h("span",{style:{fontSize:12,fontWeight:700}},selIds.length+" selecionado"+(selIds.length>1?"s":"")+" \u00b7 "+fB(selTot)),h("div",{style:{display:"flex",gap:4,alignItems:"center",flexWrap:"wrap"}},h(In,{label:"Valor pago",value:vp,onChange:setVp,prefix:"R$",style:{width:140}}),h(In,{label:"Data",value:dl,onChange:setDl,type:"date",style:{width:130}}),h(Bt,{primary:true,color:c.blue,onClick:liqManual},"Liquidar")))),
-
-    h(Card,{style:{padding:0,overflow:"hidden"}},h("div",{style:{padding:"10px 14px",borderBottom:"1px solid "+c.border}},h("h3",{style:{fontSize:12,fontWeight:700}},"T\u00edtulos Ativos ("+at.length+") \u2014 Baixa Manual")),h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["","Dupl","Sacado","Op","Valor","Vencto","Dias"].map(t=>h("th",{key:t},t)))),h("tbody",null,at.map(r=>h("tr",{key:r.id,style:{background:sel[r.id]?c.blue+"08":"transparent"}},h("td",{style:{width:24}},h("input",{type:"checkbox",checked:!!sel[r.id],onChange:()=>toggle(r.id)})),h("td",{className:"mono",style:{color:c.accent,fontWeight:600}},r.dupl),h("td",{style:{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.sacado),h("td",null,h(Bg,{color:r.op==="Siderqu\u00edmica"?c.green:c.purple},r.op)),h("td",{className:"mono",style:{fontWeight:600}},fB(r.valor)),h("td",{className:"mono"},fD(r.vencto)),h("td",{className:"mono",style:{color:dA(r.vencto)<0?c.red:dA(r.vencto)<=7?c.amber:c.green}},dA(r.vencto)+"d"))))))),
-
-    recs.filter(r=>r.status==="liquidado").length>0&&h("div",{style:{marginTop:12}},h("h3",{style:{fontSize:13,fontWeight:700,marginBottom:8}},"Liquidados ("+recs.filter(r=>r.status==="liquidado").length+")"),h(Card,{style:{padding:0,overflow:"hidden"}},h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["Dupl","Sacado","Face","Pago","Data","Via"].map(t=>h("th",{key:t},t)))),h("tbody",null,recs.filter(r=>r.status==="liquidado").map(r=>h("tr",{key:r.id},h("td",{className:"mono",style:{color:c.blue,fontWeight:600}},r.dupl),h("td",{style:{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.sacado),h("td",{className:"mono"},fB(r.valor)),h("td",{className:"mono",style:{color:c.green,fontWeight:600}},fB(r.valorPago||r.valor)),h("td",{className:"mono"},fD(r.dataLiquidacao)),h("td",null,h(Bg,{color:r.conciliadoPor==="auto-ihold"?c.green:c.blue},r.conciliadoPor||"manual"))))))))));
-}
-
-/* ═══════════ ON-CHAIN ═══════════ */
-function OnChain({recs,nfts,setNfts,nftSt}){
-  const [minting,setMinting]=useState(null);
-
-  const mint=async(r)=>{
-    setMinting(r.id);
-    const res=await api("POST","/api/nft/mint",{recId:r.id});
-    if(res.ok){
-      setNfts([...nfts,{recId:r.id,dupl:r.dupl,tokenId:res.tokenId,txHash:res.txHash,contract:res.contract,owner:res.owner||"0x...",mintedAt:new Date().toISOString()}]);
-    }else{
-      alert("Erro: "+(res.error||"Contrato n\u00e3o deployado. Deploy via Remix primeiro."));
-    }
-    setMinting(null);
-  };
-
-  const mintedIds=new Set(nfts.map(n=>n.recId));
-  const available=recs.filter(r=>!mintedIds.has(r.id));
-
-  return h("div",null,
-    h("div",{className:"fh",style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},h("div",null,h("h2",{style:{fontSize:18,fontWeight:700}},"On-Chain \u00b7 NFTs"),h("p",{style:{fontSize:11,color:c.dim}},"Certificados de Receb\u00edvel tokenizados na Polygon")),h(Bg,{color:nftSt.ready?c.green:c.amber},nftSt.ready?"Conectado":"Offline")),
-
-    h(Card,{className:"g4",style:{marginBottom:10,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,padding:14}},
-      h("div",{style:{textAlign:"center"}},h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"CONTRATO"),h("div",{className:"mono",style:{fontSize:11,fontWeight:700,color:c.purple,wordBreak:"break-all"}},nftSt.address?nftSt.address.slice(0,10)+"..."+nftSt.address.slice(-6):"N\u00e3o deployado")),
-      h("div",{style:{textAlign:"center"}},h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"SUPPLY"),h("div",{className:"mono",style:{fontSize:18,fontWeight:800,color:c.accent}},nfts.length)),
-      h("div",{style:{textAlign:"center"}},h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"WALLET"),h("div",{className:"mono",style:{fontSize:11,fontWeight:700}},nftSt.matic?(nftSt.matic+" MATIC"):"...")),
-      h("div",{style:{textAlign:"center"}},h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"CHAIN"),h("div",{style:{fontSize:14,fontWeight:700,color:c.purple}},"Polygon"))),
-
-    nfts.length>0&&h("div",{style:{marginBottom:12}},h("h3",{style:{fontSize:13,fontWeight:700,marginBottom:8}},"NFTs Mintados ("+nfts.length+")"),h(Card,{style:{padding:0,overflow:"hidden"}},h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["Token","Dupl","Valor","Modo","Tx","Polygonscan"].map(t=>h("th",{key:t},t)))),h("tbody",null,nfts.map(n=>{const r=recs.find(x=>x.id===n.recId);return h("tr",{key:n.recId},h("td",null,h(Bg,{color:c.purple},"#"+(n.tokenId||"?"))),h("td",{className:"mono",style:{color:c.accent,fontWeight:600}},n.dupl),h("td",{className:"mono",style:{fontWeight:600}},r?fB(r.valor):"\u2014"),h("td",null,h(Bg,{color:n.mode==="on-chain"?c.green:c.amber},n.mode||"local")),h("td",{className:"mono",style:{fontSize:10}},n.txHash?(n.txHash.slice(0,10)+"..."):h(Bg,{color:c.amber},"local")),h("td",null,n.txHash?h("a",{href:"https://polygonscan.com/tx/"+n.txHash,target:"_blank",style:{color:c.accent,fontSize:11,textDecoration:"none"}},"Ver \u2197"):"\u2014"))})))))),
-
-    h("h3",{style:{fontSize:13,fontWeight:700,marginBottom:8}},"Dispon\u00edveis para Mint ("+available.length+")"),
-    h(Card,{style:{padding:0,overflow:"hidden"}},h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["Dupl","Sacado","Op","Valor","Vencto","A\u00e7\u00e3o"].map(t=>h("th",{key:t},t)))),h("tbody",null,available.map(r=>h("tr",{key:r.id},h("td",{className:"mono",style:{color:c.accent,fontWeight:600}},r.dupl),h("td",{style:{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.sacado),h("td",null,h(Bg,{color:r.op==="Siderqu\u00edmica"?c.green:c.purple},r.op)),h("td",{className:"mono",style:{fontWeight:600}},fB(r.valor)),h("td",{className:"mono"},fD(r.vencto)),h("td",null,h(Bt,{small:true,primary:true,color:c.purple,onClick:()=>mint(r),disabled:minting===r.id},minting===r.id?"\u23f3":"\u25c7 Mint NFT")))))))),
-
-    h(Card,{style:{marginTop:12,background:c.bg}},h("h3",{style:{fontSize:12,fontWeight:700,marginBottom:6,color:c.accent}},"Como funciona"),h("div",{style:{fontSize:11,color:c.dim,lineHeight:1.6}},"1. Deploy o contrato EFIX_CR.sol na Polygon via Remix IDE",h("br"),"2. Configure o endere\u00e7o do contrato nas vari\u00e1veis de ambiente (NFT_CONTRACT_ADDRESS)",h("br"),"3. Cada CR mintado vira um ERC-721 transfer\u00edvel no secund\u00e1rio",h("br"),"4. Metadata inclui: duplicata, valor, vencimento, cedente, sacado, regime fiscal",h("br"),"5. Liquidado o CR, o NFT pode ser queimado (burn) ou mantido como hist\u00f3rico")));
-}
-
-/* ═══════════ CADASTROS ═══════════ */
-function Cadastros(){
-  const list=[{id:"USR-001",nome:"C2LOG TRANSPORTES LTDA",tipo:"cedente",doc:"04.876.970/0001-06",email:"contato@c2log.com.br"},{id:"USR-002",nome:"SIDERQUIMICA IND. E COM.",tipo:"sacado",doc:"73.586.976/0001-61",email:"DIOCLEA.BILL@SBCHEMICALS.COM.BR"},{id:"USR-003",nome:"ROCHESA TINTAS E VERNIZES",tipo:"sacado",doc:"74.068.552/0001-78",email:"contato@rochesa.com.br"},{id:"USR-004",nome:"Ernesto Otero",tipo:"admin",doc:"ernesto.otero@hausbank.com.br",email:"ernesto.otero@hausbank.com.br"}];
-  return h("div",null,h("h2",{style:{fontSize:18,fontWeight:700,marginBottom:14}},"Cadastros"),h("div",{className:"g4",style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:10}},h(Card,{style:{textAlign:"center",padding:10}},h("div",{className:"mono",style:{fontSize:22,fontWeight:800,color:c.green}},1),h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"CEDENTES")),h(Card,{style:{textAlign:"center",padding:10}},h("div",{className:"mono",style:{fontSize:22,fontWeight:800,color:c.purple}},2),h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"SACADOS")),h(Card,{style:{textAlign:"center",padding:10}},h("div",{className:"mono",style:{fontSize:22,fontWeight:800,color:c.blue}},0),h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"INVESTIDORES")),h(Card,{style:{textAlign:"center",padding:10}},h("div",{className:"mono",style:{fontSize:22,fontWeight:800,color:c.amber}},1),h("div",{style:{fontSize:9,color:c.dim,fontWeight:600}},"ADMINS"))),h(Card,{style:{padding:0,overflow:"hidden"}},h("div",{style:{overflowX:"auto"}},h("table",null,h("thead",null,h("tr",null,["ID","Nome","Tipo","Doc","Email"].map(t=>h("th",{key:t},t)))),h("tbody",null,list.map(u=>h("tr",{key:u.id},h("td",{className:"mono",style:{color:c.accent}},u.id),h("td",{style:{fontWeight:600}},u.nome),h("td",null,h(Bg,{color:u.tipo==="cedente"?c.green:u.tipo==="sacado"?c.purple:c.amber},u.tipo)),h("td",{className:"mono",style:{color:c.sec}},u.doc),h("td",null,u.email))))))));
-}
-
-/* ═══════════ PAR\u00c2METROS ═══════════ */
-function Parametros({par,setPar}){
-  const up=(k,v)=>{const nw={...par,[k]:v};setPar(nw);api("PUT","/api/params",nw)};
-  return h("div",null,h("h2",{style:{fontSize:18,fontWeight:700,marginBottom:14}},"Par\u00e2metros"),h("div",{className:"g2",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
-    h(Card,null,h("h3",{style:{fontSize:13,fontWeight:700,marginBottom:10,color:c.accent}},"Taxas"),h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}},h(In,{label:"Desconto %",value:String(par.txDesconto),onChange:v=>up("txDesconto",Number(v)||0),suffix:"%"}),h(In,{label:"Royalty %",value:String(par.royalty),onChange:v=>up("royalty",Number(v)||0),suffix:"%"}),h(In,{label:"Prazo Sider (d)",value:String(par.prazoSider),onChange:v=>up("prazoSider",Number(v)||0)}),h(In,{label:"Prazo Mercado (d)",value:String(par.prazoMercado),onChange:v=>up("prazoMercado",Number(v)||0)})),h("div",{style:{marginTop:10,padding:10,background:c.bg,borderRadius:6,border:"1px solid "+c.border}},h("div",{style:{fontSize:10,fontWeight:700,color:c.dim,marginBottom:4}},"SIMULA\u00c7\u00c3O R$ 100k"),h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,fontSize:11}},h("div",null,h("div",{style:{color:c.sec}},"Desconto"),h("div",{className:"mono",style:{fontWeight:700}},fB(100000*par.txDesconto/100))),h("div",null,h("div",{style:{color:c.sec}},"Royalty"),h("div",{className:"mono",style:{fontWeight:700}},fB(100000*par.royalty/100))),h("div",null,h("div",{style:{color:c.sec}},"L\u00edquido"),h("div",{className:"mono",style:{fontWeight:700,color:c.green}},fB(100000*(1-par.txDesconto/100-par.royalty/100))))))),
-    h(Card,null,h("h3",{style:{fontSize:13,fontWeight:700,marginBottom:10,color:c.accent}},"Securitizadora"),h("div",{style:{display:"grid",gap:6}},h(In,{label:"Nome",value:par.nomeSecuritizadora,onChange:v=>up("nomeSecuritizadora",v)}),h(In,{label:"CNPJ",value:par.cnpjSecuritizadora,onChange:v=>up("cnpjSecuritizadora",v)}),h(In,{label:"Conta",value:par.contaBanco,onChange:v=>up("contaBanco",v)})),h("div",{style:{marginTop:10}},h("div",{style:{fontSize:10,fontWeight:700,color:c.dim,marginBottom:6}},"IR REGRESSIVO"),h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:4,fontSize:11}},["180d","360d","720d","+720d"].map((l,i)=>h("div",{key:i,style:{textAlign:"center",padding:6,background:c.bg,borderRadius:4}},h("div",{style:{fontSize:9,color:c.sec}},l),h("div",{className:"mono",style:{fontWeight:700,color:c.accent}},par.irRegressivo[i]+"%"))))))));
-}
-
-/* ═══════════ APP ═══════════ */
-function App(){
-  const [page,setPage]=useState("Dashboard");
-  const [recs,setRecs]=useState(SEED);
-  const [par,setPar]=useState(defP);
-  const [nfts,setNfts]=useState([]);
-  const [nftSt,setNftSt]=useState({ready:false});
-  const [bal,setBal]=useState(null);
-  const [menu,setMenu]=useState(false);
-  const [loaded,setLoaded]=useState(false);
-
-  useEffect(()=>{
-    Promise.all([
-      api("GET","/api/recebiveis"),api("GET","/api/nft/tokens"),api("GET","/api/nft/status"),api("GET","/api/params"),api("GET","/api/balance")
-    ]).then(([r,nt,ns,p,b])=>{
-      if(r.ok&&r.data&&r.data.length>0)setRecs(r.data);
-      else api("POST","/api/recebiveis/seed",{data:SEED}).then(()=>setRecs(SEED));
-      if(nt.ok&&nt.data)setNfts(nt.data);
-      if(ns.ok)setNftSt(ns);
-      if(p.ok&&p.data)setPar(p.data);
-      if(b.ok&&b.data){try{const accs=Array.isArray(b.data)?b.data:b.data.data||[];const total=accs.reduce((s,a)=>s+(Number(a.balance||a.available_balance||0)/100),0);if(total>0)setBal(total)}catch(e){}}
-      setLoaded(true);
-    }).catch(()=>setLoaded(true));
-  },[]);
-
-  const nav=p=>{setPage(p);setMenu(false)};
-  const ct=()=>{switch(page){
-    case "Dashboard":return h(Dashboard,{recs,par,nfts,bal,nav});
-    case "Opera\u00e7\u00f5es":return h(Operacoes,{recs,setRecs,par,nfts});
-    case "Receb\u00edveis":return h(Recebiveis,{recs});
-    case "Concilia\u00e7\u00e3o":return h(Conciliacao,{recs,setRecs});
-    case "On-Chain":return h(OnChain,{recs,nfts,setNfts,nftSt});
-    case "Cadastros":return h(Cadastros);
-    case "Par\u00e2metros":return h(Parametros,{par,setPar});
-    default:return h(Card,null,h("p",null,"Em desenvolvimento"));
-  }};
-
-  return h("div",{style:{display:"flex",minHeight:"100vh"}},
-    h("div",{className:"overlay"+(menu?" open":""),onClick:()=>setMenu(false)}),
-    h("div",{className:"mob-hdr",style:{display:"none",position:"fixed",top:0,left:0,right:0,height:44,background:"#1E1B2E",zIndex:50,alignItems:"center",padding:"0 10px",gap:8}},h("button",{onClick:()=>setMenu(!menu),style:{background:"none",border:"none",color:"#fff",fontSize:18,cursor:"pointer"}},"\u2630"),h("img",{src:LOGO,style:{width:20,height:20,borderRadius:4}}),h("span",{style:{color:"#fff",fontSize:12,fontWeight:700}},"EFIX")),
-    h("nav",{className:"sidebar"+(menu?" open":""),style:{width:180,background:"#1E1B2E",color:"#fff",padding:"14px 0",flexShrink:0,display:"flex",flexDirection:"column",position:"sticky",top:0,height:"100vh"}},
-      h("div",{style:{padding:"0 14px",marginBottom:16,display:"flex",alignItems:"center",gap:6}},h("img",{src:LOGO,style:{width:24,height:24,borderRadius:6}}),h("div",null,h("div",{style:{fontSize:13,fontWeight:800}},"EFIX"),h("div",{style:{fontSize:7,color:"#9CA3AF",letterSpacing:".08em"}},"SECURITIZADORA S.A."))),
-      pages.map(p=>h("div",{key:p,onClick:()=>nav(p),style:{padding:"8px 14px",cursor:"pointer",fontSize:12,fontWeight:page===p?700:400,color:page===p?"#fff":"#9CA3AF",background:page===p?"#6366F120":"transparent",borderLeft:page===p?"3px solid #6366F1":"3px solid transparent",transition:"all .15s"}},(icons[p]||"\u25c7")+" "+p)),
-      h("div",{style:{marginTop:"auto",padding:"8px 14px",fontSize:8,color:"#4B5563",lineHeight:1.4}},"EFIX Plataforma de Tokenização e Crowdfunding Ltda\nCVM 88 \u00b7 Ato 23.635/2025")),
-    h("main",{className:"main",style:{flex:1,padding:18,overflowY:"auto",maxHeight:"100vh"}},!loaded?h("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",height:"50vh",color:c.dim}},"Carregando..."):ct()));
-}
-ReactDOM.createRoot(document.getElementById("root")).render(h(App));
-</script></body></html>
-
+document.addEventListener('click', (e) => {
+  const sel = document.querySelector('.lang-sel');
+  if (sel && !sel.contains(e.target)) {
+    document.getElementById('langMenu')?.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
+<script src="/shared/js/ga4.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-brand-title="{name} — Painel">EFIX TDIC — Painel</title>
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/reset.css">
+<style>
+:root{
+  --white:#fff;--black:#0a0a0a;
+  --gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--gray-700:#404040;--gray-800:#262626;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;
+  --brand-primary:#22c55e;--brand-primary-dark:#16a34a;--brand-secondary:#0a0a0a;--brand-accent:#22c55e;
+}
+html,body{height:100%}
+body{font-family:'Syne',-apple-system,sans-serif;background:#fafafa;color:#0a0a0a;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:#0a0a0a;color:#fff}
+.mono{font-family:'Space Mono',monospace}
+
+/* Layout shell */
+.shell{display:flex;flex-direction:column;min-height:100vh}
+nav.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid #e5e5e5;padding:0 1.5rem;height:56px;display:flex;align-items:center}
+.topbar-inner{max-width:1200px;width:100%;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.brand-link{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#0a0a0a;font-weight:800;font-size:17px;letter-spacing:-0.5px}
+.brand-link .mark{width:24px;height:24px;color:var(--brand-primary)}
+.brand-sub{font-family:'Space Mono',monospace;font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.1em;padding-left:6px;border-left:1px solid #e5e5e5;margin-left:6px}
+.user-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1px solid #e5e5e5;border-radius:50px;background:#fff;font-size:0.78rem;color:#525252}
+.user-pill .avatar{width:24px;height:24px;border-radius:50%;background:var(--brand-primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;font-family:'Space Mono',monospace}
+.user-pill .email{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-pill button{background:transparent;border:none;color:#a3a3a3;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:0 4px;transition:color .2s}
+.user-pill button:hover{color:#0a0a0a}
+
+main{flex:1;width:100%;max-width:1200px;margin:0 auto;padding:1.75rem 1.5rem 4rem}
+
+/* Login */
+.login-wrap{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;padding:2rem 1.5rem}
+.login-card{width:100%;max-width:420px;background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:2rem 2rem 1.75rem;box-shadow:0 1px 2px rgba(0,0,0,0.02)}
+.login-tag{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:0.6rem;color:#737373;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1rem}
+.login-tag .dot{width:5px;height:5px;background:var(--brand-primary);border-radius:50%}
+.login-card h1{font-size:1.45rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.4rem;line-height:1.25}
+.login-card p.help{font-size:0.85rem;color:#737373;margin-bottom:1.5rem;line-height:1.6}
+.login-form{display:flex;flex-direction:column;gap:0.85rem}
+label.field{display:flex;flex-direction:column;gap:0.4rem}
+label.field .lbl{font-family:'Space Mono',monospace;font-size:0.6rem;color:#525252;text-transform:uppercase;letter-spacing:0.08em}
+input[type=text],input[type=email],input[type=number],input[type=tel],input[type=date],select,textarea{font-family:inherit;font-size:0.92rem;padding:0.7rem 0.85rem;border:1px solid #d4d4d4;border-radius:8px;background:#fff;color:#0a0a0a;transition:border-color .2s, box-shadow .2s;width:100%}
+input.mono{font-family:'Space Mono',monospace;letter-spacing:0.15em}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand-primary);box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-primary) 15%, transparent)}
+input[disabled]{background:#f5f5f5;color:#737373}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:0.5rem;padding:0.75rem 1.25rem;border-radius:8px;font-family:inherit;font-weight:600;font-size:0.85rem;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn:disabled{cursor:not-allowed;opacity:0.5}
+.btn-primary{background:#0a0a0a;color:#fff}
+.btn-primary:hover:not(:disabled){background:#262626}
+.btn-brand{background:var(--brand-primary);color:#fff}
+.btn-brand:hover:not(:disabled){background:var(--brand-primary-dark);box-shadow:0 4px 16px color-mix(in srgb, var(--brand-primary) 20%, transparent)}
+.btn-ghost{background:transparent;color:#525252;border:1px solid #d4d4d4}
+.btn-ghost:hover:not(:disabled){border-color:#0a0a0a;color:#0a0a0a}
+.btn-danger-ghost{background:transparent;color:#525252;border:1px solid #e5e5e5;font-size:0.78rem;padding:0.5rem 0.85rem}
+.btn-danger-ghost:hover{border-color:#ef4444;color:#ef4444}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-msg{font-size:0.78rem;color:#ef4444;background:#fef2f2;padding:0.55rem 0.75rem;border-radius:6px;border:1px solid #fecaca}
+.info-msg{font-size:0.78rem;color:#525252;background:#f5f5f5;padding:0.55rem 0.75rem;border-radius:6px}
+.foot-note{margin-top:1.25rem;font-size:0.72rem;color:#a3a3a3;line-height:1.6;text-align:center}
+.foot-note a{color:#525252;text-decoration:none;border-bottom:1px dotted #d4d4d4}
+
+/* Page header */
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem}
+.page-head h2{font-size:1.4rem;font-weight:700;letter-spacing:-0.02em}
+.page-head .sub{font-size:0.85rem;color:#737373}
+.page-head-actions{display:flex;gap:0.5rem;flex-wrap:wrap}
+
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.25rem}
+.kpi{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:0.95rem 1rem}
+.kpi .lbl{font-family:'Space Mono',monospace;font-size:0.6rem;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem}
+.kpi .val{font-family:'Space Mono',monospace;font-size:1.15rem;font-weight:700;color:#0a0a0a}
+.kpi .val.brand{color:var(--brand-primary)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid #e5e5e5;margin-bottom:1.25rem;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:0.75rem 1rem;font-size:0.85rem;font-weight:600;color:#737373;background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;font-family:inherit}
+.tab:hover{color:#0a0a0a}
+.tab.active{color:var(--brand-primary);border-bottom-color:var(--brand-primary)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Card / Table */
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.card-head{padding:0.85rem 1.1rem;border-bottom:1px solid #e5e5e5;display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap}
+.card-head h3{font-size:0.92rem;font-weight:700}
+.card-head .meta{font-size:0.74rem;color:#737373;font-family:'Space Mono',monospace}
+.card-body{padding:1.1rem}
+
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-family:'Space Mono',monospace;font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#737373;padding:0.65rem 1.1rem;border-bottom:1px solid #e5e5e5;background:#fafafa;white-space:nowrap}
+td{padding:0.7rem 1.1rem;border-bottom:1px solid #f5f5f5;font-size:0.83rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.row-hover:hover td{background:#fafafa;cursor:pointer}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:50px;font-family:'Space Mono',monospace;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap}
+.pill.gray{background:#f5f5f5;color:#525252}
+.pill.amber{background:#fffbeb;color:#b45309}
+.pill.blue{background:#eff6ff;color:#1d4ed8}
+.pill.green{background:#f0fdf4;color:#15803d}
+.pill.brand{background:color-mix(in srgb, var(--brand-primary) 12%, transparent);color:var(--brand-primary-dark)}
+.pill.red{background:#fef2f2;color:#b91c1c}
+.pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+/* KYB layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:0.85rem}
+.kyb-section{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--brand-primary);text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent);padding-bottom:6px;margin:1rem 0 0.75rem}
+.kyb-section:first-of-type{margin-top:0}
+.upload-zone{border:1.5px dashed #d4d4d4;border-radius:10px;padding:1rem;display:flex;flex-direction:column;gap:0.4rem;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa}
+.upload-zone:hover{border-color:var(--brand-primary);background:color-mix(in srgb, var(--brand-primary) 5%, #fff)}
+.upload-zone .ico{font-family:'Space Mono',monospace;font-size:0.8rem;color:var(--brand-primary);font-weight:700}
+.upload-zone .lbl{font-size:0.78rem;font-weight:600}
+.upload-zone .help{font-size:0.7rem;color:#737373}
+.uploaded-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.uploaded-item{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fafafa;border:1px solid #e5e5e5;border-radius:6px;font-size:0.78rem}
+.uploaded-item .name{font-family:'Space Mono',monospace;color:#525252}
+.uploaded-item button{background:none;border:none;color:#a3a3a3;cursor:pointer;font-size:0.78rem;padding:0}
+.uploaded-item button:hover{color:#ef4444}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:5vh 1rem;overflow-y:auto;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal{width:100%;max-width:560px;background:#fff;border-radius:14px;border:1px solid #e5e5e5;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.18)}
+.modal-head{padding:1.1rem 1.4rem;border-bottom:1px solid #e5e5e5;display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{font-size:1rem;font-weight:700}
+.modal-head .x{background:none;border:none;color:#a3a3a3;cursor:pointer;font-size:1.25rem;line-height:1;padding:0;width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center}
+.modal-head .x:hover{background:#f5f5f5;color:#0a0a0a}
+.modal-body{padding:1.4rem}
+.modal-foot{padding:0.95rem 1.4rem;border-top:1px solid #e5e5e5;display:flex;justify-content:flex-end;gap:0.5rem;background:#fafafa}
+
+/* Empty state */
+.empty{padding:3rem 1.5rem;text-align:center;color:#737373}
+.empty h3{font-size:0.95rem;color:#0a0a0a;font-weight:700;margin-bottom:0.4rem}
+.empty p{font-size:0.82rem;line-height:1.7;max-width:380px;margin:0 auto 1rem}
+
+/* Confirm overlay */
+.confirm-list{font-size:0.84rem;color:#525252;line-height:1.8;background:#fafafa;border:1px solid #e5e5e5;border-radius:8px;padding:0.85rem 1.1rem;margin-bottom:1rem}
+.confirm-list .row{display:flex;justify-content:space-between;border-bottom:1px solid #f5f5f5;padding:4px 0}
+.confirm-list .row:last-child{border-bottom:none}
+.confirm-list .k{color:#737373;font-family:'Space Mono',monospace;font-size:0.74rem;text-transform:uppercase;letter-spacing:0.06em}
+.confirm-list .v{font-family:'Space Mono',monospace;font-weight:700;color:#0a0a0a}
+
+#alchemy-signer-iframe-container{position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden}
+
+/* Mobile */
+@media(max-width:780px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .topbar-inner .brand-sub{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="alchemy-signer-iframe-container"></div>
+
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <nav class="topbar">
+    <div class="topbar-inner">
+      <a href="/tdic/" class="brand-link" id="brandLink">
+        <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="currentColor"/><g fill="#fff"><path d="M16 22h32v4H34v22h-4V26H16z"/><circle cx="48" cy="48" r="3"/></g></svg>
+        <span data-brand="displayName">EFIX TDIC</span>
+        <span class="brand-sub">Painel cedente</span>
+      </a>
+      <div id="userPill" class="user-pill" style="display:none">
+        <span class="avatar" id="userAvatar">·</span>
+        <span class="email" id="userEmail"></span>
+        <button onclick="window.tdicApp.logout()">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- LOGIN -->
+  <div id="loginView" class="login-wrap" style="display:none">
+    <div class="login-card">
+      <div class="login-tag"><span class="dot"></span><span>Acesso seguro · OTP por e-mail</span></div>
+      <h1 id="loginTitle">Acessar painel TDIC</h1>
+      <p class="help" id="loginHelp">Informe o e-mail corporativo do responsável pela cedente. Vamos enviar um código de verificação para confirmar sua identidade.</p>
+
+      <!-- Step: email -->
+      <form class="login-form" id="emailForm">
+        <label class="field">
+          <span class="lbl">E-mail corporativo</span>
+          <input type="email" id="emailInput" placeholder="financeiro@empresa.com.br" required autocomplete="email">
+        </label>
+        <div class="error-msg" id="emailErr" style="display:none"></div>
+        <button class="btn btn-brand" type="submit" id="sendOtpBtn">Enviar código</button>
+      </form>
+
+      <!-- Step: code -->
+      <form class="login-form" id="codeForm" style="display:none">
+        <div class="info-msg">Código enviado para <strong id="codeEmail"></strong>. Verifique a caixa de entrada e o spam.</div>
+        <label class="field">
+          <span class="lbl">Código (6 dígitos)</span>
+          <input type="text" id="codeInput" class="mono" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        </label>
+        <div class="error-msg" id="codeErr" style="display:none"></div>
+        <button class="btn btn-brand" type="submit" id="verifyOtpBtn">Confirmar</button>
+        <button class="btn btn-ghost" type="button" id="resendBtn">Reenviar / trocar e-mail</button>
+      </form>
+
+      <p class="foot-note">
+        Ao prosseguir você concorda com os termos da
+        <a href="/tdic/" target="_blank">EFIX TDIC</a>. Smart wallet criada via Alchemy
+        Account Kit. Gas custeado pela EFIX (gasless).
+      </p>
+    </div>
+  </div>
+
+  <!-- KYB -->
+  <main id="kybView" style="display:none">
+    <div class="page-head">
+      <div>
+        <h2>Cadastro KYB da cedente</h2>
+        <p class="sub">Antes do primeiro mint, precisamos validar a empresa. Levamos 1 dia útil para aprovar.</p>
+      </div>
+    </div>
+
+    <form class="card" id="kybForm">
+      <div class="card-body">
+        <div class="kyb-section">Dados da pessoa jurídica</div>
+        <div class="two-col">
+          <label class="field">
+            <span class="lbl">CNPJ</span>
+            <input type="text" id="kybCnpj" placeholder="00.000.000/0000-00" required>
+          </label>
+          <label class="field">
+            <span class="lbl">Razão social</span>
+            <input type="text" id="kybRazao" required>
+          </label>
+        </div>
+        <div class="two-col" style="margin-top:0.75rem">
+          <label class="field">
+            <span class="lbl">Regime tributário</span>
+            <select id="kybRegime">
+              <option value="lucro-real" selected>Lucro real</option>
+              <option value="lucro-presumido">Lucro presumido</option>
+              <option value="simples">Simples nacional</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="lbl">Faturamento anual estimado</span>
+            <select id="kybFat">
+              <option value="ate-10m">Até R$ 10M</option>
+              <option value="10m-50m" selected>R$ 10M – 50M</option>
+              <option value="50m-200m">R$ 50M – 200M</option>
+              <option value="200m+">Acima de R$ 200M</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="kyb-section">Contato do responsável</div>
+        <div class="two-col">
+          <label class="field">
+            <span class="lbl">Nome completo</span>
+            <input type="text" id="kybNome" required>
+          </label>
+          <label class="field">
+            <span class="lbl">Cargo</span>
+            <input type="text" id="kybCargo" placeholder="CFO, Controller, Diretor Financeiro" required>
+          </label>
+        </div>
+        <div class="two-col" style="margin-top:0.75rem">
+          <label class="field">
+            <span class="lbl">E-mail (já validado)</span>
+            <input type="email" id="kybEmail" disabled>
+          </label>
+          <label class="field">
+            <span class="lbl">Telefone</span>
+            <input type="tel" id="kybTel" placeholder="(11) 90000-0000">
+          </label>
+        </div>
+
+        <div class="kyb-section">Documentos</div>
+        <div class="two-col">
+          <div class="upload-zone" data-doc="contrato-social">
+            <div class="ico">↑</div>
+            <div class="lbl">Contrato social consolidado</div>
+            <div class="help">PDF, até 10 MB</div>
+          </div>
+          <div class="upload-zone" data-doc="receita-cnpj">
+            <div class="ico">↑</div>
+            <div class="lbl">Cartão CNPJ Receita Federal</div>
+            <div class="help">PDF, até 5 MB</div>
+          </div>
+        </div>
+        <div class="two-col" style="margin-top:0.75rem">
+          <div class="upload-zone" data-doc="balanco">
+            <div class="ico">↑</div>
+            <div class="lbl">Balanço (último exercício)</div>
+            <div class="help">PDF, até 10 MB</div>
+          </div>
+          <div class="upload-zone" data-doc="ata-sociedade">
+            <div class="ico">↑</div>
+            <div class="lbl">Ata / procuração do responsável</div>
+            <div class="help">PDF, até 5 MB</div>
+          </div>
+        </div>
+        <div class="uploaded-list" id="uploadedList"></div>
+      </div>
+      <div class="modal-foot" style="border-top:1px solid #e5e5e5">
+        <button class="btn btn-ghost" type="button" onclick="window.tdicApp.logout()">Sair</button>
+        <button class="btn btn-brand" type="submit" id="kybSubmitBtn">Enviar para análise</button>
+      </div>
+    </form>
+  </main>
+
+  <!-- KYB pending -->
+  <main id="kybPendingView" style="display:none">
+    <div class="page-head">
+      <div>
+        <h2>KYB em análise</h2>
+        <p class="sub">Recebemos seus documentos. O time de compliance EFIX aprova em até 1 dia útil.</p>
+      </div>
+      <div class="page-head-actions">
+        <button class="btn btn-ghost" id="refreshKybBtn">Atualizar status</button>
+        <button class="btn btn-ghost" id="simulateApproveKybBtn" title="DEMO">Simular aprovação</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="empty">
+          <h3>Análise em andamento</h3>
+          <p>Você receberá um e-mail assim que a análise for concluída. Em produção, este card mostrará o
+          status real consultado em <code class="mono">tdic-backend</code>.</p>
+          <span class="pill amber"><span class="dot"></span>Pending</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- DASHBOARD -->
+  <main id="dashView" style="display:none">
+    <div class="page-head">
+      <div>
+        <h2 id="dashGreeting">Olá</h2>
+        <p class="sub" id="dashSub">Smart wallet pronta · Gasless via paymaster Alchemy</p>
+      </div>
+      <div class="page-head-actions">
+        <button class="btn btn-brand" id="newCreditoBtn">+ Novo crédito</button>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="lbl">Smart wallet</div><div class="val mono" id="kpiWallet">—</div></div>
+      <div class="kpi"><div class="lbl">Créditos ativos</div><div class="val" id="kpiCreditos">0</div></div>
+      <div class="kpi"><div class="lbl">Tokens TDIC</div><div class="val brand" id="kpiTokens">0</div></div>
+      <div class="kpi"><div class="lbl">Despesa gerada</div><div class="val mono" id="kpiDespesa">R$ 0</div></div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="creditos">Meus créditos</button>
+      <button class="tab" data-tab="tokens">Tokens TDIC</button>
+      <button class="tab" data-tab="despesa">Despesa financeira</button>
+      <button class="tab" data-tab="historico">Histórico</button>
+    </div>
+
+    <div class="tab-panel active" data-panel="creditos">
+      <div class="card">
+        <div class="card-head">
+          <h3>Créditos cadastrados</h3>
+          <span class="meta" id="creditosCount">0 créditos</span>
+        </div>
+        <div id="creditosBody"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="tokens">
+      <div class="card">
+        <div class="card-head">
+          <h3>Tokens TDIC na smart wallet</h3>
+          <span class="meta">ERC-1155 · Base mainnet</span>
+        </div>
+        <div id="tokensBody"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="despesa">
+      <div class="card">
+        <div class="card-head">
+          <h3>Despesa financeira do período</h3>
+          <span class="meta">Para fechamento contábil</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size:0.85rem;color:#525252;line-height:1.7;margin-bottom:1rem">
+            O deságio é amortizado pelo prazo do CR e classificado como despesa financeira na DRE.
+            Exporte o relatório consolidado para enviar ao seu contador.
+          </p>
+          <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:1rem">
+            <div class="kpi"><div class="lbl">Despesa gerada (acumulada)</div><div class="val mono" id="despesaTotal">R$ 0</div></div>
+            <div class="kpi"><div class="lbl">Redução IRPJ/CSLL (34%)</div><div class="val mono brand" id="despesaSavings">R$ 0</div></div>
+            <div class="kpi"><div class="lbl">CRs ativos</div><div class="val" id="despesaCRs">0</div></div>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-ghost" id="exportCsvBtn">Exportar CSV</button>
+            <button class="btn btn-ghost" id="exportPdfBtn">Gerar relatório (HTML)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="historico">
+      <div class="card">
+        <div class="card-head">
+          <h3>Histórico de transações</h3>
+          <span class="meta">On-chain · Base</span>
+        </div>
+        <div id="historicoBody"></div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<!-- Modal: novo crédito -->
+<div class="modal-backdrop" id="modalCredito" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Novo crédito a ceder</h3>
+      <button class="x" onclick="window.tdicApp.closeCreditoModal()">×</button>
+    </div>
+    <form id="creditoForm">
+      <div class="modal-body">
+        <div class="kyb-section" style="margin-top:0">Tipo do crédito</div>
+        <label class="field">
+          <span class="lbl">Categoria</span>
+          <select id="credTipo">
+            <option value="confissao-divida" selected>Confissão de dívida</option>
+            <option value="duplicata">Duplicata</option>
+            <option value="contrato-fornecimento">Contrato de fornecimento</option>
+            <option value="mutuo">Mútuo intercompany</option>
+          </select>
+        </label>
+
+        <div class="kyb-section">Devedor</div>
+        <div class="two-col">
+          <label class="field">
+            <span class="lbl">CNPJ do devedor</span>
+            <input type="text" id="credDevedorCnpj" placeholder="00.000.000/0000-00" required>
+          </label>
+          <label class="field">
+            <span class="lbl">Razão social do devedor</span>
+            <input type="text" id="credDevedorRazao" required>
+          </label>
+        </div>
+
+        <div class="kyb-section">Termos do crédito</div>
+        <div class="two-col">
+          <label class="field">
+            <span class="lbl">Valor face (R$)</span>
+            <input type="number" id="credFace" placeholder="1000000" min="0" step="1000" required>
+          </label>
+          <label class="field">
+            <span class="lbl">Vencimento</span>
+            <input type="date" id="credVencto" required>
+          </label>
+        </div>
+        <label class="field" style="margin-top:0.75rem">
+          <span class="lbl">Deságio (% sobre face)</span>
+          <input type="number" id="credDiscount" placeholder="80" min="0" max="100" step="1" value="80" required>
+        </label>
+
+        <div class="kyb-section">Documentação</div>
+        <div class="upload-zone" data-doc="contrato-credito">
+          <div class="ico">↑</div>
+          <div class="lbl">Contrato / instrumento que comprova o crédito</div>
+          <div class="help">PDF, até 10 MB</div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" type="button" onclick="window.tdicApp.closeCreditoModal()">Cancelar</button>
+        <button class="btn btn-brand" type="submit" id="credSubmitBtn">Cadastrar para análise</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: confirmar mint -->
+<div class="modal-backdrop" id="modalMint" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Confirmar mint do TDIC</h3>
+      <button class="x" onclick="window.tdicApp.closeMintModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;color:#525252;line-height:1.7;margin-bottom:1rem">
+        Esta ação dispara o mint do token ERC-1155 na sua smart wallet em Base mainnet.
+        Gas custeado pela EFIX (gasless via paymaster). A operação é irreversível.
+      </p>
+      <div class="confirm-list" id="mintConfirmList"></div>
+      <div class="error-msg" id="mintErr" style="display:none"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="window.tdicApp.closeMintModal()">Cancelar</button>
+      <button class="btn btn-brand" id="mintConfirmBtn">Confirmar mint</button>
+    </div>
+  </div>
+</div>
+
+<!-- White-label theming -->
+<script src="/tdic/assets/theme.js"></script>
+<script src="/tdic/tdic-mock.js"></script>
+
+<!-- Alchemy Account Kit (carregado lazy: ver wallet/efix-wallet-bundle.js).
+     Em prod, descomentar a linha abaixo e remover EfixWalletStub.
+     <script src="/app/wallet/efix-wallet-bundle.js"></script>
+     <script src="/app/efix-auth.js"></script>
+-->
+
+<script>
+/**
+ * EfixWalletStub — Fallback para sessões offline / desenvolvimento.
+ * Mimica window.EfixWallet com valores mockados em localStorage.
+ *
+ * Em produção (com efix-wallet-bundle.js carregado), este stub não é usado:
+ * o IIFE detecta window.EfixWallet existente e não sobrescreve.
+ */
+(function () {
+  if (window.EfixWallet) return;
+  const KEY = 'tdic_stub_session_v1';
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
+  function save(o) { localStorage.setItem(KEY, JSON.stringify(o)); }
+
+  const fakeAddrFor = (email) => {
+    let h = 0;
+    for (let i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) >>> 0;
+    return '0x' + h.toString(16).padStart(40, '0').slice(0, 40);
+  };
+
+  let state = load();
+
+  window.EfixWallet = {
+    config: { apiKey: 'STUB', gasPolicyIdBase: 'TODO' },
+    init() { return true; },
+    async sendOTP(email) { state = { email, pending: true }; save(state); await new Promise(r => setTimeout(r, 400)); return { ok: true }; },
+    async verifyOTP(_code) {
+      if (!state.email) throw new Error('Send OTP first');
+      const address = fakeAddrFor(state.email);
+      state = { email: state.email, address, ts: Date.now() };
+      save(state);
+      await new Promise(r => setTimeout(r, 600));
+      return { address };
+    },
+    async checkSession() { return state.address || null; },
+    async getAddress() { return state.address || null; },
+    async getBaseClient() { return { sendUserOperation: async () => ({ hash: '0x' + Math.random().toString(16).slice(2) }) }; },
+    async disconnect() { state = {}; save({}); }
+  };
+
+  // Stub de auth: encadeia OTP do Alchemy + perfil local
+  window.EfixAuth = {
+    _user: null,
+    async restore() {
+      const addr = await window.EfixWallet.checkSession();
+      if (!addr) return null;
+      const raw = localStorage.getItem('tdic_stub_user_v1');
+      this._user = raw ? JSON.parse(raw) : { address: addr, email: state.email };
+      return { token: 'stub', user: this._user };
+    },
+    async sendOTP(email) { return window.EfixWallet.sendOTP(email); },
+    async verifyOTP(email, code) {
+      const r = await window.EfixWallet.verifyOTP(code);
+      this._user = { email, address: r.address };
+      localStorage.setItem('tdic_stub_user_v1', JSON.stringify(this._user));
+      return { token: 'stub', user: this._user };
+    },
+    async logout() { localStorage.removeItem('tdic_stub_user_v1'); await window.EfixWallet.disconnect(); this._user = null; },
+    getUser() { return this._user; },
+    isLoggedIn() { return !!this._user; }
+  };
+})();
+</script>
+
+<script src="./app.js" defer></script>
+
+</body>
+</html>

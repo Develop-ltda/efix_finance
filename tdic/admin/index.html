@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
+<script src="/shared/js/ga4.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EFIX TDIC — Admin Compliance</title>
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/reset.css">
+<style>
+:root{
+  --white:#fff;--black:#0a0a0a;
+  --gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252;--gray-700:#404040;--gray-800:#262626;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;
+  /* Admin uses EFIX neutral palette (no white-label) */
+  --brand-primary:#22c55e;--brand-primary-dark:#16a34a;
+}
+html,body{height:100%}
+body{font-family:'Syne',-apple-system,sans-serif;background:#fafafa;color:#0a0a0a;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:#0a0a0a;color:#fff}
+.mono{font-family:'Space Mono',monospace}
+
+nav.topbar{position:sticky;top:0;z-index:50;background:#0a0a0a;color:#fff;border-bottom:1px solid #171717;padding:0 1.5rem;height:56px;display:flex;align-items:center}
+.topbar-inner{max-width:1280px;width:100%;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.brand-link{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#fff;font-weight:800;font-size:17px;letter-spacing:-0.5px}
+.brand-link .mark{width:24px;height:24px;color:var(--brand-primary)}
+.brand-sub{font-family:'Space Mono',monospace;font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.1em;padding-left:6px;border-left:1px solid #262626;margin-left:6px}
+.role-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;background:rgba(34,197,94,0.15);color:#86efac;font-family:'Space Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:700}
+.role-badge .dot{width:5px;height:5px;background:#22c55e;border-radius:50%}
+
+main{flex:1;width:100%;max-width:1280px;margin:0 auto;padding:1.75rem 1.5rem 4rem}
+
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem}
+.page-head h2{font-size:1.4rem;font-weight:700;letter-spacing:-0.02em}
+.page-head .sub{font-size:0.85rem;color:#737373}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.25rem}
+.kpi{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:0.95rem 1rem}
+.kpi .lbl{font-family:'Space Mono',monospace;font-size:0.6rem;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem}
+.kpi .val{font-family:'Space Mono',monospace;font-size:1.15rem;font-weight:700;color:#0a0a0a}
+.kpi .val.amber{color:#b45309}
+.kpi .val.green{color:#15803d}
+
+.tabs{display:flex;gap:0;border-bottom:1px solid #e5e5e5;margin-bottom:1.25rem;overflow-x:auto;scrollbar-width:none}
+.tab{padding:0.75rem 1.1rem;font-size:0.85rem;font-weight:600;color:#737373;background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.tab:hover{color:#0a0a0a}
+.tab.active{color:#0a0a0a;border-bottom-color:#0a0a0a}
+.tab .count{font-family:'Space Mono',monospace;background:#f5f5f5;color:#525252;font-size:0.65rem;padding:2px 7px;border-radius:50px;font-weight:700}
+.tab.active .count{background:#0a0a0a;color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden}
+.card-head{padding:0.85rem 1.1rem;border-bottom:1px solid #e5e5e5;display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap}
+.card-head h3{font-size:0.92rem;font-weight:700}
+.card-head .meta{font-size:0.74rem;color:#737373;font-family:'Space Mono',monospace}
+
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-family:'Space Mono',monospace;font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#737373;padding:0.65rem 1.1rem;border-bottom:1px solid #e5e5e5;background:#fafafa;white-space:nowrap}
+td{padding:0.7rem 1.1rem;border-bottom:1px solid #f5f5f5;font-size:0.83rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:0.4rem;padding:0.45rem 0.85rem;border-radius:7px;font-family:inherit;font-weight:600;font-size:0.78rem;cursor:pointer;border:none;transition:all .2s;text-decoration:none;white-space:nowrap}
+.btn:disabled{cursor:not-allowed;opacity:0.5}
+.btn-primary{background:#0a0a0a;color:#fff}
+.btn-primary:hover:not(:disabled){background:#262626}
+.btn-green{background:#22c55e;color:#fff}
+.btn-green:hover:not(:disabled){background:#16a34a;box-shadow:0 4px 16px rgba(34,197,94,0.25)}
+.btn-ghost{background:transparent;color:#525252;border:1px solid #d4d4d4}
+.btn-ghost:hover:not(:disabled){border-color:#0a0a0a;color:#0a0a0a}
+.btn-danger{background:transparent;color:#ef4444;border:1px solid #fecaca}
+.btn-danger:hover:not(:disabled){background:#fef2f2}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:50px;font-family:'Space Mono',monospace;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap}
+.pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.pill.gray{background:#f5f5f5;color:#525252}
+.pill.amber{background:#fffbeb;color:#b45309}
+.pill.blue{background:#eff6ff;color:#1d4ed8}
+.pill.green{background:#f0fdf4;color:#15803d}
+.pill.red{background:#fef2f2;color:#b91c1c}
+
+.empty{padding:3rem 1.5rem;text-align:center;color:#737373}
+.empty h3{font-size:0.95rem;color:#0a0a0a;font-weight:700;margin-bottom:0.4rem}
+.empty p{font-size:0.82rem;line-height:1.7;max-width:420px;margin:0 auto}
+
+.toolbar{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.toolbar input{font-family:inherit;font-size:0.85rem;padding:0.5rem 0.85rem;border:1px solid #d4d4d4;border-radius:8px;width:280px}
+.toolbar input:focus{outline:none;border-color:#0a0a0a}
+
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:#0a0a0a;color:#fff;padding:0.85rem 1.25rem;border-radius:10px;font-size:0.85rem;box-shadow:0 12px 40px rgba(0,0,0,0.25);z-index:300;display:flex;align-items:center;gap:0.5rem;opacity:0;transform:translateY(8px);transition:opacity .2s, transform .2s}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast .dot{width:6px;height:6px;border-radius:50%;background:#22c55e}
+.toast.err .dot{background:#ef4444}
+
+@media(max-width:780px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a href="/tdic/admin/" class="brand-link">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="currentColor"/><g fill="#fff"><path d="M16 22h32v4H34v22h-4V26H16z"/><circle cx="48" cy="48" r="3"/></g></svg>
+      <span>EFIX TDIC</span>
+      <span class="brand-sub">Admin compliance</span>
+    </a>
+    <div class="role-badge"><span class="dot"></span>COMPLIANCE_ROLE</div>
+  </div>
+</nav>
+
+<main>
+
+  <div class="page-head">
+    <div>
+      <h2>Painel de aprovação</h2>
+      <p class="sub">KYBs pendentes, CRs em análise e mints autorizados. Em produção, exige role <code class="mono">COMPLIANCE_ROLE</code> + <code class="mono">CR_ISSUER_ROLE</code> no contrato TDICRegistry.</p>
+    </div>
+    <button class="btn btn-ghost" id="refreshAllBtn">Atualizar</button>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="lbl">KYB pendentes</div><div class="val amber" id="kpiKyb">0</div></div>
+    <div class="kpi"><div class="lbl">CRs em análise</div><div class="val amber" id="kpiCrPending">0</div></div>
+    <div class="kpi"><div class="lbl">Aprovados aguardando mint</div><div class="val" id="kpiCrApproved">0</div></div>
+    <div class="kpi"><div class="lbl">CRs ativos</div><div class="val green" id="kpiCrActive">0</div></div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="kyb">KYBs <span class="count" id="cntKyb">0</span></button>
+    <button class="tab" data-tab="cr-pending">CRs em análise <span class="count" id="cntCrPending">0</span></button>
+    <button class="tab" data-tab="cr-approved">Aguardando mint <span class="count" id="cntCrApproved">0</span></button>
+    <button class="tab" data-tab="cr-active">Ativos <span class="count" id="cntCrActive">0</span></button>
+  </div>
+
+  <!-- KYBs -->
+  <div class="tab-panel active" data-panel="kyb">
+    <div class="card">
+      <div class="card-head"><h3>KYBs pendentes</h3><span class="meta">Aprovação adiciona wallet à whitelist on-chain</span></div>
+      <div id="kybBody"></div>
+    </div>
+  </div>
+
+  <!-- CR pending -->
+  <div class="tab-panel" data-panel="cr-pending">
+    <div class="card">
+      <div class="card-head"><h3>Créditos aguardando análise EFIX</h3><span class="meta">Aprovação chama TDICRegistry.approveCR()</span></div>
+      <div id="crPendingBody"></div>
+    </div>
+  </div>
+
+  <!-- CR approved -->
+  <div class="tab-panel" data-panel="cr-approved">
+    <div class="card">
+      <div class="card-head"><h3>CRs aprovados — disparar mint</h3><span class="meta">Mint chama TDICRegistry.mintCR() via CR_ISSUER_ROLE</span></div>
+      <div id="crApprovedBody"></div>
+    </div>
+  </div>
+
+  <!-- CR active -->
+  <div class="tab-panel" data-panel="cr-active">
+    <div class="card">
+      <div class="card-head"><h3>CRs ativos (mintados)</h3><span class="meta">Aguardando vencimento ou liquidação antecipada</span></div>
+      <div id="crActiveBody"></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
+
+<script src="/tdic/tdic-mock.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  const fmtBRL = (n) => "R$ " + Number(n || 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+  const fmtBRL0 = (n) => "R$ " + Number(n || 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+  const fmtDate = (s) => s ? new Date(s + (s.length === 10 ? "T12:00:00" : "")).toLocaleDateString("pt-BR") : "—";
+  const shortAddr = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
+  const shortHex = (h) => h ? h.slice(0, 10) + "…" + h.slice(-6) : "";
+
+  const tipoLabel = (t) => ({
+    "confissao-divida": "Confissão de dívida",
+    "duplicata": "Duplicata",
+    "contrato-fornecimento": "Contrato fornec.",
+    "mutuo": "Mútuo"
+  })[t] || t;
+
+  let state = { cedentes: [], creditos: [], crs: [], tab: "kyb" };
+
+  function toast(msg, isErr) {
+    const t = $("#toast");
+    $("#toastMsg").textContent = msg;
+    t.classList.toggle("err", !!isErr);
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2400);
+  }
+
+  async function loadAll() {
+    const [cedentes, creditos, crs] = await Promise.all([
+      window.TdicMock.listCedentes(),
+      window.TdicMock.listAllCreditos(),
+      window.TdicMock.listAllCRs(),
+    ]);
+    state.cedentes = cedentes;
+    state.creditos = creditos;
+    state.crs = crs;
+    renderKpis();
+    renderTab(state.tab);
+  }
+
+  function renderKpis() {
+    const kybPending = state.cedentes.filter(c => c.kybStatus === "pending").length;
+    const crPending = state.creditos.filter(c => c.status === "em-analise").length;
+    const crApproved = state.crs.filter(c => c.status === "approved").length;
+    const crActive = state.crs.filter(c => c.status === "active").length;
+    $("#kpiKyb").textContent = kybPending;
+    $("#kpiCrPending").textContent = crPending;
+    $("#kpiCrApproved").textContent = crApproved;
+    $("#kpiCrActive").textContent = crActive;
+    $("#cntKyb").textContent = kybPending;
+    $("#cntCrPending").textContent = crPending;
+    $("#cntCrApproved").textContent = crApproved;
+    $("#cntCrActive").textContent = crActive;
+  }
+
+  function renderTab(tab) {
+    state.tab = tab;
+    $$(".tab", $("#tabs")).forEach(t =>
+      t.classList.toggle("active", t.getAttribute("data-tab") === tab)
+    );
+    $$(".tab-panel").forEach(p =>
+      p.classList.toggle("active", p.getAttribute("data-panel") === tab)
+    );
+    if (tab === "kyb") return renderKyb();
+    if (tab === "cr-pending") return renderCrPending();
+    if (tab === "cr-approved") return renderCrApproved();
+    if (tab === "cr-active") return renderCrActive();
+  }
+
+  function renderKyb() {
+    const list = state.cedentes.filter(c => c.kybStatus === "pending");
+    const body = $("#kybBody");
+    if (!list.length) {
+      body.innerHTML = `<div class="empty"><h3>Sem KYBs pendentes</h3><p>Quando uma cedente concluir o cadastro KYB, aparecerá aqui para análise.</p></div>`;
+      return;
+    }
+    let h = "<table><thead><tr><th>CNPJ</th><th>Razão social</th><th>Responsável</th><th>Regime</th><th>Wallet</th><th>Submetido</th><th>Docs</th><th></th></tr></thead><tbody>";
+    list.forEach(c => {
+      h += `<tr>
+        <td class="mono">${c.cnpj || "—"}</td>
+        <td>${c.razaoSocial || "—"}</td>
+        <td>${c.contato?.nome || "—"}<div class="mono" style="font-size:0.7rem;color:#a3a3a3">${c.contato?.cargo || ""}</div></td>
+        <td><span class="pill ${c.regimeTributario === "lucro-real" ? "green" : "gray"}">${c.regimeTributario || "—"}</span></td>
+        <td class="mono" style="font-size:0.72rem">${shortAddr(c.walletAddress)}</td>
+        <td class="mono" style="font-size:0.72rem">${new Date(c.submittedAt).toLocaleString("pt-BR")}</td>
+        <td><span class="pill blue">${c.docs?.length || 0} docs</span></td>
+        <td><button class="btn btn-green" data-approve-kyb="${c.walletAddress}">Aprovar KYB</button></td>
+      </tr>`;
+    });
+    h += "</tbody></table>";
+    body.innerHTML = h;
+    $$("button[data-approve-kyb]", body).forEach(b => {
+      b.addEventListener("click", () => approveKyb(b.getAttribute("data-approve-kyb"), b));
+    });
+  }
+
+  async function approveKyb(walletAddress, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Aprovando…';
+    try {
+      await window.TdicMock.approveKyb(walletAddress);
+      toast("KYB aprovado · wallet adicionada à whitelist");
+      await loadAll();
+    } catch (e) {
+      toast("Erro: " + e.message, true);
+      btn.disabled = false;
+      btn.textContent = "Aprovar KYB";
+    }
+  }
+
+  function renderCrPending() {
+    const list = state.creditos.filter(c => c.status === "em-analise");
+    const body = $("#crPendingBody");
+    if (!list.length) {
+      body.innerHTML = `<div class="empty"><h3>Sem créditos para análise</h3><p>Créditos cadastrados pelas cedentes aparecerão aqui.</p></div>`;
+      return;
+    }
+    let h = "<table><thead><tr><th>ID</th><th>Cedente</th><th>Devedor</th><th>Tipo</th><th>Face</th><th>Vencto</th><th>Deságio</th><th></th></tr></thead><tbody>";
+    list.forEach(c => {
+      const ced = state.cedentes.find(x => x.walletAddress === c.cedenteWallet);
+      h += `<tr>
+        <td class="mono" style="color:#525252;font-size:0.72rem">${c.id}</td>
+        <td>${ced?.razaoSocial || shortAddr(c.cedenteWallet)}<div class="mono" style="font-size:0.7rem;color:#a3a3a3">${ced?.cnpj || ""}</div></td>
+        <td>${c.devedorRazaoSocial}<div class="mono" style="font-size:0.7rem;color:#a3a3a3">${c.devedorCnpj}</div></td>
+        <td>${tipoLabel(c.tipo)}</td>
+        <td class="mono">${fmtBRL0(c.faceValue)}</td>
+        <td class="mono">${fmtDate(c.maturityDate)}</td>
+        <td class="mono">${(c.discountBps / 100).toFixed(0)}%</td>
+        <td><button class="btn btn-green" data-approve-cr="${c.id}">Aprovar CR</button></td>
+      </tr>`;
+    });
+    h += "</tbody></table>";
+    body.innerHTML = h;
+    $$("button[data-approve-cr]", body).forEach(b => {
+      b.addEventListener("click", () => approveCR(b.getAttribute("data-approve-cr"), b));
+    });
+  }
+
+  async function approveCR(creditoId, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Aprovando…';
+    try {
+      const cr = await window.TdicMock.aprovarCR(creditoId);
+      toast("CR aprovado · token id " + cr.tokenId.slice(0, 12) + "…");
+      await loadAll();
+    } catch (e) {
+      toast("Erro: " + e.message, true);
+      btn.disabled = false;
+      btn.textContent = "Aprovar CR";
+    }
+  }
+
+  function renderCrApproved() {
+    const list = state.crs.filter(c => c.status === "approved");
+    const body = $("#crApprovedBody");
+    if (!list.length) {
+      body.innerHTML = `<div class="empty"><h3>Nenhum CR aguardando mint</h3><p>Aprove créditos na aba "CRs em análise" para liberar o mint aqui.</p></div>`;
+      return;
+    }
+    let h = "<table><thead><tr><th>Token ID</th><th>Cedente</th><th>Wallet destino</th><th>Face</th><th>Vencto</th><th>Deságio</th><th></th></tr></thead><tbody>";
+    list.forEach(cr => {
+      const ced = state.cedentes.find(x => x.walletAddress === cr.cedenteWallet);
+      h += `<tr>
+        <td class="mono" style="font-size:0.72rem;color:#525252" title="${cr.tokenId}">${cr.tokenId.slice(0, 14)}…</td>
+        <td>${ced?.razaoSocial || "—"}</td>
+        <td class="mono" style="font-size:0.72rem">${shortAddr(cr.cedenteWallet)}</td>
+        <td class="mono">${fmtBRL0(cr.faceValue)}</td>
+        <td class="mono">${fmtDate(cr.maturityDate)}</td>
+        <td class="mono">${(cr.discountBps / 100).toFixed(0)}%</td>
+        <td><button class="btn btn-green" data-mint="${cr.creditoId}">Mintar TDIC</button></td>
+      </tr>`;
+    });
+    h += "</tbody></table>";
+    body.innerHTML = h;
+    $$("button[data-mint]", body).forEach(b => {
+      b.addEventListener("click", () => mintCR(b.getAttribute("data-mint"), b));
+    });
+  }
+
+  async function mintCR(creditoId, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Mintando…';
+    try {
+      const r = await window.TdicMock.mintarCR(creditoId);
+      toast("Mint executado · tx " + shortHex(r.txHash));
+      await loadAll();
+    } catch (e) {
+      toast("Erro: " + e.message, true);
+      btn.disabled = false;
+      btn.textContent = "Mintar TDIC";
+    }
+  }
+
+  function renderCrActive() {
+    const list = state.crs.filter(c => c.status === "active");
+    const body = $("#crActiveBody");
+    if (!list.length) {
+      body.innerHTML = `<div class="empty"><h3>Nenhum CR ativo</h3><p>CRs mintados aparecerão aqui até a liquidação.</p></div>`;
+      return;
+    }
+    let h = "<table><thead><tr><th>Token ID</th><th>Cedente</th><th>Face</th><th>Vencto</th><th>Mintado em</th><th>Tx</th></tr></thead><tbody>";
+    list.forEach(cr => {
+      const ced = state.cedentes.find(x => x.walletAddress === cr.cedenteWallet);
+      h += `<tr>
+        <td class="mono" style="font-size:0.72rem">${cr.tokenId.slice(0, 14)}…</td>
+        <td>${ced?.razaoSocial || shortAddr(cr.cedenteWallet)}</td>
+        <td class="mono">${fmtBRL0(cr.faceValue)}</td>
+        <td class="mono">${fmtDate(cr.maturityDate)}</td>
+        <td class="mono">${new Date(cr.mintedAt).toLocaleString("pt-BR")}</td>
+        <td><a class="mono" style="font-size:0.72rem;color:#0a0a0a" href="https://basescan.org/tx/${cr.mintTxHash}" target="_blank">${shortHex(cr.mintTxHash)}</a></td>
+      </tr>`;
+    });
+    h += "</tbody></table>";
+    body.innerHTML = h;
+  }
+
+  // Bind
+  $$(".tab", $("#tabs")).forEach(t => {
+    t.addEventListener("click", () => renderTab(t.getAttribute("data-tab")));
+  });
+  $("#refreshAllBtn").addEventListener("click", loadAll);
+
+  loadAll();
+  window.tdicAdmin = { state, loadAll };
+})();
+</script>
+</body>
+</html>

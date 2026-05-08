@@ -1,0 +1,22 @@
+{
+  "default": {
+    "displayName": "EFIX TDIC",
+    "shortName": "TDIC",
+    "tagline": "Token de Direito (Imobiliário) Creditório",
+    "logo": "/logo_efix_400x400.jpg",
+    "logoMark": "TDIC",
+    "primary": "#22c55e",
+    "primaryDark": "#16a34a",
+    "secondary": "#0a0a0a",
+    "accent": "#22c55e",
+    "supportEmail": "tdic@efix.finance",
+    "siteName": "EFIX",
+    "siteUrl": "https://efix.finance",
+    "issuer": {
+      "razaoSocial": "EFIX Securitizadora S.A.",
+      "cnpj": "60.756.859/0001-57",
+      "atoCVM": "23.635/2025",
+      "resolucaoCVM": "88/2022"
+    }
+  }
+}
