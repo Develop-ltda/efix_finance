@@ -127,8 +127,8 @@ tr:last-child td{border-bottom:none}
 .arb-row{display:flex;justify-content:space-between;font-size:0.83rem;padding:0.3rem 0;color:#404040}
 .arb-row.total{border-top:1px solid #e5e5e5;margin-top:0.4rem;padding-top:0.55rem;font-weight:700;color:#15803d;font-size:0.95rem}
 .arb-row.muted{color:#737373;font-size:0.78rem}
-.issuance-pick{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem}
-@media(max-width:640px){.issuance-pick{grid-template-columns:1fr}}
+.issuance-pick{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.55rem}
+@media(max-width:780px){.issuance-pick{grid-template-columns:1fr}}
 .issuance-opt{display:flex;align-items:flex-start;gap:0.55rem;padding:0.7rem 0.85rem;background:#fff;border:1.5px solid #e5e5e5;border-radius:9px;cursor:pointer;transition:border-color .15s}
 .issuance-opt:has(input:checked){border-color:var(--brand-primary);background:color-mix(in srgb, var(--brand-primary) 6%, #fff)}
 .issuance-opt input{margin-top:3px;flex-shrink:0;width:16px;height:16px;cursor:pointer;accent-color:var(--brand-primary)}
@@ -164,14 +164,14 @@ tr:last-child td{border-bottom:none}
   <div class="kpi-row">
     <div class="kpi"><div class="lbl">KYB pendentes</div><div class="val amber" id="kpiKyb">0</div></div>
     <div class="kpi"><div class="lbl">CRs em análise</div><div class="val amber" id="kpiCrPending">0</div></div>
-    <div class="kpi"><div class="lbl">Aprovados aguardando mint</div><div class="val" id="kpiCrApproved">0</div></div>
+    <div class="kpi"><div class="lbl">Aprovados (ações pendentes)</div><div class="val" id="kpiCrApproved">0</div></div>
     <div class="kpi"><div class="lbl">CRs ativos</div><div class="val green" id="kpiCrActive">0</div></div>
   </div>
 
   <div class="tabs" id="tabs">
     <button class="tab active" data-tab="kyb">KYBs <span class="count" id="cntKyb">0</span></button>
     <button class="tab" data-tab="cr-pending">CRs em análise <span class="count" id="cntCrPending">0</span></button>
-    <button class="tab" data-tab="cr-approved">Aguardando mint <span class="count" id="cntCrApproved">0</span></button>
+    <button class="tab" data-tab="cr-approved">Aprovados · ações <span class="count" id="cntCrApproved">0</span></button>
     <button class="tab" data-tab="cr-active">Ativos <span class="count" id="cntCrActive">0</span></button>
   </div>
 
@@ -194,7 +194,7 @@ tr:last-child td{border-bottom:none}
   <!-- CR approved -->
   <div class="tab-panel" data-panel="cr-approved">
     <div class="card">
-      <div class="card-head"><h3>CRs aprovados — disparar mint</h3><span class="meta">Mint chama TDICRegistry.mintCR() via CR_ISSUER_ROLE</span></div>
+      <div class="card-head"><h3>Operações aprovadas</h3><span class="meta">Enviar e-mail ao tomador (manual) · Mintar token (CR) · Liquidar (venda direta)</span></div>
       <div id="crApprovedBody"></div>
     </div>
   </div>
@@ -241,20 +241,27 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
 
-      <div class="arb-section">Tipo de emissão</div>
+      <div class="arb-section">Modalidade da operação</div>
       <div class="issuance-pick">
         <label class="issuance-opt">
           <input type="radio" name="issuanceType" value="private" checked>
           <span>
-            <strong>Privada</strong> · Auto-securitização
-            <small>Tomador = cedente. Após aprovação, e-mail automático com CR em PDF + link da oferta de subscrição. Ideal para tese fiscal (deságio como despesa financeira).</small>
+            <strong>Emitir CR · Privada</strong>
+            <small>Securitização com TDIC tokenizado. Tomador = cedente (auto-securitização). Ideal para tese fiscal — deságio como despesa financeira.</small>
           </span>
         </label>
         <label class="issuance-opt">
           <input type="radio" name="issuanceType" value="public">
           <span>
-            <strong>Pública</strong> · CVM 88 (crowdfunding)
-            <small>Distribuição pública via plataforma. Tomadores são investidores externos cadastrados. Sem e-mail automático ao cedente.</small>
+            <strong>Emitir CR · Pública</strong>
+            <small>Securitização com TDIC tokenizado e distribuição pública via crowdfunding (CVM 88). Tomadores são investidores externos.</small>
+          </span>
+        </label>
+        <label class="issuance-opt">
+          <input type="radio" name="issuanceType" value="venda-direta">
+          <span>
+            <strong>Venda direta do direito creditório</strong>
+            <small>Cessão simples — sem emissão de CR e sem mint de TDIC. EFIX intermedeia a transferência do direito do cedente para o tomador (factoring tradicional).</small>
           </span>
         </label>
       </div>
@@ -295,7 +302,7 @@ tr:last-child td{border-bottom:none}
 
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
-<script src="/tdic/tdic-mock.js?v=20260508g"></script>
+<script src="/tdic/tdic-mock.js?v=20260508h"></script>
 <script>
 (function () {
   "use strict";
@@ -542,39 +549,17 @@ tr:last-child td{border-bottom:none}
         netValue: r.liquido,
       };
       const cr = await window.TdicMock.aprovarCR(_arbCreditoId, overrides);
-      const credito = state.creditos.find(x => x.id === _arbCreditoId);
-      const ced = state.cedentes.find(x => x.walletAddress === credito?.cedenteWallet);
-
       closeArbModal();
-
-      if (issuanceType === "private" && credito && ced) {
-        // 1. Gera PDF do CR (institucional)
-        const crPdfHtml = renderCRDocument({ cr, credito, cedente: ced });
-        downloadAsPdf(crPdfHtml, "CR-" + (credito.dupl || credito.id) + ".pdf");
-
-        // 2. Simula envio de e-mail (mock)
-        const subscriptionLink = `https://efix.finance/tdic/pay/?cr=${cr.id}&envelope=${cr.tokenId.slice(0, 18)}`;
-        await window.TdicMock.logCREmail({
-          crId: cr.id,
-          creditoId: credito.id,
-          to: ced.contato?.email || ced.walletAddress,
-          tomador: ced.razaoSocial,
-          subject: `[EFIX TDIC] Certificado de Recebíveis aprovado · ${credito.dupl || credito.id}`,
-          subscriptionLink,
-          subscriptionAmount: r.liquido,
-          sentAt: new Date().toISOString(),
-        });
-
-        // 3. Mostra modal de confirmação com preview do e-mail
-        showEmailSentModal({ cr, credito, cedente: ced, subscriptionLink, subscriptionAmount: r.liquido });
-      } else {
-        toast("CR aprovado (oferta pública) · token " + cr.tokenId.slice(0, 12) + "…");
-      }
+      const labelType = issuanceType === "private" ? "CR Privado"
+        : issuanceType === "public" ? "CR Público"
+        : "Venda direta";
+      toast("Aprovado · " + labelType + " · ações disponíveis na aba 'Aprovados'");
       await loadAll();
+      renderTab("cr-approved");
     } catch (e) {
       toast("Erro: " + e.message, true);
       btn.disabled = false;
-      btn.textContent = "Aprovar CR com estes parâmetros";
+      btn.textContent = "Aprovar com estes parâmetros";
     }
   }
 
@@ -710,49 +695,59 @@ respondendo pela solvência do devedor salvo dolo ou má-fé.
     })[t] || t || "Documento de crédito";
   }
 
-  // Modal "E-mail enviado" (preview do conteúdo enviado ao tomador/cedente)
-  function showEmailSentModal({ cr, credito, cedente, subscriptionLink, subscriptionAmount }) {
+  // Modal "E-mail enviado" (preview do conteúdo). Em produção, o e-mail
+  // é disparado de fato via backend (Resend/Sendgrid). Hoje o sistema
+  // ainda não tem servidor SMTP plugado — este modal mostra o conteúdo
+  // que SERIA enviado e registra no log mock (db.emails).
+  function showEmailSentModal({ cr, credito, cedente, subscriptionLink, subscriptionAmount, isVendaDireta }) {
     const overlay = document.createElement("div");
     overlay.className = "modal-backdrop open";
     overlay.style.zIndex = "300";
+    const tipoLbl = isVendaDireta ? "Venda direta" : "CR Privado";
     overlay.innerHTML = `
       <div class="modal" style="max-width:680px">
         <div class="modal-head">
-          <h3>📧 E-mail enviado ao cedente</h3>
+          <h3>📧 E-mail preparado · preview</h3>
           <button class="x" type="button" data-close>×</button>
         </div>
         <div class="modal-body">
-          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.75rem 0.95rem;font-size:0.82rem;color:#15803d;margin-bottom:1rem;display:flex;align-items:center;gap:0.55rem">
-            <span style="font-size:1.05rem">✓</span>
-            <span>CR aprovado em modo <strong>Oferta privada</strong>. PDF gerado e e-mail enviado para <strong>${escapeHtml(cedente.contato?.email || "—")}</strong>.</span>
+          <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:0.75rem 0.95rem;font-size:0.78rem;color:#7c2d12;margin-bottom:1rem;line-height:1.55">
+            <strong>⚠ Modo demo — e-mail NÃO foi disparado de verdade.</strong>
+            <div style="margin-top:3px">O backend de envio (Resend/Sendgrid) ainda não está plugado. Este modal mostra exatamente o conteúdo que será enviado quando o servidor SMTP for ativado, e o evento já foi registrado em <code class="mono">db.emails</code>. Por ora, baixe o PDF (já foi gerado) e envie manualmente ao tomador, se quiser.</div>
+          </div>
+
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.6rem 0.95rem;font-size:0.78rem;color:#15803d;margin-bottom:1rem">
+            <strong>${tipoLbl}</strong> aprovado para <strong>${escapeHtml(cedente.razaoSocial || "—")}</strong>. PDF do${isVendaDireta ? " termo de cessão" : " Certificado"} já foi gerado e baixado pra sua máquina.
           </div>
 
           <div style="background:#fff;border:1px solid #e5e5e5;border-radius:10px;overflow:hidden">
             <div style="padding:0.65rem 0.85rem;background:#fafafa;border-bottom:1px solid #e5e5e5;font-family:'Space Mono',monospace;font-size:0.7rem;color:#525252">
               <div><strong>Para:</strong> ${escapeHtml(cedente.contato?.email || "—")}</div>
               <div><strong>De:</strong> tdic@efix.finance</div>
-              <div><strong>Assunto:</strong> [EFIX TDIC] Certificado de Recebíveis aprovado · ${credito.dupl || credito.id}</div>
+              <div><strong>Assunto:</strong> ${isVendaDireta ? "[EFIX] Termo de Cessão" : "[EFIX TDIC] Certificado de Recebíveis aprovado"} · ${escapeHtml(credito.dupl || credito.id)}</div>
             </div>
             <div style="padding:1rem 1.1rem;font-size:0.85rem;line-height:1.65;color:#262626">
               <p>Olá, ${escapeHtml(cedente.contato?.nome?.split(" ")[0] || "")}.</p>
-              <p>O compliance da EFIX aprovou o seu Certificado de Recebíveis lastreado na operação <strong>${credito.dupl || credito.id}</strong> (devedor: ${escapeHtml(credito.devedorRazaoSocial)}).</p>
+              <p>${isVendaDireta
+                ? `O compliance da EFIX aprovou a venda direta do seu direito creditório referente à operação <strong>${escapeHtml(credito.dupl || credito.id)}</strong> (devedor: ${escapeHtml(credito.devedorRazaoSocial)}).`
+                : `O compliance da EFIX aprovou o seu Certificado de Recebíveis lastreado na operação <strong>${escapeHtml(credito.dupl || credito.id)}</strong> (devedor: ${escapeHtml(credito.devedorRazaoSocial)}).`}</p>
               <p style="background:#fafafa;padding:0.7rem 0.9rem;border-radius:8px;border:1px solid #e5e5e5;font-size:0.82rem">
-                <strong>Valor de subscrição:</strong> ${fmtBRL(subscriptionAmount)}<br>
-                <strong>Vencimento do lastro:</strong> ${fmtDate(credito.maturityDate)}<br>
-                <strong>Token TDIC:</strong> <span style="font-family:monospace;font-size:0.74rem">${cr.tokenId.slice(0, 14)}…${cr.tokenId.slice(-6)}</span>
+                <strong>Valor a receber:</strong> ${fmtBRL(subscriptionAmount)}<br>
+                <strong>Vencimento do lastro:</strong> ${fmtDate(credito.maturityDate)}
+                ${!isVendaDireta ? `<br><strong>Token TDIC:</strong> <span style="font-family:monospace;font-size:0.74rem">${cr.tokenId.slice(0, 14)}…${cr.tokenId.slice(-6)}</span>` : ""}
               </p>
-              <p>Em anexo, o <strong>Certificado de Recebíveis em PDF</strong> e abaixo o link para finalizar a subscrição (pagamento via PIX ou TED):</p>
-              <p style="margin:1rem 0;text-align:center">
+              <p>Em anexo, o <strong>${isVendaDireta ? "Termo de Cessão" : "Certificado de Recebíveis"} em PDF</strong>${isVendaDireta ? "." : " e abaixo o link para finalizar a subscrição (PIX ou TED):"}</p>
+              ${isVendaDireta ? "" : `<p style="margin:1rem 0;text-align:center">
                 <a href="${subscriptionLink}" style="display:inline-block;padding:0.65rem 1.4rem;background:#22c55e;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:0.85rem">→ Pagar oferta de subscrição</a>
               </p>
-              <p style="font-size:0.78rem;color:#737373">Após o pagamento, o token TDIC será mintado na sua smart wallet em Base mainnet (gasless via paymaster EFIX).</p>
+              <p style="font-size:0.78rem;color:#737373">Após o pagamento, o token TDIC será mintado na sua smart wallet em Base mainnet (gasless via paymaster EFIX).</p>`}
               <p style="font-size:0.78rem;color:#737373">— EFIX Securitizadora · CNPJ 60.756.859/0001-57</p>
             </div>
           </div>
 
           <div style="margin-top:1rem;font-size:0.74rem;color:#737373;line-height:1.55">
-            <strong>Anexo (gerado e baixado para sua máquina):</strong> CR-${escapeHtml(credito.dupl || credito.id)}.pdf ·
-            <strong>Link gravado:</strong> <span class="mono" style="font-size:0.7rem;word-break:break-all">${subscriptionLink}</span>
+            <strong>Anexo gerado:</strong> ${isVendaDireta ? "Termo-Cessao-" : "CR-"}${escapeHtml(credito.dupl || credito.id)}.pdf<br>
+            <strong>Link gravado no log:</strong> <span class="mono" style="font-size:0.7rem;word-break:break-all">${subscriptionLink}</span>
           </div>
         </div>
         <div class="modal-foot">
@@ -799,20 +794,38 @@ respondendo pela solvência do devedor salvo dolo ou má-fé.
     const list = state.crs.filter(c => c.status === "approved");
     const body = $("#crApprovedBody");
     if (!list.length) {
-      body.innerHTML = `<div class="empty"><h3>Nenhum CR aguardando mint</h3><p>Aprove créditos na aba "CRs em análise" para liberar o mint aqui.</p></div>`;
+      body.innerHTML = `<div class="empty"><h3>Nada aguardando ação</h3><p>Aprove uma operação na aba "CRs em análise" para que as ações (enviar e-mail, mintar token, liquidar) apareçam aqui.</p></div>`;
       return;
     }
-    let h = "<table><thead><tr><th>Token ID</th><th>Cedente</th><th>Wallet destino</th><th>Face</th><th>Vencto</th><th>Deságio</th><th></th></tr></thead><tbody>";
+    let h = "<table><thead><tr><th>Operação</th><th>Cedente / Tomador</th><th>Modalidade</th><th>Líquido</th><th>Vencto</th><th>Status notif.</th><th>Ações</th></tr></thead><tbody>";
     list.forEach(cr => {
       const ced = state.cedentes.find(x => x.walletAddress === cr.cedenteWallet);
+      const credito = state.creditos.find(c => c.id === cr.creditoId);
+      const liquido = Number(cr.netValue) || cr.faceValue - (cr.discountBrl || 0) - (cr.royaltyBrl || 0);
+      const tipoTag = cr.issuanceType === "venda-direta"
+        ? `<span class="pill gray">Venda direta</span>`
+        : cr.issuanceType === "public"
+        ? `<span class="pill blue">CR Público</span>`
+        : `<span class="pill amber">CR Privado</span>`;
+      const mintBtn = cr.issuanceType === "venda-direta"
+        ? `<button class="btn btn-green" data-liquidar="${cr.creditoId}">Marcar liquidado</button>`
+        : `<button class="btn btn-green" data-mint="${cr.creditoId}">💎 Mintar token</button>`;
+      const emailLabel = cr.notifiedAt
+        ? `<span class="pill green">✓ Enviado · ${new Date(cr.notifiedAt).toLocaleString("pt-BR")}</span>`
+        : `<span class="pill amber">Não enviado</span>`;
       h += `<tr>
-        <td class="mono" style="font-size:0.72rem;color:#525252" title="${cr.tokenId}">${cr.tokenId.slice(0, 14)}…</td>
-        <td>${ced?.razaoSocial || "—"}</td>
-        <td class="mono" style="font-size:0.72rem">${shortAddr(cr.cedenteWallet)}</td>
-        <td class="mono">${fmtBRL0(cr.faceValue)}</td>
+        <td class="mono" style="font-size:0.72rem;color:#525252" title="${cr.tokenId}">${credito?.dupl || cr.id}<div style="font-size:0.65rem;color:#a3a3a3">${cr.tokenId.slice(0, 12)}…</div></td>
+        <td>${ced?.razaoSocial || "—"}<div class="mono" style="font-size:0.7rem;color:#a3a3a3">${ced?.contato?.email || "—"}</div></td>
+        <td>${tipoTag}</td>
+        <td class="mono" style="font-weight:700;color:#15803d">${fmtBRL(liquido)}</td>
         <td class="mono">${fmtDate(cr.maturityDate)}</td>
-        <td class="mono">${(cr.discountBps / 100).toFixed(0)}%</td>
-        <td><button class="btn btn-green" data-mint="${cr.creditoId}">Mintar TDIC</button></td>
+        <td>${emailLabel}</td>
+        <td>
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
+            <button class="btn btn-ghost" data-email="${cr.creditoId}" title="Enviar e-mail ao tomador (mock)">📧 Enviar e-mail</button>
+            ${mintBtn}
+          </div>
+        </td>
       </tr>`;
     });
     h += "</tbody></table>";
@@ -820,7 +833,15 @@ respondendo pela solvência do devedor salvo dolo ou má-fé.
     $$("button[data-mint]", body).forEach(b => {
       b.addEventListener("click", () => mintCR(b.getAttribute("data-mint"), b));
     });
+    $$("button[data-email]", body).forEach(b => {
+      b.addEventListener("click", () => enviarEmailTomador(b.getAttribute("data-email"), b));
+    });
+    $$("button[data-liquidar]", body).forEach(b => {
+      b.addEventListener("click", () => liquidarVendaDireta(b.getAttribute("data-liquidar"), b));
+    });
   }
+
+  function fmtBRL(n) { return "R$ " + Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
   async function mintCR(creditoId, btn) {
     btn.disabled = true;
@@ -832,8 +853,160 @@ respondendo pela solvência do devedor salvo dolo ou má-fé.
     } catch (e) {
       toast("Erro: " + e.message, true);
       btn.disabled = false;
-      btn.textContent = "Mintar TDIC";
+      btn.innerHTML = "💎 Mintar token";
     }
+  }
+
+  async function liquidarVendaDireta(creditoId, btn) {
+    if (!confirm("Marcar a venda direta como liquidada? Isso fecha a operação sem mint de token (não há TDIC nesta modalidade).")) return;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Liquidando…';
+    try {
+      await window.TdicMock.liquidarVendaDireta(creditoId);
+      toast("Venda direta liquidada.");
+      await loadAll();
+    } catch (e) {
+      toast("Erro: " + e.message, true);
+      btn.disabled = false;
+      btn.textContent = "Marcar liquidado";
+    }
+  }
+
+  // Envio manual de e-mail ao tomador. Em produção dispara via backend
+  // (Resend/Sendgrid). Aqui é mock: gera o PDF do CR (ou termo de cessão
+  // para venda direta), grava o evento em db.emails e abre modal preview.
+  async function enviarEmailTomador(creditoId, btn) {
+    const cr = state.crs.find(c => c.creditoId === creditoId);
+    const credito = state.creditos.find(c => c.id === creditoId);
+    const ced = state.cedentes.find(c => c.walletAddress === cr?.cedenteWallet);
+    if (!cr || !credito || !ced) return toast("Dados incompletos.", true);
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Preparando…';
+    try {
+      const isVendaDireta = cr.issuanceType === "venda-direta";
+      const pdfHtml = isVendaDireta
+        ? renderTermoCessaoVendaDireta({ cr, credito, cedente: ced })
+        : renderCRDocument({ cr, credito, cedente: ced });
+      downloadAsPdf(pdfHtml, (isVendaDireta ? "Termo-Cessao-" : "CR-") + (credito.dupl || credito.id) + ".pdf");
+
+      const liquido = Number(cr.netValue) || cr.faceValue - (cr.discountBrl || 0) - (cr.royaltyBrl || 0);
+      const subscriptionLink = isVendaDireta
+        ? `https://efix.finance/tdic/pay/?cr=${cr.id}&mode=venda-direta`
+        : `https://efix.finance/tdic/pay/?cr=${cr.id}&envelope=${cr.tokenId.slice(0, 18)}`;
+
+      await window.TdicMock.logCREmail({
+        crId: cr.id,
+        creditoId: credito.id,
+        to: ced.contato?.email || ced.walletAddress,
+        tomador: ced.razaoSocial,
+        subject: isVendaDireta
+          ? `[EFIX] Termo de Cessão · ${credito.dupl || credito.id}`
+          : `[EFIX TDIC] Certificado de Recebíveis aprovado · ${credito.dupl || credito.id}`,
+        subscriptionLink,
+        subscriptionAmount: liquido,
+        sentAt: new Date().toISOString(),
+      });
+
+      showEmailSentModal({ cr, credito, cedente: ced, subscriptionLink, subscriptionAmount: liquido, isVendaDireta });
+      await loadAll();
+    } catch (e) {
+      toast("Erro: " + e.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "📧 Enviar e-mail";
+    }
+  }
+
+  // Termo de cessão de venda direta (sem CR / sem TDIC)
+  function renderTermoCessaoVendaDireta({ cr, credito, cedente }) {
+    const issuer = { razaoSocial: "EFIX Securitizadora S.A.", cnpj: "60.756.859/0001-57" };
+    const ts = new Date();
+    const liquido = Number(cr.netValue) || (cr.faceValue - (cr.discountBrl || 0) - (cr.royaltyBrl || 0));
+    return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Termo de Cessão · ${credito.dupl || credito.id}</title>
+<style>
+body{font-family:Georgia,'Times New Roman',serif;max-width:780px;margin:0 auto;padding:32px 28px;color:#1a1a1a;line-height:1.6;font-size:13px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0a0a0a;padding-bottom:14px;margin-bottom:24px}
+.head .logo{font-family:Arial,sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.5px}
+h1{font-family:Arial,sans-serif;font-size:18px;text-align:center;margin:24px 0 4px;letter-spacing:0.05em}
+.h1-sub{font-family:Arial,sans-serif;text-align:center;font-size:11px;color:#737373;margin-bottom:24px}
+h2{font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#525252;margin:18px 0 6px;border-bottom:1px solid #d4d4d4;padding-bottom:4px}
+.kv{display:grid;grid-template-columns:1fr 2fr;gap:6px 12px;font-size:12px;margin-bottom:6px}
+.kv .k{color:#525252;font-family:Arial,sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.05em}
+.kv .v{font-weight:600}
+.tot{margin-top:14px;padding:12px;background:#fafafa;border:1px solid #d4d4d4;border-radius:6px}
+.tot .row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;font-family:Arial,sans-serif}
+.tot .row.t{border-top:1px solid #d4d4d4;margin-top:5px;padding-top:7px;font-weight:700;font-size:13px;color:#15803d}
+.declaracao{margin-top:18px;padding:14px;background:#fff;border:1px solid #d4d4d4;border-radius:6px;font-size:11.5px;line-height:1.7}
+.sig{margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:36px}
+.sig .box{border-top:1px solid #1a1a1a;padding-top:8px;text-align:center;font-size:11px;color:#404040;font-family:Arial,sans-serif}
+.ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:10px;color:#737373;text-align:center;font-family:Arial,sans-serif}
+.mono{font-family:'Courier New',monospace;font-size:11px;word-break:break-all}
+.tag{display:inline-block;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.06em;padding:3px 9px;border-radius:50px;background:#525252;color:#fff;text-transform:uppercase}
+</style>
+</head><body>
+<div class="head">
+  <div>
+    <div class="logo">EFIX SECURITIZADORA</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#737373;margin-top:3px">Intermediação de cessão de direitos creditórios</div>
+  </div>
+  <div style="font-family:Arial,sans-serif;font-size:11px;color:#737373;text-align:right">CNPJ ${issuer.cnpj}</div>
+</div>
+
+<h1>TERMO DE CESSÃO DE DIREITO CREDITÓRIO</h1>
+<div class="h1-sub">Operação ${escapeHtml(credito.dupl || credito.id)} · <span class="tag">VENDA DIRETA</span> · sem emissão de CR</div>
+
+<h2>Cedente (vendedor)</h2>
+<div class="kv">
+  <span class="k">Razão social</span><span class="v">${escapeHtml(cedente.razaoSocial || "—")}</span>
+  <span class="k">CNPJ</span><span class="v">${cedente.cnpj || "—"}</span>
+</div>
+
+<h2>Cessionário (tomador / comprador)</h2>
+<div class="kv">
+  <span class="k">A definir</span><span class="v">A formalizar mediante aceite eletrônico via portal EFIX</span>
+</div>
+
+<h2>Lastro · Direito creditório cedido</h2>
+<div class="kv">
+  <span class="k">Devedor</span><span class="v">${escapeHtml(credito.devedorRazaoSocial || "—")}</span>
+  <span class="k">CNPJ devedor</span><span class="v">${credito.devedorCnpj || "—"}</span>
+  <span class="k">Documento</span><span class="v">${tipoLabel(credito.tipo)} ${credito.dupl ? "nº " + credito.dupl : ""}</span>
+  ${credito.chaveNF ? `<span class="k">Chave NF-e</span><span class="v mono">${credito.chaveNF}</span>` : ""}
+  <span class="k">Valor de face</span><span class="v">${fmtBRL(credito.faceValue)}</span>
+  <span class="k">Vencimento</span><span class="v">${fmtDate(credito.maturityDate)}</span>
+</div>
+
+<h2>Termos da cessão</h2>
+<div class="tot">
+  <div class="row"><span>Valor de face</span><strong>${fmtBRL(credito.faceValue)}</strong></div>
+  <div class="row"><span>(−) Deságio (${(cr.discountBps / 100).toFixed(2)}%)</span><strong>${fmtBRL(cr.discountBrl || 0)}</strong></div>
+  ${cr.royaltyBrl ? `<div class="row"><span>(−) Taxa de serviço EFIX</span><strong>${fmtBRL(cr.royaltyBrl)}</strong></div>` : ""}
+  ${cr.abatimento ? `<div class="row"><span>(−) Abatimento</span><strong>${fmtBRL(cr.abatimento)}</strong></div>` : ""}
+  <div class="row t"><span>Valor a receber pelo cedente</span><strong>${fmtBRL(liquido)}</strong></div>
+</div>
+
+<div class="declaracao">
+A cedente cede e transfere o crédito acima descrito ao cessionário, em caráter
+<strong>pro soluto</strong> e definitivo, recebendo em contrapartida o valor
+indicado em "Valor a receber". A operação é uma cessão simples, <strong>sem
+emissão de Certificado de Recebíveis</strong> e <strong>sem tokenização TDIC</strong>
+— a EFIX atua como intermediadora da operação. A cedente garante a existência
+e regularidade do crédito (art. 295 CC), não respondendo pela solvência do
+devedor salvo dolo, simulação ou má-fé.
+</div>
+
+<div class="sig">
+  <div class="box">${escapeHtml(cedente.contato?.nome || "—")}<br>p/ ${escapeHtml(cedente.razaoSocial || "—")}<br>(Cedente)</div>
+  <div class="box">[Cessionário a formalizar]<br>p/ Tomador<br>(Comprador do direito creditório)</div>
+</div>
+
+<div class="ft">
+  Documento gerado em ${ts.toLocaleString("pt-BR")} (${ts.toISOString()}) · Operação ${escapeHtml(credito.dupl || credito.id)}<br>
+  ${cr.arbitrated?.arbitratedBy ? `Arbitrado por ${cr.arbitrated.arbitratedBy} em ${new Date(cr.arbitrated.arbitratedAt).toLocaleString("pt-BR")}` : ""}
+</div>
+</body></html>`;
   }
 
   function renderCrActive() {

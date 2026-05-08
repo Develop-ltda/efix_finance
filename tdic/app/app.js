@@ -895,12 +895,15 @@ ${body}
       const cr = state.crs.find((x) => x.creditoId === c.id);
       let action = "";
       if (c.status === "aprovado") {
-        // Privada: mostra "Ver oferta" (subscrição) em vez de Mint direto.
-        // O mint só roda após o pagamento da subscrição confirmar.
-        if (cr?.issuanceType === "private" && cr?.subscriptionLink) {
+        // Venda direta não emite TDIC — UI passiva (aguarda admin liquidar).
+        if (cr?.issuanceType === "venda-direta") {
+          action = `<span class="mono" style="font-size:0.72rem;color:#737373">Aguardando comprador</span>`;
+        } else if (cr?.subscriptionLink) {
+          // Privada/Pública com link de subscrição emitido pelo admin.
           action = `<a class="btn btn-brand" href="${cr.subscriptionLink}" target="_blank" style="padding:0.4rem 0.85rem;font-size:0.78rem;text-decoration:none">→ Ver oferta</a>`;
         } else {
-          action = `<button class="btn btn-brand" data-mint="${c.id}" style="padding:0.4rem 0.85rem;font-size:0.78rem">Mintar TDIC</button>`;
+          // Aprovado mas admin ainda não disparou o e-mail/link.
+          action = `<span class="mono" style="font-size:0.72rem;color:#737373">Aguardando notificação EFIX</span>`;
         }
       } else if (c.status === "mintado") {
         action = cr
@@ -908,9 +911,11 @@ ${body}
           : "";
       }
       const issuanceTag = cr?.issuanceType === "private"
-        ? `<span class="pill amber" style="font-size:0.62rem;margin-left:4px" title="Auto-securitização: cedente é o tomador"><span class="dot"></span>Privada</span>`
+        ? `<span class="pill amber" style="font-size:0.62rem;margin-left:4px" title="Auto-securitização: cedente é o tomador"><span class="dot"></span>CR Privado</span>`
         : cr?.issuanceType === "public"
-        ? `<span class="pill blue" style="font-size:0.62rem;margin-left:4px" title="Oferta pública via crowdfunding CVM 88"><span class="dot"></span>Pública</span>`
+        ? `<span class="pill blue" style="font-size:0.62rem;margin-left:4px" title="Oferta pública via crowdfunding CVM 88"><span class="dot"></span>CR Público</span>`
+        : cr?.issuanceType === "venda-direta"
+        ? `<span class="pill gray" style="font-size:0.62rem;margin-left:4px" title="Cessão direta sem CR / sem TDIC"><span class="dot"></span>Venda direta</span>`
         : "";
       const desconto = c.discountBrl ? fmtBRL(c.discountBrl) : (c.discountBps / 100).toFixed(2) + "% face";
       const liquido = c.netValue || c.faceValue - (c.discountBrl || 0);

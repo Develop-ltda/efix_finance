@@ -238,10 +238,12 @@
       arb?.netValue ??
       Math.max(0, credito.faceValue - finalDiscountBrl - finalRoyaltyBrl - finalAbatimento);
 
-    // Tipo de emissão: "private" (auto-securitização — cedente é o tomador,
-    // dispara e-mail automático com CR + link de subscrição) ou "public"
-    // (oferta pública via crowdfunding CVM 88, distribuída a investidores).
-    const issuanceType = arb?.issuanceType === "public" ? "public" : "private";
+    // Modalidade da operação:
+    //   "private"      = securitização privada com TDIC (auto-securitização)
+    //   "public"       = securitização pública (CVM 88 crowdfunding)
+    //   "venda-direta" = cessão direta sem CR e sem TDIC (factoring)
+    const allowed = ["private", "public", "venda-direta"];
+    const issuanceType = allowed.includes(arb?.issuanceType) ? arb.issuanceType : "private";
 
     const cr = {
       id: uid("CR"),
@@ -287,12 +289,33 @@
     return cr;
   }
 
+  // Liquidação de venda direta (sem CR / sem TDIC).
+  // Marca a operação como liquidada apenas no banco, sem tx on-chain.
+  async function liquidarVendaDireta(creditoId) {
+    await delay();
+    const db = load();
+    const cr = db.crs.find((c) => c.creditoId === creditoId);
+    if (!cr) throw new Error("Operação não encontrada");
+    if (cr.issuanceType !== "venda-direta") {
+      throw new Error("Esta operação requer mint de TDIC (não é venda direta).");
+    }
+    cr.status = "liquidated-direct";
+    cr.liquidatedAt = new Date().toISOString();
+    const credito = db.creditos.find((c) => c.id === creditoId);
+    if (credito) credito.status = "liquidado";
+    save(db);
+    return cr;
+  }
+
   async function mintarCR(creditoId) {
     await delay(1200);
     const db = load();
     const cr = db.crs.find((c) => c.creditoId === creditoId);
     if (!cr) throw new Error("CR não encontrado");
     if (cr.status !== "approved") throw new Error("CR não está aprovado para mint");
+    if (cr.issuanceType === "venda-direta") {
+      throw new Error("Venda direta não emite TDIC — use 'Marcar liquidado'.");
+    }
 
     const txHash = "0x" + Array.from({ length: 64 }, () =>
       Math.floor(Math.random() * 16).toString(16)
@@ -358,6 +381,7 @@
     aprovarCR,
     logCREmail,
     listCREmails,
+    liquidarVendaDireta,
     mintarCR,
     listCRs,
     listAllCRs,
