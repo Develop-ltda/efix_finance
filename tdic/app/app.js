@@ -338,6 +338,7 @@
 
     // Contrato: provider selector, gating do submit pelo checkbox + nome + CPF.
     populateSignProviderSelect();
+    bindBankBlock();
     const sync = () => syncContractGate();
     $("#kybSignAccept").addEventListener("change", sync);
     $("#kybSignName").addEventListener("input", sync);
@@ -367,6 +368,12 @@
 
       if (!$("#kybCnpj").value.trim() || !$("#kybRazao").value.trim() || !$("#kybNome").value.trim()) {
         alert("Preencha CNPJ, razão social e nome do responsável.");
+        return;
+      }
+      const bankAccount = collectBankAccount();
+      const bankErr = validateBankAccount(bankAccount);
+      if (bankErr) {
+        alert("Dados bancários: " + bankErr);
         return;
       }
       if (!signName || !isValidCpfFormat(signCpf)) {
@@ -406,6 +413,7 @@
             faturamento: $("#kybFat").value,
           },
           docs: Object.values(state.kybDocs),
+          bankAccount,
           signedContract,
         };
 
@@ -425,6 +433,80 @@
         btn.textContent = "Assinar e enviar para análise";
       }
     });
+  }
+
+  function bindBankBlock() {
+    // Mostra/esconde campo "Nome do banco" quando "OUTRO"
+    $("#kybBankCompe").addEventListener("change", () => {
+      const v = $("#kybBankCompe").value;
+      $("#kybBankNameField").style.display = v === "OUTRO" ? "" : "none";
+    });
+    // Mostra/esconde campos de titularidade de terceiros
+    $("#kybBankOwner").addEventListener("change", () => {
+      const v = $("#kybBankOwner").value;
+      $("#kybBankThirdFields").style.display = v === "third" ? "grid" : "none";
+    });
+    // Auto-preenche PIX (CNPJ) com o CNPJ do cedente quando trocar tipo
+    $("#kybPixType").addEventListener("change", () => {
+      const t = $("#kybPixType").value;
+      const k = $("#kybPixKey");
+      if (t === "cnpj" && !k.value) k.value = $("#kybCnpj").value || "";
+    });
+    // Máscaras leves
+    $("#kybAgencia").addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/[^0-9-]/g, "").slice(0, 6);
+    });
+    $("#kybConta").addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/[^0-9-Xx]/g, "").slice(0, 14);
+    });
+  }
+
+  function collectBankAccount() {
+    const compe = $("#kybBankCompe").value;
+    if (!compe) return null;
+    const owner = $("#kybBankOwner").value;
+    const out = {
+      pix: $("#kybPixKey").value.trim()
+        ? { type: $("#kybPixType").value, key: $("#kybPixKey").value.trim() }
+        : null,
+      bank: {
+        compe: compe === "OUTRO" ? null : compe,
+        name:
+          compe === "OUTRO"
+            ? $("#kybBankName").value.trim()
+            : $("#kybBankCompe").options[$("#kybBankCompe").selectedIndex].text.replace(/^\d+ — /, ""),
+        type: $("#kybBankType").value,
+        agencia: $("#kybAgencia").value.trim(),
+        conta: $("#kybConta").value.trim(),
+        contaVar: $("#kybContaVar").value.trim() || null,
+      },
+      ownership: owner,
+    };
+    if (owner === "third") {
+      out.thirdParty = {
+        doc: $("#kybBankOwnerDoc").value.trim(),
+        name: $("#kybBankOwnerName").value.trim(),
+      };
+    }
+    return out;
+  }
+
+  function validateBankAccount(b) {
+    if (!b) return "Selecione o banco e preencha agência + conta.";
+    if (!b.bank.agencia) return "Informe a agência.";
+    if (!b.bank.conta) return "Informe a conta com dígito verificador.";
+    if (!b.bank.compe && !b.bank.name) return "Informe o nome do banco.";
+    if (b.pix) {
+      const k = b.pix.key;
+      if (b.pix.type === "cnpj" && k.replace(/\D/g, "").length !== 14) return "Chave PIX (CNPJ) inválida.";
+      if (b.pix.type === "cpf" && k.replace(/\D/g, "").length !== 11) return "Chave PIX (CPF) inválida.";
+      if (b.pix.type === "email" && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(k)) return "Chave PIX (e-mail) inválida.";
+      if (b.pix.type === "phone" && k.replace(/\D/g, "").length < 10) return "Chave PIX (telefone) inválida.";
+    }
+    if (b.ownership === "third") {
+      if (!b.thirdParty?.doc || !b.thirdParty?.name) return "Conta de terceiros: informe CNPJ/CPF e razão social.";
+    }
+    return null;
   }
 
   function populateSignProviderSelect() {
@@ -737,6 +819,29 @@ ${body}
       $("#kybFat").value = c.contato.faturamento || "";
     }
     $("#kybEmail").value = state.user.email;
+    // Preenche dados bancários (BACEN) a partir do registro existente
+    if (c.bankAccount) {
+      const ba = c.bankAccount;
+      if (ba.pix) {
+        $("#kybPixType").value = ba.pix.type || "cnpj";
+        $("#kybPixKey").value = ba.pix.key || "";
+      }
+      if (ba.bank) {
+        $("#kybBankCompe").value = ba.bank.compe || (ba.bank.name ? "OUTRO" : "");
+        $("#kybBankNameField").style.display = $("#kybBankCompe").value === "OUTRO" ? "" : "none";
+        $("#kybBankName").value = ba.bank.compe ? "" : ba.bank.name || "";
+        $("#kybBankType").value = ba.bank.type || "cc";
+        $("#kybAgencia").value = ba.bank.agencia || "";
+        $("#kybConta").value = ba.bank.conta || "";
+        $("#kybContaVar").value = ba.bank.contaVar || "";
+      }
+      $("#kybBankOwner").value = ba.ownership || "self";
+      $("#kybBankThirdFields").style.display = ba.ownership === "third" ? "grid" : "none";
+      if (ba.thirdParty) {
+        $("#kybBankOwnerDoc").value = ba.thirdParty.doc || "";
+        $("#kybBankOwnerName").value = ba.thirdParty.name || "";
+      }
+    }
     // Limpa o aceite — re-aceitação é um ato novo.
     $("#kybSignAccept").checked = false;
     $("#kybSignName").value = "";
@@ -783,7 +888,7 @@ ${body}
     }
 
     let html =
-      "<table><thead><tr><th>ID</th><th>Devedor</th><th>Tipo</th><th>Valor face</th><th>Vencimento</th><th>Deságio</th><th>Status</th><th></th></tr></thead><tbody>";
+      "<table><thead><tr><th>ID</th><th>Devedor</th><th>Tipo</th><th>Valor face</th><th>Vencimento</th><th>Deságio</th><th>Líquido</th><th>Status</th><th>Borderô</th><th></th></tr></thead><tbody>";
     state.creditos.forEach((c) => {
       const st = STATUS[c.status] || { label: c.status, pill: "gray" };
       let action = "";
@@ -795,14 +900,18 @@ ${body}
           ? `<a class="mono" style="font-size:0.74rem;color:#525252" href="https://basescan.org/token/${cr.tokenId}" target="_blank">Ver token</a>`
           : "";
       }
+      const desconto = c.discountBrl ? fmtBRL(c.discountBrl) : (c.discountBps / 100).toFixed(2) + "% face";
+      const liquido = c.netValue || c.faceValue - (c.discountBrl || 0);
       html += `<tr>
         <td class="mono" style="color:#525252">${c.id}</td>
         <td>${c.devedorRazaoSocial || "—"}<div class="mono" style="font-size:0.7rem;color:#a3a3a3">${c.devedorCnpj || ""}</div></td>
         <td>${tipoLabel(c.tipo)}</td>
         <td class="mono">${fmtBRL(c.faceValue)}</td>
         <td class="mono">${fmtDate(c.maturityDate)}</td>
-        <td class="mono">${(c.discountBps / 100).toFixed(0)}%</td>
+        <td class="mono" style="font-size:0.78rem">${desconto}</td>
+        <td class="mono" style="color:var(--brand-primary);font-weight:700">${fmtBRL(liquido)}</td>
         <td><span class="pill ${st.pill}"><span class="dot"></span>${st.label}</span></td>
+        <td><button class="btn btn-ghost" data-bordero="${c.id}" style="padding:0.3rem 0.65rem;font-size:0.72rem" title="Baixar borderô de cessão">↓ HTML</button></td>
         <td>${action}</td>
       </tr>`;
     });
@@ -812,6 +921,100 @@ ${body}
     $$("button[data-mint]", body).forEach((b) => {
       b.addEventListener("click", () => openMintModal(b.getAttribute("data-mint")));
     });
+    $$("button[data-bordero]", body).forEach((b) => {
+      b.addEventListener("click", () => downloadBorderoCessao(b.getAttribute("data-bordero")));
+    });
+  }
+
+  // Borderô de Cessão — documento contábil / operacional gerado por crédito.
+  // Em produção é assinado eletronicamente junto com o Termo de Adesão e
+  // arquivado pelo backend. Aqui geramos um HTML standalone pra impressão.
+  function downloadBorderoCessao(creditoId) {
+    const c = state.creditos.find((x) => x.id === creditoId);
+    if (!c) return;
+    const cedente = state.cedente || {};
+    const issuer = window.TdicBrand?.issuer || {};
+    const cr = state.crs.find((x) => x.creditoId === c.id);
+    const ts = new Date();
+    const liquido = c.netValue || c.faceValue - (c.discountBrl || 0);
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Borderô de Cessão — ${c.id}</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;max-width:820px;margin:32px auto;padding:24px;color:#1a1a1a;line-height:1.6;font-size:13px}
+h1{font-size:18px;margin-bottom:6px;letter-spacing:-.01em}
+.sub{color:#525252;font-size:12px;margin-bottom:24px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #d4d4d4;border-radius:8px;overflow:hidden;margin-bottom:18px}
+.grid .cell{padding:8px 12px;border-right:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0}
+.grid .cell:nth-child(2n){border-right:none}
+.grid .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#737373;font-weight:700;margin-bottom:2px}
+.grid .val{font-size:13px;font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+th,td{border:1px solid #e5e5e5;padding:8px 10px;text-align:left}
+th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.05em}
+.tot{margin-top:18px;padding:14px;background:#fafafa;border:1px solid #e5e5e5;border-radius:8px}
+.tot .row{display:flex;justify-content:space-between;padding:4px 0}
+.tot .row.t{border-top:1px solid #d4d4d4;margin-top:6px;padding-top:8px;font-weight:700;font-size:14px;color:#15803d}
+.sig{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.sig .box{border-top:1px solid #1a1a1a;padding-top:8px;text-align:center;font-size:11px;color:#525252}
+.ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:10px;color:#737373;text-align:center}
+.mono{font-family:monospace}</style>
+</head><body>
+<h1>Borderô de Cessão de Direitos Creditórios</h1>
+<div class="sub">Operação ${c.id} · Emitido em ${ts.toLocaleString("pt-BR")}</div>
+
+<div class="grid">
+  <div class="cell"><div class="lbl">Cessionária</div><div class="val">${issuer.razaoSocial || "EFIX Securitizadora S.A."}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${issuer.cnpj || "60.756.859/0001-57"}</div></div>
+  <div class="cell"><div class="lbl">Cedente</div><div class="val">${escapeHtml(cedente.razaoSocial || "—")}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${cedente.cnpj || "—"}</div></div>
+  <div class="cell"><div class="lbl">Data da operação</div><div class="val">${ts.toLocaleDateString("pt-BR")}</div></div>
+  <div class="cell"><div class="lbl">ID do crédito</div><div class="val mono">${c.id}</div></div>
+</div>
+
+<table>
+  <thead><tr><th>Devedor (sacado)</th><th>CNPJ devedor</th><th>Duplicata / referência</th><th style="text-align:right">Valor face</th><th style="text-align:right">Vencimento</th><th style="text-align:right">Prazo</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>${escapeHtml(c.devedorRazaoSocial || "—")}</td>
+      <td class="mono">${c.devedorCnpj || "—"}</td>
+      <td class="mono">${c.dupl || c.id}${c.chaveNF ? "<br><span style='font-size:10px;color:#737373'>NF " + c.chaveNF + "</span>" : ""}</td>
+      <td class="mono" style="text-align:right">${fmtBRL(c.faceValue)}</td>
+      <td class="mono" style="text-align:right">${fmtDate(c.maturityDate)}</td>
+      <td class="mono" style="text-align:right">${c.prazoDias || "—"} dias</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="tot">
+  <div class="row"><span>Valor face</span><strong class="mono">${fmtBRL(c.faceValue)}</strong></div>
+  <div class="row"><span>(−) Deságio (${(c.discountBps / 100).toFixed(2)}% sobre face)</span><strong class="mono">${fmtBRL(c.discountBrl || 0)}</strong></div>
+  ${c.abatimento ? `<div class="row"><span>(−) Abatimento</span><strong class="mono">${fmtBRL(c.abatimento)}</strong></div>` : ""}
+  <div class="row t"><span>Valor líquido a creditar</span><strong class="mono">${fmtBRL(liquido)}</strong></div>
+</div>
+
+${cedente.bankAccount ? `
+<div class="grid" style="margin-top:18px">
+  <div class="cell"><div class="lbl">Conta de liquidação · Banco</div><div class="val">${escapeHtml(cedente.bankAccount.bank?.name || "—")}${cedente.bankAccount.bank?.compe ? " (" + cedente.bankAccount.bank.compe + ")" : ""}</div></div>
+  <div class="cell"><div class="lbl">Tipo</div><div class="val">${({ cc: "Corrente", cp: "Poupança", cg: "Pagamento" }[cedente.bankAccount.bank?.type] || "—")}</div></div>
+  <div class="cell"><div class="lbl">Agência</div><div class="val mono">${cedente.bankAccount.bank?.agencia || "—"}</div></div>
+  <div class="cell"><div class="lbl">Conta</div><div class="val mono">${cedente.bankAccount.bank?.conta || "—"}${cedente.bankAccount.bank?.contaVar ? " · var " + cedente.bankAccount.bank.contaVar : ""}</div></div>
+  ${cedente.bankAccount.pix ? `<div class="cell" style="grid-column:1/3"><div class="lbl">PIX (alternativo)</div><div class="val mono">${cedente.bankAccount.pix.type.toUpperCase()} · ${escapeHtml(cedente.bankAccount.pix.key)}</div></div>` : ""}
+</div>` : ""}
+
+${cr ? `
+<div class="grid" style="margin-top:18px">
+  <div class="cell" style="grid-column:1/3"><div class="lbl">Token TDIC vinculado</div><div class="val mono" style="font-size:11px;word-break:break-all">${cr.tokenId}</div></div>
+  ${cr.mintTxHash ? `<div class="cell" style="grid-column:1/3"><div class="lbl">Transação de mint (Base mainnet)</div><div class="val mono" style="font-size:11px;word-break:break-all">${cr.mintTxHash}</div></div>` : ""}
+</div>` : ""}
+
+<div class="sig">
+  <div class="box">${escapeHtml(cedente.contato?.nome || "—")}<br>Cedente · ${cedente.cnpj || "—"}</div>
+  <div class="box">${issuer.razaoSocial || "EFIX Securitizadora S.A."}<br>Cessionária · ${issuer.cnpj || "60.756.859/0001-57"}</div>
+</div>
+
+<div class="ft">
+  Borderô gerado em ${ts.toLocaleString("pt-BR")} (${ts.toISOString()}). Este documento integra o conjunto probatório
+  da operação de cessão e deve ser conservado pela cedente para fins fiscais e contábeis (Lei 14.430/2022 + RFB IN).
+</div>
+</body></html>`;
+    download(html, "tdic-bordero-cessao-" + c.id + ".html", "text/html");
   }
 
   function tipoLabel(t) {
@@ -903,38 +1106,106 @@ ${body}
     download("﻿" + csv, "tdic-creditos.csv", "text/csv");
   }
 
+  // Borderô de Despesa Financeira (relatório contábil para fechamento de período).
+  // Lista CRs ativos com cálculo amortizado pro rata pela permanência no período.
   function exportHtmlReport() {
-    const total = totalDespesa();
-    const rows = state.crs
-      .filter((c) => c.status === "active")
+    const cedente = state.cedente || {};
+    const issuer = window.TdicBrand?.issuer || {};
+    const today = Date.now();
+    const ativos = state.crs.filter((c) => c.status === "active");
+
+    let totalDespesaPeriodo = 0;
+    let totalProjetado = 0;
+    let totalFace = 0;
+    const rows = ativos
       .map((cr) => {
-        const desc = (cr.faceValue * cr.discountBps) / 10000;
+        const start = new Date(cr.mintedAt || cr.createdAt).getTime();
+        const end = new Date(cr.maturityDate + "T12:00:00").getTime();
+        const totalDays = Math.max(1, (end - start) / 86400000);
+        const elapsedDays = Math.max(0, Math.min(totalDays, (today - start) / 86400000));
+        const desagioTotal = (cr.faceValue * cr.discountBps) / 10000;
+        const despesaPeriodo = (desagioTotal * elapsedDays) / totalDays;
+        totalDespesaPeriodo += despesaPeriodo;
+        totalProjetado += desagioTotal;
+        totalFace += cr.faceValue;
         return `<tr>
-        <td>${cr.tokenId.slice(0, 12)}…</td>
-        <td>${fmtBRL(cr.faceValue)}</td>
-        <td>${(cr.discountBps / 100).toFixed(0)}%</td>
-        <td>${fmtBRL(desc)}</td>
-        <td>${fmtDate(cr.maturityDate)}</td>
-      </tr>`;
+          <td class="mono" style="font-size:11px">${cr.tokenId.slice(0, 14)}…${cr.tokenId.slice(-6)}</td>
+          <td class="mono" style="text-align:right">${fmtBRL(cr.faceValue)}</td>
+          <td style="text-align:right">${(cr.discountBps / 100).toFixed(2)}%</td>
+          <td class="mono" style="text-align:right">${fmtBRL(desagioTotal)}</td>
+          <td class="mono" style="text-align:right;font-weight:700">${fmtBRL(despesaPeriodo)}</td>
+          <td class="mono" style="text-align:right">${Math.round(elapsedDays)}/${Math.round(totalDays)} dias</td>
+          <td class="mono">${fmtDate(cr.maturityDate)}</td>
+        </tr>`;
       })
       .join("");
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>TDIC — Despesa Financeira</title>
-<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:24px;color:#0a0a0a}
-h1{font-size:22px;margin-bottom:6px}.sub{color:#525252;font-size:13px;margin-bottom:24px}
-table{width:100%;border-collapse:collapse;margin-top:16px}
-th,td{border:1px solid #e5e5e5;padding:10px 12px;text-align:left;font-size:13px}
-th{background:#fafafa;text-transform:uppercase;letter-spacing:0.05em;font-size:11px}
-.tot{margin-top:24px;padding:16px;background:#fafafa;border:1px solid #e5e5e5;border-radius:8px}
-.ft{margin-top:32px;font-size:11px;color:#737373;border-top:1px solid #e5e5e5;padding-top:12px}</style></head>
-<body><h1>Relatório de despesa financeira — TDIC</h1>
-<div class="sub">Cedente: ${state.cedente?.razaoSocial || "—"} · CNPJ ${state.cedente?.cnpj || "—"}</div>
-<table><thead><tr><th>Token ID</th><th>Valor face</th><th>Deságio</th><th>Despesa total</th><th>Vencimento</th></tr></thead>
-<tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#737373">Nenhum CR ativo</td></tr>'}</tbody></table>
-<div class="tot"><strong>Despesa financeira amortizada até hoje:</strong> ${fmtBRL(total)}<br>
-<strong>Redução estimada de IRPJ/CSLL (34%):</strong> ${fmtBRL(total * 0.34)}</div>
-<div class="ft">Gerado em ${new Date().toLocaleString("pt-BR")} · EFIX Securitizadora S.A. · CNPJ 60.756.859/0001-57<br>
-Não substitui análise contábil formal. Consulte seu contador.</div></body></html>`;
-    download(html, "tdic-despesa-financeira.html", "text/html");
+
+    const ts = new Date();
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Borderô de Despesa Financeira — TDIC</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;max-width:920px;margin:32px auto;padding:24px;color:#1a1a1a;line-height:1.55;font-size:13px}
+h1{font-size:20px;margin-bottom:6px;letter-spacing:-.01em}
+.sub{color:#525252;font-size:12px;margin-bottom:24px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #d4d4d4;border-radius:8px;overflow:hidden;margin-bottom:18px}
+.grid .cell{padding:8px 12px;border-right:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0}
+.grid .cell:nth-child(2n){border-right:none}
+.grid .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#737373;font-weight:700;margin-bottom:2px}
+.grid .val{font-size:13px;font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+th,td{border:1px solid #e5e5e5;padding:8px 10px}
+th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;text-align:left}
+.tot{margin-top:18px;padding:14px;background:#fafafa;border:1px solid #e5e5e5;border-radius:8px}
+.tot .row{display:flex;justify-content:space-between;padding:4px 0}
+.tot .row.t{border-top:1px solid #d4d4d4;margin-top:6px;padding-top:8px;font-weight:700;font-size:14px;color:#15803d}
+.tot .row.s{font-size:11px;color:#737373}
+.note{margin-top:18px;padding:12px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;font-size:11px;color:#7c2d12}
+.ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:10px;color:#737373;text-align:center}
+.mono{font-family:monospace}</style>
+</head><body>
+<h1>Borderô de Despesa Financeira — TDIC</h1>
+<div class="sub">Apuração até ${ts.toLocaleDateString("pt-BR")} · ${ativos.length} CR(s) ativo(s) · Documento contábil</div>
+
+<div class="grid">
+  <div class="cell"><div class="lbl">Cedente</div><div class="val">${escapeHtml(cedente.razaoSocial || "—")}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${cedente.cnpj || "—"}</div></div>
+  <div class="cell"><div class="lbl">Regime tributário</div><div class="val">${cedente.regimeTributario === "lucro-real" ? "Lucro Real" : (cedente.regimeTributario || "—")}</div></div>
+  <div class="cell"><div class="lbl">Securitizadora (cessionária)</div><div class="val">${issuer.razaoSocial || "EFIX Securitizadora S.A."}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${issuer.cnpj || "60.756.859/0001-57"}</div></div>
+  <div class="cell"><div class="lbl">Marco regulatório</div><div class="val">Lei 14.430/2022 · CVM 88/2022</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Token TDIC</th>
+      <th style="text-align:right">Valor face</th>
+      <th style="text-align:right">Deságio</th>
+      <th style="text-align:right">Deságio total (R$)</th>
+      <th style="text-align:right">Despesa amortizada</th>
+      <th style="text-align:right">Permanência</th>
+      <th>Vencimento</th>
+    </tr>
+  </thead>
+  <tbody>${rows || '<tr><td colspan="7" style="text-align:center;color:#737373;padding:18px">Nenhum CR ativo no período.</td></tr>'}</tbody>
+</table>
+
+<div class="tot">
+  <div class="row s"><span>Total de face em carteira</span><span class="mono">${fmtBRL(totalFace)}</span></div>
+  <div class="row s"><span>Deságio contratado total (regime de competência)</span><span class="mono">${fmtBRL(totalProjetado)}</span></div>
+  <div class="row t"><span>Despesa financeira reconhecida no período</span><span class="mono">${fmtBRL(totalDespesaPeriodo)}</span></div>
+  <div class="row"><span>Redução estimada de IRPJ/CSLL (34% sobre o reconhecido)</span><strong class="mono">${fmtBRL(totalDespesaPeriodo * 0.34)}</strong></div>
+</div>
+
+<div class="note">
+  <strong>Tratamento contábil sugerido:</strong> reconhecer cada parcela de deságio como despesa
+  financeira (conta 4.2.x.x) <em>pro rata die</em> entre a data da cessão e o vencimento do crédito,
+  conforme regime de competência (CPC 47 / Lei 6.404/76 art. 187 §1º). Documento de apoio para o
+  contador — não substitui análise tributária formal.
+</div>
+
+<div class="ft">
+  Gerado em ${ts.toLocaleString("pt-BR")} (${ts.toISOString()}) · ${issuer.razaoSocial || "EFIX Securitizadora S.A."}
+</div>
+</body></html>`;
+    download(html, "tdic-bordero-despesa-financeira-" + ts.toISOString().slice(0, 10) + ".html", "text/html");
   }
 
   function download(content, filename, mime) {
@@ -948,17 +1219,95 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
   }
 
   // ── Modal Crédito ───────────────────────────────────────
+  // Estado do deságio dentro do modal de cadastro.
+  // mode: "pct" (% a.m. pro rata die) | "brl" (R$ flat) | "effective" (% face)
+  function getDiscountMode() {
+    const active = document.querySelector(".discount-tab.active");
+    return active ? active.getAttribute("data-discount-mode") : "pct";
+  }
+
+  function calcDiscountInput() {
+    const face = Number($("#credFace").value) || 0;
+    const venctoStr = $("#credVencto").value;
+    const days = venctoStr
+      ? Math.max(0, Math.ceil((new Date(venctoStr + "T12:00:00") - Date.now()) / 86400000))
+      : 0;
+
+    let discountBrl = 0;
+    const mode = getDiscountMode();
+    if (mode === "pct") {
+      const pct = Number($("#credDiscount").value) || 0;
+      const daily = pct / 30;
+      discountBrl = (face * daily * days) / 100;
+    } else if (mode === "brl") {
+      discountBrl = Number($("#credDiscountBrl").value) || 0;
+    } else if (mode === "effective") {
+      const pctFace = Number($("#credDiscountEffective").value) || 0;
+      discountBrl = (face * pctFace) / 100;
+    }
+    discountBrl = Math.min(discountBrl, face);
+    const liquido = face - discountBrl;
+    const discountBps = face > 0 ? Math.round((discountBrl / face) * 10000) : 0;
+    return { face, days, discountBrl, liquido, discountBps, mode };
+  }
+
+  function renderCreditoSummary() {
+    const r = calcDiscountInput();
+    $("#sumFace").textContent = "R$ " + r.face.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    $("#sumPrazo").textContent = r.days + " dia" + (r.days === 1 ? "" : "s");
+    $("#sumDesconto").textContent =
+      "R$ " +
+      r.discountBrl.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+      "  ·  " +
+      (r.discountBps / 100).toFixed(2) +
+      "% face";
+    $("#sumLiquido").textContent = "R$ " + r.liquido.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    $("#sumDespesa").textContent = "R$ " + r.discountBrl.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    $("#sumEconomia").textContent = "R$ " + (r.discountBrl * 0.34).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   function bindCreditoModal() {
+    // Tabs do deságio
+    $$(".discount-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        $$(".discount-tab").forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        const mode = tab.getAttribute("data-discount-mode");
+        ["paneDiscountPct", "paneDiscountBrl", "paneDiscountEffective"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = "none";
+        });
+        const map = { pct: "paneDiscountPct", brl: "paneDiscountBrl", effective: "paneDiscountEffective" };
+        const show = document.getElementById(map[mode]);
+        if (show) show.style.display = "";
+        renderCreditoSummary();
+      });
+    });
+    ["credFace", "credVencto", "credDiscount", "credDiscountBrl", "credDiscountEffective"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", renderCreditoSummary);
+    });
+
     $("#creditoForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = $("#credSubmitBtn");
+      const calc = calcDiscountInput();
       const payload = {
         tipo: $("#credTipo").value,
         devedorCnpj: $("#credDevedorCnpj").value.trim(),
         devedorRazaoSocial: $("#credDevedorRazao").value.trim(),
-        faceValue: $("#credFace").value,
+        faceValue: calc.face,
         maturityDate: $("#credVencto").value,
-        discountBps: Math.round((Number($("#credDiscount").value) || 0) * 100),
+        discountBps: calc.discountBps,
+        discountBrl: calc.discountBrl,
+        discountMode: calc.mode,
+        discountInputs: {
+          pctMonthly: Number($("#credDiscount").value) || 0,
+          brlFlat: Number($("#credDiscountBrl").value) || 0,
+          pctEffective: Number($("#credDiscountEffective").value) || 0,
+        },
+        netValue: calc.liquido,
+        prazoDias: calc.days,
         docs: state.pendingPdfDoc ? [state.pendingPdfDoc] : [],
         origem: state.pendingPdfDoc ? "import-pdf" : "manual",
       };
@@ -985,7 +1334,14 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
 
   function openCreditoModal() {
     $("#creditoForm").reset();
-    $("#credDiscount").value = 80;
+    $("#credDiscount").value = 2.5;
+    $("#credDiscountEffective").value = 3.5;
+    $$(".discount-tab").forEach((t) => t.classList.toggle("active", t.getAttribute("data-discount-mode") === "pct"));
+    ["paneDiscountPct", "paneDiscountBrl", "paneDiscountEffective"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = id === "paneDiscountPct" ? "" : "none";
+    });
+    renderCreditoSummary();
     $("#credTipo").value = state.pendingPdfDoc ? "duplicata" : "confissao-divida";
     // Mostra anexo PDF (se vier do import) num bloco discreto.
     const ph = $("#credPdfPlaceholder");

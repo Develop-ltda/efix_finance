@@ -73,6 +73,8 @@
       regimeTributario: payload.regimeTributario || "lucro-real",
       contato: payload.contato || {},
       docs: payload.docs || existing.docs || [],
+      // Conta para liquidação (PIX + tradicional, BACEN compliant)
+      bankAccount: payload.bankAccount || existing.bankAccount || null,
       // Aceitação eletrônica do Instrumento de Cessão (sempre o mais recente).
       signedContract: payload.signedContract || existing.signedContract || null,
       // Histórico completo de assinaturas — append-only.
@@ -125,7 +127,15 @@
       tipo: payload.tipo || "confissao-divida",
       faceValue: Number(payload.faceValue) || 0,
       maturityDate: payload.maturityDate,
+      // Deságio: armazena tanto bps quanto valor absoluto + modo + inputs originais
       discountBps: Number(payload.discountBps) || 1500,
+      discountBrl: Number(payload.discountBrl) || 0,
+      discountMode: payload.discountMode || "pct",
+      discountInputs: payload.discountInputs || null,
+      netValue:
+        Number(payload.netValue) ||
+        (Number(payload.faceValue) || 0) - (Number(payload.discountBrl) || 0),
+      prazoDias: Number(payload.prazoDias) || null,
       // Campos de import em lote (planilha modelo)
       dupl: payload.dupl || null,
       chaveNF: payload.chaveNF || null,

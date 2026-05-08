@@ -157,6 +157,27 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
   .topbar-inner .brand-sub{display:none}
 }
 
+/* ── Cadastro de crédito: deságio + resumo ── */
+.discount-block{border:1px solid #e5e5e5;border-radius:10px;padding:0.65rem 0.75rem;background:#fafafa}
+.discount-tabs{display:flex;gap:0.35rem;margin-bottom:0.65rem;flex-wrap:wrap}
+.discount-tab{padding:0.4rem 0.7rem;font-family:'Space Mono',monospace;font-size:0.65rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:#fff;border:1px solid #e5e5e5;border-radius:7px;cursor:pointer;color:#525252;transition:all .15s}
+.discount-tab.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+.discount-tab:hover:not(.active){border-color:#a3a3a3}
+.discount-pane .hint{display:block;font-size:0.72rem;color:#737373;margin-top:0.3rem;line-height:1.5}
+.cred-summary{margin-top:0.85rem;padding:0.85rem 1rem;background:#fff;border:1px solid #e5e5e5;border-radius:10px}
+.cred-row{display:flex;justify-content:space-between;font-size:0.82rem;color:#404040;padding:0.3rem 0;line-height:1.55}
+.cred-row.total{border-top:1px solid #e5e5e5;margin-top:0.35rem;padding-top:0.55rem;font-weight:700;color:var(--brand-primary);font-size:0.92rem}
+.cred-row.sub{font-size:0.74rem;color:#737373}
+.cred-row.sub strong{color:#525252;font-weight:600}
+
+/* ── Bloco bancário (KYB) ── */
+.bank-block{border:1px solid #e5e5e5;border-radius:10px;padding:0.95rem 1rem;background:#fafafa;margin-bottom:0.85rem}
+.bank-block-head{display:flex;align-items:center;gap:0.65rem;margin-bottom:0.7rem}
+.bank-tag{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;font-weight:700;background:#0a0a0a;color:#fff;padding:3px 7px;border-radius:5px}
+.bank-block-help{font-size:0.74rem;color:#737373;line-height:1.55}
+.three-col{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:0.5rem 0.65rem}
+@media (max-width:640px){.three-col{grid-template-columns:1fr}}
+
 /* ── Banner de reassinatura ── */
 .resign-banner{display:flex;align-items:center;gap:1rem;justify-content:space-between;background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:0.85rem 1.1rem;margin-bottom:1rem}
 .resign-banner .resign-title{font-weight:700;font-size:0.92rem;color:#9a3412}
@@ -362,6 +383,120 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
           </div>
         </div>
         <div class="uploaded-list" id="uploadedList"></div>
+
+        <div class="kyb-section">Dados bancários para liquidação (BACEN)</div>
+        <p style="font-size:0.78rem;color:#737373;line-height:1.6;margin-bottom:0.85rem">
+          Estes dados são usados pela EFIX para creditar o valor líquido (face menos deságio) na cessão de cada crédito.
+          Recomendado informar PIX para liquidação até R$ 1MM e conta tradicional para valores acima.
+        </p>
+
+        <div class="bank-block">
+          <div class="bank-block-head">
+            <span class="bank-tag">PIX</span>
+            <span class="bank-block-help">Liquidação imediata, qualquer dia/hora.</span>
+          </div>
+          <div class="two-col">
+            <label class="field">
+              <span class="lbl">Tipo de chave</span>
+              <select id="kybPixType">
+                <option value="cnpj" selected>CNPJ</option>
+                <option value="cpf">CPF</option>
+                <option value="email">E-mail</option>
+                <option value="phone">Telefone</option>
+                <option value="random">Aleatória (EVP)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="lbl">Chave PIX</span>
+              <input type="text" id="kybPixKey" placeholder="Ex.: 60.756.859/0001-57">
+            </label>
+          </div>
+        </div>
+
+        <div class="bank-block">
+          <div class="bank-block-head">
+            <span class="bank-tag">CONTA</span>
+            <span class="bank-block-help">Liquidação via TED. Obrigatória para conformidade BACEN/AML.</span>
+          </div>
+          <div class="two-col">
+            <label class="field">
+              <span class="lbl">Banco (COMPE)</span>
+              <select id="kybBankCompe">
+                <option value="">Selecione…</option>
+                <!-- Top bancos PJ Brasil -->
+                <option value="001">001 — Banco do Brasil</option>
+                <option value="033">033 — Santander</option>
+                <option value="077">077 — Inter</option>
+                <option value="104">104 — Caixa Econômica</option>
+                <option value="208">208 — BTG Pactual</option>
+                <option value="212">212 — Banco Original</option>
+                <option value="237">237 — Bradesco</option>
+                <option value="260">260 — Nu Pagamentos</option>
+                <option value="290">290 — PagBank</option>
+                <option value="323">323 — Mercado Pago</option>
+                <option value="332">332 — Acesso Soluções (HausBank)</option>
+                <option value="336">336 — C6 Bank</option>
+                <option value="341">341 — Itaú Unibanco</option>
+                <option value="380">380 — PicPay</option>
+                <option value="389">389 — Mercantil</option>
+                <option value="422">422 — Safra</option>
+                <option value="461">461 — Asaas</option>
+                <option value="611">611 — Paulista</option>
+                <option value="623">623 — PAN</option>
+                <option value="652">652 — Itaú Holding</option>
+                <option value="655">655 — Votorantim</option>
+                <option value="745">745 — Citibank</option>
+                <option value="746">746 — Modal</option>
+                <option value="748">748 — Sicredi</option>
+                <option value="756">756 — Sicoob</option>
+                <option value="OUTRO">Outro (informar nome)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="lbl">Tipo de conta</span>
+              <select id="kybBankType">
+                <option value="cc" selected>Corrente (CC)</option>
+                <option value="cp">Poupança (CP)</option>
+                <option value="cg">Pagamento (CG)</option>
+              </select>
+            </label>
+          </div>
+          <label class="field" id="kybBankNameField" style="display:none;margin-top:0.55rem">
+            <span class="lbl">Nome do banco (livre)</span>
+            <input type="text" id="kybBankName" placeholder="Nome conforme contrato bancário">
+          </label>
+          <div class="three-col" style="margin-top:0.55rem">
+            <label class="field">
+              <span class="lbl">Agência</span>
+              <input type="text" id="kybAgencia" placeholder="0000" maxlength="6">
+            </label>
+            <label class="field">
+              <span class="lbl">Conta + DV</span>
+              <input type="text" id="kybConta" placeholder="00000000-0">
+            </label>
+            <label class="field">
+              <span class="lbl">Variação (se houver)</span>
+              <input type="text" id="kybContaVar" placeholder="000" maxlength="3">
+            </label>
+          </div>
+          <label class="field" style="margin-top:0.55rem">
+            <span class="lbl">Titularidade</span>
+            <select id="kybBankOwner">
+              <option value="self" selected>Mesma da cedente (recomendado)</option>
+              <option value="third">Conta de terceiros (necessita documentação adicional)</option>
+            </select>
+          </label>
+          <div id="kybBankThirdFields" class="two-col" style="display:none;margin-top:0.55rem">
+            <label class="field">
+              <span class="lbl">CNPJ/CPF do titular</span>
+              <input type="text" id="kybBankOwnerDoc" placeholder="00.000.000/0000-00">
+            </label>
+            <label class="field">
+              <span class="lbl">Razão social / nome do titular</span>
+              <input type="text" id="kybBankOwnerName">
+            </label>
+          </div>
+        </div>
 
         <div class="kyb-section">Cessão de direitos creditórios</div>
         <div class="contract-card">
@@ -578,10 +713,38 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
             <input type="date" id="credVencto" required>
           </label>
         </div>
-        <label class="field" style="margin-top:0.75rem">
-          <span class="lbl">Deságio (% sobre face)</span>
-          <input type="number" id="credDiscount" placeholder="80" min="0" max="100" step="1" value="80" required>
-        </label>
+
+        <div class="discount-block" style="margin-top:0.75rem">
+          <div class="discount-tabs">
+            <button type="button" class="discount-tab active" data-discount-mode="pct">Deságio em % a.m.</button>
+            <button type="button" class="discount-tab" data-discount-mode="brl">Deságio em R$ (flat)</button>
+            <button type="button" class="discount-tab" data-discount-mode="effective">Deságio efetivo (% face)</button>
+          </div>
+          <div class="discount-pane">
+            <label class="field" id="paneDiscountPct">
+              <span class="lbl">Deságio (% a.m. · pro rata die)</span>
+              <input type="number" id="credDiscount" min="0" max="100" step="0.01" value="2.5">
+              <span class="hint">Valor referencial. EFIX confirma a taxa final na aprovação do CR.</span>
+            </label>
+            <label class="field" id="paneDiscountBrl" style="display:none">
+              <span class="lbl">Deságio total (R$)</span>
+              <input type="number" id="credDiscountBrl" min="0" step="100" placeholder="Ex.: 35000">
+            </label>
+            <label class="field" id="paneDiscountEffective" style="display:none">
+              <span class="lbl">Deságio efetivo (% sobre face)</span>
+              <input type="number" id="credDiscountEffective" min="0" max="100" step="0.1" value="3.5">
+            </label>
+          </div>
+        </div>
+
+        <div class="cred-summary" id="credSummary">
+          <div class="cred-row"><span>Valor face</span><strong class="mono" id="sumFace">R$ 0,00</strong></div>
+          <div class="cred-row"><span>Prazo</span><strong class="mono" id="sumPrazo">— dias</strong></div>
+          <div class="cred-row"><span>Deságio (R$)</span><strong class="mono" id="sumDesconto">R$ 0,00</strong></div>
+          <div class="cred-row total"><span>Valor líquido a receber</span><strong class="mono" id="sumLiquido">R$ 0,00</strong></div>
+          <div class="cred-row sub"><span>Despesa financeira (lucro real, dedutível)</span><strong class="mono" id="sumDespesa">R$ 0,00</strong></div>
+          <div class="cred-row sub"><span>Economia estimada IRPJ/CSLL (34%)</span><strong class="mono" id="sumEconomia">R$ 0,00</strong></div>
+        </div>
 
         <div class="kyb-section">Documentação</div>
         <div class="upload-zone" data-doc="contrato-credito">
@@ -766,9 +929,9 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <!-- White-label theming -->
-<script src="/tdic/assets/theme.js?v=20260508b"></script>
-<script src="/tdic/tdic-mock.js?v=20260508b"></script>
-<script src="/tdic/app/sign-providers.js?v=20260508b"></script>
+<script src="/tdic/assets/theme.js?v=20260508c"></script>
+<script src="/tdic/tdic-mock.js?v=20260508c"></script>
+<script src="/tdic/app/sign-providers.js?v=20260508c"></script>
 
 <!-- Alchemy Account Kit — bundle real.
      Define window.EfixWallet (signer + smart wallet client) e window.EfixAuth
@@ -843,7 +1006,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 })();
 </script>
 
-<script src="./app.js?v=20260508b" defer></script>
+<script src="./app.js?v=20260508c" defer></script>
 
 </body>
 </html>
