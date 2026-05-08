@@ -1412,68 +1412,65 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
     URL.revokeObjectURL(url);
   }
 
-  // Gera PDF a partir de um documento HTML completo (com <head><style>).
-  // Usa html2pdf.js (CDN). Se o bundle não carregar (offline/bloqueado),
-  // cai num fallback que abre janela popup e dispara window.print() —
-  // o usuário escolhe "Salvar como PDF" no diálogo nativo.
-  async function downloadAsPdf(htmlContent, filenamePdf) {
-    if (typeof window.html2pdf !== "undefined") {
-      const wrap = document.createElement("div");
-      wrap.style.cssText = "position:absolute;left:-99999px;top:0;width:794px";
-      try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, "text/html");
-        doc.querySelectorAll("style").forEach((s) => wrap.appendChild(s.cloneNode(true)));
-        const inner = document.createElement("div");
-        inner.innerHTML = doc.body.innerHTML;
-        wrap.appendChild(inner);
-        document.body.appendChild(wrap);
-
-        await window
-          .html2pdf()
-          .set({
-            margin: [12, 10, 12, 10],
-            filename: filenamePdf,
-            image: { type: "jpeg", quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-            pagebreak: { mode: ["css", "legacy"] },
-          })
-          .from(wrap)
-          .save();
-      } catch (e) {
-        console.error("[TDIC] html2pdf falhou, abrindo print fallback:", e);
-        return openForPrint(htmlContent, filenamePdf);
-      } finally {
-        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
-      }
-      return;
-    }
-    return openForPrint(htmlContent, filenamePdf);
-  }
-
-  // Fallback nativo: popup + window.print() — usuário escolhe "Salvar como PDF".
-  function openForPrint(htmlContent, filenamePdf) {
+  // Gera PDF abrindo o documento em janela popup e disparando window.print().
+  // O usuário escolhe "Salvar como PDF" no diálogo nativo do browser
+  // (Chrome/Edge/Firefox/Safari oferecem essa opção há mais de 6 anos).
+  // Estratégia mais robusta que html2pdf/html2canvas para documentos longos
+  // com tabelas — preserva texto vetorial, paginação automática, sem CDN.
+  function downloadAsPdf(htmlContent, filenamePdf) {
     const w = window.open("", "_blank", "width=900,height=1100");
-    if (!w) {
-      alert("Habilite popups para gerar o PDF.");
-      return;
+    if (!w || w.closed) {
+      alert(
+        "O navegador bloqueou a janela do PDF.\n\n" +
+          "Permita popups/janelas para efix.finance e clique novamente.\n" +
+          "(Chrome: ícone na barra de endereço · Firefox: aviso amarelo no topo)"
+      );
+      return false;
     }
-    const enriched = htmlContent.replace(
-      "</style>",
-      "@page{size:A4;margin:1.5cm}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>"
+    // Sugere o nome do arquivo via <title> — o diálogo de impressão usa
+    // como nome default ao "Salvar como PDF".
+    const safeTitle = String(filenamePdf || "tdic-bordero").replace(/\.(pdf|html)$/i, "");
+    const titled = htmlContent.replace(
+      /<title>[\s\S]*?<\/title>/i,
+      `<title>${escapeHtml(safeTitle)}</title>`
     );
-    const titled = enriched.replace(
-      /<title>[^<]+<\/title>/,
-      `<title>${escapeHtml(filenamePdf.replace(/\.(pdf|html)$/i, ""))}</title>`
+    // Injeta @page e print color adjust antes do </style>.
+    const enriched = titled.replace(
+      "</style>",
+      "@page{size:A4;margin:1.5cm}" +
+        "@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}" +
+        "table{break-inside:auto}tr{break-inside:avoid;break-after:auto}thead{display:table-header-group}tfoot{display:table-footer-group}}" +
+        "</style>"
     );
     w.document.open();
-    w.document.write(titled);
+    w.document.write(enriched);
     w.document.close();
-    w.addEventListener("load", () => {
-      w.focus();
-      setTimeout(() => w.print(), 250);
-    });
+    // Aguarda o render do popup e dispara o print.
+    const triggerPrint = () => {
+      try {
+        w.focus();
+        // setTimeout extra para o layout assentar (especialmente com fonts/imagens).
+        setTimeout(() => {
+          try {
+            w.print();
+          } catch (e) {
+            console.error("[TDIC] print() error:", e);
+          }
+        }, 350);
+      } catch (e) {
+        console.error("[TDIC] popup focus error:", e);
+      }
+    };
+    if (w.document.readyState === "complete") {
+      triggerPrint();
+    } else {
+      w.addEventListener("load", triggerPrint, { once: true });
+      // Backup: se o load não disparar em 1.5s, força o print.
+      setTimeout(() => {
+        if (!w.closed && w.document.readyState !== "complete") triggerPrint();
+      }, 1500);
+    }
+    return true;
   }
 
   // ── Modal Crédito ───────────────────────────────────────

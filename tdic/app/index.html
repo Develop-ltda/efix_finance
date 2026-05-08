@@ -929,13 +929,13 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 
 <!-- SheetJS (parser .xlsx/.xls/.csv) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<!-- html2pdf — geração de borderôs em PDF (jsPDF + html2canvas embutidos) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+<!-- PDF dos borderôs: gerado via window.print() em popup nativo
+     (usuário escolhe "Salvar como PDF" no diálogo do navegador). -->
 
 <!-- White-label theming -->
-<script src="/tdic/assets/theme.js?v=20260508e"></script>
-<script src="/tdic/tdic-mock.js?v=20260508e"></script>
-<script src="/tdic/app/sign-providers.js?v=20260508e"></script>
+<script src="/tdic/assets/theme.js?v=20260508f"></script>
+<script src="/tdic/tdic-mock.js?v=20260508f"></script>
+<script src="/tdic/app/sign-providers.js?v=20260508f"></script>
 
 <!-- Alchemy Account Kit — bundle real.
      Define window.EfixWallet (signer + smart wallet client) e window.EfixAuth
@@ -1010,7 +1010,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 })();
 </script>
 
-<script src="./app.js?v=20260508e" defer></script>
+<script src="./app.js?v=20260508f" defer></script>
 
 </body>
 </html>
