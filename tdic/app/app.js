@@ -167,6 +167,7 @@
     const emailForm = $("#emailForm");
     const codeForm = $("#codeForm");
     let _email = "";
+    let _sendOtpPromise = null;
 
     emailForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -182,22 +183,26 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Enviando…';
       try {
-        // 15s race contra o hang conhecido do Alchemy stamper iframe quando
-        // bloqueado por third-party cookies (incognito, Brave, uBlock).
+        // Mecânica do AlchemyWebSigner: `authenticate({type:"email"})` envia
+        // o e-mail mas só RESOLVE quando `authenticate({type:"otp"})` (chamado
+        // pelo verifyOTP) completar — as duas chamadas se fundem internamente.
+        // Logo, NÃO podemos `await` aqui — ficaríamos presos. Damos 2s para
+        // detectar erro imediato (rede/CORS/email inválido) e seguimos pro
+        // form de código; a promise pendente termina junto com o verify.
+        _sendOtpPromise = window.EfixWallet.sendOTP(email);
+        _sendOtpPromise.catch((err) => {
+          console.warn("[TDIC] sendOTP rejected (might be expected if verify ran):", err?.message || err);
+        });
+
+        let earlyError = null;
         await Promise.race([
-          window.EfixWallet.sendOTP(email),
-          new Promise((_, rej) =>
-            setTimeout(
-              () =>
-                rej(
-                  new Error(
-                    "Timeout. Tente uma janela não-anônima e libere cookies de signer.alchemy.com."
-                  )
-                ),
-              15000
-            )
-          ),
+          _sendOtpPromise.catch((err) => {
+            earlyError = err;
+          }),
+          new Promise((r) => setTimeout(r, 2000)),
         ]);
+        if (earlyError) throw earlyError;
+
         _email = email;
         $("#codeEmail").textContent = email;
         emailForm.style.display = "none";
