@@ -127,6 +127,14 @@ tr:last-child td{border-bottom:none}
 .arb-row{display:flex;justify-content:space-between;font-size:0.83rem;padding:0.3rem 0;color:#404040}
 .arb-row.total{border-top:1px solid #e5e5e5;margin-top:0.4rem;padding-top:0.55rem;font-weight:700;color:#15803d;font-size:0.95rem}
 .arb-row.muted{color:#737373;font-size:0.78rem}
+.issuance-pick{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem}
+@media(max-width:640px){.issuance-pick{grid-template-columns:1fr}}
+.issuance-opt{display:flex;align-items:flex-start;gap:0.55rem;padding:0.7rem 0.85rem;background:#fff;border:1.5px solid #e5e5e5;border-radius:9px;cursor:pointer;transition:border-color .15s}
+.issuance-opt:has(input:checked){border-color:var(--brand-primary);background:color-mix(in srgb, var(--brand-primary) 6%, #fff)}
+.issuance-opt input{margin-top:3px;flex-shrink:0;width:16px;height:16px;cursor:pointer;accent-color:var(--brand-primary)}
+.issuance-opt span{flex:1;font-size:0.82rem;line-height:1.45}
+.issuance-opt span strong{display:block;color:#0a0a0a}
+.issuance-opt span small{display:block;font-size:0.7rem;color:#737373;margin-top:3px;line-height:1.5}
 .arb-suggested{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:0.55rem 0.75rem;font-size:0.74rem;color:#7c2d12;margin-bottom:0.85rem;line-height:1.5}
 </style>
 </head>
@@ -233,6 +241,24 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
 
+      <div class="arb-section">Tipo de emissão</div>
+      <div class="issuance-pick">
+        <label class="issuance-opt">
+          <input type="radio" name="issuanceType" value="private" checked>
+          <span>
+            <strong>Privada</strong> · Auto-securitização
+            <small>Tomador = cedente. Após aprovação, e-mail automático com CR em PDF + link da oferta de subscrição. Ideal para tese fiscal (deságio como despesa financeira).</small>
+          </span>
+        </label>
+        <label class="issuance-opt">
+          <input type="radio" name="issuanceType" value="public">
+          <span>
+            <strong>Pública</strong> · CVM 88 (crowdfunding)
+            <small>Distribuição pública via plataforma. Tomadores são investidores externos cadastrados. Sem e-mail automático ao cedente.</small>
+          </span>
+        </label>
+      </div>
+
       <div class="arb-section">Parâmetros da cessão (arbitrados pela EFIX)</div>
       <div class="row-grid-3">
         <div class="field">
@@ -269,7 +295,7 @@ tr:last-child td{border-bottom:none}
 
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
-<script src="/tdic/tdic-mock.js?v=20260508e"></script>
+<script src="/tdic/tdic-mock.js?v=20260508g"></script>
 <script>
 (function () {
   "use strict";
@@ -495,12 +521,15 @@ tr:last-child td{border-bottom:none}
     const btn = $("#arbConfirmBtn");
     const r = renderArbSummary();
     if (!r) return;
+    const issuanceType = (document.querySelector("input[name=issuanceType]:checked") || {}).value || "private";
+
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Aprovando…';
     try {
       const overrides = {
         arbitratedBy: "compliance@efix",
         arbitratedAt: new Date().toISOString(),
+        issuanceType,
         // Parâmetros decididos pela EFIX (sobrescrevem a sugestão da cedente)
         discountMonthlyPct: r.txMensal,
         discountBps: Math.round((r.desc / r.face) * 10000),
@@ -513,14 +542,248 @@ tr:last-child td{border-bottom:none}
         netValue: r.liquido,
       };
       const cr = await window.TdicMock.aprovarCR(_arbCreditoId, overrides);
-      toast("CR aprovado · token " + cr.tokenId.slice(0, 12) + "…");
+      const credito = state.creditos.find(x => x.id === _arbCreditoId);
+      const ced = state.cedentes.find(x => x.walletAddress === credito?.cedenteWallet);
+
       closeArbModal();
+
+      if (issuanceType === "private" && credito && ced) {
+        // 1. Gera PDF do CR (institucional)
+        const crPdfHtml = renderCRDocument({ cr, credito, cedente: ced });
+        downloadAsPdf(crPdfHtml, "CR-" + (credito.dupl || credito.id) + ".pdf");
+
+        // 2. Simula envio de e-mail (mock)
+        const subscriptionLink = `https://efix.finance/tdic/pay/?cr=${cr.id}&envelope=${cr.tokenId.slice(0, 18)}`;
+        await window.TdicMock.logCREmail({
+          crId: cr.id,
+          creditoId: credito.id,
+          to: ced.contato?.email || ced.walletAddress,
+          tomador: ced.razaoSocial,
+          subject: `[EFIX TDIC] Certificado de Recebíveis aprovado · ${credito.dupl || credito.id}`,
+          subscriptionLink,
+          subscriptionAmount: r.liquido,
+          sentAt: new Date().toISOString(),
+        });
+
+        // 3. Mostra modal de confirmação com preview do e-mail
+        showEmailSentModal({ cr, credito, cedente: ced, subscriptionLink, subscriptionAmount: r.liquido });
+      } else {
+        toast("CR aprovado (oferta pública) · token " + cr.tokenId.slice(0, 12) + "…");
+      }
       await loadAll();
     } catch (e) {
       toast("Erro: " + e.message, true);
       btn.disabled = false;
       btn.textContent = "Aprovar CR com estes parâmetros";
     }
+  }
+
+  // Documento institucional do Certificado de Recebíveis (separado do borderô).
+  // Estrutura compatível com a Resolução CVM 88/2022 e a Lei 14.430/2022.
+  function renderCRDocument({ cr, credito, cedente }) {
+    const issuer = { razaoSocial: "EFIX Securitizadora S.A.", cnpj: "60.756.859/0001-57", atoCVM: "23.635/2025", resolucaoCVM: "88/2022" };
+    const ts = new Date();
+    const liquido = Number(cr.netValue) || (cr.faceValue - (cr.discountBrl || 0) - (cr.royaltyBrl || 0));
+    const series = "A";
+    const nro = cr.id.replace("CR-", "").toUpperCase();
+    return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Certificado de Recebíveis ${nro}</title>
+<style>
+body{font-family:Georgia,'Times New Roman',serif;max-width:780px;margin:0 auto;padding:32px 28px;color:#1a1a1a;line-height:1.6;font-size:13px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0a0a0a;padding-bottom:14px;margin-bottom:24px}
+.head .logo{font-family:Arial,sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.5px}
+.head .meta{font-family:Arial,sans-serif;font-size:10px;color:#525252;text-align:right;line-height:1.5}
+h1{font-family:Arial,sans-serif;font-size:18px;text-align:center;margin:24px 0 4px;letter-spacing:0.05em}
+.h1-sub{font-family:Arial,sans-serif;text-align:center;font-size:11px;color:#737373;margin-bottom:24px}
+h2{font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#525252;margin:18px 0 6px;border-bottom:1px solid #d4d4d4;padding-bottom:4px}
+.kv{display:grid;grid-template-columns:1fr 2fr;gap:6px 12px;font-size:12px;margin-bottom:6px}
+.kv .k{color:#525252;font-family:Arial,sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.05em}
+.kv .v{font-weight:600}
+.tot{margin-top:14px;padding:12px;background:#fafafa;border:1px solid #d4d4d4;border-radius:6px}
+.tot .row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;font-family:Arial,sans-serif}
+.tot .row.t{border-top:1px solid #d4d4d4;margin-top:5px;padding-top:7px;font-weight:700;font-size:13px;color:#15803d}
+.declaracao{margin-top:18px;padding:14px;background:#fff;border:1px solid #d4d4d4;border-radius:6px;font-size:11.5px;line-height:1.7}
+.sig{margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:36px}
+.sig .box{border-top:1px solid #1a1a1a;padding-top:8px;text-align:center;font-size:11px;color:#404040;font-family:Arial,sans-serif}
+.ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:10px;color:#737373;text-align:center;font-family:Arial,sans-serif}
+.mono{font-family:'Courier New',monospace;font-size:11px;word-break:break-all}
+.tag{display:inline-block;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.06em;padding:3px 9px;border-radius:50px;background:#0a0a0a;color:#fff;text-transform:uppercase}
+.tag.priv{background:#7c2d12;color:#fff}
+</style>
+</head><body>
+<div class="head">
+  <div>
+    <div class="logo">EFIX SECURITIZADORA</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#737373;margin-top:3px">Patrimônio segregado · Lei 14.430/2022</div>
+  </div>
+  <div class="meta">
+    Ato Declaratório CVM nº ${issuer.atoCVM}<br>
+    Resolução CVM ${issuer.resolucaoCVM}<br>
+    CNPJ ${issuer.cnpj}
+  </div>
+</div>
+
+<h1>CERTIFICADO DE RECEBÍVEIS Nº ${escapeHtml(nro)}</h1>
+<div class="h1-sub">Série ${series} · 1ª Emissão · <span class="tag priv">OFERTA PRIVADA</span></div>
+
+<h2>Emissora</h2>
+<div class="kv">
+  <span class="k">Razão social</span><span class="v">${issuer.razaoSocial}</span>
+  <span class="k">CNPJ</span><span class="v">${issuer.cnpj}</span>
+  <span class="k">Regime</span><span class="v">Securitizadora autorizada · Resolução CVM 88/2022</span>
+</div>
+
+<h2>Cedente</h2>
+<div class="kv">
+  <span class="k">Razão social</span><span class="v">${escapeHtml(cedente.razaoSocial || "—")}</span>
+  <span class="k">CNPJ</span><span class="v">${cedente.cnpj || "—"}</span>
+  <span class="k">Smart wallet</span><span class="v mono">${cedente.walletAddress || "—"}</span>
+</div>
+
+<h2>Tomador (subscritor)</h2>
+<div class="kv">
+  <span class="k">Identidade</span><span class="v">${escapeHtml(cedente.razaoSocial || "—")} <span class="tag priv" style="margin-left:6px;font-size:9px">CEDENTE = TOMADOR</span></span>
+  <span class="k">CNPJ</span><span class="v">${cedente.cnpj || "—"}</span>
+  <span class="k">Natureza</span><span class="v">Auto-securitização (oferta privada nos termos do Art. 6º da Resolução CVM 88/2022)</span>
+</div>
+
+<h2>Lastro · Direito creditório cedido</h2>
+<div class="kv">
+  <span class="k">Devedor (sacado)</span><span class="v">${escapeHtml(credito.devedorRazaoSocial || "—")}</span>
+  <span class="k">CNPJ devedor</span><span class="v">${credito.devedorCnpj || "—"}</span>
+  <span class="k">Documento</span><span class="v">${tipoLabel(credito.tipo)} ${credito.dupl ? "nº " + credito.dupl : ""}</span>
+  ${credito.chaveNF ? `<span class="k">Chave NF-e</span><span class="v mono">${credito.chaveNF}</span>` : ""}
+  <span class="k">Valor de face</span><span class="v">${fmtBRL(credito.faceValue)}</span>
+  <span class="k">Vencimento</span><span class="v">${fmtDate(credito.maturityDate)}</span>
+</div>
+
+<h2>Termos da emissão</h2>
+<div class="tot">
+  <div class="row"><span>Valor de face do CR</span><strong>${fmtBRL(credito.faceValue)}</strong></div>
+  <div class="row"><span>(−) Deságio (${(cr.discountBps / 100).toFixed(2)}%)</span><strong>${fmtBRL(cr.discountBrl || 0)}</strong></div>
+  ${cr.royaltyBrl ? `<div class="row"><span>(−) Taxa de serviço</span><strong>${fmtBRL(cr.royaltyBrl)}</strong></div>` : ""}
+  ${cr.abatimento ? `<div class="row"><span>(−) Abatimento</span><strong>${fmtBRL(cr.abatimento)}</strong></div>` : ""}
+  <div class="row t"><span>Valor de subscrição (preço)</span><strong>${fmtBRL(liquido)}</strong></div>
+</div>
+
+<h2>Tokenização</h2>
+<div class="kv">
+  <span class="k">Padrão</span><span class="v">ERC-1155 · TDIC (Token de Direito Creditório)</span>
+  <span class="k">Rede</span><span class="v">Base mainnet (chain id 8453)</span>
+  <span class="k">Token ID</span><span class="v mono">${cr.tokenId}</span>
+  <span class="k">CR ID interno</span><span class="v mono">${cr.id}</span>
+</div>
+
+<h2>Patrimônio segregado</h2>
+<p style="font-size:11.5px;line-height:1.65">Este Certificado de Recebíveis é emitido sob regime de patrimônio segregado nos
+termos do art. 11 da Lei nº 14.430/2022, isolando o lastro descrito acima de
+qualquer outro patrimônio da emissora. Os valores recebidos do devedor serão
+canalizados exclusivamente para liquidação deste CR.</p>
+
+<div class="declaracao">
+A cedente declara, sob as penas da lei, que o crédito objeto deste CR é
+verdadeiro, líquido, certo e exigível, sem qualquer ônus, gravame ou cessão
+prévia a terceiros, e que possui plena capacidade jurídica e poderes
+societários para celebrar a presente operação. A cessão é <strong>pro
+soluto</strong>: a cedente garante a existência do crédito (art. 295 CC), não
+respondendo pela solvência do devedor salvo dolo ou má-fé.
+</div>
+
+<div class="sig">
+  <div class="box">${escapeHtml(cedente.contato?.nome || "—")}<br>p/ ${escapeHtml(cedente.razaoSocial || "—")}<br>(Cedente / Tomador)</div>
+  <div class="box">${issuer.razaoSocial}<br>p/ Compliance · CNPJ ${issuer.cnpj}</div>
+</div>
+
+<div class="ft">
+  Documento gerado em ${ts.toLocaleString("pt-BR")} (${ts.toISOString()}) · CR ${escapeHtml(nro)} · Série ${series}<br>
+  ${cr.arbitrated?.arbitratedBy ? `Aprovado por ${cr.arbitrated.arbitratedBy} em ${new Date(cr.arbitrated.arbitratedAt).toLocaleString("pt-BR")}` : ""}
+</div>
+</body></html>`;
+  }
+
+  function tipoLabel(t) {
+    return ({
+      "confissao-divida": "Confissão de dívida",
+      duplicata: "Duplicata",
+      "contrato-fornecimento": "Contrato de fornecimento",
+      mutuo: "Mútuo intercompany"
+    })[t] || t || "Documento de crédito";
+  }
+
+  // Modal "E-mail enviado" (preview do conteúdo enviado ao tomador/cedente)
+  function showEmailSentModal({ cr, credito, cedente, subscriptionLink, subscriptionAmount }) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-backdrop open";
+    overlay.style.zIndex = "300";
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:680px">
+        <div class="modal-head">
+          <h3>📧 E-mail enviado ao cedente</h3>
+          <button class="x" type="button" data-close>×</button>
+        </div>
+        <div class="modal-body">
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.75rem 0.95rem;font-size:0.82rem;color:#15803d;margin-bottom:1rem;display:flex;align-items:center;gap:0.55rem">
+            <span style="font-size:1.05rem">✓</span>
+            <span>CR aprovado em modo <strong>Oferta privada</strong>. PDF gerado e e-mail enviado para <strong>${escapeHtml(cedente.contato?.email || "—")}</strong>.</span>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:10px;overflow:hidden">
+            <div style="padding:0.65rem 0.85rem;background:#fafafa;border-bottom:1px solid #e5e5e5;font-family:'Space Mono',monospace;font-size:0.7rem;color:#525252">
+              <div><strong>Para:</strong> ${escapeHtml(cedente.contato?.email || "—")}</div>
+              <div><strong>De:</strong> tdic@efix.finance</div>
+              <div><strong>Assunto:</strong> [EFIX TDIC] Certificado de Recebíveis aprovado · ${credito.dupl || credito.id}</div>
+            </div>
+            <div style="padding:1rem 1.1rem;font-size:0.85rem;line-height:1.65;color:#262626">
+              <p>Olá, ${escapeHtml(cedente.contato?.nome?.split(" ")[0] || "")}.</p>
+              <p>O compliance da EFIX aprovou o seu Certificado de Recebíveis lastreado na operação <strong>${credito.dupl || credito.id}</strong> (devedor: ${escapeHtml(credito.devedorRazaoSocial)}).</p>
+              <p style="background:#fafafa;padding:0.7rem 0.9rem;border-radius:8px;border:1px solid #e5e5e5;font-size:0.82rem">
+                <strong>Valor de subscrição:</strong> ${fmtBRL(subscriptionAmount)}<br>
+                <strong>Vencimento do lastro:</strong> ${fmtDate(credito.maturityDate)}<br>
+                <strong>Token TDIC:</strong> <span style="font-family:monospace;font-size:0.74rem">${cr.tokenId.slice(0, 14)}…${cr.tokenId.slice(-6)}</span>
+              </p>
+              <p>Em anexo, o <strong>Certificado de Recebíveis em PDF</strong> e abaixo o link para finalizar a subscrição (pagamento via PIX ou TED):</p>
+              <p style="margin:1rem 0;text-align:center">
+                <a href="${subscriptionLink}" style="display:inline-block;padding:0.65rem 1.4rem;background:#22c55e;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:0.85rem">→ Pagar oferta de subscrição</a>
+              </p>
+              <p style="font-size:0.78rem;color:#737373">Após o pagamento, o token TDIC será mintado na sua smart wallet em Base mainnet (gasless via paymaster EFIX).</p>
+              <p style="font-size:0.78rem;color:#737373">— EFIX Securitizadora · CNPJ 60.756.859/0001-57</p>
+            </div>
+          </div>
+
+          <div style="margin-top:1rem;font-size:0.74rem;color:#737373;line-height:1.55">
+            <strong>Anexo (gerado e baixado para sua máquina):</strong> CR-${escapeHtml(credito.dupl || credito.id)}.pdf ·
+            <strong>Link gravado:</strong> <span class="mono" style="font-size:0.7rem;word-break:break-all">${subscriptionLink}</span>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" type="button" data-close>Fechar</button>
+          <a class="btn btn-primary" href="${subscriptionLink}" target="_blank" style="text-decoration:none">Abrir oferta em nova aba</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => overlay.remove()));
+  }
+
+  // Helper: PDF via window.print() em popup (mesma estratégia do app cedente)
+  function downloadAsPdf(htmlContent, filenamePdf) {
+    const w = window.open("", "_blank", "width=900,height=1100");
+    if (!w || w.closed) {
+      alert("Permita popups para gerar o PDF do CR.");
+      return;
+    }
+    const safeTitle = String(filenamePdf || "tdic-cr").replace(/\.(pdf|html)$/i, "");
+    const titled = htmlContent.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(safeTitle)}</title>`);
+    const enriched = titled.replace(
+      "</style>",
+      "@page{size:A4;margin:1.5cm}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}table{break-inside:auto}tr{break-inside:avoid;break-after:auto}thead{display:table-header-group}}</style>"
+    );
+    w.document.open();
+    w.document.write(enriched);
+    w.document.close();
+    const triggerPrint = () => { try { w.focus(); setTimeout(() => w.print(), 350); } catch (e) {} };
+    if (w.document.readyState === "complete") triggerPrint();
+    else { w.addEventListener("load", triggerPrint, { once: true }); setTimeout(() => { if (!w.closed) triggerPrint(); }, 1500); }
   }
 
   // Re-render summary on input (delegação no body, para inputs do modal)

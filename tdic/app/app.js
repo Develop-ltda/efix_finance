@@ -892,15 +892,26 @@ ${body}
       "<table><thead><tr><th>ID</th><th>Devedor</th><th>Tipo</th><th>Valor face</th><th>Vencimento</th><th>Deságio</th><th>Líquido</th><th>Status</th><th>Borderô</th><th></th></tr></thead><tbody>";
     state.creditos.forEach((c) => {
       const st = STATUS[c.status] || { label: c.status, pill: "gray" };
+      const cr = state.crs.find((x) => x.creditoId === c.id);
       let action = "";
       if (c.status === "aprovado") {
-        action = `<button class="btn btn-brand" data-mint="${c.id}" style="padding:0.4rem 0.85rem;font-size:0.78rem">Mintar TDIC</button>`;
+        // Privada: mostra "Ver oferta" (subscrição) em vez de Mint direto.
+        // O mint só roda após o pagamento da subscrição confirmar.
+        if (cr?.issuanceType === "private" && cr?.subscriptionLink) {
+          action = `<a class="btn btn-brand" href="${cr.subscriptionLink}" target="_blank" style="padding:0.4rem 0.85rem;font-size:0.78rem;text-decoration:none">→ Ver oferta</a>`;
+        } else {
+          action = `<button class="btn btn-brand" data-mint="${c.id}" style="padding:0.4rem 0.85rem;font-size:0.78rem">Mintar TDIC</button>`;
+        }
       } else if (c.status === "mintado") {
-        const cr = state.crs.find((x) => x.creditoId === c.id);
         action = cr
           ? `<a class="mono" style="font-size:0.74rem;color:#525252" href="https://basescan.org/token/${cr.tokenId}" target="_blank">Ver token</a>`
           : "";
       }
+      const issuanceTag = cr?.issuanceType === "private"
+        ? `<span class="pill amber" style="font-size:0.62rem;margin-left:4px" title="Auto-securitização: cedente é o tomador"><span class="dot"></span>Privada</span>`
+        : cr?.issuanceType === "public"
+        ? `<span class="pill blue" style="font-size:0.62rem;margin-left:4px" title="Oferta pública via crowdfunding CVM 88"><span class="dot"></span>Pública</span>`
+        : "";
       const desconto = c.discountBrl ? fmtBRL(c.discountBrl) : (c.discountBps / 100).toFixed(2) + "% face";
       const liquido = c.netValue || c.faceValue - (c.discountBrl || 0);
       html += `<tr>
@@ -911,8 +922,8 @@ ${body}
         <td class="mono">${fmtDate(c.maturityDate)}</td>
         <td class="mono" style="font-size:0.78rem">${desconto}</td>
         <td class="mono" style="color:var(--brand-primary);font-weight:700">${fmtBRL(liquido)}</td>
-        <td><span class="pill ${st.pill}"><span class="dot"></span>${st.label}</span></td>
-        <td><button class="btn btn-ghost" data-bordero="${c.id}" style="padding:0.3rem 0.65rem;font-size:0.72rem" title="Baixar borderô de cessão">↓ HTML</button></td>
+        <td><span class="pill ${st.pill}"><span class="dot"></span>${st.label}</span>${issuanceTag}</td>
+        <td><button class="btn btn-ghost" data-bordero="${c.id}" style="padding:0.3rem 0.65rem;font-size:0.72rem" title="Baixar borderô de cessão (PDF)">↓ PDF</button></td>
         <td>${action}</td>
       </tr>`;
     });

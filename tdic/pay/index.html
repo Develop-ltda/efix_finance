@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subscrição de CR · EFIX TDIC</title>
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/reset.css">
+<style>
+:root{--brand-primary:#22c55e;--brand-primary-dark:#16a34a;--white:#fff;--black:#0a0a0a;--gray-100:#f5f5f5;--gray-200:#e5e5e5;--gray-300:#d4d4d4;--gray-400:#a3a3a3;--gray-500:#737373;--gray-600:#525252}
+html,body{height:100%}
+body{font-family:'Syne',-apple-system,sans-serif;background:#fafafa;color:#0a0a0a;line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh}
+.mono{font-family:'Space Mono',monospace}
+
+nav.topbar{background:#0a0a0a;color:#fff;height:56px;display:flex;align-items:center;padding:0 1.5rem}
+.topbar-inner{max-width:880px;width:100%;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.brand-link{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#fff;font-weight:800;font-size:17px;letter-spacing:-0.5px}
+.brand-link .mark{width:24px;height:24px;color:var(--brand-primary)}
+.brand-sub{font-family:'Space Mono',monospace;font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.1em;padding-left:6px;border-left:1px solid #262626;margin-left:6px}
+
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:1.75rem 1.5rem 4rem}
+.head{margin-bottom:1.5rem}
+.eyebrow{font-family:'Space Mono',monospace;font-size:0.65rem;color:#737373;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.4rem}
+h1{font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.4rem}
+.sub{font-size:0.92rem;color:#525252;line-height:1.65}
+
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem 1.4rem;margin-bottom:1rem}
+.card h3{font-size:0.85rem;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;color:#525252;margin-bottom:0.75rem;font-weight:700}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem;font-size:0.85rem}
+.kv .k{color:#737373;font-size:0.75rem}
+.kv .v{font-weight:600}
+
+.tot{background:#0a0a0a;color:#fff;border-radius:12px;padding:1.4rem 1.5rem;text-align:center;margin-bottom:1rem}
+.tot .lbl{font-family:'Space Mono',monospace;font-size:0.7rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem}
+.tot .val{font-family:'Space Mono',monospace;font-size:2rem;font-weight:800;color:var(--brand-primary);letter-spacing:-0.02em}
+.tot .help{font-size:0.78rem;color:#a3a3a3;margin-top:0.4rem}
+
+.tabs{display:flex;gap:0;border-bottom:1px solid #e5e5e5;margin-bottom:1rem}
+.tab{padding:0.7rem 1rem;font-family:inherit;background:none;border:none;cursor:pointer;color:#737373;font-weight:600;font-size:0.85rem;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:#0a0a0a;border-bottom-color:#0a0a0a}
+
+.method{display:none}
+.method.active{display:block}
+
+.qr-block{display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;background:#fafafa;border:1px solid #e5e5e5;border-radius:10px;padding:1rem 1.1rem}
+.qr-block .qr{width:160px;height:160px;background:#0a0a0a;border-radius:8px;flex-shrink:0;position:relative;overflow:hidden}
+.qr-block .qr svg{width:100%;height:100%}
+.qr-block .info{flex:1;min-width:240px;font-size:0.85rem;line-height:1.55}
+.qr-block .info strong{display:block;font-size:0.95rem;margin-bottom:0.3rem}
+.copy-row{display:flex;gap:0.4rem;margin-top:0.6rem}
+.copy-row input{flex:1;font-family:'Space Mono',monospace;font-size:0.72rem;padding:0.55rem 0.7rem;border:1px solid #d4d4d4;border-radius:7px;background:#fff;color:#404040}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:0.4rem;padding:0.55rem 1rem;border-radius:8px;font-family:inherit;font-weight:600;font-size:0.85rem;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn-primary{background:#0a0a0a;color:#fff}
+.btn-primary:hover{background:#262626}
+.btn-ghost{background:#fff;color:#404040;border:1px solid #d4d4d4}
+.btn-ghost:hover{border-color:#0a0a0a;color:#0a0a0a}
+.btn-brand{background:var(--brand-primary);color:#fff}
+.btn-brand:hover{background:var(--brand-primary-dark)}
+
+.note{margin-top:1rem;padding:0.85rem 1rem;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;font-size:0.78rem;color:#7c2d12;line-height:1.55}
+
+footer{padding:2rem 1.5rem;border-top:1px solid #e5e5e5;background:#fff;text-align:center;font-size:0.72rem;color:#737373;font-family:'Space Mono',monospace}
+footer a{color:#525252;text-decoration:none;margin:0 0.5rem}
+footer a:hover{color:#0a0a0a}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a href="/tdic/" class="brand-link">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="currentColor"/><g fill="#fff"><path d="M16 22h32v4H34v22h-4V26H16z"/><circle cx="48" cy="48" r="3"/></g></svg>
+      <span>EFIX TDIC</span>
+      <span class="brand-sub">Subscrição</span>
+    </a>
+    <a href="/tdic/app/" style="color:#a3a3a3;font-size:0.78rem;text-decoration:none">← Voltar ao painel</a>
+  </div>
+</nav>
+
+<main>
+  <div class="head">
+    <div class="eyebrow">● Oferta privada · CVM 88</div>
+    <h1>Subscrição de Certificado de Recebíveis</h1>
+    <p class="sub">Pague o valor da subscrição para que o token TDIC seja mintado na sua smart wallet em Base mainnet. Operação <span id="invCrId" class="mono">—</span>.</p>
+  </div>
+
+  <div class="card">
+    <h3>Operação</h3>
+    <div class="kv">
+      <div><div class="k">Cedente / Tomador</div><div class="v" id="invCedente">—</div></div>
+      <div><div class="k">CR ID interno</div><div class="v mono" id="invCrInternalId">—</div></div>
+      <div><div class="k">Devedor (lastro)</div><div class="v" id="invDevedor">—</div></div>
+      <div><div class="k">Vencimento</div><div class="v mono" id="invVencto">—</div></div>
+      <div><div class="k">Valor de face</div><div class="v mono" id="invFace">—</div></div>
+      <div><div class="k">Token TDIC</div><div class="v mono" id="invToken" style="font-size:0.72rem">—</div></div>
+    </div>
+  </div>
+
+  <div class="tot">
+    <div class="lbl">Valor da subscrição</div>
+    <div class="val" id="invAmount">R$ —</div>
+    <div class="help">Valor de face menos deságio e taxa de serviço.</div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" data-method="pix">PIX (recomendado)</button>
+      <button class="tab" data-method="ted">TED</button>
+    </div>
+
+    <div class="method active" data-pane="pix">
+      <div class="qr-block">
+        <div class="qr">
+          <!-- QR mock estilizado -->
+          <svg viewBox="0 0 160 160" aria-hidden="true">
+            <rect width="160" height="160" fill="#0a0a0a"/>
+            <g fill="#22c55e">
+              <rect x="12" y="12" width="40" height="40" rx="2"/>
+              <rect x="20" y="20" width="24" height="24" fill="#0a0a0a"/>
+              <rect x="28" y="28" width="8" height="8"/>
+              <rect x="108" y="12" width="40" height="40" rx="2"/>
+              <rect x="116" y="20" width="24" height="24" fill="#0a0a0a"/>
+              <rect x="124" y="28" width="8" height="8"/>
+              <rect x="12" y="108" width="40" height="40" rx="2"/>
+              <rect x="20" y="116" width="24" height="24" fill="#0a0a0a"/>
+              <rect x="28" y="124" width="8" height="8"/>
+            </g>
+            <g fill="#fff" opacity="0.92">
+              <rect x="58" y="14" width="6" height="6"/><rect x="68" y="14" width="6" height="6"/><rect x="78" y="14" width="6" height="6"/><rect x="88" y="14" width="6" height="6"/>
+              <rect x="14" y="58" width="6" height="6"/><rect x="14" y="68" width="6" height="6"/><rect x="14" y="78" width="6" height="6"/><rect x="14" y="88" width="6" height="6"/>
+              <rect x="58" y="58" width="6" height="6"/><rect x="68" y="58" width="6" height="6"/><rect x="78" y="58" width="6" height="6"/><rect x="88" y="58" width="6" height="6"/><rect x="98" y="58" width="6" height="6"/><rect x="108" y="58" width="6" height="6"/><rect x="118" y="58" width="6" height="6"/><rect x="128" y="58" width="6" height="6"/><rect x="138" y="58" width="6" height="6"/>
+              <rect x="58" y="68" width="6" height="6"/><rect x="78" y="68" width="6" height="6"/><rect x="98" y="68" width="6" height="6"/><rect x="118" y="68" width="6" height="6"/><rect x="138" y="68" width="6" height="6"/>
+              <rect x="58" y="78" width="6" height="6"/><rect x="68" y="78" width="6" height="6"/><rect x="88" y="78" width="6" height="6"/><rect x="108" y="78" width="6" height="6"/><rect x="128" y="78" width="6" height="6"/>
+              <rect x="68" y="88" width="6" height="6"/><rect x="78" y="88" width="6" height="6"/><rect x="88" y="88" width="6" height="6"/><rect x="98" y="88" width="6" height="6"/><rect x="108" y="88" width="6" height="6"/><rect x="118" y="88" width="6" height="6"/><rect x="128" y="88" width="6" height="6"/><rect x="138" y="88" width="6" height="6"/>
+              <rect x="58" y="98" width="6" height="6"/><rect x="78" y="98" width="6" height="6"/><rect x="98" y="98" width="6" height="6"/><rect x="118" y="98" width="6" height="6"/><rect x="138" y="98" width="6" height="6"/>
+              <rect x="58" y="108" width="6" height="6"/><rect x="68" y="108" width="6" height="6"/><rect x="88" y="108" width="6" height="6"/><rect x="108" y="108" width="6" height="6"/><rect x="128" y="108" width="6" height="6"/>
+              <rect x="58" y="118" width="6" height="6"/><rect x="68" y="118" width="6" height="6"/><rect x="78" y="118" width="6" height="6"/><rect x="98" y="118" width="6" height="6"/><rect x="118" y="118" width="6" height="6"/><rect x="128" y="118" width="6" height="6"/><rect x="138" y="118" width="6" height="6"/>
+            </g>
+          </svg>
+        </div>
+        <div class="info">
+          <strong>PIX EFIX Securitizadora S.A.</strong>
+          <div style="color:#525252;font-size:0.8rem">Liquidação imediata. Após confirmação do PIX (D+0), o token TDIC é mintado automaticamente na sua smart wallet (gasless via paymaster Alchemy).</div>
+          <div class="copy-row">
+            <input type="text" id="pixCopia" readonly value="00020126580014BR.GOV.BCB.PIX0136efix-tdic-mock-copia-cola-EXEMPLO5204000053039865802BR5916EFIX SECURITIZADORA6009Sao Paulo62070503***6304ABCD">
+            <button class="btn btn-primary" onclick="copyPix()">Copiar</button>
+          </div>
+          <div style="font-size:0.74rem;color:#737373;margin-top:0.5rem">Beneficiário: <strong>EFIX Securitizadora S.A.</strong> · CNPJ 60.756.859/0001-57 · Banco 332 (Acesso Soluções)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="method" data-pane="ted">
+      <div class="kv">
+        <div><div class="k">Banco</div><div class="v">Acesso Soluções (332)</div></div>
+        <div><div class="k">Agência</div><div class="v mono">0001</div></div>
+        <div><div class="k">Conta</div><div class="v mono">000XXXX-X</div></div>
+        <div><div class="k">Titular</div><div class="v">EFIX Securitizadora S.A.</div></div>
+        <div><div class="k">CNPJ</div><div class="v mono">60.756.859/0001-57</div></div>
+        <div><div class="k">Identificador (referência)</div><div class="v mono" id="tedRef">—</div></div>
+      </div>
+      <div class="note">Use o <strong>identificador</strong> acima como referência da TED para que o pagamento seja conciliado automaticamente com este CR. TEDs sem o identificador podem levar D+1 para o mint.</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+    <button class="btn btn-ghost" id="downloadCrBtn">↓ Baixar CR (PDF)</button>
+    <button class="btn btn-brand" id="simulatePaymentBtn">Simular pagamento confirmado</button>
+  </div>
+
+  <div class="note" style="margin-top:1rem">
+    <strong>Modo demo:</strong> esta página é o esqueleto da subscrição privada. Em produção, a EFIX
+    integra com o PSP (HausBank) para gerar PIX dinâmico real, conciliar via webhook e disparar o
+    mint do TDIC quando o pagamento confirmar. Botão "Simular pagamento confirmado" abaixo executa
+    o caminho completo só pra testes.
+  </div>
+</main>
+
+<footer>
+  <div>
+    <a href="/tdic/">TDIC</a>·<a href="/tdic/app/">Painel cedente</a>·<a href="https://efix.finance">EFIX</a>
+  </div>
+  <div style="margin-top:0.5rem">© EFIX Securitizadora S.A. · CNPJ 60.756.859/0001-57 · Resolução CVM 88/2022</div>
+</footer>
+
+<script src="/tdic/tdic-mock.js?v=20260508g"></script>
+<script>
+(function() {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const fmtBRL = (n) => "R$ " + Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (s) => s ? new Date(s + (s.length === 10 ? "T12:00:00" : "")).toLocaleDateString("pt-BR") : "—";
+  const params = new URLSearchParams(location.search);
+  const crId = params.get("cr");
+
+  let _cr = null, _credito = null, _cedente = null;
+
+  async function load() {
+    if (!crId) {
+      $("#invCrId").textContent = "(sem cr na URL — abra via link enviado por e-mail)";
+      return;
+    }
+    const crs = await window.TdicMock.listAllCRs();
+    _cr = crs.find(c => c.id === crId);
+    if (!_cr) {
+      $("#invCrId").textContent = crId + " não encontrado neste navegador (mock local)";
+      return;
+    }
+    const creditos = await window.TdicMock.listAllCreditos();
+    _credito = creditos.find(c => c.id === _cr.creditoId);
+    const cedentes = await window.TdicMock.listCedentes();
+    _cedente = cedentes.find(c => c.walletAddress === _cr.cedenteWallet);
+
+    $("#invCrId").textContent = _cr.id;
+    $("#invCrInternalId").textContent = _cr.id;
+    $("#invCedente").textContent = _cedente?.razaoSocial || "—";
+    $("#invDevedor").textContent = _credito?.devedorRazaoSocial || "—";
+    $("#invVencto").textContent = fmtDate(_credito?.maturityDate);
+    $("#invFace").textContent = fmtBRL(_cr.faceValue);
+    $("#invToken").textContent = _cr.tokenId.slice(0, 14) + "…" + _cr.tokenId.slice(-6);
+    $("#invAmount").textContent = fmtBRL(_cr.netValue || _cr.subscriptionAmount);
+    $("#tedRef").textContent = "TDIC-" + _cr.id.replace("CR-", "").toUpperCase();
+  }
+
+  // Toggle de método (PIX / TED)
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      const m = t.getAttribute("data-method");
+      document.querySelectorAll(".method").forEach(p => {
+        p.classList.toggle("active", p.getAttribute("data-pane") === m);
+      });
+    });
+  });
+
+  window.copyPix = () => {
+    const el = $("#pixCopia");
+    el.select();
+    el.setSelectionRange(0, 99999);
+    try {
+      document.execCommand("copy");
+      alert("Código PIX copiado.");
+    } catch (e) {
+      navigator.clipboard?.writeText(el.value);
+    }
+  };
+
+  $("#downloadCrBtn").addEventListener("click", () => {
+    if (_cr && _credito && _cedente) {
+      // Reusa a UX: abre o painel cedente em nova aba (que tem o gerador)
+      // ou guia o user. Aqui, alerta direto:
+      alert("Para baixar o CR em PDF, acesse o e-mail enviado pela EFIX (anexo CR-" + (_credito.dupl || _credito.id) + ".pdf) ou solicite reenvio em tdic@efix.finance.");
+    }
+  });
+
+  $("#simulatePaymentBtn").addEventListener("click", async () => {
+    if (!_cr) { alert("Carregue um CR válido primeiro (?cr=...)."); return; }
+    if (!confirm("Simular pagamento confirmado? Isso vai disparar o mint do TDIC.")) return;
+    const btn = $("#simulatePaymentBtn");
+    btn.disabled = true;
+    btn.textContent = "Mintando…";
+    try {
+      // Primeiro auto-aprova via mock se ainda não aprovado (ele já está na criação),
+      // depois mintarCR.
+      await window.TdicMock.mintarCR(_cr.creditoId);
+      alert("Pagamento confirmado · TDIC mintado. Volte ao painel cedente para ver o token.");
+      location.href = "/tdic/app/";
+    } catch (e) {
+      alert("Erro: " + e.message);
+      btn.disabled = false;
+      btn.textContent = "Simular pagamento confirmado";
+    }
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

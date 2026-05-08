@@ -40,6 +40,9 @@
       crs: [],
       txs: [],
       whitelist: {},
+      // Log de e-mails enviados (mock — em prod vai para Sendgrid/Resend
+      // via backend e fica gravado em outbox table com status delivery).
+      emails: [],
     };
     save(db);
     return db;
@@ -87,6 +90,36 @@
     };
     save(db);
     return db.cedentes[addr];
+  }
+
+  // Log de e-mail de aprovação de CR (privada). Em produção, esse endpoint
+  // dispara o envio real via Sendgrid/Resend e armazena status de delivery.
+  async function logCREmail(payload) {
+    await delay();
+    const db = load();
+    const entry = {
+      id: uid("EMAIL"),
+      ...payload,
+      type: "cr-approved-private",
+      status: "sent",
+      createdAt: new Date().toISOString(),
+    };
+    db.emails.push(entry);
+    // Atualiza o CR com o link de subscrição
+    const cr = db.crs.find((c) => c.id === payload.crId);
+    if (cr) {
+      cr.subscriptionLink = payload.subscriptionLink;
+      cr.subscriptionAmount = payload.subscriptionAmount;
+      cr.notifiedAt = entry.createdAt;
+    }
+    save(db);
+    return entry;
+  }
+
+  async function listCREmails(creditoId) {
+    await delay();
+    const db = load();
+    return db.emails.filter((e) => !creditoId || e.creditoId === creditoId);
   }
 
   async function getSignatureHistory(walletAddress) {
@@ -205,6 +238,11 @@
       arb?.netValue ??
       Math.max(0, credito.faceValue - finalDiscountBrl - finalRoyaltyBrl - finalAbatimento);
 
+    // Tipo de emissão: "private" (auto-securitização — cedente é o tomador,
+    // dispara e-mail automático com CR + link de subscrição) ou "public"
+    // (oferta pública via crowdfunding CVM 88, distribuída a investidores).
+    const issuanceType = arb?.issuanceType === "public" ? "public" : "private";
+
     const cr = {
       id: uid("CR"),
       creditoId,
@@ -218,6 +256,11 @@
       royaltyBrl: finalRoyaltyBrl,
       abatimento: finalAbatimento,
       netValue: finalNetValue,
+      // Estrutura da emissão
+      issuanceType,
+      tomadorWallet: issuanceType === "private" ? credito.cedenteWallet : null,
+      subscriptionStatus: issuanceType === "private" ? "pending-payment" : "open",
+      subscriptionLink: null, // setado pelo admin após aprovar (via logCREmail)
       maturityDate: credito.maturityDate,
       // Trilha de auditoria: o que a cedente sugeriu vs. o que a EFIX arbitrou
       suggested,
@@ -313,6 +356,8 @@
     listCreditos,
     listAllCreditos,
     aprovarCR,
+    logCREmail,
+    listCREmails,
     mintarCR,
     listCRs,
     listAllCRs,
