@@ -127,12 +127,6 @@ tr:last-child td{border-bottom:none}
 .arb-row{display:flex;justify-content:space-between;font-size:0.83rem;padding:0.3rem 0;color:#404040}
 .arb-row.total{border-top:1px solid #e5e5e5;margin-top:0.4rem;padding-top:0.55rem;font-weight:700;color:#15803d;font-size:0.95rem}
 .arb-row.muted{color:#737373;font-size:0.78rem}
-.arb-cet{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:0.55rem}
-.arb-cet .cell{background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:0.6rem 0.75rem;text-align:center}
-.arb-cet .lbl{font-family:'Space Mono',monospace;font-size:0.58rem;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
-.arb-cet .val{font-family:'Space Mono',monospace;font-size:1rem;font-weight:800;color:var(--brand-primary)}
-.arb-cet .val.purple{color:#7c3aed}
-.arb-meta{font-size:0.7rem;color:#737373;margin-top:6px}
 .arb-suggested{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:0.55rem 0.75rem;font-size:0.74rem;color:#7c2d12;margin-bottom:0.85rem;line-height:1.5}
 </style>
 </head>
@@ -264,11 +258,6 @@ tr:last-child td{border-bottom:none}
         <div class="arb-row muted"><span id="arbSumRoyLbl">(−) Royalty flat</span><span class="mono" id="arbSumRoy">R$ 0,00</span></div>
         <div class="arb-row muted" id="arbSumAbatRow" style="display:none"><span>(−) Abatimento</span><span class="mono" id="arbSumAbat">R$ 0,00</span></div>
         <div class="arb-row total"><span>Valor líquido a creditar</span><strong class="mono" id="arbSumLiquido">R$ 0,00</strong></div>
-        <div class="arb-cet">
-          <div class="cell"><div class="lbl">CET total</div><div class="val" id="arbCetTotal">0,00%</div></div>
-          <div class="cell"><div class="lbl">CET ao mês</div><div class="val purple" id="arbCetMes">0,00%</div></div>
-        </div>
-        <div class="arb-meta" id="arbMeta">Tx diária: 0,0000% · Regime IR Regressivo</div>
       </div>
     </div>
     <div class="modal-foot">
@@ -479,12 +468,9 @@ tr:last-child td{border-bottom:none}
     const royaltyPct = Number($("#arbRoyalty").value) || 0;
     const abat = Number($("#arbAbat").value) || 0;
 
-    const txDiaria = txMensal / 30;
-    const desc = (face * txDiaria * prazo) / 100;
+    const desc = (face * (txMensal / 30) * prazo) / 100;
     const royalty = (face * royaltyPct) / 100;
     const liquido = Math.max(0, face - desc - royalty - abat);
-    const cetTotal = face > 0 ? ((desc + royalty) / face) * 100 : 0;
-    const cetMes = prazo > 0 ? (cetTotal / prazo) * 30 : 0;
 
     $("#arbSumFace").textContent = fmtBRL(face);
     $("#arbSumDescLbl").textContent = `(−) Desconto pro rata (${txMensal.toFixed(2)}%/m × ${prazo}d ÷ 30)`;
@@ -498,11 +484,7 @@ tr:last-child td{border-bottom:none}
       $("#arbSumAbatRow").style.display = "none";
     }
     $("#arbSumLiquido").textContent = fmtBRL(liquido);
-    $("#arbCetTotal").textContent = cetTotal.toFixed(2).replace(".", ",") + "%";
-    $("#arbCetMes").textContent = cetMes.toFixed(2).replace(".", ",") + "%";
-    $("#arbMeta").textContent =
-      `Tx diária: ${txDiaria.toFixed(4).replace(".", ",")}% · Regime ${c.tipo === "duplicata" ? "Ganho Capital GCAP" : "IR Regressivo"}`;
-    return { face, prazo, txMensal, royaltyPct, abat, desc, royalty, liquido, cetTotal, cetMes };
+    return { face, prazo, txMensal, royaltyPct, abat, desc, royalty, liquido };
   }
 
   function escapeHtml(s) {
@@ -530,8 +512,6 @@ tr:last-child td{border-bottom:none}
         abatimento: r.abat,
         prazoDias: r.prazo,
         netValue: r.liquido,
-        cetTotalPct: r.cetTotal,
-        cetMonthlyPct: r.cetMes,
       };
       const cr = await window.TdicMock.aprovarCR(_arbCreditoId, overrides);
       toast("CR aprovado · token " + cr.tokenId.slice(0, 12) + "…");

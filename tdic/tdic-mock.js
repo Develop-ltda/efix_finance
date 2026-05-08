@@ -218,8 +218,6 @@
       royaltyBrl: finalRoyaltyBrl,
       abatimento: finalAbatimento,
       netValue: finalNetValue,
-      cetTotalPct: arb?.cetTotalPct ?? null,
-      cetMonthlyPct: arb?.cetMonthlyPct ?? null,
       maturityDate: credito.maturityDate,
       // Trilha de auditoria: o que a cedente sugeriu vs. o que a EFIX arbitrou
       suggested,
