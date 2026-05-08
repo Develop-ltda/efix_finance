@@ -151,6 +151,39 @@
     return window.EfixWallet?.config?.apiKey === "STUB";
   }
 
+  // Converte erros do Alchemy/Turnkey em mensagens em PT-BR.
+  function humanizeAuthError(e) {
+    const raw = String(e?.message || e || "").trim();
+    // O Turnkey costuma vir como JSON dentro do message.
+    let payload = null;
+    try {
+      const m = raw.match(/\{[\s\S]*\}$/);
+      if (m) payload = JSON.parse(m[0]);
+      if (payload?.error) {
+        try {
+          payload = JSON.parse(payload.error);
+        } catch (_) {}
+      }
+    } catch (_) {}
+
+    const code = payload?.turnkeyErrorCode || payload?.code || "";
+    const msg = payload?.message || raw;
+
+    if (/MAX_OTP_INITIATED/i.test(raw) || code === "MAX_OTP_INITIATED") {
+      return "Limite de envios de OTP atingido para este e-mail. Aguarde ~15-30 min e tente novamente, ou use outro e-mail.";
+    }
+    if (/INVALID_OTP_CODE|otp.*invalid|otp.*expired/i.test(raw)) {
+      return "Código inválido ou expirado. Solicite um novo OTP.";
+    }
+    if (/timeout/i.test(raw)) {
+      return "Tempo esgotado. Verifique se cookies de signer.alchemy.com estão liberados (extensions/incognito podem bloquear).";
+    }
+    if (/network|fetch|failed to load/i.test(raw)) {
+      return "Falha de rede. Verifique sua conexão e tente novamente.";
+    }
+    return msg || "Não foi possível concluir a autenticação. Tente novamente.";
+  }
+
   async function getSmartAccountAddress() {
     // Stub expõe getAddress() direto; o bundle real expõe getSmartClient().
     if (isStub()) return window.EfixWallet.getAddress?.() || null;
@@ -210,7 +243,7 @@
         $("#codeInput").focus();
       } catch (e) {
         console.error("[TDIC] sendOTP error:", e);
-        err.textContent = e.message || "Falha ao enviar código.";
+        err.textContent = humanizeAuthError(e);
         err.style.display = "block";
       } finally {
         btn.disabled = false;
@@ -247,7 +280,7 @@
         await loadCedenteAndRoute();
       } catch (e) {
         console.error("[TDIC] verifyOTP error:", e);
-        err.textContent = e.message || "Código inválido.";
+        err.textContent = humanizeAuthError(e);
         err.style.display = "block";
       } finally {
         btn.disabled = false;
