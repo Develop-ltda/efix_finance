@@ -107,6 +107,12 @@
       faceValue: Number(payload.faceValue) || 0,
       maturityDate: payload.maturityDate,
       discountBps: Number(payload.discountBps) || 1500,
+      // Campos de import em lote (planilha modelo)
+      dupl: payload.dupl || null,
+      chaveNF: payload.chaveNF || null,
+      abatimento: Number(payload.abatimento) || 0,
+      devedorContato: payload.devedorContato || null,
+      origem: payload.origem || "manual",
       docs: payload.docs || [],
       status: "em-analise",
       createdAt: new Date().toISOString(),
@@ -114,6 +120,14 @@
     db.creditos.push(credito);
     save(db);
     return credito;
+  }
+
+  async function cadastrarCreditosLote(walletAddress, items) {
+    const out = [];
+    for (const it of items) {
+      out.push(await cadastrarCredito(walletAddress, it));
+    }
+    return out;
   }
 
   async function listCreditos(walletAddress) {
@@ -226,6 +240,7 @@
     approveKyb,
     listCedentes,
     cadastrarCredito,
+    cadastrarCreditosLote,
     listCreditos,
     listAllCreditos,
     aprovarCR,

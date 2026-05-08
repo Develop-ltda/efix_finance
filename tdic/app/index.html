@@ -156,6 +156,32 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
   .two-col{grid-template-columns:1fr}
   .topbar-inner .brand-sub{display:none}
 }
+
+/* ── Import modal ── */
+.drop-zone{border:1.5px dashed #d4d4d4;border-radius:12px;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--brand-primary);background:color-mix(in srgb, var(--brand-primary) 6%, #fff)}
+.drop-zone .ico{font-size:1.75rem;margin-bottom:0.5rem}
+.drop-zone .ttl{font-size:0.95rem;font-weight:700;margin-bottom:0.35rem}
+.drop-zone .help{font-size:0.78rem;color:#737373;line-height:1.6}
+.drop-zone input[type=file]{display:none}
+.import-summary{display:flex;gap:1rem;flex-wrap:wrap;margin:0.85rem 0;font-size:0.78rem}
+.import-summary .chip{padding:0.35rem 0.7rem;border-radius:999px;background:#fafafa;border:1px solid #e5e5e5}
+.import-summary .chip strong{font-family:'Space Mono',monospace;color:#0a0a0a}
+.import-summary .chip.ok{background:color-mix(in srgb, var(--brand-primary) 8%, #fff);border-color:color-mix(in srgb, var(--brand-primary) 30%, #e5e5e5)}
+.import-summary .chip.warn{background:#fff7ed;border-color:#fdba74;color:#9a3412}
+.preview-table{max-height:340px;overflow:auto;border:1px solid #e5e5e5;border-radius:10px}
+.preview-table table{width:100%;border-collapse:collapse;font-size:0.78rem}
+.preview-table th{position:sticky;top:0;background:#fafafa;border-bottom:1px solid #e5e5e5;text-align:left;padding:0.55rem 0.7rem;font-family:'Space Mono',monospace;font-size:0.66rem;letter-spacing:0.05em;text-transform:uppercase;color:#525252;white-space:nowrap}
+.preview-table td{border-bottom:1px solid #f5f5f5;padding:0.5rem 0.7rem;vertical-align:middle}
+.preview-table tr.row-error td{background:#fff7ed}
+.preview-table tr:hover td{background:#fafafa}
+.preview-table .row-err{font-size:0.7rem;color:#b45309;display:block;margin-top:2px}
+.import-progress{margin-top:0.75rem;background:#fafafa;border-radius:8px;padding:0.75rem;border:1px solid #e5e5e5;display:none}
+.import-progress.show{display:block}
+.import-bar{height:6px;background:#e5e5e5;border-radius:99px;overflow:hidden}
+.import-bar > i{display:block;height:100%;background:var(--brand-primary);transition:width .3s}
+.template-link{font-size:0.78rem;color:var(--brand-primary);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0;font-family:inherit}
+.template-link:hover{opacity:0.8}
 </style>
 </head>
 <body>
@@ -347,7 +373,8 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
         <p class="sub" id="dashSub">Smart wallet pronta · Gasless via paymaster Alchemy</p>
       </div>
       <div class="page-head-actions">
-        <button class="btn btn-brand" id="newCreditoBtn">+ Novo crédito</button>
+        <button class="btn btn-ghost" id="importCreditosBtn" type="button">📥 Importar planilha / PDF</button>
+        <button class="btn btn-brand" id="newCreditoBtn" type="button">+ Novo crédito</button>
       </div>
     </div>
 
@@ -431,6 +458,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
     </div>
     <form id="creditoForm">
       <div class="modal-body">
+        <div id="credPdfPlaceholder" hidden></div>
         <div class="kyb-section" style="margin-top:0">Tipo do crédito</div>
         <label class="field">
           <span class="lbl">Categoria</span>
@@ -506,6 +534,96 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
     </div>
   </div>
 </div>
+
+<!-- IMPORT MODAL ─ planilha (xlsx/xls/csv) ou PDF -->
+<div class="modal-backdrop" id="modalImport" style="display:none">
+  <div class="modal" style="max-width:960px;width:96vw">
+    <div class="modal-head">
+      <h3>Importar recebíveis</h3>
+      <button class="x" type="button" onclick="window.tdicApp.closeImportModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Step 1: drop zone -->
+      <div id="importStep1">
+        <p style="font-size:0.85rem;color:#525252;line-height:1.7;margin-bottom:0.85rem">
+          Aceitamos planilhas <strong>.xlsx / .xls / .csv</strong> com o mesmo layout do modelo
+          (16 colunas: cedente, sacado, duplicata, valor, vencimento, etc) ou
+          <strong>arquivos PDF</strong> de duplicatas/notas individuais.
+          Cada linha da planilha vira um crédito separado em análise.
+        </p>
+        <label class="drop-zone" id="importDrop" for="importFile">
+          <div class="ico">⇪</div>
+          <div class="ttl">Solte o arquivo aqui ou clique para selecionar</div>
+          <div class="help">.xlsx · .xls · .csv · .pdf · até 10 MB</div>
+          <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.pdf,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
+        </label>
+        <div style="text-align:center;margin-top:0.85rem">
+          <button class="template-link" type="button" id="downloadTemplateBtn">↓ Baixar modelo de planilha</button>
+        </div>
+        <div class="error-msg" id="importErr1" style="display:none;margin-top:0.85rem"></div>
+      </div>
+
+      <!-- Step 2: Excel preview -->
+      <div id="importStep2" hidden>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.5rem;flex-wrap:wrap">
+          <div>
+            <div style="font-size:0.78rem;color:#737373">Arquivo</div>
+            <div id="importFileName" class="mono" style="font-weight:700;font-size:0.9rem"></div>
+          </div>
+          <button class="btn btn-ghost" type="button" id="importBackBtn">← Outro arquivo</button>
+        </div>
+        <div class="import-summary" id="importSummary"></div>
+        <div class="preview-table">
+          <table>
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="importSelAll" checked></th>
+                <th>Sacado</th>
+                <th>CNPJ</th>
+                <th>Duplicata</th>
+                <th>Valor</th>
+                <th>Vencimento</th>
+                <th>Abat.</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="importPreviewBody"></tbody>
+          </table>
+        </div>
+        <div class="error-msg" id="importErr2" style="display:none;margin-top:0.85rem"></div>
+        <div class="import-progress" id="importProgress">
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.4rem">
+            <span id="importProgressLbl">Cadastrando…</span>
+            <span class="mono" id="importProgressPct">0%</span>
+          </div>
+          <div class="import-bar"><i id="importProgressBar" style="width:0%"></i></div>
+        </div>
+      </div>
+
+      <!-- Step 3: PDF anexo -->
+      <div id="importStep3" hidden>
+        <p style="font-size:0.85rem;color:#525252;line-height:1.7;margin-bottom:0.85rem">
+          PDF reconhecido. Vamos anexar como comprovante e abrir o formulário de cadastro
+          para você preencher os dados do crédito.
+        </p>
+        <div style="background:#fafafa;border:1px solid #e5e5e5;border-radius:10px;padding:0.85rem;display:flex;align-items:center;gap:0.75rem">
+          <div style="font-size:1.5rem">📄</div>
+          <div style="flex:1;min-width:0">
+            <div id="importPdfName" class="mono" style="font-weight:700;font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+            <div id="importPdfSize" style="font-size:0.72rem;color:#737373"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="window.tdicApp.closeImportModal()">Cancelar</button>
+      <button class="btn btn-brand" id="importConfirmBtn" type="button" disabled>Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SheetJS (parser .xlsx/.xls/.csv) -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <!-- White-label theming -->
 <script src="/tdic/assets/theme.js"></script>

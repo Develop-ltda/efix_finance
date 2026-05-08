@@ -40,6 +40,7 @@
     txs: [],
     tab: "creditos",
     pendingMintCreditoId: null,
+    pendingPdfDoc: null,
     kybDocs: {},
   };
 
@@ -57,6 +58,7 @@
     bindDashboard();
     bindCreditoModal();
     bindMintModal();
+    bindImportModal();
 
     // Inicializa signer Alchemy (real ou stub).
     const isStubSigner = window.EfixWallet?.config?.apiKey === "STUB";
@@ -396,6 +398,7 @@
       t.addEventListener("click", () => switchTab(t.getAttribute("data-tab")));
     });
     $("#newCreditoBtn").addEventListener("click", () => openCreditoModal());
+    $("#importCreditosBtn").addEventListener("click", () => openImportModal());
     $("#exportCsvBtn").addEventListener("click", exportCsv);
     $("#exportPdfBtn").addEventListener("click", exportHtmlReport);
   }
@@ -611,7 +614,8 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
         faceValue: $("#credFace").value,
         maturityDate: $("#credVencto").value,
         discountBps: Math.round((Number($("#credDiscount").value) || 0) * 100),
-        docs: [],
+        docs: state.pendingPdfDoc ? [state.pendingPdfDoc] : [],
+        origem: state.pendingPdfDoc ? "import-pdf" : "manual",
       };
       if (!payload.devedorCnpj || !payload.devedorRazaoSocial || !payload.faceValue || !payload.maturityDate) {
         alert("Preencha todos os campos obrigatórios.");
@@ -621,6 +625,7 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
       btn.innerHTML = '<span class="spinner"></span>Enviando…';
       try {
         await window.TdicMock.cadastrarCredito(state.user.address, payload);
+        state.pendingPdfDoc = null;
         closeCreditoModal();
         await loadDashboard();
         switchTab("creditos");
@@ -636,11 +641,25 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
   function openCreditoModal() {
     $("#creditoForm").reset();
     $("#credDiscount").value = 80;
-    $("#credTipo").value = "confissao-divida";
+    $("#credTipo").value = state.pendingPdfDoc ? "duplicata" : "confissao-divida";
+    // Mostra anexo PDF (se vier do import) num bloco discreto.
+    const ph = $("#credPdfPlaceholder");
+    if (ph) {
+      if (state.pendingPdfDoc) {
+        ph.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.6rem 0.85rem;font-size:0.78rem;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.85rem">
+          <span>📄</span><span class="mono">${escapeHtml(state.pendingPdfDoc.name)}</span>
+          <span style="margin-left:auto;color:#15803d;font-weight:700">anexado</span></div>`;
+        ph.hidden = false;
+      } else {
+        ph.innerHTML = "";
+        ph.hidden = true;
+      }
+    }
     $("#modalCredito").style.display = "flex";
   }
   function closeCreditoModal() {
     $("#modalCredito").style.display = "none";
+    state.pendingPdfDoc = null;
   }
 
   // ── Modal Mint ──────────────────────────────────────────
@@ -695,6 +714,403 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
     }
   }
 
+  // ── Importar planilha / PDF ─────────────────────────────
+  // Schema da planilha modelo: 16 colunas (caixa-alta, com acentuação),
+  // mapeadas para o payload do tdic. Aceita .xlsx, .xls, .csv via SheetJS
+  // e PDFs como anexo único (1 PDF = 1 crédito; abre o modal padrão).
+  const IMPORT_HEADERS = [
+    { key: "cedenteNome", aliases: ["NOME DO CEDENTE", "CEDENTE", "NOME CEDENTE"] },
+    { key: "cedenteCnpj", aliases: ["CNPJ DO CEDENTE", "CNPJ CEDENTE"] },
+    { key: "devedorRazaoSocial", aliases: ["NOME DO SACADO", "SACADO", "NOME SACADO", "DEVEDOR"] },
+    { key: "devedorCnpj", aliases: ["CNPJ SACADO", "CNPJ DO SACADO", "CNPJ DEVEDOR"] },
+    { key: "dupl", aliases: ["Nº DUPL", "N DUPL", "DUPL", "DUPLICATA", "NUMERO DUPLICATA"] },
+    { key: "faceValue", aliases: ["VALOR", "VALOR FACE", "VALOR DUPLICATA"] },
+    { key: "maturityDate", aliases: ["VENCTO", "VENCIMENTO", "DATA VENCIMENTO"] },
+    { key: "chaveNF", aliases: ["CHAVE NF", "CHAVE NFE", "CHAVE NF-E"] },
+    { key: "endereco", aliases: ["ENDEREÇO", "ENDERECO"] },
+    { key: "bairro", aliases: ["BAIRRO"] },
+    { key: "cidade", aliases: ["CIDADE"] },
+    { key: "uf", aliases: ["UF", "ESTADO"] },
+    { key: "cep", aliases: ["CEP"] },
+    { key: "email", aliases: ["EMAIL", "E-MAIL", "EMAIL CONTATO"] },
+    { key: "telefone", aliases: ["TELEFONE", "FONE", "TELEFONE CONTATO"] },
+    { key: "abatimento", aliases: ["ABATIMENTO", "ABAT"] },
+  ];
+
+  let _importParsed = []; // [{raw, payload, errors[]}]
+  let _importPdf = null;
+
+  function bindImportModal() {
+    $("#importDrop").addEventListener("dragover", (e) => {
+      e.preventDefault();
+      $("#importDrop").classList.add("dragover");
+    });
+    $("#importDrop").addEventListener("dragleave", () => $("#importDrop").classList.remove("dragover"));
+    $("#importDrop").addEventListener("drop", (e) => {
+      e.preventDefault();
+      $("#importDrop").classList.remove("dragover");
+      const file = e.dataTransfer.files?.[0];
+      if (file) handleImportFile(file);
+    });
+    $("#importFile").addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (file) handleImportFile(file);
+    });
+    $("#importBackBtn").addEventListener("click", () => resetImportModal());
+    $("#importSelAll").addEventListener("change", (e) => {
+      $$("input[data-import-row]", $("#importPreviewBody")).forEach((c) => {
+        if (!c.disabled) c.checked = e.target.checked;
+      });
+      updateImportSummary();
+    });
+    $("#importConfirmBtn").addEventListener("click", confirmImport);
+    $("#downloadTemplateBtn").addEventListener("click", downloadTemplate);
+  }
+
+  function openImportModal() {
+    resetImportModal();
+    $("#modalImport").style.display = "flex";
+  }
+  function closeImportModal() {
+    $("#modalImport").style.display = "none";
+    resetImportModal();
+  }
+  function resetImportModal() {
+    _importParsed = [];
+    _importPdf = null;
+    $("#importStep1").hidden = false;
+    $("#importStep2").hidden = true;
+    $("#importStep3").hidden = true;
+    $("#importFile").value = "";
+    $("#importErr1").style.display = "none";
+    $("#importErr2").style.display = "none";
+    $("#importProgress").classList.remove("show");
+    $("#importPreviewBody").innerHTML = "";
+    $("#importSummary").innerHTML = "";
+    $("#importConfirmBtn").disabled = true;
+    $("#importConfirmBtn").textContent = "Importar";
+  }
+
+  async function handleImportFile(file) {
+    if (file.size > 10 * 1024 * 1024) {
+      return showImportErr1("Arquivo maior que 10 MB. Divida em arquivos menores.");
+    }
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    if (file.type === "application/pdf" || ext === "pdf") {
+      return handlePdfImport(file);
+    }
+    if (["xlsx", "xls", "csv"].includes(ext) || /sheet|excel|csv/.test(file.type)) {
+      return handleExcelImport(file);
+    }
+    showImportErr1("Tipo de arquivo não suportado. Envie .xlsx, .xls, .csv ou .pdf.");
+  }
+
+  function showImportErr1(msg) {
+    const el = $("#importErr1");
+    el.textContent = msg;
+    el.style.display = "block";
+  }
+
+  // ── Excel ─────────────────────────────────────────────
+  async function handleExcelImport(file) {
+    if (typeof window.XLSX === "undefined") {
+      return showImportErr1("Biblioteca de planilhas não carregou. Recarregue a página.");
+    }
+    let rows;
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = window.XLSX.read(buf, { type: "array", cellDates: true });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      rows = window.XLSX.utils.sheet_to_json(sheet, { defval: null });
+    } catch (e) {
+      console.error("[TDIC] xlsx parse error:", e);
+      return showImportErr1("Não consegui ler a planilha: " + (e.message || "formato inválido"));
+    }
+    if (!rows.length) return showImportErr1("Planilha vazia.");
+
+    const colMap = buildColMap(Object.keys(rows[0]));
+    if (!colMap.devedorRazaoSocial || !colMap.devedorCnpj || !colMap.faceValue || !colMap.maturityDate) {
+      return showImportErr1(
+        "Colunas obrigatórias não encontradas. A planilha precisa ter pelo menos: NOME DO SACADO, CNPJ SACADO, VALOR e VENCTO. Use o modelo como referência."
+      );
+    }
+
+    _importParsed = rows.map((raw, idx) => normalizeRow(raw, colMap, idx + 2));
+    $("#importStep1").hidden = true;
+    $("#importStep2").hidden = false;
+    $("#importFileName").textContent = file.name;
+    renderImportPreview();
+    updateImportSummary();
+  }
+
+  function buildColMap(actualHeaders) {
+    const norm = (s) =>
+      String(s || "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toUpperCase();
+    const headerByNorm = {};
+    actualHeaders.forEach((h) => (headerByNorm[norm(h)] = h));
+    const map = {};
+    IMPORT_HEADERS.forEach((spec) => {
+      for (const alias of spec.aliases) {
+        const k = norm(alias);
+        if (headerByNorm[k]) {
+          map[spec.key] = headerByNorm[k];
+          break;
+        }
+      }
+    });
+    return map;
+  }
+
+  function normalizeRow(raw, colMap, lineNo) {
+    const get = (k) => (colMap[k] ? raw[colMap[k]] : null);
+    const errors = [];
+
+    const devedorRazaoSocial = String(get("devedorRazaoSocial") || "").trim();
+    const devedorCnpj = String(get("devedorCnpj") || "").trim();
+    const dupl = String(get("dupl") || "").trim();
+    const faceValueRaw = get("faceValue");
+    const faceValue = parseNumber(faceValueRaw);
+    const maturityRaw = get("maturityDate");
+    const maturityDate = parseDate(maturityRaw);
+    const abatimento = parseNumber(get("abatimento")) || 0;
+
+    if (!devedorRazaoSocial) errors.push("Nome do sacado vazio");
+    if (!devedorCnpj) errors.push("CNPJ do sacado vazio");
+    else if (!isValidCnpjFormat(devedorCnpj)) errors.push("CNPJ inválido");
+    if (!faceValue || faceValue <= 0) errors.push("Valor inválido");
+    if (!maturityDate) errors.push("Vencimento inválido");
+
+    return {
+      lineNo,
+      raw,
+      errors,
+      payload: {
+        tipo: "duplicata",
+        devedorRazaoSocial,
+        devedorCnpj,
+        dupl,
+        faceValue,
+        maturityDate,
+        chaveNF: get("chaveNF") ? String(get("chaveNF")).trim() : null,
+        abatimento,
+        discountBps: 1500,
+        origem: "import-planilha",
+        devedorContato: {
+          email: String(get("email") || "").trim() || null,
+          telefone: String(get("telefone") || "").trim() || null,
+          endereco: String(get("endereco") || "").trim() || null,
+          bairro: String(get("bairro") || "").trim() || null,
+          cidade: String(get("cidade") || "").trim() || null,
+          uf: String(get("uf") || "").trim() || null,
+          cep: String(get("cep") || "").trim() || null,
+        },
+      },
+    };
+  }
+
+  function parseNumber(v) {
+    if (v === null || v === undefined || v === "") return 0;
+    if (typeof v === "number") return v;
+    // Aceita "R$ 1.234,56" ou "1234.56" ou "1,234.56"
+    const cleaned = String(v).replace(/[R$\s]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".");
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function parseDate(v) {
+    if (!v) return null;
+    if (v instanceof Date && !isNaN(v.getTime())) {
+      return v.toISOString().slice(0, 10);
+    }
+    const s = String(v).trim();
+    // dd/mm/yyyy
+    let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+    // yyyy-mm-dd
+    m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+    return null;
+  }
+
+  function isValidCnpjFormat(s) {
+    return /\d/.test(s) && String(s).replace(/\D/g, "").length === 14;
+  }
+
+  function renderImportPreview() {
+    const body = $("#importPreviewBody");
+    body.innerHTML = _importParsed
+      .map((r, i) => {
+        const ok = r.errors.length === 0;
+        const cls = ok ? "" : "row-error";
+        const status = ok
+          ? '<span class="pill brand"><span class="dot"></span>OK</span>'
+          : `<span class="pill amber"><span class="dot"></span>Erro</span>
+             <span class="row-err">${r.errors.join("; ")}</span>`;
+        return `<tr class="${cls}">
+        <td><input type="checkbox" data-import-row="${i}" ${ok ? "checked" : "disabled"}></td>
+        <td>${escapeHtml(r.payload.devedorRazaoSocial || "—")}</td>
+        <td class="mono" style="font-size:0.72rem">${escapeHtml(r.payload.devedorCnpj || "—")}</td>
+        <td class="mono" style="font-size:0.72rem">${escapeHtml(r.payload.dupl || "—")}</td>
+        <td class="mono">${fmtBRL(r.payload.faceValue)}</td>
+        <td class="mono">${fmtDate(r.payload.maturityDate)}</td>
+        <td class="mono">${r.payload.abatimento ? fmtBRL(r.payload.abatimento) : "—"}</td>
+        <td>${status}</td>
+      </tr>`;
+      })
+      .join("");
+    $$("input[data-import-row]", body).forEach((c) =>
+      c.addEventListener("change", updateImportSummary)
+    );
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  }
+
+  function updateImportSummary() {
+    const total = _importParsed.length;
+    const okCount = _importParsed.filter((r) => r.errors.length === 0).length;
+    const checked = $$("input[data-import-row]:checked", $("#importPreviewBody")).length;
+    const sumFace = _importParsed
+      .filter((r, i) => r.errors.length === 0 && $(`input[data-import-row="${i}"]`)?.checked)
+      .reduce((s, r) => s + r.payload.faceValue, 0);
+
+    $("#importSummary").innerHTML = `
+      <span class="chip"><strong>${total}</strong> linhas lidas</span>
+      <span class="chip ok"><strong>${okCount}</strong> válidas</span>
+      ${total - okCount > 0 ? `<span class="chip warn"><strong>${total - okCount}</strong> com erro</span>` : ""}
+      <span class="chip"><strong>${checked}</strong> selecionadas · <strong>${fmtBRL0(sumFace)}</strong></span>
+    `;
+    $("#importConfirmBtn").disabled = checked === 0;
+    $("#importConfirmBtn").textContent =
+      checked === 0
+        ? "Importar"
+        : `Importar ${checked} crédito${checked === 1 ? "" : "s"}`;
+  }
+
+  async function confirmImport() {
+    if (_importPdf) return confirmPdfImport();
+
+    const selected = _importParsed.filter(
+      (r, i) => r.errors.length === 0 && $(`input[data-import-row="${i}"]`)?.checked
+    );
+    if (!selected.length) return;
+
+    $("#importErr2").style.display = "none";
+    $("#importConfirmBtn").disabled = true;
+    $("#importProgress").classList.add("show");
+    const total = selected.length;
+    let done = 0;
+    const errs = [];
+
+    for (const item of selected) {
+      try {
+        await window.TdicMock.cadastrarCredito(state.user.address, item.payload);
+        done++;
+      } catch (e) {
+        console.error("[TDIC] cadastrarCredito falhou:", e);
+        errs.push(`Linha ${item.lineNo}: ${e.message}`);
+      }
+      const pct = Math.round((done / total) * 100);
+      $("#importProgressLbl").textContent = `Cadastrando ${done}/${total}…`;
+      $("#importProgressPct").textContent = pct + "%";
+      $("#importProgressBar").style.width = pct + "%";
+    }
+
+    if (errs.length) {
+      const err = $("#importErr2");
+      err.innerHTML = `<strong>${errs.length} falharam.</strong><br>` + errs.slice(0, 5).map(escapeHtml).join("<br>");
+      err.style.display = "block";
+      $("#importConfirmBtn").disabled = false;
+    } else {
+      closeImportModal();
+      await loadDashboard();
+      switchTab("creditos");
+    }
+  }
+
+  // ── PDF ───────────────────────────────────────────────
+  function handlePdfImport(file) {
+    _importPdf = file;
+    $("#importStep1").hidden = true;
+    $("#importStep2").hidden = true;
+    $("#importStep3").hidden = false;
+    $("#importPdfName").textContent = file.name;
+    $("#importPdfSize").textContent = (file.size / 1024).toFixed(1) + " KB · application/pdf";
+    $("#importConfirmBtn").disabled = false;
+    $("#importConfirmBtn").textContent = "Anexar e abrir cadastro";
+  }
+
+  async function confirmPdfImport() {
+    const file = _importPdf;
+    if (!file) return;
+    // Anexa o PDF aos docs do próximo crédito e abre modal de cadastro padrão.
+    state.pendingPdfDoc = {
+      key: "duplicata-pdf",
+      name: file.name,
+      size: file.size,
+      uploadedAt: new Date().toISOString(),
+    };
+    closeImportModal();
+    openCreditoModal();
+    // Se quiser no futuro: ler texto via pdf.js e auto-preencher campos.
+  }
+
+  // ── Template download ─────────────────────────────────
+  function downloadTemplate() {
+    if (typeof window.XLSX === "undefined") {
+      alert("Biblioteca de planilhas ainda carregando. Tente novamente em 1s.");
+      return;
+    }
+    const headers = [
+      "NOME DO CEDENTE",
+      "CNPJ DO CEDENTE",
+      "NOME DO SACADO",
+      "CNPJ SACADO",
+      "Nº DUPL",
+      "VALOR",
+      "VENCTO",
+      "CHAVE NF",
+      "Endereço",
+      "Bairro",
+      "Cidade",
+      "UF",
+      "CEP",
+      "Email",
+      "Telefone",
+      "ABATIMENTO",
+    ];
+    const sample = [
+      "EMPRESA CEDENTE LTDA",
+      "00.000.000/0001-00",
+      "EMPRESA SACADO S/A",
+      "00.000.000/0001-00",
+      "00001-1",
+      10000,
+      "2026-12-31",
+      "",
+      "Rua Exemplo, 100",
+      "Centro",
+      "São Paulo",
+      "SP",
+      "01000-000",
+      "contato@sacado.com.br",
+      "11999990000",
+      0,
+    ];
+    const aoa = [headers, sample];
+    const ws = window.XLSX.utils.aoa_to_sheet(aoa);
+    ws["!cols"] = headers.map((h) => ({ wch: Math.max(h.length + 2, 14) }));
+    const wb = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(wb, ws, "Recebíveis");
+    window.XLSX.writeFile(wb, "tdic-modelo-importacao.xlsx");
+  }
+
   // ── Logout ──────────────────────────────────────────────
   async function logout() {
     await window.EfixAuth.logout();
@@ -719,6 +1135,8 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
     openCreditoModal,
     closeCreditoModal,
     closeMintModal,
+    openImportModal,
+    closeImportModal,
     state,
   };
 })();
