@@ -59,19 +59,41 @@
     bindCreditoModal();
     bindMintModal();
 
-    // Restore Alchemy session (or stub)
-    let session = null;
+    // Inicializa signer Alchemy (real ou stub).
     try {
       if (window.EfixWallet?.init) window.EfixWallet.init();
-      session = await window.EfixAuth.restore();
     } catch (e) {
-      console.warn("[TDIC] restore failed:", e);
+      console.warn("[TDIC] EfixWallet.init failed:", e);
     }
 
-    if (!session) return showLogin();
+    // 1) Tenta restaurar JWT no backend efixdi (caminho normal).
+    let session = null;
+    try {
+      session = await window.EfixAuth.restore();
+    } catch (e) {
+      console.warn("[TDIC] EfixAuth.restore failed:", e);
+    }
+    if (session?.user?.address) {
+      state.user = session.user;
+      return loadCedenteAndRoute();
+    }
 
-    state.user = session.user;
-    await loadCedenteAndRoute();
+    // 2) Sem JWT: se o Alchemy ainda tem sessão local (signer cookie), usa o
+    //    smart account address e segue sem precisar de novo OTP.
+    try {
+      const signerAddr = await window.EfixWallet?.checkSession?.();
+      if (signerAddr) {
+        const address = await getSmartAccountAddress();
+        const cached = JSON.parse(localStorage.getItem("efix_user_data") || "null");
+        const email = cached?.email || (window.EfixAuth?.getUser?.()?.email) || "";
+        state.user = { email, address };
+        return loadCedenteAndRoute();
+      }
+    } catch (e) {
+      console.warn("[TDIC] signer session check failed:", e);
+    }
+
+    showLogin();
   }
 
   // ── Routing ─────────────────────────────────────────────
@@ -106,6 +128,29 @@
   }
 
   // ── Login ───────────────────────────────────────────────
+  // Flow padrão efix.finance (idêntico a /app/wallet/index.html):
+  //   1. EfixWallet.sendOTP(email)        → Alchemy envia o e-mail
+  //   2. EfixWallet.verifyOTP(code)       → assina sessão
+  //   3. getSmartAccountAddress()         → obtem endereço ERC-4337
+  //   4. EfixAuth.login(email, address)   → backend cria/restaura JWT
+  // Se EfixWallet for o stub local (apiKey === 'STUB'), usamos o caminho
+  // legacy EfixAuth.sendOTP/verifyOTP que persiste em localStorage.
+  function isStub() {
+    return window.EfixWallet?.config?.apiKey === "STUB";
+  }
+
+  async function getSmartAccountAddress() {
+    // Stub expõe getAddress() direto; o bundle real expõe getSmartClient().
+    if (isStub()) return window.EfixWallet.getAddress?.() || null;
+    const client = await window.EfixWallet.getSmartClient();
+    if (typeof client.requestAccount === "function") {
+      const acct = await client.requestAccount();
+      return acct.address;
+    }
+    if (client.account?.address) return client.account.address;
+    throw new Error("Não foi possível resolver o endereço do smart account");
+  }
+
   function bindLoginForm() {
     const emailForm = $("#emailForm");
     const codeForm = $("#codeForm");
@@ -125,13 +170,29 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Enviando…';
       try {
-        await window.EfixAuth.sendOTP(email);
+        // 15s race contra o hang conhecido do Alchemy stamper iframe quando
+        // bloqueado por third-party cookies (incognito, Brave, uBlock).
+        await Promise.race([
+          window.EfixWallet.sendOTP(email),
+          new Promise((_, rej) =>
+            setTimeout(
+              () =>
+                rej(
+                  new Error(
+                    "Timeout. Tente uma janela não-anônima e libere cookies de signer.alchemy.com."
+                  )
+                ),
+              15000
+            )
+          ),
+        ]);
         _email = email;
         $("#codeEmail").textContent = email;
         emailForm.style.display = "none";
         codeForm.style.display = "flex";
         $("#codeInput").focus();
       } catch (e) {
+        console.error("[TDIC] sendOTP error:", e);
         err.textContent = e.message || "Falha ao enviar código.";
         err.style.display = "block";
       } finally {
@@ -154,10 +215,21 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Verificando…';
       try {
-        const res = await window.EfixAuth.verifyOTP(_email, code);
-        state.user = res.user;
+        await window.EfixWallet.verifyOTP(code);
+        const address = await getSmartAccountAddress();
+
+        // Backend efixdi guarda perfil + JWT (não-bloqueante).
+        let user = { email: _email, address };
+        try {
+          const session = await window.EfixAuth.login(_email, address);
+          if (session?.user) user = session.user;
+        } catch (be) {
+          console.warn("[TDIC] backend login falhou (continuando local):", be.message);
+        }
+        state.user = user;
         await loadCedenteAndRoute();
       } catch (e) {
+        console.error("[TDIC] verifyOTP error:", e);
         err.textContent = e.message || "Código inválido.";
         err.style.display = "block";
       } finally {
