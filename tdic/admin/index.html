@@ -147,7 +147,10 @@ tr:last-child td{border-bottom:none}
       <span>EFIX TDIC</span>
       <span class="brand-sub">Admin compliance</span>
     </a>
-    <div class="role-badge"><span class="dot"></span>COMPLIANCE_ROLE</div>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <div class="role-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24" title="Backend mock — dados em localStorage. O envio real de e-mail tenta o efixdi-backend; o resto ainda é local."><span class="dot" style="background:#f59e0b"></span>MOCK MODE</div>
+      <div class="role-badge"><span class="dot"></span>COMPLIANCE_ROLE</div>
+    </div>
   </div>
 </nav>
 
@@ -158,7 +161,11 @@ tr:last-child td{border-bottom:none}
       <h2>Painel de aprovação</h2>
       <p class="sub">KYBs pendentes, CRs em análise e mints autorizados. Em produção, exige role <code class="mono">COMPLIANCE_ROLE</code> + <code class="mono">CR_ISSUER_ROLE</code> no contrato TDICRegistry.</p>
     </div>
-    <button class="btn btn-ghost" id="refreshAllBtn">Atualizar</button>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      <button class="btn btn-ghost" id="seedDemoBtn" title="Cria 1 cedente fictício (Siderquímica) + 7 créditos pra você testar o fluxo admin sem cadastrar manualmente">📦 Carregar dados demo</button>
+      <button class="btn btn-ghost" id="resetMockBtn" title="Apaga tudo do localStorage (cedentes, créditos, CRs, e-mails)">🗑 Reset</button>
+      <button class="btn btn-ghost" id="refreshAllBtn">Atualizar</button>
+    </div>
   </div>
 
   <div class="kpi-row">
@@ -302,7 +309,7 @@ tr:last-child td{border-bottom:none}
 
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
-<script src="/tdic/tdic-mock.js?v=20260508i"></script>
+<script src="/tdic/tdic-mock.js?v=20260508j"></script>
 <script>
 (function () {
   "use strict";
@@ -378,7 +385,9 @@ tr:last-child td{border-bottom:none}
     const list = state.cedentes.filter(c => c.kybStatus === "pending");
     const body = $("#kybBody");
     if (!list.length) {
-      body.innerHTML = `<div class="empty"><h3>Sem KYBs pendentes</h3><p>Quando uma cedente concluir o cadastro KYB, aparecerá aqui para análise.</p></div>`;
+      body.innerHTML = `<div class="empty"><h3>Sem KYBs pendentes</h3>
+        <p>Os dados deste painel vivem no <strong>localStorage</strong> do seu navegador (mock). Para ver KYBs aqui, o cedente precisa cadastrar em <a href="/tdic/app/" style="color:#0a0a0a">/tdic/app/</a> no <strong>mesmo navegador/perfil</strong>. Ou clique em <strong>"📦 Carregar dados demo"</strong> no topo pra criar um cedente fictício.</p>
+      </div>`;
       return;
     }
     let h = "<table><thead><tr><th>CNPJ</th><th>Razão social</th><th>Responsável</th><th>Wallet</th><th>Submetido</th><th>Docs</th><th></th></tr></thead><tbody>";
@@ -418,7 +427,9 @@ tr:last-child td{border-bottom:none}
     const list = state.creditos.filter(c => c.status === "em-analise");
     const body = $("#crPendingBody");
     if (!list.length) {
-      body.innerHTML = `<div class="empty"><h3>Sem créditos para análise</h3><p>Créditos cadastrados pelas cedentes aparecerão aqui.</p></div>`;
+      body.innerHTML = `<div class="empty"><h3>Sem créditos para análise</h3>
+        <p>Quando o KYB do cedente for aprovado, os créditos cadastrados (manuais ou via importação de planilha) aparecem aqui pra arbitragem dos parâmetros e aprovação. Use o botão <strong>"📦 Carregar dados demo"</strong> pra criar um cenário de teste com 7 créditos.</p>
+      </div>`;
       return;
     }
     let h = "<table><thead><tr><th>ID</th><th>Cedente</th><th>Devedor</th><th>Tipo</th><th>Face</th><th>Vencto</th><th>Deságio sugerido</th><th></th></tr></thead><tbody>";
@@ -1128,6 +1139,17 @@ devedor salvo dolo, simulação ou má-fé.
     t.addEventListener("click", () => renderTab(t.getAttribute("data-tab")));
   });
   $("#refreshAllBtn").addEventListener("click", loadAll);
+  $("#seedDemoBtn").addEventListener("click", async () => {
+    const r = await window.TdicMock.seedDemo();
+    toast(`Demo carregado · cedente "${r.cedente.razaoSocial}" + ${r.creditos} créditos`);
+    await loadAll();
+  });
+  $("#resetMockBtn").addEventListener("click", async () => {
+    if (!confirm("Apagar TODOS os dados do mock (cedentes, créditos, CRs, e-mails)? Não dá pra desfazer.")) return;
+    window.TdicMock.reset();
+    toast("Mock zerado.");
+    await loadAll();
+  });
 
   loadAll();
   // Mescla com o que outras funções já adicionaram (closeArbModal, clearAdminKey)

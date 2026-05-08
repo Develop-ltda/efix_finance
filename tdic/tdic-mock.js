@@ -368,6 +368,101 @@
     return seed();
   }
 
+  // ── Seed de demonstração ──────────────────────────────────
+  // Cria 1 cedente fictício (Siderquímica como caso real do brief) com KYB
+  // pendente + 7 créditos a analisar. Útil pra testar o admin sem precisar
+  // ir até o app cedente cadastrar KYB e importar planilha.
+  async function seedDemo() {
+    await delay();
+    const db = load();
+    const demoAddr = "0xdem0c3d3nt3517ab12345678901234567890abcd";
+    db.cedentes[demoAddr] = {
+      walletAddress: demoAddr,
+      cnpj: "04.876.970/0001-06",
+      razaoSocial: "C2LOG TRANSPORTES LTDA (DEMO)",
+      regimeTributario: "lucro-real",
+      contato: {
+        nome: "Ernesto Otero",
+        cargo: "CFO",
+        email: "ernesto.otero@hausbank.com.br",
+        tel: "(41) 2105-3838",
+        faturamento: "10m-50m",
+      },
+      docs: [
+        { key: "contrato-social", name: "contrato-social.pdf", uploadedAt: new Date().toISOString() },
+        { key: "receita-cnpj", name: "cartao-cnpj.pdf", uploadedAt: new Date().toISOString() },
+      ],
+      bankAccount: {
+        pix: { type: "cnpj", key: "04.876.970/0001-06" },
+        bank: { compe: "237", name: "Bradesco", type: "cc", agencia: "0597", conta: "12345-6", contaVar: null },
+        ownership: "self",
+      },
+      signedContract: {
+        version: "1.0.0",
+        title: "Instrumento Particular de Cessão de Direitos Creditórios",
+        signatory: { name: "Ernesto Otero", cpf: "000.000.000-00", email: "ernesto.otero@hausbank.com.br" },
+        cedente: { cnpj: "04.876.970/0001-06", razaoSocial: "C2LOG TRANSPORTES LTDA (DEMO)" },
+        wallet: demoAddr,
+        acceptedAt: new Date().toISOString(),
+        acceptedAtLocal: new Date().toString(),
+        userAgent: "demo-seed",
+        documentTextHash: "demo-hash-" + Date.now().toString(36),
+        provider: "none",
+        envelopeId: "EFIX-DEMO-" + Date.now().toString(36),
+      },
+      signatureHistory: [],
+      kybStatus: "pending",
+      submittedAt: new Date().toISOString(),
+      approvedAt: null,
+      reSignedAt: null,
+    };
+
+    const sample = [
+      { dupl: "15457-1", valor: 94634.91, vencto: "2026-06-10" },
+      { dupl: "15458-0", valor: 41196.88, vencto: "2026-06-10" },
+      { dupl: "15459-8", valor: 579.88, vencto: "2026-06-10" },
+      { dupl: "15460-1", valor: 3947.17, vencto: "2026-06-10" },
+      { dupl: "15461-0", valor: 2209.55, vencto: "2026-06-10" },
+      { dupl: "15462-8", valor: 166.49, vencto: "2026-06-10" },
+      { dupl: "15463-6", valor: 62.08, vencto: "2026-06-10" },
+    ];
+    sample.forEach((s, i) => {
+      db.creditos.push({
+        id: uid("CRED"),
+        cedenteWallet: demoAddr,
+        devedorCnpj: "73.586.976/0001-61",
+        devedorRazaoSocial: "SIDERQUIMICA INDUSTRIA E COMERCIO DE PRODUTOS QUIMICOS S/A",
+        tipo: "duplicata",
+        faceValue: s.valor,
+        maturityDate: s.vencto,
+        discountBps: 250 * (i % 3 === 0 ? 4 : 3), // varia 7,5%-10%
+        discountBrl: 0,
+        discountMode: "pct",
+        discountInputs: { pctMonthly: 2.5, brlFlat: 0, pctEffective: 7.5 },
+        netValue: s.valor,
+        prazoDias: 30,
+        dupl: s.dupl,
+        chaveNF: null,
+        abatimento: 0,
+        devedorContato: {
+          email: "DIOCLEA.BILL@SBCHEMICALS.COM.BR",
+          telefone: "4121053838",
+          endereco: "RODOVIA BR-376, 376",
+          bairro: "SAO MARCOS",
+          cidade: "SAO JOSE DOS PINHAIS",
+          uf: "PR",
+          cep: "83090-360",
+        },
+        origem: "demo-seed",
+        docs: [],
+        status: "em-analise",
+        createdAt: new Date().toISOString(),
+      });
+    });
+    save(db);
+    return { cedente: db.cedentes[demoAddr], creditos: db.creditos.length };
+  }
+
   global.TdicMock = {
     getCedente,
     submitKyb,
@@ -387,5 +482,6 @@
     listAllCRs,
     listTxs,
     reset,
+    seedDemo,
   };
 })(typeof window !== "undefined" ? window : globalThis);
