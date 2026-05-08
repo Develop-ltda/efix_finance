@@ -309,7 +309,7 @@ tr:last-child td{border-bottom:none}
 
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
-<script src="/tdic/tdic-mock.js?v=20260508j"></script>
+<script src="/tdic/tdic-mock.js?v=20260508k"></script>
 <script>
 (function () {
   "use strict";
@@ -1139,10 +1139,22 @@ devedor salvo dolo, simulação ou má-fé.
     t.addEventListener("click", () => renderTab(t.getAttribute("data-tab")));
   });
   $("#refreshAllBtn").addEventListener("click", loadAll);
-  $("#seedDemoBtn").addEventListener("click", async () => {
-    const r = await window.TdicMock.seedDemo();
-    toast(`Demo carregado · cedente "${r.cedente.razaoSocial}" + ${r.creditos} créditos`);
-    await loadAll();
+  $("#seedDemoBtn").addEventListener("click", async (ev) => {
+    console.log("[admin] seedDemo button clicked");
+    if (!window.TdicMock || typeof window.TdicMock.seedDemo !== "function") {
+      console.error("[admin] TdicMock.seedDemo não existe — JS antigo em cache?");
+      alert("Função seedDemo não encontrada. Faça hard refresh (Ctrl+Shift+R) e tente de novo.");
+      return;
+    }
+    try {
+      const r = await window.TdicMock.seedDemo();
+      console.log("[admin] seedDemo result:", r);
+      toast(`Demo carregado · cedente "${r.cedente.razaoSocial}" + ${r.creditos} créditos`);
+      await loadAll();
+    } catch (e) {
+      console.error("[admin] seedDemo error:", e);
+      toast("Erro: " + e.message, true);
+    }
   });
   $("#resetMockBtn").addEventListener("click", async () => {
     if (!confirm("Apagar TODOS os dados do mock (cedentes, créditos, CRs, e-mails)? Não dá pra desfazer.")) return;
@@ -1150,6 +1162,21 @@ devedor salvo dolo, simulação ou má-fé.
     toast("Mock zerado.");
     await loadAll();
   });
+
+  // Atalho: /tdic/admin/?demo=1 carrega seed + abre tab CRs em análise
+  if (new URLSearchParams(location.search).get("demo") === "1") {
+    (async () => {
+      try {
+        const r = await window.TdicMock.seedDemo();
+        console.log("[admin] auto-seed via ?demo=1:", r);
+        toast(`Demo carregado automaticamente · ${r.creditos} créditos prontos`);
+        await loadAll();
+        renderTab("cr-pending");
+      } catch (e) {
+        console.error("[admin] auto-seed falhou:", e);
+      }
+    })();
+  }
 
   loadAll();
   // Mescla com o que outras funções já adicionaram (closeArbModal, clearAdminKey)
