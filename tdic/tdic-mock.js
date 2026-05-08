@@ -173,7 +173,7 @@
   }
 
   // ── CRs (Certificados de Recebíveis) ────────────────────
-  async function aprovarCR(creditoId) {
+  async function aprovarCR(creditoId, overrides) {
     await delay();
     const db = load();
     const credito = db.creditos.find((c) => c.id === creditoId);
@@ -184,14 +184,46 @@
       Math.floor(Math.random() * 16).toString(16)
     ).join("");
 
+    // Parâmetros sugeridos pela cedente (preservados como histórico).
+    const suggested = {
+      discountBps: credito.discountBps,
+      discountBrl: credito.discountBrl,
+      discountMode: credito.discountMode,
+      discountInputs: credito.discountInputs,
+      netValue: credito.netValue,
+      abatimento: credito.abatimento || 0,
+    };
+
+    // Parâmetros arbitrados pela EFIX (admin), se enviados.
+    const arb = overrides || null;
+    const finalDiscountBps = arb?.discountBps ?? credito.discountBps;
+    const finalDiscountBrl = arb?.discountBrl ?? credito.discountBrl;
+    const finalRoyaltyBps = arb?.royaltyBps ?? 0;
+    const finalRoyaltyBrl = arb?.royaltyBrl ?? 0;
+    const finalAbatimento = arb?.abatimento ?? credito.abatimento ?? 0;
+    const finalNetValue =
+      arb?.netValue ??
+      Math.max(0, credito.faceValue - finalDiscountBrl - finalRoyaltyBrl - finalAbatimento);
+
     const cr = {
       id: uid("CR"),
       creditoId,
       tokenId,
       cedenteWallet: credito.cedenteWallet,
       faceValue: credito.faceValue,
-      discountBps: credito.discountBps,
+      // Parâmetros finais (arbitrados ou sugeridos)
+      discountBps: finalDiscountBps,
+      discountBrl: finalDiscountBrl,
+      royaltyBps: finalRoyaltyBps,
+      royaltyBrl: finalRoyaltyBrl,
+      abatimento: finalAbatimento,
+      netValue: finalNetValue,
+      cetTotalPct: arb?.cetTotalPct ?? null,
+      cetMonthlyPct: arb?.cetMonthlyPct ?? null,
       maturityDate: credito.maturityDate,
+      // Trilha de auditoria: o que a cedente sugeriu vs. o que a EFIX arbitrou
+      suggested,
+      arbitrated: arb,
       status: "approved",
       mintTxHash: null,
       mintedAt: null,
@@ -201,6 +233,15 @@
     credito.status = "aprovado";
     credito.crId = cr.id;
     credito.tokenId = tokenId;
+    // Sobrescreve o crédito com os parâmetros finais (mantém suggested separado)
+    credito.discountBps = finalDiscountBps;
+    credito.discountBrl = finalDiscountBrl;
+    credito.netValue = finalNetValue;
+    credito.royaltyBps = finalRoyaltyBps;
+    credito.royaltyBrl = finalRoyaltyBrl;
+    credito.abatimento = finalAbatimento;
+    credito.suggested = suggested;
+    credito.arbitrated = arb;
     save(db);
     return cr;
   }

@@ -99,6 +99,41 @@ tr:last-child td{border-bottom:none}
 @media(max-width:780px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
 }
+
+/* ── Modal de arbitragem ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,10,10,0.55);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-backdrop.open{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:780px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,0.25)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #e5e5e5}
+.modal-head h3{font-size:1rem;font-weight:700}
+.modal-head .x{background:none;border:none;font-size:1.4rem;color:#737373;cursor:pointer;line-height:1}
+.modal-body{padding:1rem 1.25rem}
+.modal-foot{padding:0.85rem 1.25rem;display:flex;justify-content:flex-end;gap:0.5rem;border-top:1px solid #e5e5e5;background:#fafafa}
+
+/* Sections do modal */
+.arb-section{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--brand-primary);text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent);padding-bottom:5px;margin:1rem 0 0.55rem}
+.arb-section:first-child{margin-top:0}
+.field{display:flex;flex-direction:column}
+.field .lbl{font-family:'Space Mono',monospace;font-size:0.62rem;color:#737373;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;font-weight:700}
+.field input,.field select{font-family:inherit;font-size:0.85rem;padding:0.55rem 0.75rem;border:1px solid #d4d4d4;border-radius:8px;background:#fff;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus{border-color:var(--brand-primary)}
+.field input:disabled{background:#f5f5f5;color:#737373}
+.field .hint{font-size:0.7rem;color:#737373;margin-top:3px;line-height:1.45}
+.row-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem}
+.row-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem}
+@media(max-width:640px){.row-grid-2,.row-grid-3{grid-template-columns:1fr}}
+
+.arb-summary{margin-top:1rem;background:#fafafa;border:1px solid #e5e5e5;border-radius:10px;padding:0.85rem 1rem}
+.arb-row{display:flex;justify-content:space-between;font-size:0.83rem;padding:0.3rem 0;color:#404040}
+.arb-row.total{border-top:1px solid #e5e5e5;margin-top:0.4rem;padding-top:0.55rem;font-weight:700;color:#15803d;font-size:0.95rem}
+.arb-row.muted{color:#737373;font-size:0.78rem}
+.arb-cet{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:0.55rem}
+.arb-cet .cell{background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:0.6rem 0.75rem;text-align:center}
+.arb-cet .lbl{font-family:'Space Mono',monospace;font-size:0.58rem;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
+.arb-cet .val{font-family:'Space Mono',monospace;font-size:1rem;font-weight:800;color:var(--brand-primary)}
+.arb-cet .val.purple{color:#7c3aed}
+.arb-meta{font-size:0.7rem;color:#737373;margin-top:6px}
+.arb-suggested{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:0.55rem 0.75rem;font-size:0.74rem;color:#7c2d12;margin-bottom:0.85rem;line-height:1.5}
 </style>
 </head>
 <body>
@@ -172,9 +207,80 @@ tr:last-child td{border-bottom:none}
 
 </main>
 
+<!-- MODAL ARBITRAGEM ─ revisar e arbitrar parâmetros antes de aprovar o CR -->
+<div class="modal-backdrop" id="arbModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Arbitrar parâmetros do CR e aprovar</h3>
+      <button class="x" type="button" onclick="window.tdicAdmin.closeArbModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="arb-suggested" id="arbSuggested">—</div>
+
+      <div class="arb-section">Título</div>
+      <div class="row-grid-2">
+        <div class="field">
+          <span class="lbl">Duplicata / referência</span>
+          <input type="text" id="arbDupl" disabled>
+        </div>
+        <div class="field">
+          <span class="lbl">Valor face</span>
+          <input type="text" id="arbFace" disabled>
+        </div>
+      </div>
+      <div class="row-grid-2" style="margin-top:0.55rem">
+        <div class="field">
+          <span class="lbl">Vencimento</span>
+          <input type="text" id="arbVencto" disabled>
+        </div>
+        <div class="field">
+          <span class="lbl">Abatimento (R$)</span>
+          <input type="number" id="arbAbat" min="0" step="100" placeholder="0">
+        </div>
+      </div>
+
+      <div class="arb-section">Parâmetros da cessão (arbitrados pela EFIX)</div>
+      <div class="row-grid-3">
+        <div class="field">
+          <span class="lbl">Tx desconto a.m.</span>
+          <input type="number" id="arbTaxa" min="0" step="0.01" value="2.5">
+          <span class="hint">% mensal · pro rata die</span>
+        </div>
+        <div class="field">
+          <span class="lbl">Royalty (flat)</span>
+          <input type="number" id="arbRoyalty" min="0" step="0.05" value="1.0">
+          <span class="hint">% sobre face</span>
+        </div>
+        <div class="field">
+          <span class="lbl">Prazo (auto)</span>
+          <input type="text" id="arbPrazo" disabled>
+        </div>
+      </div>
+
+      <div class="arb-section">Resumo financeiro</div>
+      <div class="arb-summary">
+        <div class="arb-row"><span>Valor face</span><strong class="mono" id="arbSumFace">R$ 0,00</strong></div>
+        <div class="arb-row muted"><span id="arbSumDescLbl">(−) Desconto pro rata</span><span class="mono" id="arbSumDesc">R$ 0,00</span></div>
+        <div class="arb-row muted"><span id="arbSumRoyLbl">(−) Royalty flat</span><span class="mono" id="arbSumRoy">R$ 0,00</span></div>
+        <div class="arb-row muted" id="arbSumAbatRow" style="display:none"><span>(−) Abatimento</span><span class="mono" id="arbSumAbat">R$ 0,00</span></div>
+        <div class="arb-row total"><span>Valor líquido a creditar</span><strong class="mono" id="arbSumLiquido">R$ 0,00</strong></div>
+        <div class="arb-cet">
+          <div class="cell"><div class="lbl">CET total</div><div class="val" id="arbCetTotal">0,00%</div></div>
+          <div class="cell"><div class="lbl">CET ao mês</div><div class="val purple" id="arbCetMes">0,00%</div></div>
+        </div>
+        <div class="arb-meta" id="arbMeta">Tx diária: 0,0000% · Regime IR Regressivo</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="window.tdicAdmin.closeArbModal()">Cancelar</button>
+      <button class="btn btn-green" id="arbConfirmBtn" type="button">Aprovar CR com estes parâmetros</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
-<script src="/tdic/tdic-mock.js"></script>
+<script src="/tdic/tdic-mock.js?v=20260508c"></script>
 <script>
 (function () {
   "use strict";
@@ -294,9 +400,12 @@ tr:last-child td{border-bottom:none}
       body.innerHTML = `<div class="empty"><h3>Sem créditos para análise</h3><p>Créditos cadastrados pelas cedentes aparecerão aqui.</p></div>`;
       return;
     }
-    let h = "<table><thead><tr><th>ID</th><th>Cedente</th><th>Devedor</th><th>Tipo</th><th>Face</th><th>Vencto</th><th>Deságio</th><th></th></tr></thead><tbody>";
+    let h = "<table><thead><tr><th>ID</th><th>Cedente</th><th>Devedor</th><th>Tipo</th><th>Face</th><th>Vencto</th><th>Deságio sugerido</th><th></th></tr></thead><tbody>";
     list.forEach(c => {
       const ced = state.cedentes.find(x => x.walletAddress === c.cedenteWallet);
+      const desagioSug = c.discountMode === "pct"
+        ? `${(c.discountInputs?.pctMonthly || 0).toFixed(2)}% a.m.`
+        : `${(c.discountBps / 100).toFixed(2)}% face`;
       h += `<tr>
         <td class="mono" style="color:#525252;font-size:0.72rem">${c.id}</td>
         <td>${ced?.razaoSocial || shortAddr(c.cedenteWallet)}<div class="mono" style="font-size:0.7rem;color:#a3a3a3">${ced?.cnpj || ""}</div></td>
@@ -304,30 +413,145 @@ tr:last-child td{border-bottom:none}
         <td>${tipoLabel(c.tipo)}</td>
         <td class="mono">${fmtBRL0(c.faceValue)}</td>
         <td class="mono">${fmtDate(c.maturityDate)}</td>
-        <td class="mono">${(c.discountBps / 100).toFixed(0)}%</td>
-        <td><button class="btn btn-green" data-approve-cr="${c.id}">Aprovar CR</button></td>
+        <td class="mono">${desagioSug}</td>
+        <td><button class="btn btn-green" data-approve-cr="${c.id}">Arbitrar e aprovar</button></td>
       </tr>`;
     });
     h += "</tbody></table>";
     body.innerHTML = h;
     $$("button[data-approve-cr]", body).forEach(b => {
-      b.addEventListener("click", () => approveCR(b.getAttribute("data-approve-cr"), b));
+      b.addEventListener("click", () => openArbModal(b.getAttribute("data-approve-cr")));
     });
   }
 
-  async function approveCR(creditoId, btn) {
+  // ── Modal de arbitragem ──────────────────────────────────────────────
+  let _arbCreditoId = null;
+
+  function openArbModal(creditoId) {
+    const c = state.creditos.find(x => x.id === creditoId);
+    if (!c) return;
+    _arbCreditoId = creditoId;
+    const ced = state.cedentes.find(x => x.walletAddress === c.cedenteWallet);
+
+    // Sugestões da cedente — admin pode aceitar ou substituir.
+    $("#arbSuggested").innerHTML = `
+      <strong>Sugestão da cedente:</strong>
+      modo <code class="mono">${c.discountMode || "pct"}</code> ·
+      ${c.discountInputs ? `% a.m. <strong>${(c.discountInputs.pctMonthly || 0).toFixed(2)}</strong> · R$ flat <strong>${fmtBRL0(c.discountInputs.brlFlat || 0)}</strong> · % efetivo <strong>${(c.discountInputs.pctEffective || 0).toFixed(2)}</strong>` : `% face efetivo <strong>${(c.discountBps / 100).toFixed(2)}%</strong>`}
+      ·  Cedente: <strong>${escapeHtml(ced?.razaoSocial || "—")}</strong>
+    `;
+
+    $("#arbDupl").value = c.dupl || c.id;
+    $("#arbFace").value = fmtBRL(c.faceValue);
+    $("#arbVencto").value = fmtDate(c.maturityDate);
+    $("#arbAbat").value = c.abatimento || 0;
+
+    // Preenche parâmetros default a partir da sugestão da cedente
+    const txMonthly = c.discountInputs?.pctMonthly || (c.discountBps / 100 / Math.max(1, c.prazoDias / 30 || 1));
+    $("#arbTaxa").value = isFinite(txMonthly) ? txMonthly.toFixed(2) : "2.50";
+    $("#arbRoyalty").value = "1.00";
+
+    // Prazo é função do vencimento; recalcula ao abrir.
+    const prazo = c.prazoDias || daysUntil(c.maturityDate);
+    $("#arbPrazo").value = prazo + " dias";
+
+    renderArbSummary();
+    $("#arbModal").classList.add("open");
+  }
+
+  function closeArbModal() {
+    _arbCreditoId = null;
+    $("#arbModal").classList.remove("open");
+  }
+
+  function daysUntil(dateStr) {
+    if (!dateStr) return 0;
+    const d = new Date(dateStr + "T12:00:00").getTime();
+    return Math.max(0, Math.ceil((d - Date.now()) / 86400000));
+  }
+
+  function renderArbSummary() {
+    const c = state.creditos.find(x => x.id === _arbCreditoId);
+    if (!c) return;
+    const face = c.faceValue;
+    const prazo = c.prazoDias || daysUntil(c.maturityDate);
+    const txMensal = Number($("#arbTaxa").value) || 0;
+    const royaltyPct = Number($("#arbRoyalty").value) || 0;
+    const abat = Number($("#arbAbat").value) || 0;
+
+    const txDiaria = txMensal / 30;
+    const desc = (face * txDiaria * prazo) / 100;
+    const royalty = (face * royaltyPct) / 100;
+    const liquido = Math.max(0, face - desc - royalty - abat);
+    const cetTotal = face > 0 ? ((desc + royalty) / face) * 100 : 0;
+    const cetMes = prazo > 0 ? (cetTotal / prazo) * 30 : 0;
+
+    $("#arbSumFace").textContent = fmtBRL(face);
+    $("#arbSumDescLbl").textContent = `(−) Desconto pro rata (${txMensal.toFixed(2)}%/m × ${prazo}d ÷ 30)`;
+    $("#arbSumDesc").textContent = fmtBRL(desc);
+    $("#arbSumRoyLbl").textContent = `(−) Royalty ${royaltyPct.toFixed(2)}% flat`;
+    $("#arbSumRoy").textContent = fmtBRL(royalty);
+    if (abat > 0) {
+      $("#arbSumAbatRow").style.display = "flex";
+      $("#arbSumAbat").textContent = fmtBRL(abat);
+    } else {
+      $("#arbSumAbatRow").style.display = "none";
+    }
+    $("#arbSumLiquido").textContent = fmtBRL(liquido);
+    $("#arbCetTotal").textContent = cetTotal.toFixed(2).replace(".", ",") + "%";
+    $("#arbCetMes").textContent = cetMes.toFixed(2).replace(".", ",") + "%";
+    $("#arbMeta").textContent =
+      `Tx diária: ${txDiaria.toFixed(4).replace(".", ",")}% · Regime ${c.tipo === "duplicata" ? "Ganho Capital GCAP" : "IR Regressivo"}`;
+    return { face, prazo, txMensal, royaltyPct, abat, desc, royalty, liquido, cetTotal, cetMes };
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  }
+
+  async function confirmArbApprove() {
+    if (!_arbCreditoId) return;
+    const btn = $("#arbConfirmBtn");
+    const r = renderArbSummary();
+    if (!r) return;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Aprovando…';
     try {
-      const cr = await window.TdicMock.aprovarCR(creditoId);
-      toast("CR aprovado · token id " + cr.tokenId.slice(0, 12) + "…");
+      const overrides = {
+        arbitratedBy: "compliance@efix",
+        arbitratedAt: new Date().toISOString(),
+        // Parâmetros decididos pela EFIX (sobrescrevem a sugestão da cedente)
+        discountMonthlyPct: r.txMensal,
+        discountBps: Math.round((r.desc / r.face) * 10000),
+        discountBrl: r.desc,
+        royaltyPct: r.royaltyPct,
+        royaltyBps: Math.round((r.royalty / r.face) * 10000),
+        royaltyBrl: r.royalty,
+        abatimento: r.abat,
+        prazoDias: r.prazo,
+        netValue: r.liquido,
+        cetTotalPct: r.cetTotal,
+        cetMonthlyPct: r.cetMes,
+      };
+      const cr = await window.TdicMock.aprovarCR(_arbCreditoId, overrides);
+      toast("CR aprovado · token " + cr.tokenId.slice(0, 12) + "…");
+      closeArbModal();
       await loadAll();
     } catch (e) {
       toast("Erro: " + e.message, true);
       btn.disabled = false;
-      btn.textContent = "Aprovar CR";
+      btn.textContent = "Aprovar CR com estes parâmetros";
     }
   }
+
+  // Re-render summary on input (delegação no body, para inputs do modal)
+  document.addEventListener("input", (e) => {
+    if (["arbTaxa", "arbRoyalty", "arbAbat"].includes(e.target.id)) renderArbSummary();
+  });
+  // Bind imediato — script está no fim do body, elementos já existem.
+  $("#arbConfirmBtn")?.addEventListener("click", confirmArbApprove);
+
+  window.tdicAdmin = { closeArbModal };
 
   function renderCrApproved() {
     const list = state.crs.filter(c => c.status === "approved");
