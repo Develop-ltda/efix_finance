@@ -800,6 +800,7 @@ ${body}
     $("#importCreditosBtn").addEventListener("click", () => openImportModal());
     $("#exportCsvBtn").addEventListener("click", exportCsv);
     $("#exportPdfBtn").addEventListener("click", exportHtmlReport);
+    $("#borderoConsolidadoBtn")?.addEventListener("click", downloadBorderoConsolidado);
     $("#reSignBtn")?.addEventListener("click", openReSignFlow);
   }
 
@@ -1104,6 +1105,208 @@ ${cr ? `
     ];
     const csv = rows.map((r) => r.map((x) => `"${String(x ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
     download("﻿" + csv, "tdic-creditos.csv", "text/csv");
+  }
+
+  // ── Borderô consolidado: somatório de TODAS as operações do cedente ──
+  // Documento operacional/contábil agregando todos os créditos por status,
+  // com totais por bucket e total geral. Aceita filtro de período.
+  function downloadBorderoConsolidado() {
+    const cedente = state.cedente || {};
+    const issuer = window.TdicBrand?.issuer || {};
+    const period = document.getElementById("borderoPeriod")?.value || "all";
+    const { since, label: periodLabel } = resolvePeriod(period);
+
+    const inPeriod = (c) => {
+      if (!since) return true;
+      const ts = new Date(c.createdAt).getTime();
+      return ts >= since.getTime();
+    };
+    const all = state.creditos.filter(inPeriod);
+
+    // Agrupa por status — mantém também ordem temporal dentro do bucket.
+    const byStatus = {
+      "em-analise": all.filter((c) => c.status === "em-analise"),
+      aprovado: all.filter((c) => c.status === "aprovado"),
+      mintado: all.filter((c) => c.status === "mintado"),
+      liquidado: all.filter((c) => c.status === "liquidado"),
+    };
+    const STATUS_LABEL = {
+      "em-analise": "Em análise (aguardando compliance EFIX)",
+      aprovado: "Aprovados (aguardando mint)",
+      mintado: "Mintados (TDIC ativo)",
+      liquidado: "Liquidados",
+    };
+
+    const sum = (arr, k) => arr.reduce((a, b) => a + (Number(b[k]) || 0), 0);
+    const liquidoOf = (c) =>
+      Number(c.netValue) || c.faceValue - (Number(c.discountBrl) || 0) - (Number(c.royaltyBrl) || 0) - (Number(c.abatimento) || 0);
+
+    let buckets = "";
+    let grandFace = 0,
+      grandDesc = 0,
+      grandRoy = 0,
+      grandAbat = 0,
+      grandLiq = 0;
+    Object.keys(byStatus).forEach((statusKey) => {
+      const list = byStatus[statusKey];
+      if (!list.length) return;
+      const face = sum(list, "faceValue");
+      const desc = sum(list, "discountBrl");
+      const roy = sum(list, "royaltyBrl");
+      const abat = sum(list, "abatimento");
+      const liq = list.reduce((a, c) => a + liquidoOf(c), 0);
+      grandFace += face;
+      grandDesc += desc;
+      grandRoy += roy;
+      grandAbat += abat;
+      grandLiq += liq;
+      const rows = list
+        .map((c) => {
+          const cr = state.crs.find((x) => x.creditoId === c.id);
+          const liqC = liquidoOf(c);
+          return `<tr>
+            <td class="mono" style="font-size:11px;color:#525252">${c.id}</td>
+            <td>${escapeHtml(c.devedorRazaoSocial || "—")}<div class="mono" style="font-size:10px;color:#a3a3a3">${c.devedorCnpj || ""}</div></td>
+            <td class="mono" style="font-size:11px">${c.dupl || "—"}</td>
+            <td class="mono" style="text-align:right">${fmtBRL(c.faceValue)}</td>
+            <td class="mono" style="text-align:right">${fmtBRL(c.discountBrl || 0)}</td>
+            <td class="mono" style="text-align:right">${fmtBRL(c.royaltyBrl || 0)}</td>
+            <td class="mono" style="text-align:right">${fmtBRL(c.abatimento || 0)}</td>
+            <td class="mono" style="text-align:right;font-weight:700;color:#15803d">${fmtBRL(liqC)}</td>
+            <td class="mono">${fmtDate(c.maturityDate)}</td>
+            <td class="mono" style="font-size:10px;color:#525252">${cr ? cr.tokenId.slice(0, 10) + "…" + cr.tokenId.slice(-4) : "—"}</td>
+          </tr>`;
+        })
+        .join("");
+      buckets += `
+        <h4 class="bucket">${STATUS_LABEL[statusKey]} <span class="bucket-count">${list.length} operação${list.length === 1 ? "" : "ões"}</span></h4>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Devedor (sacado)</th>
+              <th>Duplicata</th>
+              <th style="text-align:right">Face</th>
+              <th style="text-align:right">Deságio</th>
+              <th style="text-align:right">Royalty</th>
+              <th style="text-align:right">Abat.</th>
+              <th style="text-align:right">Líquido</th>
+              <th>Vencto</th>
+              <th>Token TDIC</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" style="font-weight:700">Subtotal · ${list.length}</td>
+              <td class="mono" style="text-align:right;font-weight:700">${fmtBRL(face)}</td>
+              <td class="mono" style="text-align:right;font-weight:700">${fmtBRL(desc)}</td>
+              <td class="mono" style="text-align:right;font-weight:700">${fmtBRL(roy)}</td>
+              <td class="mono" style="text-align:right;font-weight:700">${fmtBRL(abat)}</td>
+              <td class="mono" style="text-align:right;font-weight:700;color:#15803d">${fmtBRL(liq)}</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      `;
+    });
+
+    if (!all.length) {
+      buckets = `<div class="empty-bucket">Nenhuma operação no período selecionado.</div>`;
+    }
+
+    const ts = new Date();
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Borderô Consolidado de Cessões — TDIC</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;max-width:1080px;margin:32px auto;padding:24px;color:#1a1a1a;line-height:1.55;font-size:12px}
+h1{font-size:20px;margin-bottom:6px;letter-spacing:-.01em}
+.sub{color:#525252;font-size:12px;margin-bottom:24px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #d4d4d4;border-radius:8px;overflow:hidden;margin-bottom:18px}
+.grid .cell{padding:8px 12px;border-right:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0}
+.grid .cell:nth-child(2n){border-right:none}
+.grid .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#737373;font-weight:700;margin-bottom:2px}
+.grid .val{font-size:13px;font-weight:600}
+h4.bucket{margin:24px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#404040;border-bottom:1px solid #d4d4d4;padding-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.bucket-count{font-family:monospace;font-size:10px;color:#737373;font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:4px;font-size:11px}
+th,td{border:1px solid #e5e5e5;padding:6px 8px;text-align:left;vertical-align:middle}
+th{background:#fafafa;font-size:9px;text-transform:uppercase;letter-spacing:0.04em}
+tfoot td{background:#f5f5f5}
+.tot{margin-top:24px;padding:14px;background:#fafafa;border:1px solid #e5e5e5;border-radius:8px}
+.tot .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.tot .row.t{border-top:1px solid #d4d4d4;margin-top:6px;padding-top:8px;font-weight:700;font-size:15px;color:#15803d}
+.tot .row.s{font-size:11px;color:#737373}
+.empty-bucket{padding:32px;text-align:center;color:#737373;border:1px dashed #d4d4d4;border-radius:8px;margin-top:18px;font-size:12px}
+.bank{margin-top:18px;padding:10px 12px;background:#fff;border:1px solid #e5e5e5;border-radius:8px;font-size:11px;color:#525252}
+.bank strong{color:#0a0a0a}
+.ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:10px;color:#737373;text-align:center}
+.mono{font-family:monospace}
+</style>
+</head><body>
+<h1>Borderô Consolidado de Cessões — TDIC</h1>
+<div class="sub">${periodLabel} · ${all.length} operação(ões) · Emitido em ${ts.toLocaleString("pt-BR")}</div>
+
+<div class="grid">
+  <div class="cell"><div class="lbl">Cedente</div><div class="val">${escapeHtml(cedente.razaoSocial || "—")}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${cedente.cnpj || "—"}</div></div>
+  <div class="cell"><div class="lbl">Regime tributário</div><div class="val">${cedente.regimeTributario === "lucro-real" ? "Lucro Real" : (cedente.regimeTributario || "—")}</div></div>
+  <div class="cell"><div class="lbl">Cessionária</div><div class="val">${issuer.razaoSocial || "EFIX Securitizadora S.A."}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${issuer.cnpj || "60.756.859/0001-57"}</div></div>
+  <div class="cell"><div class="lbl">Marco regulatório</div><div class="val">Lei 14.430/2022 · CVM 88/2022</div></div>
+</div>
+
+${cedente.bankAccount ? `
+<div class="bank">
+  <strong>Conta de liquidação:</strong>
+  ${escapeHtml(cedente.bankAccount.bank?.name || "—")}${cedente.bankAccount.bank?.compe ? " (" + cedente.bankAccount.bank.compe + ")" : ""}
+  · ${({ cc: "CC", cp: "CP", cg: "CG" }[cedente.bankAccount.bank?.type] || "—")}
+  · Ag <span class="mono">${cedente.bankAccount.bank?.agencia || "—"}</span>
+  · Conta <span class="mono">${cedente.bankAccount.bank?.conta || "—"}</span>
+  ${cedente.bankAccount.pix ? ` · PIX <span class="mono">${cedente.bankAccount.pix.type.toUpperCase()} ${escapeHtml(cedente.bankAccount.pix.key)}</span>` : ""}
+</div>` : ""}
+
+${buckets}
+
+<div class="tot">
+  <div class="row s"><span>Total de operações</span><span class="mono">${all.length}</span></div>
+  <div class="row"><span>Total de face cedido</span><strong class="mono">${fmtBRL(grandFace)}</strong></div>
+  <div class="row s"><span>(−) Deságio total</span><span class="mono">${fmtBRL(grandDesc)}</span></div>
+  <div class="row s"><span>(−) Royalty total</span><span class="mono">${fmtBRL(grandRoy)}</span></div>
+  ${grandAbat > 0 ? `<div class="row s"><span>(−) Abatimentos</span><span class="mono">${fmtBRL(grandAbat)}</span></div>` : ""}
+  <div class="row t"><span>Total líquido a creditar</span><strong class="mono">${fmtBRL(grandLiq)}</strong></div>
+  <div class="row s"><span>Despesa financeira potencial (regime de competência)</span><span class="mono">${fmtBRL(grandDesc + grandRoy)}</span></div>
+  <div class="row s"><span>Redução estimada de IRPJ/CSLL (34%)</span><span class="mono">${fmtBRL((grandDesc + grandRoy) * 0.34)}</span></div>
+</div>
+
+<div class="ft">
+  Borderô consolidado gerado em ${ts.toLocaleString("pt-BR")} (${ts.toISOString()}) ·
+  ${issuer.razaoSocial || "EFIX Securitizadora S.A."} · Documento de apoio operacional/contábil.
+  Para borderô individual de cada cessão use o botão "↓ HTML" da operação correspondente.
+</div>
+</body></html>`;
+
+    download(html, "tdic-bordero-consolidado-" + ts.toISOString().slice(0, 10) + ".html", "text/html");
+  }
+
+  // Resolve a janela temporal selecionada para o filtro do borderô consolidado.
+  function resolvePeriod(period) {
+    const now = new Date();
+    if (period === "mtd") {
+      const since = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { since, label: "Mês corrente · " + now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }) };
+    }
+    if (period === "ytd") {
+      const since = new Date(now.getFullYear(), 0, 1);
+      return { since, label: "Ano corrente · " + now.getFullYear() };
+    }
+    if (period === "last30") {
+      const since = new Date(now.getTime() - 30 * 86400000);
+      return { since, label: "Últimos 30 dias (desde " + since.toLocaleDateString("pt-BR") + ")" };
+    }
+    if (period === "last90") {
+      const since = new Date(now.getTime() - 90 * 86400000);
+      return { since, label: "Últimos 90 dias (desde " + since.toLocaleDateString("pt-BR") + ")" };
+    }
+    return { since: null, label: "Todas as operações (sem filtro temporal)" };
   }
 
   // Borderô de Despesa Financeira (relatório contábil para fechamento de período).

@@ -615,8 +615,20 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
     <div class="tab-panel active" data-panel="creditos">
       <div class="card">
         <div class="card-head">
-          <h3>Créditos cadastrados</h3>
-          <span class="meta" id="creditosCount">0 créditos</span>
+          <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
+            <h3>Créditos cadastrados</h3>
+            <span class="meta" id="creditosCount">0 créditos</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+            <select id="borderoPeriod" class="meta" style="font-family:'Space Mono',monospace;font-size:0.72rem;padding:0.4rem 0.65rem;border:1px solid #e5e5e5;border-radius:7px;background:#fff;color:#404040;cursor:pointer">
+              <option value="all">Todas as operações</option>
+              <option value="mtd">Mês corrente</option>
+              <option value="ytd">Ano corrente</option>
+              <option value="last30">Últimos 30 dias</option>
+              <option value="last90">Últimos 90 dias</option>
+            </select>
+            <button class="btn btn-ghost" id="borderoConsolidadoBtn" type="button" style="padding:0.4rem 0.85rem;font-size:0.78rem">↓ Borderô consolidado</button>
+          </div>
         </div>
         <div id="creditosBody"></div>
       </div>
@@ -929,9 +941,9 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <!-- White-label theming -->
-<script src="/tdic/assets/theme.js?v=20260508c"></script>
-<script src="/tdic/tdic-mock.js?v=20260508c"></script>
-<script src="/tdic/app/sign-providers.js?v=20260508c"></script>
+<script src="/tdic/assets/theme.js?v=20260508d"></script>
+<script src="/tdic/tdic-mock.js?v=20260508d"></script>
+<script src="/tdic/app/sign-providers.js?v=20260508d"></script>
 
 <!-- Alchemy Account Kit — bundle real.
      Define window.EfixWallet (signer + smart wallet client) e window.EfixAuth
@@ -1006,7 +1018,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 })();
 </script>
 
-<script src="./app.js?v=20260508c" defer></script>
+<script src="./app.js?v=20260508d" defer></script>
 
 </body>
 </html>
