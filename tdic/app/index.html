@@ -315,25 +315,18 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
             <input type="text" id="kybRazao" required>
           </label>
         </div>
-        <div class="two-col" style="margin-top:0.75rem">
-          <label class="field">
-            <span class="lbl">Regime tributário</span>
-            <select id="kybRegime">
-              <option value="lucro-real" selected>Lucro real</option>
-              <option value="lucro-presumido">Lucro presumido</option>
-              <option value="simples">Simples nacional</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="lbl">Faturamento anual estimado</span>
-            <select id="kybFat">
-              <option value="ate-10m">Até R$ 10M</option>
-              <option value="10m-50m" selected>R$ 10M – 50M</option>
-              <option value="50m-200m">R$ 50M – 200M</option>
-              <option value="200m+">Acima de R$ 200M</option>
-            </select>
-          </label>
-        </div>
+        <!-- Regime tributário fica como input hidden — assumimos lucro real
+             internamente para os cálculos, mas sem expor na UI. -->
+        <input type="hidden" id="kybRegime" value="lucro-real">
+        <label class="field" style="margin-top:0.75rem">
+          <span class="lbl">Faturamento anual estimado</span>
+          <select id="kybFat">
+            <option value="ate-10m">Até R$ 10M</option>
+            <option value="10m-50m" selected>R$ 10M – 50M</option>
+            <option value="50m-200m">R$ 50M – 200M</option>
+            <option value="200m+">Acima de R$ 200M</option>
+          </select>
+        </label>
 
         <div class="kyb-section">Contato do responsável</div>
         <div class="two-col">
@@ -655,14 +648,13 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
             O deságio é amortizado pelo prazo do CR e classificado como despesa financeira na DRE.
             Exporte o relatório consolidado para enviar ao seu contador.
           </p>
-          <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:1rem">
-            <div class="kpi"><div class="lbl">Despesa gerada (acumulada)</div><div class="val mono" id="despesaTotal">R$ 0</div></div>
-            <div class="kpi"><div class="lbl">Redução IRPJ/CSLL (34%)</div><div class="val mono brand" id="despesaSavings">R$ 0</div></div>
+          <div class="kpi-row" style="grid-template-columns:repeat(2,1fr);margin-bottom:1rem">
+            <div class="kpi"><div class="lbl">Custo de cessão acumulado</div><div class="val mono" id="despesaTotal">R$ 0</div></div>
             <div class="kpi"><div class="lbl">CRs ativos</div><div class="val" id="despesaCRs">0</div></div>
           </div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
             <button class="btn btn-ghost" id="exportCsvBtn">Exportar CSV</button>
-            <button class="btn btn-ghost" id="exportPdfBtn">Gerar relatório (HTML)</button>
+            <button class="btn btn-ghost" id="exportPdfBtn">↓ Borderô (PDF)</button>
           </div>
         </div>
       </div>
@@ -754,8 +746,6 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
           <div class="cred-row"><span>Prazo</span><strong class="mono" id="sumPrazo">— dias</strong></div>
           <div class="cred-row"><span>Deságio (R$)</span><strong class="mono" id="sumDesconto">R$ 0,00</strong></div>
           <div class="cred-row total"><span>Valor líquido a receber</span><strong class="mono" id="sumLiquido">R$ 0,00</strong></div>
-          <div class="cred-row sub"><span>Despesa financeira (lucro real, dedutível)</span><strong class="mono" id="sumDespesa">R$ 0,00</strong></div>
-          <div class="cred-row sub"><span>Economia estimada IRPJ/CSLL (34%)</span><strong class="mono" id="sumEconomia">R$ 0,00</strong></div>
         </div>
 
         <div class="kyb-section">Documentação</div>
@@ -939,11 +929,13 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 
 <!-- SheetJS (parser .xlsx/.xls/.csv) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<!-- html2pdf — geração de borderôs em PDF (jsPDF + html2canvas embutidos) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 
 <!-- White-label theming -->
-<script src="/tdic/assets/theme.js?v=20260508d"></script>
-<script src="/tdic/tdic-mock.js?v=20260508d"></script>
-<script src="/tdic/app/sign-providers.js?v=20260508d"></script>
+<script src="/tdic/assets/theme.js?v=20260508e"></script>
+<script src="/tdic/tdic-mock.js?v=20260508e"></script>
+<script src="/tdic/app/sign-providers.js?v=20260508e"></script>
 
 <!-- Alchemy Account Kit — bundle real.
      Define window.EfixWallet (signer + smart wallet client) e window.EfixAuth
@@ -1018,7 +1010,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 })();
 </script>
 
-<script src="./app.js?v=20260508d" defer></script>
+<script src="./app.js?v=20260508e" defer></script>
 
 </body>
 </html>

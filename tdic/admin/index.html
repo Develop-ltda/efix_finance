@@ -241,7 +241,7 @@ tr:last-child td{border-bottom:none}
           <span class="hint">% mensal · pro rata die</span>
         </div>
         <div class="field">
-          <span class="lbl">Royalty (flat)</span>
+          <span class="lbl">Taxa de serviço (flat)</span>
           <input type="number" id="arbRoyalty" min="0" step="0.05" value="1.0">
           <span class="hint">% sobre face</span>
         </div>
@@ -255,7 +255,7 @@ tr:last-child td{border-bottom:none}
       <div class="arb-summary">
         <div class="arb-row"><span>Valor face</span><strong class="mono" id="arbSumFace">R$ 0,00</strong></div>
         <div class="arb-row muted"><span id="arbSumDescLbl">(−) Desconto pro rata</span><span class="mono" id="arbSumDesc">R$ 0,00</span></div>
-        <div class="arb-row muted"><span id="arbSumRoyLbl">(−) Royalty flat</span><span class="mono" id="arbSumRoy">R$ 0,00</span></div>
+        <div class="arb-row muted"><span id="arbSumRoyLbl">(−) Taxa de serviço flat</span><span class="mono" id="arbSumRoy">R$ 0,00</span></div>
         <div class="arb-row muted" id="arbSumAbatRow" style="display:none"><span>(−) Abatimento</span><span class="mono" id="arbSumAbat">R$ 0,00</span></div>
         <div class="arb-row total"><span>Valor líquido a creditar</span><strong class="mono" id="arbSumLiquido">R$ 0,00</strong></div>
       </div>
@@ -269,7 +269,7 @@ tr:last-child td{border-bottom:none}
 
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
-<script src="/tdic/tdic-mock.js?v=20260508c"></script>
+<script src="/tdic/tdic-mock.js?v=20260508e"></script>
 <script>
 (function () {
   "use strict";
@@ -348,13 +348,12 @@ tr:last-child td{border-bottom:none}
       body.innerHTML = `<div class="empty"><h3>Sem KYBs pendentes</h3><p>Quando uma cedente concluir o cadastro KYB, aparecerá aqui para análise.</p></div>`;
       return;
     }
-    let h = "<table><thead><tr><th>CNPJ</th><th>Razão social</th><th>Responsável</th><th>Regime</th><th>Wallet</th><th>Submetido</th><th>Docs</th><th></th></tr></thead><tbody>";
+    let h = "<table><thead><tr><th>CNPJ</th><th>Razão social</th><th>Responsável</th><th>Wallet</th><th>Submetido</th><th>Docs</th><th></th></tr></thead><tbody>";
     list.forEach(c => {
       h += `<tr>
         <td class="mono">${c.cnpj || "—"}</td>
         <td>${c.razaoSocial || "—"}</td>
         <td>${c.contato?.nome || "—"}<div class="mono" style="font-size:0.7rem;color:#a3a3a3">${c.contato?.cargo || ""}</div></td>
-        <td><span class="pill ${c.regimeTributario === "lucro-real" ? "green" : "gray"}">${c.regimeTributario || "—"}</span></td>
         <td class="mono" style="font-size:0.72rem">${shortAddr(c.walletAddress)}</td>
         <td class="mono" style="font-size:0.72rem">${new Date(c.submittedAt).toLocaleString("pt-BR")}</td>
         <td><span class="pill blue">${c.docs?.length || 0} docs</span></td>
@@ -475,7 +474,7 @@ tr:last-child td{border-bottom:none}
     $("#arbSumFace").textContent = fmtBRL(face);
     $("#arbSumDescLbl").textContent = `(−) Desconto pro rata (${txMensal.toFixed(2)}%/m × ${prazo}d ÷ 30)`;
     $("#arbSumDesc").textContent = fmtBRL(desc);
-    $("#arbSumRoyLbl").textContent = `(−) Royalty ${royaltyPct.toFixed(2)}% flat`;
+    $("#arbSumRoyLbl").textContent = `(−) Taxa de serviço ${royaltyPct.toFixed(2)}% flat`;
     $("#arbSumRoy").textContent = fmtBRL(royalty);
     if (abat > 0) {
       $("#arbSumAbatRow").style.display = "flex";

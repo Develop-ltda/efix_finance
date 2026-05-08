@@ -938,9 +938,10 @@ ${body}
     const cr = state.crs.find((x) => x.creditoId === c.id);
     const ts = new Date();
     const liquido = c.netValue || c.faceValue - (c.discountBrl || 0);
+    const royalty = Number(c.royaltyBrl) || 0;
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 <title>Borderô de Cessão — ${c.id}</title>
-<style>body{font-family:Arial,Helvetica,sans-serif;max-width:820px;margin:32px auto;padding:24px;color:#1a1a1a;line-height:1.6;font-size:13px}
+<style>body{font-family:Arial,Helvetica,sans-serif;max-width:820px;margin:0 auto;padding:24px;color:#1a1a1a;line-height:1.6;font-size:13px}
 h1{font-size:18px;margin-bottom:6px;letter-spacing:-.01em}
 .sub{color:#525252;font-size:12px;margin-bottom:24px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #d4d4d4;border-radius:8px;overflow:hidden;margin-bottom:18px}
@@ -986,6 +987,7 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
 <div class="tot">
   <div class="row"><span>Valor face</span><strong class="mono">${fmtBRL(c.faceValue)}</strong></div>
   <div class="row"><span>(−) Deságio (${(c.discountBps / 100).toFixed(2)}% sobre face)</span><strong class="mono">${fmtBRL(c.discountBrl || 0)}</strong></div>
+  ${royalty ? `<div class="row"><span>(−) Taxa de serviço</span><strong class="mono">${fmtBRL(royalty)}</strong></div>` : ""}
   ${c.abatimento ? `<div class="row"><span>(−) Abatimento</span><strong class="mono">${fmtBRL(c.abatimento)}</strong></div>` : ""}
   <div class="row t"><span>Valor líquido a creditar</span><strong class="mono">${fmtBRL(liquido)}</strong></div>
 </div>
@@ -1015,7 +1017,7 @@ ${cr ? `
   da operação de cessão e deve ser conservado pela cedente para fins fiscais e contábeis (Lei 14.430/2022 + RFB IN).
 </div>
 </body></html>`;
-    download(html, "tdic-bordero-cessao-" + c.id + ".html", "text/html");
+    downloadAsPdf(html, "tdic-bordero-cessao-" + c.id + ".pdf");
   }
 
   function tipoLabel(t) {
@@ -1059,7 +1061,6 @@ ${cr ? `
   function renderDespesa() {
     const total = totalDespesa();
     $("#despesaTotal").textContent = fmtBRL0(total);
-    $("#despesaSavings").textContent = fmtBRL0(total * 0.34);
     $("#despesaCRs").textContent = state.crs.filter((c) => c.status === "active").length;
   }
 
@@ -1188,7 +1189,7 @@ ${cr ? `
               <th>Duplicata</th>
               <th style="text-align:right">Face</th>
               <th style="text-align:right">Deságio</th>
-              <th style="text-align:right">Royalty</th>
+              <th style="text-align:right">Taxa serv.</th>
               <th style="text-align:right">Abat.</th>
               <th style="text-align:right">Líquido</th>
               <th>Vencto</th>
@@ -1247,11 +1248,12 @@ tfoot td{background:#f5f5f5}
 <h1>Borderô Consolidado de Cessões — TDIC</h1>
 <div class="sub">${periodLabel} · ${all.length} operação(ões) · Emitido em ${ts.toLocaleString("pt-BR")}</div>
 
+
+
 <div class="grid">
   <div class="cell"><div class="lbl">Cedente</div><div class="val">${escapeHtml(cedente.razaoSocial || "—")}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${cedente.cnpj || "—"}</div></div>
-  <div class="cell"><div class="lbl">Regime tributário</div><div class="val">${cedente.regimeTributario === "lucro-real" ? "Lucro Real" : (cedente.regimeTributario || "—")}</div></div>
   <div class="cell"><div class="lbl">Cessionária</div><div class="val">${issuer.razaoSocial || "EFIX Securitizadora S.A."}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${issuer.cnpj || "60.756.859/0001-57"}</div></div>
-  <div class="cell"><div class="lbl">Marco regulatório</div><div class="val">Lei 14.430/2022 · CVM 88/2022</div></div>
+  <div class="cell" style="grid-column:1/3"><div class="lbl">Marco regulatório</div><div class="val">Lei 14.430/2022 · CVM 88/2022</div></div>
 </div>
 
 ${cedente.bankAccount ? `
@@ -1270,11 +1272,9 @@ ${buckets}
   <div class="row s"><span>Total de operações</span><span class="mono">${all.length}</span></div>
   <div class="row"><span>Total de face cedido</span><strong class="mono">${fmtBRL(grandFace)}</strong></div>
   <div class="row s"><span>(−) Deságio total</span><span class="mono">${fmtBRL(grandDesc)}</span></div>
-  <div class="row s"><span>(−) Royalty total</span><span class="mono">${fmtBRL(grandRoy)}</span></div>
+  <div class="row s"><span>(−) Taxa de serviço total</span><span class="mono">${fmtBRL(grandRoy)}</span></div>
   ${grandAbat > 0 ? `<div class="row s"><span>(−) Abatimentos</span><span class="mono">${fmtBRL(grandAbat)}</span></div>` : ""}
   <div class="row t"><span>Total líquido a creditar</span><strong class="mono">${fmtBRL(grandLiq)}</strong></div>
-  <div class="row s"><span>Despesa financeira potencial (regime de competência)</span><span class="mono">${fmtBRL(grandDesc + grandRoy)}</span></div>
-  <div class="row s"><span>Redução estimada de IRPJ/CSLL (34%)</span><span class="mono">${fmtBRL((grandDesc + grandRoy) * 0.34)}</span></div>
 </div>
 
 <div class="ft">
@@ -1284,7 +1284,7 @@ ${buckets}
 </div>
 </body></html>`;
 
-    download(html, "tdic-bordero-consolidado-" + ts.toISOString().slice(0, 10) + ".html", "text/html");
+    downloadAsPdf(html, "tdic-bordero-consolidado-" + ts.toISOString().slice(0, 10) + ".pdf");
   }
 
   // Resolve a janela temporal selecionada para o filtro do borderô consolidado.
@@ -1365,12 +1365,11 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
 .ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:10px;color:#737373;text-align:center}
 .mono{font-family:monospace}</style>
 </head><body>
-<h1>Borderô de Despesa Financeira — TDIC</h1>
-<div class="sub">Apuração até ${ts.toLocaleDateString("pt-BR")} · ${ativos.length} CR(s) ativo(s) · Documento contábil</div>
+<h1>Borderô de Custo de Cessão — TDIC</h1>
+<div class="sub">Apuração até ${ts.toLocaleDateString("pt-BR")} · ${ativos.length} CR(s) ativo(s) · Documento operacional</div>
 
 <div class="grid">
-  <div class="cell"><div class="lbl">Cedente</div><div class="val">${escapeHtml(cedente.razaoSocial || "—")}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${cedente.cnpj || "—"}</div></div>
-  <div class="cell"><div class="lbl">Regime tributário</div><div class="val">${cedente.regimeTributario === "lucro-real" ? "Lucro Real" : (cedente.regimeTributario || "—")}</div></div>
+  <div class="cell" style="grid-column:1/3"><div class="lbl">Cedente</div><div class="val">${escapeHtml(cedente.razaoSocial || "—")}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${cedente.cnpj || "—"}</div></div>
   <div class="cell"><div class="lbl">Securitizadora (cessionária)</div><div class="val">${issuer.razaoSocial || "EFIX Securitizadora S.A."}</div><div class="mono" style="font-size:11px;color:#737373">CNPJ ${issuer.cnpj || "60.756.859/0001-57"}</div></div>
   <div class="cell"><div class="lbl">Marco regulatório</div><div class="val">Lei 14.430/2022 · CVM 88/2022</div></div>
 </div>
@@ -1382,7 +1381,7 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
       <th style="text-align:right">Valor face</th>
       <th style="text-align:right">Deságio</th>
       <th style="text-align:right">Deságio total (R$)</th>
-      <th style="text-align:right">Despesa amortizada</th>
+      <th style="text-align:right">Custo amortizado</th>
       <th style="text-align:right">Permanência</th>
       <th>Vencimento</th>
     </tr>
@@ -1392,23 +1391,15 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
 
 <div class="tot">
   <div class="row s"><span>Total de face em carteira</span><span class="mono">${fmtBRL(totalFace)}</span></div>
-  <div class="row s"><span>Deságio contratado total (regime de competência)</span><span class="mono">${fmtBRL(totalProjetado)}</span></div>
-  <div class="row t"><span>Despesa financeira reconhecida no período</span><span class="mono">${fmtBRL(totalDespesaPeriodo)}</span></div>
-  <div class="row"><span>Redução estimada de IRPJ/CSLL (34% sobre o reconhecido)</span><strong class="mono">${fmtBRL(totalDespesaPeriodo * 0.34)}</strong></div>
-</div>
-
-<div class="note">
-  <strong>Tratamento contábil sugerido:</strong> reconhecer cada parcela de deságio como despesa
-  financeira (conta 4.2.x.x) <em>pro rata die</em> entre a data da cessão e o vencimento do crédito,
-  conforme regime de competência (CPC 47 / Lei 6.404/76 art. 187 §1º). Documento de apoio para o
-  contador — não substitui análise tributária formal.
+  <div class="row s"><span>Deságio total contratado</span><span class="mono">${fmtBRL(totalProjetado)}</span></div>
+  <div class="row t"><span>Custo de cessão amortizado no período</span><span class="mono">${fmtBRL(totalDespesaPeriodo)}</span></div>
 </div>
 
 <div class="ft">
   Gerado em ${ts.toLocaleString("pt-BR")} (${ts.toISOString()}) · ${issuer.razaoSocial || "EFIX Securitizadora S.A."}
 </div>
 </body></html>`;
-    download(html, "tdic-bordero-despesa-financeira-" + ts.toISOString().slice(0, 10) + ".html", "text/html");
+    downloadAsPdf(html, "tdic-bordero-custo-cessao-" + ts.toISOString().slice(0, 10) + ".pdf");
   }
 
   function download(content, filename, mime) {
@@ -1419,6 +1410,70 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // Gera PDF a partir de um documento HTML completo (com <head><style>).
+  // Usa html2pdf.js (CDN). Se o bundle não carregar (offline/bloqueado),
+  // cai num fallback que abre janela popup e dispara window.print() —
+  // o usuário escolhe "Salvar como PDF" no diálogo nativo.
+  async function downloadAsPdf(htmlContent, filenamePdf) {
+    if (typeof window.html2pdf !== "undefined") {
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "position:absolute;left:-99999px;top:0;width:794px";
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, "text/html");
+        doc.querySelectorAll("style").forEach((s) => wrap.appendChild(s.cloneNode(true)));
+        const inner = document.createElement("div");
+        inner.innerHTML = doc.body.innerHTML;
+        wrap.appendChild(inner);
+        document.body.appendChild(wrap);
+
+        await window
+          .html2pdf()
+          .set({
+            margin: [12, 10, 12, 10],
+            filename: filenamePdf,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 794 },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+            pagebreak: { mode: ["css", "legacy"] },
+          })
+          .from(wrap)
+          .save();
+      } catch (e) {
+        console.error("[TDIC] html2pdf falhou, abrindo print fallback:", e);
+        return openForPrint(htmlContent, filenamePdf);
+      } finally {
+        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+      }
+      return;
+    }
+    return openForPrint(htmlContent, filenamePdf);
+  }
+
+  // Fallback nativo: popup + window.print() — usuário escolhe "Salvar como PDF".
+  function openForPrint(htmlContent, filenamePdf) {
+    const w = window.open("", "_blank", "width=900,height=1100");
+    if (!w) {
+      alert("Habilite popups para gerar o PDF.");
+      return;
+    }
+    const enriched = htmlContent.replace(
+      "</style>",
+      "@page{size:A4;margin:1.5cm}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>"
+    );
+    const titled = enriched.replace(
+      /<title>[^<]+<\/title>/,
+      `<title>${escapeHtml(filenamePdf.replace(/\.(pdf|html)$/i, ""))}</title>`
+    );
+    w.document.open();
+    w.document.write(titled);
+    w.document.close();
+    w.addEventListener("load", () => {
+      w.focus();
+      setTimeout(() => w.print(), 250);
+    });
   }
 
   // ── Modal Crédito ───────────────────────────────────────
@@ -1465,8 +1520,6 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
       (r.discountBps / 100).toFixed(2) +
       "% face";
     $("#sumLiquido").textContent = "R$ " + r.liquido.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    $("#sumDespesa").textContent = "R$ " + r.discountBrl.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    $("#sumEconomia").textContent = "R$ " + (r.discountBrl * 0.34).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function bindCreditoModal() {
