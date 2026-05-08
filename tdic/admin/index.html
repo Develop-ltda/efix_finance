@@ -302,7 +302,7 @@ tr:last-child td{border-bottom:none}
 
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
-<script src="/tdic/tdic-mock.js?v=20260508h"></script>
+<script src="/tdic/tdic-mock.js?v=20260508i"></script>
 <script>
 (function () {
   "use strict";
@@ -699,25 +699,32 @@ respondendo pela solvência do devedor salvo dolo ou má-fé.
   // é disparado de fato via backend (Resend/Sendgrid). Hoje o sistema
   // ainda não tem servidor SMTP plugado — este modal mostra o conteúdo
   // que SERIA enviado e registra no log mock (db.emails).
-  function showEmailSentModal({ cr, credito, cedente, subscriptionLink, subscriptionAmount, isVendaDireta }) {
+  function showEmailSentModal({ cr, credito, cedente, subscriptionLink, subscriptionAmount, isVendaDireta, realSendOk, realSendError }) {
     const overlay = document.createElement("div");
     overlay.className = "modal-backdrop open";
     overlay.style.zIndex = "300";
     const tipoLbl = isVendaDireta ? "Venda direta" : "CR Privado";
+    const statusBanner = realSendOk
+      ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.75rem 0.95rem;font-size:0.82rem;color:#15803d;margin-bottom:1rem;line-height:1.55">
+           <strong>✓ E-mail enviado de verdade</strong>
+           <div style="margin-top:3px">Disparado pelo backend efixdi (nodemailer · SMTP configurado nas env vars). O servidor de e-mail processou a entrega — verifique <code class="mono">${escapeHtml(cedente.contato?.email || "")}</code> (incluindo spam) ou os logs do Railway / provedor SMTP.</div>
+         </div>`
+      : `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:0.75rem 0.95rem;font-size:0.78rem;color:#991b1b;margin-bottom:1rem;line-height:1.55">
+           <strong>⚠ E-mail NÃO foi enviado de verdade</strong>
+           <div style="margin-top:3px">${escapeHtml(realSendError || "Sem conexão com o backend")}. O conteúdo abaixo é o que SERIA enviado. PDF anexo já foi gerado e baixado — envie manualmente se necessário.</div>
+           <div style="margin-top:6px;font-size:0.72rem">Possíveis causas: admin key inválida ou ausente (peça uma ao operador efixdi), SMTP não configurado no Railway (envs <code>SMTP_HOST/USER/PASS</code>), ou backend offline.</div>
+         </div>`;
     overlay.innerHTML = `
       <div class="modal" style="max-width:680px">
         <div class="modal-head">
-          <h3>📧 E-mail preparado · preview</h3>
+          <h3>${realSendOk ? "📧 E-mail enviado" : "📧 E-mail · preview (não enviado)"}</h3>
           <button class="x" type="button" data-close>×</button>
         </div>
         <div class="modal-body">
-          <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:0.75rem 0.95rem;font-size:0.78rem;color:#7c2d12;margin-bottom:1rem;line-height:1.55">
-            <strong>⚠ Modo demo — e-mail NÃO foi disparado de verdade.</strong>
-            <div style="margin-top:3px">O backend de envio (Resend/Sendgrid) ainda não está plugado. Este modal mostra exatamente o conteúdo que será enviado quando o servidor SMTP for ativado, e o evento já foi registrado em <code class="mono">db.emails</code>. Por ora, baixe o PDF (já foi gerado) e envie manualmente ao tomador, se quiser.</div>
-          </div>
+          ${statusBanner}
 
-          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.6rem 0.95rem;font-size:0.78rem;color:#15803d;margin-bottom:1rem">
-            <strong>${tipoLbl}</strong> aprovado para <strong>${escapeHtml(cedente.razaoSocial || "—")}</strong>. PDF do${isVendaDireta ? " termo de cessão" : " Certificado"} já foi gerado e baixado pra sua máquina.
+          <div style="background:#fafafa;border:1px solid #e5e5e5;border-radius:8px;padding:0.6rem 0.95rem;font-size:0.78rem;color:#525252;margin-bottom:1rem">
+            <strong>${tipoLbl}</strong> · cedente <strong>${escapeHtml(cedente.razaoSocial || "—")}</strong> · PDF do${isVendaDireta ? " termo de cessão" : " Certificado"} gerado e baixado pra sua máquina.
           </div>
 
           <div style="background:#fff;border:1px solid #e5e5e5;border-radius:10px;overflow:hidden">
@@ -788,7 +795,7 @@ respondendo pela solvência do devedor salvo dolo ou má-fé.
   // Bind imediato — script está no fim do body, elementos já existem.
   $("#arbConfirmBtn")?.addEventListener("click", confirmArbApprove);
 
-  window.tdicAdmin = { closeArbModal };
+  window.tdicAdmin = Object.assign(window.tdicAdmin || {}, { closeArbModal });
 
   function renderCrApproved() {
     const list = state.crs.filter(c => c.status === "approved");
@@ -872,33 +879,109 @@ respondendo pela solvência do devedor salvo dolo ou má-fé.
     }
   }
 
-  // Envio manual de e-mail ao tomador. Em produção dispara via backend
-  // (Resend/Sendgrid). Aqui é mock: gera o PDF do CR (ou termo de cessão
-  // para venda direta), grava o evento em db.emails e abre modal preview.
+  // Backend que dispara o e-mail (mesmo SMTP que envia OTP do efixDI).
+  const TDIC_BACKEND = "https://efixdi-backend-production.up.railway.app";
+
+  function getAdminKey() {
+    let k = localStorage.getItem("tdic_admin_key") || "";
+    if (!k) {
+      k = prompt(
+        "Para enviar e-mails reais ao tomador, informe a admin key do backend efixdi.\n\n" +
+        "(Ela fica salva localmente. Use 'Limpar admin key' no console pra resetar.)"
+      ) || "";
+      if (k) localStorage.setItem("tdic_admin_key", k.trim());
+    }
+    return k.trim();
+  }
+  window.tdicAdmin = window.tdicAdmin || {};
+  window.tdicAdmin.clearAdminKey = () => {
+    localStorage.removeItem("tdic_admin_key");
+    toast("Admin key limpa.");
+  };
+
+  // Envio manual de e-mail ao tomador.
+  // Caminho real: POST /api/tdic/email/send-cr-notification (efixdi-backend
+  // → nodemailer → SMTP configurado nas envs SMTP_HOST/USER/PASS).
+  // Caminho mock: se o backend rejeitar (401/503/network), grava localmente
+  // e mostra modal preview pra envio manual via cópia.
   async function enviarEmailTomador(creditoId, btn) {
     const cr = state.crs.find(c => c.creditoId === creditoId);
     const credito = state.creditos.find(c => c.id === creditoId);
     const ced = state.cedentes.find(c => c.walletAddress === cr?.cedenteWallet);
     if (!cr || !credito || !ced) return toast("Dados incompletos.", true);
 
+    const tomadorEmail = ced.contato?.email;
+    if (!tomadorEmail || !tomadorEmail.includes("@")) {
+      return toast("Cedente sem e-mail cadastrado.", true);
+    }
+
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>Preparando…';
+    btn.innerHTML = '<span class="spinner"></span>Enviando…';
+
+    const isVendaDireta = cr.issuanceType === "venda-direta";
+    const liquido = Number(cr.netValue) || cr.faceValue - (cr.discountBrl || 0) - (cr.royaltyBrl || 0);
+    const subscriptionLink = isVendaDireta
+      ? `https://efix.finance/tdic/pay/?cr=${cr.id}&mode=venda-direta`
+      : `https://efix.finance/tdic/pay/?cr=${cr.id}&envelope=${cr.tokenId.slice(0, 18)}`;
+
+    // 1. Gera PDF localmente (sempre — admin tem cópia)
     try {
-      const isVendaDireta = cr.issuanceType === "venda-direta";
       const pdfHtml = isVendaDireta
         ? renderTermoCessaoVendaDireta({ cr, credito, cedente: ced })
         : renderCRDocument({ cr, credito, cedente: ced });
       downloadAsPdf(pdfHtml, (isVendaDireta ? "Termo-Cessao-" : "CR-") + (credito.dupl || credito.id) + ".pdf");
+    } catch (e) {
+      console.warn("[TDIC admin] pdf gen falhou:", e);
+    }
 
-      const liquido = Number(cr.netValue) || cr.faceValue - (cr.discountBrl || 0) - (cr.royaltyBrl || 0);
-      const subscriptionLink = isVendaDireta
-        ? `https://efix.finance/tdic/pay/?cr=${cr.id}&mode=venda-direta`
-        : `https://efix.finance/tdic/pay/?cr=${cr.id}&envelope=${cr.tokenId.slice(0, 18)}`;
+    // 2. Tenta envio real via backend
+    let realSendOk = false;
+    let realSendError = null;
+    try {
+      const adminKey = getAdminKey();
+      const headers = { "Content-Type": "application/json" };
+      if (adminKey) headers["X-Admin-Key"] = adminKey;
 
+      const r = await fetch(`${TDIC_BACKEND}/api/tdic/email/send-cr-notification`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          to: tomadorEmail,
+          tomadorNome: ced.contato?.nome,
+          crId: cr.id,
+          dupl: credito.dupl || credito.id,
+          devedor: credito.devedorRazaoSocial,
+          vencto: credito.maturityDate,
+          faceValue: cr.faceValue,
+          subscriptionAmount: liquido,
+          subscriptionLink,
+          tokenId: isVendaDireta ? null : cr.tokenId,
+          issuanceType: cr.issuanceType,
+        }),
+      });
+
+      if (r.ok) {
+        const data = await r.json().catch(() => ({}));
+        realSendOk = true;
+        console.log("[TDIC admin] e-mail real enviado:", data);
+      } else {
+        const err = await r.json().catch(() => ({ error: r.statusText }));
+        realSendError = `${r.status} · ${err.error || "Falha no backend"}`;
+        if (r.status === 401) {
+          // Limpa admin key inválida pra próxima tentativa pedir de novo
+          localStorage.removeItem("tdic_admin_key");
+        }
+      }
+    } catch (e) {
+      realSendError = "Sem conexão com o backend (" + e.message + ")";
+    }
+
+    // 3. Sempre loga no mock pra histórico local
+    try {
       await window.TdicMock.logCREmail({
         crId: cr.id,
         creditoId: credito.id,
-        to: ced.contato?.email || ced.walletAddress,
+        to: tomadorEmail,
         tomador: ced.razaoSocial,
         subject: isVendaDireta
           ? `[EFIX] Termo de Cessão · ${credito.dupl || credito.id}`
@@ -906,16 +989,24 @@ respondendo pela solvência do devedor salvo dolo ou má-fé.
         subscriptionLink,
         subscriptionAmount: liquido,
         sentAt: new Date().toISOString(),
+        realSendOk,
+        realSendError,
       });
+    } catch (_) {}
 
-      showEmailSentModal({ cr, credito, cedente: ced, subscriptionLink, subscriptionAmount: liquido, isVendaDireta });
-      await loadAll();
-    } catch (e) {
-      toast("Erro: " + e.message, true);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = "📧 Enviar e-mail";
+    // 4. Feedback visual
+    if (realSendOk) {
+      toast("✓ E-mail enviado para " + tomadorEmail);
+    } else {
+      toast("E-mail NÃO enviado · " + (realSendError || "modo demo"), true);
     }
+    showEmailSentModal({
+      cr, credito, cedente: ced, subscriptionLink, subscriptionAmount: liquido, isVendaDireta,
+      realSendOk, realSendError,
+    });
+    await loadAll();
+    btn.disabled = false;
+    btn.innerHTML = "📧 Enviar e-mail";
   }
 
   // Termo de cessão de venda direta (sem CR / sem TDIC)
@@ -1039,7 +1130,8 @@ devedor salvo dolo, simulação ou má-fé.
   $("#refreshAllBtn").addEventListener("click", loadAll);
 
   loadAll();
-  window.tdicAdmin = { state, loadAll };
+  // Mescla com o que outras funções já adicionaram (closeArbModal, clearAdminKey)
+  window.tdicAdmin = Object.assign(window.tdicAdmin || {}, { state, loadAll });
 })();
 </script>
 </body>
