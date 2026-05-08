@@ -157,6 +157,11 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
   .topbar-inner .brand-sub{display:none}
 }
 
+/* ── Banner de reassinatura ── */
+.resign-banner{display:flex;align-items:center;gap:1rem;justify-content:space-between;background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:0.85rem 1.1rem;margin-bottom:1rem}
+.resign-banner .resign-title{font-weight:700;font-size:0.92rem;color:#9a3412}
+.resign-banner .resign-desc{font-size:0.78rem;color:#7c2d12;line-height:1.55;margin-top:2px}
+
 /* ── Contrato de cessão (KYB) ── */
 .contract-card{border:1px solid #e5e5e5;border-radius:12px;padding:1rem 1.1rem;background:#fafafa}
 .contract-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:0.85rem}
@@ -385,11 +390,23 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
             </label>
           </div>
 
+          <div class="two-col" style="margin-top:0.85rem">
+            <label class="field">
+              <span class="lbl">Plataforma de assinatura</span>
+              <select id="kybSignProvider"></select>
+            </label>
+            <div class="field">
+              <span class="lbl">Versão do contrato</span>
+              <div class="mono" id="kybContractVersionLabel" style="font-size:0.78rem;padding:0.55rem 0.75rem;background:#fafafa;border:1px solid #e5e5e5;border-radius:8px;color:#404040">v—</div>
+            </div>
+          </div>
+          <div id="kybSignProviderHelp" style="font-size:0.72rem;color:#737373;margin-top:0.4rem;line-height:1.5"></div>
+
           <label class="contract-accept">
             <input type="checkbox" id="kybSignAccept">
             <span>
               Declaro que li e aceito o <button type="button" class="contract-inline-link" onclick="window.tdicApp.openContractModal()">Instrumento Particular de Cessão de Direitos Creditórios</button>
-              e que tenho poderes para representar a cedente. A aceitação fica registrada com data, hora e identificação do dispositivo.
+              e que tenho poderes para representar a cedente. A aceitação fica registrada com data, hora, hash SHA-256 do documento e identificação do dispositivo.
             </span>
           </label>
         </div>
@@ -427,6 +444,14 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 
   <!-- DASHBOARD -->
   <main id="dashView" style="display:none">
+    <div id="resignBanner" class="resign-banner" hidden>
+      <div class="resign-text">
+        <div class="resign-title">Nova versão do Instrumento de Cessão</div>
+        <div class="resign-desc" id="resignBannerDesc">A versão atual do contrato é mais recente do que a que você assinou. Reaceite para continuar usando o painel.</div>
+      </div>
+      <button class="btn btn-brand" type="button" id="reSignBtn">Reassinar agora</button>
+    </div>
+
     <div class="page-head">
       <div>
         <h2 id="dashGreeting">Olá</h2>
@@ -741,8 +766,9 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <!-- White-label theming -->
-<script src="/tdic/assets/theme.js?v=20260508a"></script>
-<script src="/tdic/tdic-mock.js?v=20260508a"></script>
+<script src="/tdic/assets/theme.js?v=20260508b"></script>
+<script src="/tdic/tdic-mock.js?v=20260508b"></script>
+<script src="/tdic/app/sign-providers.js?v=20260508b"></script>
 
 <!-- Alchemy Account Kit — bundle real.
      Define window.EfixWallet (signer + smart wallet client) e window.EfixAuth
@@ -817,7 +843,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 })();
 </script>
 
-<script src="./app.js?v=20260508a" defer></script>
+<script src="./app.js?v=20260508b" defer></script>
 
 </body>
 </html>

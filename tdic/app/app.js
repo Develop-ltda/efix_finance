@@ -25,6 +25,12 @@
     return slug ? "?c=" + encodeURIComponent(slug) : "";
   };
 
+  // Versão do Instrumento de Cessão. Bump quando o texto mudar materialmente —
+  // todos os cedentes com signedContract.version != CONTRACT_VERSION verão o
+  // banner de reassinatura no dashboard.
+  const CONTRACT_VERSION = "1.0.0";
+  const CONTRACT_TITLE = "Instrumento Particular de Cessão de Direitos Creditórios";
+
   const STATUS = {
     "em-analise": { label: "Em análise", pill: "amber" },
     aprovado: { label: "Aprovado", pill: "blue" },
@@ -330,13 +336,25 @@
       });
     });
 
-    // Contrato: gating do submit pelo checkbox + nome + CPF.
+    // Contrato: provider selector, gating do submit pelo checkbox + nome + CPF.
+    populateSignProviderSelect();
     const sync = () => syncContractGate();
     $("#kybSignAccept").addEventListener("change", sync);
     $("#kybSignName").addEventListener("input", sync);
     $("#kybSignCpf").addEventListener("input", maskCpfInput);
     $("#kybSignCpf").addEventListener("input", sync);
+    $("#kybSignProvider").addEventListener("change", () => {
+      const slug = $("#kybSignProvider").value;
+      window.TdicSign?.setProvider(slug);
+      const p = window.TdicSign?.active();
+      const help = $("#kybSignProviderHelp");
+      if (help && p) {
+        help.textContent = p.helpText + (p.qualifiedSignature ? " · Assinatura qualificada disponível." : "");
+      }
+      sync();
+    });
     $("#openContractBtn").addEventListener("click", openContractModal);
+    $("#kybContractVersionLabel").textContent = "v" + CONTRACT_VERSION;
     sync();
 
     $("#kybForm").addEventListener("submit", async (e) => {
@@ -360,43 +378,38 @@
         return;
       }
 
-      const now = new Date();
-      const signedContract = {
-        version: "1.0",
-        title: "Instrumento Particular de Cessão de Direitos Creditórios",
-        issuer: { ...(window.TdicBrand?.issuer || {}) },
-        signatory: { name: signName, cpf: signCpf, email: state.user.email },
-        cedente: {
-          cnpj: $("#kybCnpj").value.trim(),
-          razaoSocial: $("#kybRazao").value.trim(),
-        },
-        wallet: state.user.address,
-        acceptedAt: now.toISOString(),
-        acceptedAtLocal: now.toString(),
-        userAgent: navigator.userAgent,
-        documentSnapshotHtml: $("#contractDocBody")?.outerHTML || null,
-      };
-
-      const payload = {
-        cnpj: signedContract.cedente.cnpj,
-        razaoSocial: signedContract.cedente.razaoSocial,
-        regimeTributario: $("#kybRegime").value,
-        contato: {
-          nome: $("#kybNome").value.trim(),
-          cargo: $("#kybCargo").value.trim(),
-          email: state.user.email,
-          tel: $("#kybTel").value.trim(),
-          faturamento: $("#kybFat").value,
-        },
-        docs: Object.values(state.kybDocs),
-        signedContract,
-      };
-
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Assinando…';
       try {
+        const signedContract = await produceSignedContract({
+          signName,
+          signCpf,
+          cnpj: $("#kybCnpj").value.trim(),
+          razaoSocial: $("#kybRazao").value.trim(),
+        });
+        if (!signedContract) {
+          // Provider devolveu cancelado / erro — UI já tratou.
+          btn.disabled = false;
+          btn.textContent = "Assinar e enviar para análise";
+          return;
+        }
+
+        const payload = {
+          cnpj: signedContract.cedente.cnpj,
+          razaoSocial: signedContract.cedente.razaoSocial,
+          regimeTributario: $("#kybRegime").value,
+          contato: {
+            nome: $("#kybNome").value.trim(),
+            cargo: $("#kybCargo").value.trim(),
+            email: state.user.email,
+            tel: $("#kybTel").value.trim(),
+            faturamento: $("#kybFat").value,
+          },
+          docs: Object.values(state.kybDocs),
+          signedContract,
+        };
+
         state.cedente = await window.TdicMock.submitKyb(state.user.address, payload);
-        // Snapshot local do contrato pra eventual download/auditoria.
         try {
           localStorage.setItem(
             "tdic_signed_contract_" + state.user.address.toLowerCase(),
@@ -405,12 +418,92 @@
         } catch (_) {}
         show("kybPendingView");
       } catch (e) {
+        console.error("[TDIC] submitKyb falhou:", e);
         alert(e.message || "Falha ao enviar KYB.");
       } finally {
         btn.disabled = false;
         btn.textContent = "Assinar e enviar para análise";
       }
     });
+  }
+
+  function populateSignProviderSelect() {
+    const sel = $("#kybSignProvider");
+    if (!sel || !window.TdicSign) return;
+    const list = window.TdicSign.listProviders();
+    const active = window.TdicSign.active().slug;
+    sel.innerHTML = list
+      .map((p) => `<option value="${p.slug}">${escapeHtml(p.displayName)}${p.qualifiedSignature ? " · qualificada" : ""}</option>`)
+      .join("");
+    sel.value = active;
+    const p = window.TdicSign.active();
+    const help = $("#kybSignProviderHelp");
+    if (help) {
+      help.textContent = p.helpText + (p.qualifiedSignature ? " · Assinatura qualificada disponível." : "");
+    }
+  }
+
+  // Coleta o body canônico do contrato + metadados, dispara o provider de
+  // assinatura e devolve o registro completo (signedContract).
+  async function produceSignedContract({ signName, signCpf, cnpj, razaoSocial }) {
+    const docBodyEl = document.getElementById("contractDocBody");
+    const canonicalText = canonicalizeContract(docBodyEl);
+    const documentTextHash = await window.TdicSign.sha256Hex(canonicalText);
+
+    let providerResult = null;
+    try {
+      providerResult = await window.TdicSign.requestSignature({
+        canonicalText,
+        documentTextHash,
+        contractVersion: CONTRACT_VERSION,
+        contractTitle: CONTRACT_TITLE,
+        signatory: { name: signName, cpf: signCpf, email: state.user.email },
+        cedente: { cnpj, razaoSocial, wallet: state.user.address },
+      });
+    } catch (e) {
+      console.error("[TDIC] provider error:", e);
+      alert("Falha na plataforma de assinatura: " + (e.message || e));
+      return null;
+    }
+    if (!providerResult || !providerResult.ok) {
+      alert("Assinatura não concluída: " + (providerResult?.error || "operação cancelada"));
+      return null;
+    }
+
+    const now = new Date();
+    return {
+      version: CONTRACT_VERSION,
+      title: CONTRACT_TITLE,
+      issuer: { ...(window.TdicBrand?.issuer || {}) },
+      signatory: { name: signName, cpf: signCpf, email: state.user.email },
+      cedente: { cnpj, razaoSocial },
+      wallet: state.user.address,
+      acceptedAt: now.toISOString(),
+      acceptedAtLocal: now.toString(),
+      userAgent: navigator.userAgent,
+      // Hash + provider — backbone da prova de existência.
+      documentTextHash,           // SHA-256 do texto canonicalizado (pré-assinatura)
+      documentHash: providerResult.documentHash,         // SHA-256 retornado/confirmado pelo provider
+      provider: providerResult.provider,
+      envelopeId: providerResult.envelopeId,
+      providerStatus: providerResult.status,
+      signedDocumentUrl: providerResult.signedDocumentUrl || null,
+      caTimestamp: providerResult.caTimestamp || null,    // RFC 3161 timestamp da CA
+      documentSnapshotHtml: docBodyEl?.outerHTML || null,
+    };
+  }
+
+  // Normaliza o body do contrato para gerar um hash estável.
+  // Remove zonas voláteis (timestamp, "Visualizado em") e colapsa whitespace.
+  function canonicalizeContract(rootEl) {
+    if (!rootEl) return "";
+    const clone = rootEl.cloneNode(true);
+    clone.querySelectorAll(".contract-meta, #contractTimestamp").forEach((n) => n.remove());
+    const text = (clone.textContent || "")
+      .replace(/ /g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return `TDIC-CONTRACT/${CONTRACT_VERSION}\n${CONTRACT_TITLE}\n---\n${text}`;
   }
 
   function syncContractGate() {
@@ -435,53 +528,85 @@
     return String(s || "").replace(/\D/g, "").length === 11;
   }
 
-  function openContractModal() {
+  async function openContractModal() {
     const ts = new Date();
     const tEl = document.getElementById("contractTimestamp");
     if (tEl) tEl.textContent = ts.toLocaleString("pt-BR") + " (" + ts.toISOString() + ")";
+    // Computa o hash live do texto canônico exibido para mostrar ao usuário
+    // como prova da integridade do que ele está visualizando.
+    try {
+      const canon = canonicalizeContract(document.getElementById("contractDocBody"));
+      const h = await window.TdicSign.sha256Hex(canon);
+      const meta = document.getElementById("contractMeta");
+      if (meta) {
+        const provider = window.TdicSign?.active();
+        meta.innerHTML = `Versão ${CONTRACT_VERSION} · SHA-256 <span class="mono" style="color:#404040">${h}</span><br>
+          Plataforma: ${escapeHtml(provider?.displayName || "—")}${provider?.qualifiedSignature ? " (qualificada)" : ""} · Visualizado em ${ts.toLocaleString("pt-BR")} <span class="mono">(${ts.toISOString()})</span>`;
+      }
+    } catch (e) {
+      console.warn("[TDIC] hash live falhou:", e);
+    }
     $("#modalContract").style.display = "flex";
   }
   function closeContractModal() {
     $("#modalContract").style.display = "none";
   }
-  function downloadContractHtml() {
+  async function downloadContractHtml() {
     const brand = window.TdicBrand || {};
     const issuer = brand.issuer || {};
     const cedente = {
-      cnpj: $("#kybCnpj")?.value || "—",
-      razaoSocial: $("#kybRazao")?.value || "—",
+      cnpj: $("#kybCnpj")?.value || state.cedente?.cnpj || "—",
+      razaoSocial: $("#kybRazao")?.value || state.cedente?.razaoSocial || "—",
     };
     const sig = {
-      name: $("#kybSignName")?.value || "—",
-      cpf: $("#kybSignCpf")?.value || "—",
+      name: $("#kybSignName")?.value || state.cedente?.signedContract?.signatory?.name || "—",
+      cpf: $("#kybSignCpf")?.value || state.cedente?.signedContract?.signatory?.cpf || "—",
       email: state.user?.email || "—",
       address: state.user?.address || "—",
     };
-    const body = $("#contractDocBody")?.innerHTML || "";
+    const docBodyEl = document.getElementById("contractDocBody");
+    const body = docBodyEl?.innerHTML || "";
+    const canon = canonicalizeContract(docBodyEl);
+    const documentTextHash = await window.TdicSign.sha256Hex(canon);
+    const provider = window.TdicSign?.active();
+    const stored = state.cedente?.signedContract;
+    const ts = new Date();
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 <title>Instrumento de Cessão — TDIC</title>
 <style>body{font-family:Arial,Helvetica,sans-serif;max-width:780px;margin:32px auto;padding:24px;color:#1a1a1a;line-height:1.65}
 h1{font-size:20px;margin-bottom:6px}.sub{color:#525252;font-size:13px;margin-bottom:24px}
 h4{margin:18px 0 6px;font-size:15px}p{margin:0 0 8px}.clause-num{font-family:monospace;color:#525252;font-size:11px;margin-right:5px}
 .box{border:1px solid #d4d4d4;border-radius:8px;padding:16px;margin-top:24px;font-size:13px}
-.box .row{display:flex;justify-content:space-between;border-bottom:1px solid #f5f5f5;padding:6px 0}
-.box .row:last-child{border-bottom:none}.ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:11px;color:#737373;text-align:center}</style>
+.box .row{display:flex;justify-content:space-between;gap:1rem;border-bottom:1px solid #f5f5f5;padding:6px 0}
+.box .row:last-child{border-bottom:none}.box .row strong{text-align:right;word-break:break-all}
+.ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:11px;color:#737373;text-align:center}
+.hash{font-family:monospace;font-size:11px;word-break:break-all}</style>
 </head><body>
 <h1>Instrumento Particular de Cessão de Direitos Creditórios</h1>
-<div class="sub">${issuer.razaoSocial || "EFIX Securitizadora S.A."} · CNPJ ${issuer.cnpj || "60.756.859/0001-57"}</div>
+<div class="sub">${issuer.razaoSocial || "EFIX Securitizadora S.A."} · CNPJ ${issuer.cnpj || "60.756.859/0001-57"} · Versão ${CONTRACT_VERSION}</div>
 ${body}
+<div class="box">
+  <h4 style="margin-top:0">Integridade documental</h4>
+  <div class="row"><span>Versão do instrumento</span><strong>${CONTRACT_VERSION}</strong></div>
+  <div class="row"><span>SHA-256 (texto canônico)</span><strong class="hash">${documentTextHash}</strong></div>
+  ${stored?.documentHash ? `<div class="row"><span>SHA-256 (provider)</span><strong class="hash">${stored.documentHash}</strong></div>` : ""}
+  <div class="row"><span>Plataforma de assinatura</span><strong>${provider?.displayName || "—"}${provider?.qualifiedSignature ? " (qualificada)" : ""}</strong></div>
+  ${stored?.envelopeId ? `<div class="row"><span>Envelope ID</span><strong class="hash">${stored.envelopeId}</strong></div>` : ""}
+  ${stored?.caTimestamp?.ts ? `<div class="row"><span>Carimbo de tempo (CA)</span><strong>${stored.caTimestamp.ts} · ${stored.caTimestamp.tsa || ""}</strong></div>` : ""}
+  ${stored?.signedDocumentUrl ? `<div class="row"><span>Documento assinado</span><strong><a href="${stored.signedDocumentUrl}">${stored.signedDocumentUrl}</a></strong></div>` : ""}
+</div>
 <div class="box">
   <h4 style="margin-top:0">Aceitação eletrônica</h4>
   <div class="row"><span>Cedente</span><strong>${cedente.razaoSocial} · CNPJ ${cedente.cnpj}</strong></div>
   <div class="row"><span>Signatário</span><strong>${sig.name} · CPF ${sig.cpf}</strong></div>
   <div class="row"><span>E-mail validado</span><strong>${sig.email}</strong></div>
-  <div class="row"><span>Smart wallet</span><strong style="font-family:monospace">${sig.address}</strong></div>
-  <div class="row"><span>Data e hora</span><strong>${new Date().toLocaleString("pt-BR")} (${new Date().toISOString()})</strong></div>
-  <div class="row"><span>Dispositivo</span><strong style="font-family:monospace;font-size:11px">${navigator.userAgent}</strong></div>
+  <div class="row"><span>Smart wallet</span><strong class="hash">${sig.address}</strong></div>
+  <div class="row"><span>Data e hora</span><strong>${ts.toLocaleString("pt-BR")} (${ts.toISOString()})</strong></div>
+  <div class="row"><span>Dispositivo</span><strong style="font-family:monospace;font-size:11px;text-align:right">${navigator.userAgent}</strong></div>
 </div>
-<div class="ft">Documento gerado em ${new Date().toLocaleString("pt-BR")} — válido como prova da contratação eletrônica nos termos do art. 10 §2º da MP 2.200-2/2001 e art. 425 do Código Civil.</div>
+<div class="ft">Documento gerado em ${ts.toLocaleString("pt-BR")} — válido como prova da contratação eletrônica nos termos do art. 10 §2º da MP 2.200-2/2001 e art. 425 do Código Civil. O hash SHA-256 acima permite verificação independente da integridade do texto.</div>
 </body></html>`;
-    download(html, "tdic-cessao-contrato.html", "text/html");
+    download(html, "tdic-cessao-contrato-" + CONTRACT_VERSION + ".html", "text/html");
   }
 
   function renderUploadedList() {
@@ -532,6 +657,28 @@ ${body}
     renderHeader();
     renderKpis();
     renderTab(state.tab);
+    syncReSignBanner();
+  }
+
+  // Mostra o banner de reassinatura quando a versão do contrato local
+  // (state.cedente.signedContract.version) está desatualizada em relação
+  // a CONTRACT_VERSION ou quando o cedente não tem signedContract.
+  function syncReSignBanner() {
+    const banner = document.getElementById("resignBanner");
+    if (!banner) return;
+    const sc = state.cedente?.signedContract;
+    const needs = !sc || sc.version !== CONTRACT_VERSION;
+    if (!needs) {
+      banner.hidden = true;
+      return;
+    }
+    const desc = document.getElementById("resignBannerDesc");
+    if (!sc) {
+      desc.textContent = "Assinatura do Instrumento de Cessão não localizada. Reaceite para continuar.";
+    } else {
+      desc.textContent = `Você assinou a versão ${sc.version}; a versão vigente é ${CONTRACT_VERSION}. Reaceite para continuar.`;
+    }
+    banner.hidden = false;
   }
 
   function renderHeader() {
@@ -571,6 +718,34 @@ ${body}
     $("#importCreditosBtn").addEventListener("click", () => openImportModal());
     $("#exportCsvBtn").addEventListener("click", exportCsv);
     $("#exportPdfBtn").addEventListener("click", exportHtmlReport);
+    $("#reSignBtn")?.addEventListener("click", openReSignFlow);
+  }
+
+  // Reaceitação: prefilenche o form do KYB com os dados atuais e volta
+  // para a tela KYB para o usuário re-assinar a nova versão do contrato.
+  function openReSignFlow() {
+    const c = state.cedente;
+    if (!c) return;
+    show("kybView");
+    $("#kybCnpj").value = c.cnpj || "";
+    $("#kybRazao").value = c.razaoSocial || "";
+    $("#kybRegime").value = c.regimeTributario || "lucro-real";
+    if (c.contato) {
+      $("#kybNome").value = c.contato.nome || "";
+      $("#kybCargo").value = c.contato.cargo || "";
+      $("#kybTel").value = c.contato.tel || "";
+      $("#kybFat").value = c.contato.faturamento || "";
+    }
+    $("#kybEmail").value = state.user.email;
+    // Limpa o aceite — re-aceitação é um ato novo.
+    $("#kybSignAccept").checked = false;
+    $("#kybSignName").value = "";
+    $("#kybSignCpf").value = "";
+    syncContractGate();
+    // Scroll até o card de contrato.
+    setTimeout(() => {
+      document.querySelector(".contract-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
   }
 
   function switchTab(tab) {

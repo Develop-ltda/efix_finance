@@ -60,21 +60,38 @@
     await delay();
     const db = load();
     const addr = walletAddress.toLowerCase();
+    const existing = db.cedentes[addr] || {};
+    const history = Array.isArray(existing.signatureHistory) ? existing.signatureHistory.slice() : [];
+    if (payload.signedContract) {
+      history.push({ ...payload.signedContract, recordedAt: new Date().toISOString() });
+    }
+    const isReSign = !!existing.kybStatus;
     db.cedentes[addr] = {
       walletAddress: addr,
       cnpj: payload.cnpj,
       razaoSocial: payload.razaoSocial,
       regimeTributario: payload.regimeTributario || "lucro-real",
       contato: payload.contato || {},
-      docs: payload.docs || [],
-      // Aceitação eletrônica do Instrumento de Cessão.
-      signedContract: payload.signedContract || null,
-      kybStatus: "pending",
-      submittedAt: new Date().toISOString(),
-      approvedAt: null,
+      docs: payload.docs || existing.docs || [],
+      // Aceitação eletrônica do Instrumento de Cessão (sempre o mais recente).
+      signedContract: payload.signedContract || existing.signedContract || null,
+      // Histórico completo de assinaturas — append-only.
+      signatureHistory: history,
+      // Re-assinatura preserva o status anterior (já aprovado segue aprovado).
+      kybStatus: isReSign ? existing.kybStatus : "pending",
+      submittedAt: existing.submittedAt || new Date().toISOString(),
+      reSignedAt: isReSign ? new Date().toISOString() : null,
+      approvedAt: existing.approvedAt || null,
     };
     save(db);
     return db.cedentes[addr];
+  }
+
+  async function getSignatureHistory(walletAddress) {
+    await delay();
+    const db = load();
+    const c = db.cedentes[walletAddress.toLowerCase()];
+    return c?.signatureHistory || [];
   }
 
   async function approveKyb(walletAddress) {
@@ -239,6 +256,7 @@
   global.TdicMock = {
     getCedente,
     submitKyb,
+    getSignatureHistory,
     approveKyb,
     listCedentes,
     cadastrarCredito,
