@@ -28,7 +28,11 @@
   // Versão do Instrumento de Cessão. Bump quando o texto mudar materialmente —
   // todos os cedentes com signedContract.version != CONTRACT_VERSION verão o
   // banner de reassinatura no dashboard.
-  const CONTRACT_VERSION = "1.0.0";
+  // v3.0.0 (2026-05-08): contrato real EFIX_v3 — adiciona cláusula 4 (liquidação
+  // 3DU + prazo resolutivo automático), cláusula 5 (notificação aos sacados +
+  // repasse no mesmo dia útil + multa 5%), remove menção a CVM 88 / TDIC /
+  // tokenização (contrato agora é agnóstico ao backend).
+  const CONTRACT_VERSION = "3.0.0";
   const CONTRACT_TITLE = "Instrumento Particular de Cessão de Direitos Creditórios";
 
   const STATUS = {

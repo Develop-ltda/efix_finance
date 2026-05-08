@@ -501,10 +501,10 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
             <button type="button" class="contract-link" id="openContractBtn">Ler contrato completo →</button>
           </div>
           <ul class="contract-bullets">
-            <li>A <strong>cedente</strong> (sua empresa) cede em caráter <strong>pro soluto</strong> os créditos descritos em cada operação à <strong>EFIX Securitizadora S.A.</strong> (CNPJ <span data-brand-issuer="cnpj">60.756.859/0001-57</span>), em patrimônio segregado por emissão.</li>
-            <li>A EFIX emite os <strong>Certificados de Recebíveis (CR)</strong> sob o regime da Lei 14.430/2022 e da Resolução CVM 88/2022 e tokeniza cada CR como TDIC (ERC-1155, Base mainnet).</li>
-            <li>O preço da cessão é o valor de face menos o <strong>deságio</strong> ajustado a cada operação. O deságio constitui <strong>despesa financeira</strong> dedutível para a cedente em regime de lucro real.</li>
-            <li>Você declara que os créditos cedidos são <strong>verdadeiros, líquidos e exigíveis</strong>, sem ônus, gravame ou cessão prévia a terceiros.</li>
+            <li>A <strong>cedente</strong> (sua empresa) cede em caráter <strong>pro soluto</strong>, definitivo e irrevogável os créditos descritos em cada operação à <strong>EFIX Securitizadora S.A.</strong> (CNPJ <span data-brand-issuer="cnpj">60.756.859/0001-57</span>), mediante aprovação prévia do compliance.</li>
+            <li>O preço de cessão é creditado em conta de titularidade da cedente em <strong>até 3 dias úteis</strong>. Se não houver crédito no prazo, a cessão é <strong>automaticamente desfeita</strong> e o crédito retorna à cedente sem ônus.</li>
+            <li>A cedente notifica os sacados em até 2 dias úteis e, se receber valores diretamente do sacado após a cessão, repassa-os à EFIX no <strong>mesmo dia útil</strong>, sob pena de multa de 5% e juros (depósito fiduciário em favor da cessionária).</li>
+            <li>Você declara que os créditos cedidos são <strong>verdadeiros, líquidos, certos e exigíveis</strong>, sem ônus, gravame ou cessão prévia. A garantia é da existência (art. 295 CC), não da solvência do devedor.</li>
           </ul>
 
           <div class="two-col" style="margin-top:0.85rem">
@@ -795,40 +795,44 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
     <div class="modal-body">
       <div class="contract-doc" id="contractDocBody">
         <h4>1. Partes</h4>
-        <p><span class="clause-num">1.1</span> <strong>EFIX Securitizadora S.A.</strong>, sociedade securitizadora autorizada a operar nos termos do Ato Declaratório CVM nº <span data-brand-issuer="atoCVM">23.635/2025</span> e da Resolução CVM nº <span data-brand-issuer="resolucaoCVM">88/2022</span>, inscrita no CNPJ sob nº <span data-brand-issuer="cnpj">60.756.859/0001-57</span>, doravante denominada "<strong>EFIX</strong>" ou "<strong>cessionária</strong>".</p>
-        <p><span class="clause-num">1.2</span> A pessoa jurídica identificada no formulário de <em>onboarding</em> deste portal, qualificada com seu CNPJ, razão social, regime tributário e responsável legal, doravante denominada "<strong>cedente</strong>".</p>
+        <p><span class="clause-num">1.1</span> <strong>EFIX Securitizadora S.A.</strong>, inscrita no CNPJ sob nº <span data-brand-issuer="cnpj">60.756.859/0001-57</span>, doravante denominada &ldquo;<strong>EFIX</strong>&rdquo; ou &ldquo;<strong>cessionária</strong>&rdquo;.</p>
+        <p><span class="clause-num">1.2</span> A pessoa jurídica identificada no formulário de <em>onboarding</em> deste portal, qualificada com seu CNPJ, razão social, regime tributário e responsável legal, doravante denominada &ldquo;<strong>cedente</strong>&rdquo;.</p>
 
         <h4>2. Objeto</h4>
-        <p><span class="clause-num">2.1</span> Pelo presente instrumento, a cedente cede e transfere à EFIX, em caráter <strong>pro soluto</strong>, definitivo e irrevogável, os direitos creditórios performados ou a performar (confissões de dívida, duplicatas, contratos de fornecimento, mútuos intercompany e demais créditos compatíveis com a Resolução CVM 88/2022) que vier a apresentar e cadastrar individualmente neste portal, mediante aprovação prévia do <em>compliance</em> da EFIX.</p>
+        <p><span class="clause-num">2.1</span> Pelo presente instrumento, a cedente cede e transfere à EFIX, em caráter <strong>pro soluto</strong>, definitivo e irrevogável, os direitos creditórios performados ou a performar (confissões de dívida, duplicatas, contratos de fornecimento, mútuos intercompany e demais créditos compatíveis com a regulação aplicável) que vier a apresentar e cadastrar individualmente neste portal, mediante aprovação prévia do <em>compliance</em> da EFIX.</p>
         <p><span class="clause-num">2.2</span> A cessão de cada crédito é formalizada por meio de <strong>Termo de Adesão e Cessão</strong> específico, gerado a partir do cadastro do crédito no portal e aceito por confirmação eletrônica equivalente à manifestação prevista nos arts. 219 e 425 do Código Civil e no art. 10 da MP 2.200-2/2001.</p>
 
         <h4>3. Preço e deságio</h4>
         <p><span class="clause-num">3.1</span> O preço de cessão de cada crédito corresponde ao seu valor de face líquido do <strong>deságio</strong> e demais encargos pactuados na operação, calculados <em>pro rata die</em> entre a data da cessão e a data de vencimento esperado do crédito.</p>
-        <p><span class="clause-num">3.2</span> A cedente reconhece que o deságio configura <strong>despesa financeira dedutível</strong> da base de cálculo do IRPJ e da CSLL, na forma da legislação tributária aplicável a contribuintes do regime de lucro real, sendo de exclusiva responsabilidade da cedente o tratamento contábil e fiscal das operações.</p>
 
-        <h4>4. Emissão de Certificados de Recebíveis e tokenização (TDIC)</h4>
-        <p><span class="clause-num">4.1</span> Para cada crédito ou conjunto homogêneo de créditos cedidos, a EFIX emite <strong>Certificados de Recebíveis (CR)</strong> em regime de <strong>patrimônio segregado</strong>, nos termos da Lei nº 14.430/2022, isolando o lastro de qualquer outro patrimônio da cessionária.</p>
-        <p><span class="clause-num">4.2</span> Cada CR é representado por um token padrão <strong>ERC-1155</strong> denominado <strong>TDIC — Token de Direito (Imobiliário) Creditório</strong>, emitido na rede <strong>Base mainnet</strong> pelo contrato <code>TDICRegistry</code> mantido pela EFIX, sob roles <code>COMPLIANCE_ROLE</code> e <code>CR_ISSUER_ROLE</code> de <em>governance</em>.</p>
-        <p><span class="clause-num">4.3</span> A custódia dos tokens TDIC ocorre em <em>smart wallet</em> ERC-4337 da cedente (Alchemy Account Kit), com gás patrocinado pela EFIX (paymaster). A transferência dos tokens TDIC fica restrita a endereços previamente incluídos em <em>whitelist</em> pela EFIX (compliance).</p>
+        <h4>4. Liquidação financeira e prazo resolutivo</h4>
+        <p><span class="clause-num">4.1</span> A cessionária obriga-se a creditar à cedente o preço de cessão de cada crédito, em conta corrente bancária de titularidade da cedente por ela indicada no respectivo Termo de Adesão e Cessão, no prazo improrrogável de <strong>3 (três) dias úteis</strong> contados da celebração do referido Termo.</p>
+        <p><span class="clause-num">4.2</span> Decorrido o prazo previsto na cláusula 4.1 sem o efetivo crédito do preço de cessão na conta indicada pela cedente, a cessão ficará <strong>automaticamente desfeita</strong>, de pleno direito e independentemente de notificação, aviso ou interpelação judicial ou extrajudicial, retornando o crédito cedido à plena, exclusiva e incondicional titularidade da cedente, sem qualquer ônus, encargo, multa, comissão ou indenização devidos por qualquer das partes.</p>
+        <p><span class="clause-num">4.3</span> Verificada a hipótese da cláusula 4.2, a cessionária obriga-se, no prazo de <strong>1 (um) dia útil</strong>, a (i) tornar sem efeito o respectivo Termo de Adesão e Cessão e o registro da cessão em quaisquer cadastros, sistemas ou bases internas; (ii) comunicar formalmente os sacados, caso já tenham sido notificados, sobre a resolução da cessão; e (iii) devolver à cedente quaisquer documentos, originais ou cópias, relacionados ao crédito cedido.</p>
 
-        <h4>5. Declarações da cedente</h4>
-        <p><span class="clause-num">5.1</span> A cedente declara, sob as penas da lei, que: (i) é a legítima e exclusiva titular dos créditos cedidos; (ii) tais créditos são <strong>verdadeiros, líquidos, certos e exigíveis</strong>, sem qualquer ônus, gravame, penhora, cessão ou alienação anterior a terceiros; (iii) os documentos de origem (notas fiscais, contratos, confissões etc.) refletem operações comerciais legítimas e em conformidade com a legislação aplicável; (iv) seu signatário possui poderes societários e/ou procuratórios suficientes para celebrar este instrumento; (v) está em situação regular perante os órgãos fiscais, trabalhistas e regulatórios.</p>
+        <h4>5. Notificação dos sacados e repasse de valores recebidos pela cedente</h4>
+        <p><span class="clause-num">5.1</span> É obrigação da cedente comunicar formalmente os sacados acerca da cessão, nos termos do art. 290 do Código Civil, no prazo de até <strong>2 (dois) dias úteis</strong> contados da liquidação financeira prevista na cláusula 4.1, mediante meio que comprove o efetivo recebimento, podendo a cessionária exigir, a qualquer tempo, a apresentação da prova da notificação.</p>
+        <p><span class="clause-num">5.2</span> Caso a cedente, após a celebração e liquidação da cessão, receba diretamente do sacado &mdash; por qualquer meio (depósito em conta, TED, PIX, boleto, cheque, compensação, dação em pagamento ou qualquer outro) &mdash; valores referentes a créditos cedidos, obriga-se a repassar a integralidade de tais valores à cessionária <strong>no mesmo dia útil</strong> em que os receber, em conta indicada pela cessionária, sob pena de incidência de multa não compensatória de <strong>5% (cinco por cento)</strong> sobre o valor recebido e não repassado tempestivamente, sem prejuízo da incidência de juros moratórios de 1% (um por cento) ao mês, correção monetária pelo IPCA/IBGE e eventuais perdas e danos.</p>
+        <p><span class="clause-num">5.3</span> Os valores recebidos pela cedente em desacordo com esta cláusula serão considerados, para todos os fins, recursos mantidos em <strong>depósito fiduciário</strong> em favor da cessionária, não integrando o patrimônio da cedente nem podendo ser objeto de compensação com quaisquer obrigações entre as partes.</p>
 
-        <h4>6. Garantia da existência (não da solvência)</h4>
-        <p><span class="clause-num">6.1</span> Nos termos do art. 295 do Código Civil, a cedente garante a <strong>existência e a regularidade jurídica</strong> dos créditos cedidos. A cessão é <strong>pro soluto</strong>, de modo que a cedente não responde, perante a EFIX, pela solvência do devedor, salvo dolo, simulação ou má-fé.</p>
+        <h4>6. Declarações da cedente</h4>
+        <p><span class="clause-num">6.1</span> A cedente declara, sob as penas da lei, que: (i) é a legítima e exclusiva titular dos créditos cedidos; (ii) tais créditos são <strong>verdadeiros, líquidos, certos e exigíveis</strong>, sem qualquer ônus, gravame, penhora, cessão ou alienação anterior a terceiros; (iii) os documentos de origem (notas fiscais, contratos, confissões etc.) refletem operações comerciais legítimas e em conformidade com a legislação aplicável; (iv) seu signatário possui poderes societários e/ou procuratórios suficientes para celebrar este instrumento; (v) está em situação regular perante os órgãos fiscais, trabalhistas e regulatórios.</p>
 
-        <h4>7. Confidencialidade e proteção de dados</h4>
-        <p><span class="clause-num">7.1</span> As partes obrigam-se a manter sigilo sobre informações sensíveis trocadas no contexto desta cessão, observada a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), em especial quanto aos dados pessoais de representantes, sacados pessoa física e correlatos. O tratamento de dados pela EFIX se dá com base nas hipóteses legais de execução de contrato e cumprimento de obrigação regulatória.</p>
+        <h4>7. Garantia da existência (não da solvência)</h4>
+        <p><span class="clause-num">7.1</span> Nos termos do art. 295 do Código Civil, a cedente garante a <strong>existência e a regularidade jurídica</strong> dos créditos cedidos. A cessão é <strong>pro soluto</strong>, de modo que a cedente não responde, perante a EFIX, pela solvência do devedor, salvo dolo, simulação ou má-fé.</p>
 
-        <h4>8. Compliance, prevenção à lavagem de dinheiro e sanções</h4>
-        <p><span class="clause-num">8.1</span> A cedente declara não estar incluída em listas restritivas (OFAC, ONU, BACEN, listagens internas da EFIX) e compromete-se a cooperar com requisições de <em>Know-Your-Business</em> (KYB) e <em>Anti-Money Laundering</em> (AML) feitas pela EFIX a qualquer tempo, inclusive em relação aos sacados das operações.</p>
+        <h4>8. Confidencialidade e proteção de dados</h4>
+        <p><span class="clause-num">8.1</span> As partes obrigam-se a manter sigilo sobre informações sensíveis trocadas no contexto desta cessão, observada a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), em especial quanto aos dados pessoais de representantes, sacados pessoa física e correlatos. O tratamento de dados pela EFIX se dá com base nas hipóteses legais de execução de contrato e cumprimento de obrigação regulatória.</p>
 
-        <h4>9. Vigência e foro</h4>
-        <p><span class="clause-num">9.1</span> Este instrumento entra em vigor com a aceitação eletrônica registrada neste portal e permanece vigente enquanto houver operação ativa entre as partes.</p>
-        <p><span class="clause-num">9.2</span> Fica eleito o foro da Comarca de São Paulo/SP para dirimir quaisquer controvérsias oriundas deste instrumento, com renúncia expressa a qualquer outro, por mais privilegiado que seja.</p>
+        <h4>9. Compliance, prevenção à lavagem de dinheiro e sanções</h4>
+        <p><span class="clause-num">9.1</span> A cedente declara não estar incluída em listas restritivas (OFAC, ONU, BACEN, listagens internas da EFIX) e compromete-se a cooperar com requisições de <em>Know-Your-Business</em> (KYB) e <em>Anti-Money Laundering</em> (AML) feitas pela EFIX a qualquer tempo, inclusive em relação aos sacados das operações.</p>
 
-        <h4>10. Aceitação eletrônica</h4>
-        <p><span class="clause-num">10.1</span> A manifestação de vontade da cedente é coletada por meio de <em>checkbox</em> eletrônico no portal, acompanhada de identificação do signatário (nome completo e CPF), data e hora (UTC e local), e identificação do dispositivo (<em>user agent</em>). O registro fica armazenado pela EFIX como prova da contratação.</p>
+        <h4>10. Vigência e foro</h4>
+        <p><span class="clause-num">10.1</span> Este instrumento entra em vigor com a aceitação eletrônica registrada neste portal e permanece vigente enquanto houver operação ativa entre as partes.</p>
+        <p><span class="clause-num">10.2</span> Fica eleito o foro da Comarca de <strong>São Paulo/SP</strong> para dirimir quaisquer controvérsias oriundas deste instrumento, com renúncia expressa a qualquer outro, por mais privilegiado que seja.</p>
+
+        <h4>11. Aceitação eletrônica</h4>
+        <p><span class="clause-num">11.1</span> A manifestação de vontade da cedente é coletada por meio de <em>checkbox</em> eletrônico no portal, acompanhada de identificação do signatário (nome completo e CPF), data e hora (UTC e local), e identificação do dispositivo (<em>user agent</em>). O registro fica armazenado pela EFIX como prova da contratação.</p>
 
         <div class="contract-meta" id="contractMeta">Visualizado em <span id="contractTimestamp">—</span></div>
       </div>
@@ -933,9 +937,9 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
      (usuário escolhe "Salvar como PDF" no diálogo do navegador). -->
 
 <!-- White-label theming -->
-<script src="/tdic/assets/theme.js?v=20260508h"></script>
-<script src="/tdic/tdic-mock.js?v=20260508h"></script>
-<script src="/tdic/app/sign-providers.js?v=20260508h"></script>
+<script src="/tdic/assets/theme.js?v=20260508l"></script>
+<script src="/tdic/tdic-mock.js?v=20260508l"></script>
+<script src="/tdic/app/sign-providers.js?v=20260508l"></script>
 
 <!-- Alchemy Account Kit — bundle real.
      Define window.EfixWallet (signer + smart wallet client) e window.EfixAuth
@@ -1010,7 +1014,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 })();
 </script>
 
-<script src="./app.js?v=20260508h" defer></script>
+<script src="./app.js?v=20260508l" defer></script>
 
 </body>
 </html>
