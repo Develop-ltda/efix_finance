@@ -44,9 +44,8 @@
   };
 
   // ── Init ────────────────────────────────────────────────
-  document.addEventListener("DOMContentLoaded", init);
-  if (document.readyState !== "loading") init();
-
+  // IMPORTANTE: declarar _initDone ANTES de chamar init(), senão a chamada
+  // síncrona quando readyState já é "interactive" cai em TDZ.
   let _initDone = false;
   async function init() {
     if (_initDone) return;
@@ -60,6 +59,13 @@
     bindMintModal();
 
     // Inicializa signer Alchemy (real ou stub).
+    const isStubSigner = window.EfixWallet?.config?.apiKey === "STUB";
+    console.log(
+      "[TDIC] signer:",
+      isStubSigner ? "STUB (e-mail simulado, OTP não chega)" : "Alchemy (real)",
+      "apiKey:",
+      window.EfixWallet?.config?.apiKey || "missing"
+    );
     try {
       if (window.EfixWallet?.init) window.EfixWallet.init();
     } catch (e) {
@@ -95,6 +101,10 @@
 
     showLogin();
   }
+
+  // Triggers (depois da declaração de _initDone para evitar TDZ).
+  document.addEventListener("DOMContentLoaded", init);
+  if (document.readyState !== "loading") init();
 
   // ── Routing ─────────────────────────────────────────────
   function show(view) {
@@ -239,6 +249,12 @@
     });
 
     $("#resendBtn").addEventListener("click", () => {
+      // Reset completo: derruba sessão Alchemy local + stub residual.
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("alchemy-signer-session") || k.startsWith("tdic_stub_"))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch (_) {}
       codeForm.style.display = "none";
       emailForm.style.display = "flex";
       $("#emailInput").focus();
