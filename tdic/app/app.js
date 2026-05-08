@@ -59,6 +59,7 @@
     bindCreditoModal();
     bindMintModal();
     bindImportModal();
+    bindContractModal();
 
     // Inicializa signer Alchemy (real ou stub).
     const isStubSigner = window.EfixWallet?.config?.apiKey === "STUB";
@@ -329,12 +330,56 @@
       });
     });
 
+    // Contrato: gating do submit pelo checkbox + nome + CPF.
+    const sync = () => syncContractGate();
+    $("#kybSignAccept").addEventListener("change", sync);
+    $("#kybSignName").addEventListener("input", sync);
+    $("#kybSignCpf").addEventListener("input", maskCpfInput);
+    $("#kybSignCpf").addEventListener("input", sync);
+    $("#openContractBtn").addEventListener("click", openContractModal);
+    sync();
+
     $("#kybForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = $("#kybSubmitBtn");
+
+      const accepted = $("#kybSignAccept").checked;
+      const signName = $("#kybSignName").value.trim();
+      const signCpf = $("#kybSignCpf").value.trim();
+
+      if (!$("#kybCnpj").value.trim() || !$("#kybRazao").value.trim() || !$("#kybNome").value.trim()) {
+        alert("Preencha CNPJ, razão social e nome do responsável.");
+        return;
+      }
+      if (!signName || !isValidCpfFormat(signCpf)) {
+        alert("Informe nome e CPF do signatário do contrato.");
+        return;
+      }
+      if (!accepted) {
+        alert("É necessário aceitar o Instrumento de Cessão para continuar.");
+        return;
+      }
+
+      const now = new Date();
+      const signedContract = {
+        version: "1.0",
+        title: "Instrumento Particular de Cessão de Direitos Creditórios",
+        issuer: { ...(window.TdicBrand?.issuer || {}) },
+        signatory: { name: signName, cpf: signCpf, email: state.user.email },
+        cedente: {
+          cnpj: $("#kybCnpj").value.trim(),
+          razaoSocial: $("#kybRazao").value.trim(),
+        },
+        wallet: state.user.address,
+        acceptedAt: now.toISOString(),
+        acceptedAtLocal: now.toString(),
+        userAgent: navigator.userAgent,
+        documentSnapshotHtml: $("#contractDocBody")?.outerHTML || null,
+      };
+
       const payload = {
-        cnpj: $("#kybCnpj").value.trim(),
-        razaoSocial: $("#kybRazao").value.trim(),
+        cnpj: signedContract.cedente.cnpj,
+        razaoSocial: signedContract.cedente.razaoSocial,
         regimeTributario: $("#kybRegime").value,
         contato: {
           nome: $("#kybNome").value.trim(),
@@ -344,25 +389,99 @@
           faturamento: $("#kybFat").value,
         },
         docs: Object.values(state.kybDocs),
+        signedContract,
       };
 
-      if (!payload.cnpj || !payload.razaoSocial || !payload.contato.nome) {
-        alert("Preencha CNPJ, razão social e nome do responsável.");
-        return;
-      }
-
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Enviando…';
+      btn.innerHTML = '<span class="spinner"></span>Assinando…';
       try {
         state.cedente = await window.TdicMock.submitKyb(state.user.address, payload);
+        // Snapshot local do contrato pra eventual download/auditoria.
+        try {
+          localStorage.setItem(
+            "tdic_signed_contract_" + state.user.address.toLowerCase(),
+            JSON.stringify(signedContract)
+          );
+        } catch (_) {}
         show("kybPendingView");
       } catch (e) {
         alert(e.message || "Falha ao enviar KYB.");
       } finally {
         btn.disabled = false;
-        btn.textContent = "Enviar para análise";
+        btn.textContent = "Assinar e enviar para análise";
       }
     });
+  }
+
+  function syncContractGate() {
+    const accepted = $("#kybSignAccept")?.checked;
+    const signName = $("#kybSignName")?.value.trim();
+    const signCpf = $("#kybSignCpf")?.value.trim();
+    const ok = accepted && signName && isValidCpfFormat(signCpf);
+    const btn = $("#kybSubmitBtn");
+    if (btn) btn.disabled = !ok;
+  }
+
+  function maskCpfInput(e) {
+    const digits = (e.target.value || "").replace(/\D/g, "").slice(0, 11);
+    let out = digits;
+    if (digits.length > 9) out = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+    else if (digits.length > 6) out = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    else if (digits.length > 3) out = `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    e.target.value = out;
+  }
+
+  function isValidCpfFormat(s) {
+    return String(s || "").replace(/\D/g, "").length === 11;
+  }
+
+  function openContractModal() {
+    const ts = new Date();
+    const tEl = document.getElementById("contractTimestamp");
+    if (tEl) tEl.textContent = ts.toLocaleString("pt-BR") + " (" + ts.toISOString() + ")";
+    $("#modalContract").style.display = "flex";
+  }
+  function closeContractModal() {
+    $("#modalContract").style.display = "none";
+  }
+  function downloadContractHtml() {
+    const brand = window.TdicBrand || {};
+    const issuer = brand.issuer || {};
+    const cedente = {
+      cnpj: $("#kybCnpj")?.value || "—",
+      razaoSocial: $("#kybRazao")?.value || "—",
+    };
+    const sig = {
+      name: $("#kybSignName")?.value || "—",
+      cpf: $("#kybSignCpf")?.value || "—",
+      email: state.user?.email || "—",
+      address: state.user?.address || "—",
+    };
+    const body = $("#contractDocBody")?.innerHTML || "";
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Instrumento de Cessão — TDIC</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;max-width:780px;margin:32px auto;padding:24px;color:#1a1a1a;line-height:1.65}
+h1{font-size:20px;margin-bottom:6px}.sub{color:#525252;font-size:13px;margin-bottom:24px}
+h4{margin:18px 0 6px;font-size:15px}p{margin:0 0 8px}.clause-num{font-family:monospace;color:#525252;font-size:11px;margin-right:5px}
+.box{border:1px solid #d4d4d4;border-radius:8px;padding:16px;margin-top:24px;font-size:13px}
+.box .row{display:flex;justify-content:space-between;border-bottom:1px solid #f5f5f5;padding:6px 0}
+.box .row:last-child{border-bottom:none}.ft{margin-top:32px;padding-top:14px;border-top:1px solid #d4d4d4;font-size:11px;color:#737373;text-align:center}</style>
+</head><body>
+<h1>Instrumento Particular de Cessão de Direitos Creditórios</h1>
+<div class="sub">${issuer.razaoSocial || "EFIX Securitizadora S.A."} · CNPJ ${issuer.cnpj || "60.756.859/0001-57"}</div>
+${body}
+<div class="box">
+  <h4 style="margin-top:0">Aceitação eletrônica</h4>
+  <div class="row"><span>Cedente</span><strong>${cedente.razaoSocial} · CNPJ ${cedente.cnpj}</strong></div>
+  <div class="row"><span>Signatário</span><strong>${sig.name} · CPF ${sig.cpf}</strong></div>
+  <div class="row"><span>E-mail validado</span><strong>${sig.email}</strong></div>
+  <div class="row"><span>Smart wallet</span><strong style="font-family:monospace">${sig.address}</strong></div>
+  <div class="row"><span>Data e hora</span><strong>${new Date().toLocaleString("pt-BR")} (${new Date().toISOString()})</strong></div>
+  <div class="row"><span>Dispositivo</span><strong style="font-family:monospace;font-size:11px">${navigator.userAgent}</strong></div>
+</div>
+<div class="ft">Documento gerado em ${new Date().toLocaleString("pt-BR")} — válido como prova da contratação eletrônica nos termos do art. 10 §2º da MP 2.200-2/2001 e art. 425 do Código Civil.</div>
+</body></html>`;
+    download(html, "tdic-cessao-contrato.html", "text/html");
   }
 
   function renderUploadedList() {
@@ -791,6 +910,11 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
   let _importParsed = []; // [{raw, payload, errors[]}]
   let _importPdf = null;
 
+  function bindContractModal() {
+    const dl = document.getElementById("downloadContractBtn");
+    if (dl) dl.addEventListener("click", downloadContractHtml);
+  }
+
   function bindImportModal() {
     $("#importDrop").addEventListener("dragover", (e) => {
       e.preventDefault();
@@ -1188,6 +1312,8 @@ Não substitui análise contábil formal. Consulte seu contador.</div></body></h
     closeMintModal,
     openImportModal,
     closeImportModal,
+    openContractModal,
+    closeContractModal,
     state,
   };
 })();

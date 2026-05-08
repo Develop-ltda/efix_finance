@@ -67,6 +67,8 @@
       regimeTributario: payload.regimeTributario || "lucro-real",
       contato: payload.contato || {},
       docs: payload.docs || [],
+      // Aceitação eletrônica do Instrumento de Cessão.
+      signedContract: payload.signedContract || null,
       kybStatus: "pending",
       submittedAt: new Date().toISOString(),
       approvedAt: null,

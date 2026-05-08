@@ -157,6 +157,30 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
   .topbar-inner .brand-sub{display:none}
 }
 
+/* ── Contrato de cessão (KYB) ── */
+.contract-card{border:1px solid #e5e5e5;border-radius:12px;padding:1rem 1.1rem;background:#fafafa}
+.contract-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:0.85rem}
+.contract-eyebrow{font-family:'Space Mono',monospace;font-size:0.6rem;color:#737373;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px}
+.contract-title{font-size:0.95rem;font-weight:700;color:#0a0a0a;letter-spacing:-0.01em;line-height:1.35}
+.contract-link{background:none;border:none;color:var(--brand-primary);font-family:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
+.contract-link:hover{opacity:0.8}
+.contract-bullets{list-style:none;padding:0;margin:0;font-size:0.82rem;line-height:1.65;color:#404040}
+.contract-bullets li{padding:0.35rem 0 0.35rem 1.4rem;position:relative}
+.contract-bullets li::before{content:"§";position:absolute;left:0;top:0.35rem;font-family:'Space Mono',monospace;color:var(--brand-primary);font-weight:700}
+.contract-accept{display:flex;align-items:flex-start;gap:0.55rem;margin-top:0.85rem;padding:0.7rem 0.85rem;background:#fff;border:1px solid #e5e5e5;border-radius:8px;font-size:0.8rem;line-height:1.55;color:#404040;cursor:pointer}
+.contract-accept input{margin-top:3px;flex-shrink:0;cursor:pointer;width:16px;height:16px;accent-color:var(--brand-primary)}
+.contract-inline-link{background:none;border:none;color:var(--brand-primary);font-family:inherit;font-size:inherit;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
+
+/* ── Modal contrato full-text ── */
+.contract-doc{font-size:0.82rem;line-height:1.75;color:#262626;max-height:60vh;overflow:auto;padding:1rem 1.1rem;background:#fff;border:1px solid #e5e5e5;border-radius:8px}
+.contract-doc h4{font-size:0.95rem;margin:1.25rem 0 0.5rem;color:#0a0a0a;letter-spacing:-0.005em}
+.contract-doc h4:first-child{margin-top:0}
+.contract-doc p{margin-bottom:0.6rem}
+.contract-doc ol{padding-left:1.25rem;margin-bottom:0.6rem}
+.contract-doc li{margin-bottom:0.3rem}
+.contract-doc .clause-num{font-family:'Space Mono',monospace;color:#525252;font-size:0.72rem;margin-right:0.3rem}
+.contract-meta{font-family:'Space Mono',monospace;font-size:0.7rem;color:#737373;margin-top:0.85rem;text-align:center}
+
 /* ── Import modal ── */
 .drop-zone{border:1.5px dashed #d4d4d4;border-radius:12px;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa}
 .drop-zone:hover,.drop-zone.dragover{border-color:var(--brand-primary);background:color-mix(in srgb, var(--brand-primary) 6%, #fff)}
@@ -333,10 +357,46 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
           </div>
         </div>
         <div class="uploaded-list" id="uploadedList"></div>
+
+        <div class="kyb-section">Cessão de direitos creditórios</div>
+        <div class="contract-card">
+          <div class="contract-head">
+            <div>
+              <div class="contract-eyebrow">INSTRUMENTO PARTICULAR DE CESSÃO</div>
+              <div class="contract-title">Termo de cessão de direitos creditórios à EFIX Securitizadora</div>
+            </div>
+            <button type="button" class="contract-link" id="openContractBtn">Ler contrato completo →</button>
+          </div>
+          <ul class="contract-bullets">
+            <li>A <strong>cedente</strong> (sua empresa) cede em caráter <strong>pro soluto</strong> os créditos descritos em cada operação à <strong>EFIX Securitizadora S.A.</strong> (CNPJ <span data-brand-issuer="cnpj">60.756.859/0001-57</span>), em patrimônio segregado por emissão.</li>
+            <li>A EFIX emite os <strong>Certificados de Recebíveis (CR)</strong> sob o regime da Lei 14.430/2022 e da Resolução CVM 88/2022 e tokeniza cada CR como TDIC (ERC-1155, Base mainnet).</li>
+            <li>O preço da cessão é o valor de face menos o <strong>deságio</strong> ajustado a cada operação. O deságio constitui <strong>despesa financeira</strong> dedutível para a cedente em regime de lucro real.</li>
+            <li>Você declara que os créditos cedidos são <strong>verdadeiros, líquidos e exigíveis</strong>, sem ônus, gravame ou cessão prévia a terceiros.</li>
+          </ul>
+
+          <div class="two-col" style="margin-top:0.85rem">
+            <label class="field">
+              <span class="lbl">Nome completo do signatário</span>
+              <input type="text" id="kybSignName" placeholder="Conforme contrato social / procuração" autocomplete="off">
+            </label>
+            <label class="field">
+              <span class="lbl">CPF do signatário</span>
+              <input type="text" id="kybSignCpf" placeholder="000.000.000-00" autocomplete="off">
+            </label>
+          </div>
+
+          <label class="contract-accept">
+            <input type="checkbox" id="kybSignAccept">
+            <span>
+              Declaro que li e aceito o <button type="button" class="contract-inline-link" onclick="window.tdicApp.openContractModal()">Instrumento Particular de Cessão de Direitos Creditórios</button>
+              e que tenho poderes para representar a cedente. A aceitação fica registrada com data, hora e identificação do dispositivo.
+            </span>
+          </label>
+        </div>
       </div>
       <div class="modal-foot" style="border-top:1px solid #e5e5e5">
         <button class="btn btn-ghost" type="button" onclick="window.tdicApp.logout()">Sair</button>
-        <button class="btn btn-brand" type="submit" id="kybSubmitBtn">Enviar para análise</button>
+        <button class="btn btn-brand" type="submit" id="kybSubmitBtn">Assinar e enviar para análise</button>
       </div>
     </form>
   </main>
@@ -535,6 +595,61 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
   </div>
 </div>
 
+<!-- CONTRATO MODAL ─ texto integral do Instrumento de Cessão -->
+<div class="modal-backdrop" id="modalContract" style="display:none">
+  <div class="modal" style="max-width:880px;width:96vw">
+    <div class="modal-head">
+      <h3>Instrumento Particular de Cessão de Direitos Creditórios</h3>
+      <button class="x" type="button" onclick="window.tdicApp.closeContractModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="contract-doc" id="contractDocBody">
+        <h4>1. Partes</h4>
+        <p><span class="clause-num">1.1</span> <strong>EFIX Securitizadora S.A.</strong>, sociedade securitizadora autorizada a operar nos termos do Ato Declaratório CVM nº <span data-brand-issuer="atoCVM">23.635/2025</span> e da Resolução CVM nº <span data-brand-issuer="resolucaoCVM">88/2022</span>, inscrita no CNPJ sob nº <span data-brand-issuer="cnpj">60.756.859/0001-57</span>, doravante denominada "<strong>EFIX</strong>" ou "<strong>cessionária</strong>".</p>
+        <p><span class="clause-num">1.2</span> A pessoa jurídica identificada no formulário de <em>onboarding</em> deste portal, qualificada com seu CNPJ, razão social, regime tributário e responsável legal, doravante denominada "<strong>cedente</strong>".</p>
+
+        <h4>2. Objeto</h4>
+        <p><span class="clause-num">2.1</span> Pelo presente instrumento, a cedente cede e transfere à EFIX, em caráter <strong>pro soluto</strong>, definitivo e irrevogável, os direitos creditórios performados ou a performar (confissões de dívida, duplicatas, contratos de fornecimento, mútuos intercompany e demais créditos compatíveis com a Resolução CVM 88/2022) que vier a apresentar e cadastrar individualmente neste portal, mediante aprovação prévia do <em>compliance</em> da EFIX.</p>
+        <p><span class="clause-num">2.2</span> A cessão de cada crédito é formalizada por meio de <strong>Termo de Adesão e Cessão</strong> específico, gerado a partir do cadastro do crédito no portal e aceito por confirmação eletrônica equivalente à manifestação prevista nos arts. 219 e 425 do Código Civil e no art. 10 da MP 2.200-2/2001.</p>
+
+        <h4>3. Preço e deságio</h4>
+        <p><span class="clause-num">3.1</span> O preço de cessão de cada crédito corresponde ao seu valor de face líquido do <strong>deságio</strong> e demais encargos pactuados na operação, calculados <em>pro rata die</em> entre a data da cessão e a data de vencimento esperado do crédito.</p>
+        <p><span class="clause-num">3.2</span> A cedente reconhece que o deságio configura <strong>despesa financeira dedutível</strong> da base de cálculo do IRPJ e da CSLL, na forma da legislação tributária aplicável a contribuintes do regime de lucro real, sendo de exclusiva responsabilidade da cedente o tratamento contábil e fiscal das operações.</p>
+
+        <h4>4. Emissão de Certificados de Recebíveis e tokenização (TDIC)</h4>
+        <p><span class="clause-num">4.1</span> Para cada crédito ou conjunto homogêneo de créditos cedidos, a EFIX emite <strong>Certificados de Recebíveis (CR)</strong> em regime de <strong>patrimônio segregado</strong>, nos termos da Lei nº 14.430/2022, isolando o lastro de qualquer outro patrimônio da cessionária.</p>
+        <p><span class="clause-num">4.2</span> Cada CR é representado por um token padrão <strong>ERC-1155</strong> denominado <strong>TDIC — Token de Direito (Imobiliário) Creditório</strong>, emitido na rede <strong>Base mainnet</strong> pelo contrato <code>TDICRegistry</code> mantido pela EFIX, sob roles <code>COMPLIANCE_ROLE</code> e <code>CR_ISSUER_ROLE</code> de <em>governance</em>.</p>
+        <p><span class="clause-num">4.3</span> A custódia dos tokens TDIC ocorre em <em>smart wallet</em> ERC-4337 da cedente (Alchemy Account Kit), com gás patrocinado pela EFIX (paymaster). A transferência dos tokens TDIC fica restrita a endereços previamente incluídos em <em>whitelist</em> pela EFIX (compliance).</p>
+
+        <h4>5. Declarações da cedente</h4>
+        <p><span class="clause-num">5.1</span> A cedente declara, sob as penas da lei, que: (i) é a legítima e exclusiva titular dos créditos cedidos; (ii) tais créditos são <strong>verdadeiros, líquidos, certos e exigíveis</strong>, sem qualquer ônus, gravame, penhora, cessão ou alienação anterior a terceiros; (iii) os documentos de origem (notas fiscais, contratos, confissões etc.) refletem operações comerciais legítimas e em conformidade com a legislação aplicável; (iv) seu signatário possui poderes societários e/ou procuratórios suficientes para celebrar este instrumento; (v) está em situação regular perante os órgãos fiscais, trabalhistas e regulatórios.</p>
+
+        <h4>6. Garantia da existência (não da solvência)</h4>
+        <p><span class="clause-num">6.1</span> Nos termos do art. 295 do Código Civil, a cedente garante a <strong>existência e a regularidade jurídica</strong> dos créditos cedidos. A cessão é <strong>pro soluto</strong>, de modo que a cedente não responde, perante a EFIX, pela solvência do devedor, salvo dolo, simulação ou má-fé.</p>
+
+        <h4>7. Confidencialidade e proteção de dados</h4>
+        <p><span class="clause-num">7.1</span> As partes obrigam-se a manter sigilo sobre informações sensíveis trocadas no contexto desta cessão, observada a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), em especial quanto aos dados pessoais de representantes, sacados pessoa física e correlatos. O tratamento de dados pela EFIX se dá com base nas hipóteses legais de execução de contrato e cumprimento de obrigação regulatória.</p>
+
+        <h4>8. Compliance, prevenção à lavagem de dinheiro e sanções</h4>
+        <p><span class="clause-num">8.1</span> A cedente declara não estar incluída em listas restritivas (OFAC, ONU, BACEN, listagens internas da EFIX) e compromete-se a cooperar com requisições de <em>Know-Your-Business</em> (KYB) e <em>Anti-Money Laundering</em> (AML) feitas pela EFIX a qualquer tempo, inclusive em relação aos sacados das operações.</p>
+
+        <h4>9. Vigência e foro</h4>
+        <p><span class="clause-num">9.1</span> Este instrumento entra em vigor com a aceitação eletrônica registrada neste portal e permanece vigente enquanto houver operação ativa entre as partes.</p>
+        <p><span class="clause-num">9.2</span> Fica eleito o foro da Comarca de São Paulo/SP para dirimir quaisquer controvérsias oriundas deste instrumento, com renúncia expressa a qualquer outro, por mais privilegiado que seja.</p>
+
+        <h4>10. Aceitação eletrônica</h4>
+        <p><span class="clause-num">10.1</span> A manifestação de vontade da cedente é coletada por meio de <em>checkbox</em> eletrônico no portal, acompanhada de identificação do signatário (nome completo e CPF), data e hora (UTC e local), e identificação do dispositivo (<em>user agent</em>). O registro fica armazenado pela EFIX como prova da contratação.</p>
+
+        <div class="contract-meta" id="contractMeta">Visualizado em <span id="contractTimestamp">—</span></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="window.tdicApp.closeContractModal()">Fechar</button>
+      <button class="btn btn-brand" type="button" id="downloadContractBtn">↓ Baixar como HTML</button>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT MODAL ─ planilha (xlsx/xls/csv) ou PDF -->
 <div class="modal-backdrop" id="modalImport" style="display:none">
   <div class="modal" style="max-width:960px;width:96vw">
@@ -626,8 +741,8 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <!-- White-label theming -->
-<script src="/tdic/assets/theme.js?v=20260508"></script>
-<script src="/tdic/tdic-mock.js?v=20260508"></script>
+<script src="/tdic/assets/theme.js?v=20260508a"></script>
+<script src="/tdic/tdic-mock.js?v=20260508a"></script>
 
 <!-- Alchemy Account Kit — bundle real.
      Define window.EfixWallet (signer + smart wallet client) e window.EfixAuth
@@ -702,7 +817,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 })();
 </script>
 
-<script src="./app.js?v=20260508" defer></script>
+<script src="./app.js?v=20260508a" defer></script>
 
 </body>
 </html>
