@@ -215,40 +215,53 @@
       }
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Enviando…';
-      try {
-        // Mecânica do AlchemyWebSigner: `authenticate({type:"email"})` envia
-        // o e-mail mas só RESOLVE quando `authenticate({type:"otp"})` (chamado
-        // pelo verifyOTP) completar — as duas chamadas se fundem internamente.
-        // Logo, NÃO podemos `await` aqui — ficaríamos presos. Damos 2s para
-        // detectar erro imediato (rede/CORS/email inválido) e seguimos pro
-        // form de código; a promise pendente termina junto com o verify.
-        _sendOtpPromise = window.EfixWallet.sendOTP(email);
-        _sendOtpPromise.catch((err) => {
-          console.warn("[TDIC] sendOTP rejected (might be expected if verify ran):", err?.message || err);
-        });
+      console.log("[TDIC] sendOTP: disparando para", email);
 
-        let earlyError = null;
-        await Promise.race([
-          _sendOtpPromise.catch((err) => {
-            earlyError = err;
-          }),
-          new Promise((r) => setTimeout(r, 2000)),
-        ]);
-        if (earlyError) throw earlyError;
+      // Mecânica do AlchemyWebSigner: `authenticate({type:"email"})` envia
+      // o e-mail mas só RESOLVE quando `authenticate({type:"otp"})` (chamado
+      // pelo verifyOTP) completar. Logo NÃO podemos `await` aqui.
+      _sendOtpPromise = window.EfixWallet.sendOTP(email);
 
-        _email = email;
-        $("#codeEmail").textContent = email;
-        emailForm.style.display = "none";
-        codeForm.style.display = "flex";
-        $("#codeInput").focus();
-      } catch (e) {
-        console.error("[TDIC] sendOTP error:", e);
-        err.textContent = humanizeAuthError(e);
+      // 500ms de proteção contra erro síncrono/imediato (rede, rate limit,
+      // email recusado). Se rejeitar dentro disso, mostra erro e fica no
+      // form de email. Se demorar mais, avança pro form de código e o
+      // .catch() abaixo reverte caso rejeite tarde.
+      let earlyError = null;
+      const earlyHandler = (err) => {
+        earlyError = err;
+      };
+      _sendOtpPromise.catch(earlyHandler);
+      await new Promise((r) => setTimeout(r, 500));
+      if (earlyError) {
+        console.error("[TDIC] sendOTP early rejection:", earlyError);
+        err.textContent = humanizeAuthError(earlyError);
         err.style.display = "block";
-      } finally {
         btn.disabled = false;
         btn.textContent = "Enviar código";
+        return;
       }
+
+      // Avança e instala handler tardio: se rejeitar enquanto o user está
+      // no form de código, volta pra tela de email com erro.
+      _sendOtpPromise.catch((errLate) => {
+        console.warn("[TDIC] sendOTP late rejection:", errLate?.message || errLate);
+        if (codeForm.style.display === "flex") {
+          const errEl = $("#emailErr");
+          errEl.textContent = humanizeAuthError(errLate);
+          errEl.style.display = "block";
+          codeForm.style.display = "none";
+          emailForm.style.display = "flex";
+        }
+      });
+
+      _email = email;
+      $("#codeEmail").textContent = email;
+      emailForm.style.display = "none";
+      codeForm.style.display = "flex";
+      $("#codeInput").focus();
+      btn.disabled = false;
+      btn.textContent = "Enviar código";
+      console.log("[TDIC] UI avançou pro form de código");
     });
 
     codeForm.addEventListener("submit", async (e) => {
