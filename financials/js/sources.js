@@ -103,36 +103,78 @@
   }
 
   // ════════════════════════════════════════════════════════════════
-  // Sumsub — paginated applicants
-  // Endpoint: GET /resources/applicants?afterCreatedAt=YYYY-MM-DD&limit=N
-  // Response varies; we tolerate {list:{items:[...]}} or {items:[...]} or array
+  // Sumsub — Sumsub API não expõe um endpoint público "list all applicants".
+  // O único caminho que funciona é GET /resources/applicants/-;externalUserId={X}/one
+  // (individual). Pra fuzzy-match por nome a gente precisa de uma LISTA,
+  // então usamos o CSV "applicants-stats" exportado do dashboard Sumsub.
+  //
+  // setSumsubApplicants(arrayOuCsvText) — armazena na cache 24h
+  // getSumsubApplicants() — lê da cache (sem network)
+  // refreshSumsubApplicant(externalUserId) — fetch live de um único applicant
   // ════════════════════════════════════════════════════════════════
+  function parseSumsubStatsCSV(text) {
+    const lines = String(text || '').split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const delim = lines[0].indexOf(';') >= 0 ? ';' : ',';
+    const headers = lines[0].split(delim).map(h => h.replace(/^"|"$/g, '').trim());
+    return lines.slice(1).map(line => {
+      const fields = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { inQ = !inQ; continue; }
+        if (c === delim && !inQ) { fields.push(cur); cur = ''; continue; }
+        cur += c;
+      }
+      fields.push(cur);
+      const row = {};
+      headers.forEach((h, idx) => row[h] = (fields[idx] || '').replace(/^"|"$/g, '').trim());
+      // Espelha o shape da API Sumsub o suficiente pra enrichMatches funcionar
+      return {
+        id: row.applicantId || '',
+        applicantId: row.applicantId || '',
+        externalUserId: row.externalId || '',
+        applicantName: row.applicantName || '',
+        email: row.applicantEmail || '',
+        info: {
+          firstName: row.applicantName || '',
+          country: row.applicantCountry || '',
+        },
+        review: { reviewResult: { reviewAnswer: row.result || '' } },
+        result: row.result || '',
+        rejectLabels: row.rejectLabels || '',
+        status: row.status || '',
+        applicantLevel: row.applicantLevel || '',
+        _raw: row,
+      };
+    });
+  }
+
+  function setSumsubApplicants(input) {
+    let arr;
+    if (typeof input === 'string') arr = parseSumsubStatsCSV(input);
+    else if (Array.isArray(input)) arr = input;
+    else return null;
+    cacheSet('sumsub_applicants', arr);
+    return arr;
+  }
+
   async function getSumsubApplicants(opts = {}) {
-    const KEY = 'sumsub_applicants';
     if (!opts.force) {
-      const cached = cacheGet(KEY);
+      const cached = cacheGet('sumsub_applicants');
       if (cached) return cached;
     }
-    const all = [];
-    const since = opts.since || '2025-01-01';
-    let offset = 0;
-    const limit = 100;
-    let guard = 0;
-    while (guard++ < 50) {
-      const url = `${PROXY_BASE}/sumsub/resources/applicants?afterCreatedAt=${since}&limit=${limit}&offset=${offset}`;
-      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if (!r.ok) {
-        const body = await r.text().catch(() => '');
-        throw new Error(`Sumsub proxy → ${r.status}: ${body.slice(0, 200)}`);
-      }
-      const j = await r.json();
-      const items = (j.list && j.list.items) || j.items || (Array.isArray(j) ? j : []);
-      all.push(...items);
-      if (items.length < limit) break;
-      offset += limit;
-    }
-    cacheSet(KEY, all);
-    return all;
+    // Sem CSV ainda — devolve array vazio (não falha)
+    return [];
+  }
+
+  // Per-applicant live fetch (funciona via API)
+  async function refreshSumsubApplicant(externalUserId) {
+    const r = await fetch(`${PROXY_BASE}/sumsub/resources/applicants/-;externalUserId=${encodeURIComponent(externalUserId)}/one`, {
+      headers: { 'Accept': 'application/json' },
+    });
+    if (!r.ok) throw new Error(`Sumsub /one → ${r.status}`);
+    return r.json();
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -221,6 +263,9 @@
     getBridgeCustomers,
     getBridgeTransfers,
     getSumsubApplicants,
+    setSumsubApplicants,
+    parseSumsubStatsCSV,
+    refreshSumsubApplicant,
     clearCache,
     normalizeName,
     tokenOverlap,

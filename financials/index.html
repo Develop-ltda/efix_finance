@@ -284,9 +284,10 @@ tr:hover{background:rgba(0,0,0,.015)}
   <label>Conf. <select id="concFilterConf"><option value="">Todas</option><option value="high">Alta</option><option value="medium">Média</option><option value="low">Baixa</option></select></label>
   <label>Source <select id="concFilterSource"><option value="">Todas</option><option value="manual">Manual</option><option value="sumsub">Sumsub</option><option value="bridge">Bridge</option><option value="none">Não identificado</option></select></label>
   <span style="flex:1"></span>
-  <button onclick="loadBridgeData(false)" id="btnBridge">Bridge</button>
-  <button onclick="loadSumsubData(false)" id="btnSumsub">Sumsub</button>
-  <button onclick="refreshConciliacaoCache()" title="Força re-fetch das APIs">↻ Refresh</button>
+  <button onclick="loadBridgeData(false)" id="btnBridge" title="Auto-fetch via proxy (cache 24h)">Bridge</button>
+  <input type="file" id="sumsubFileInput" accept=".csv" style="display:none" onchange="handleSumsubCSV(this.files[0])">
+  <button onclick="document.getElementById('sumsubFileInput').click()" id="btnSumsub" title="Drop applicants-stats.csv exportado do dashboard Sumsub">Sumsub CSV</button>
+  <button onclick="refreshConciliacaoCache()" title="Limpa cache + re-fetch Bridge">↻ Refresh</button>
   <button onclick="exportConciliacaoEnriquecimento()" class="primary">Exportar IN 1888</button>
   <button onclick="exportConciliacaoSimple()">Exportar CSV</button>
 </div>
@@ -1147,24 +1148,45 @@ async function loadBridgeData(force){
 }
 
 async function loadSumsubData(force){
+  // Sumsub API não expõe list-all → carregamos via CSV drop (handleSumsubCSV)
+  // ou do cache localStorage 24h.
   if(!window.ConciliacaoSources) return;
   const btn = document.getElementById('btnSumsub');
-  CONC_STATE.sumsubStatus = 'loading';
-  if(btn){ btn.disabled = true; btn.textContent = 'Sumsub …'; }
   try {
     const data = await window.ConciliacaoSources.getSumsubApplicants({force});
-    CONC_STATE.sumsubApplicants = data;
-    CONC_STATE.sumsubStatus = 'ok';
-    if(btn){ btn.textContent = `Sumsub ✓ ${data.length}`; }
+    if(data && data.length){
+      CONC_STATE.sumsubApplicants = data;
+      CONC_STATE.sumsubStatus = 'ok';
+      if(btn) btn.textContent = `Sumsub ✓ ${data.length}`;
+    } else {
+      CONC_STATE.sumsubStatus = 'idle';
+      if(btn) btn.textContent = 'Sumsub CSV';
+    }
   } catch(e){
-    CONC_STATE.sumsubStatus = 'error';
-    CONC_STATE.lastError = e.message;
-    console.warn('[sumsub] fetch failed:', e);
-    if(btn){ btn.textContent = 'Sumsub ✗'; btn.title = e.message; }
+    console.warn('[sumsub] cache read failed:', e);
   } finally {
-    if(btn) btn.disabled = false;
     recomputeConciliacao();
   }
+}
+
+function handleSumsubCSV(file){
+  if(!file || !window.ConciliacaoSources) return;
+  const btn = document.getElementById('btnSumsub');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const arr = window.ConciliacaoSources.setSumsubApplicants(e.target.result);
+      CONC_STATE.sumsubApplicants = arr || [];
+      CONC_STATE.sumsubStatus = arr && arr.length ? 'ok' : 'error';
+      if(btn) btn.textContent = `Sumsub ✓ ${arr ? arr.length : 0}`;
+    } catch(err){
+      console.warn('[sumsub] parse failed:', err);
+      if(btn) btn.textContent = 'Sumsub ✗';
+    } finally {
+      recomputeConciliacao();
+    }
+  };
+  reader.readAsText(file);
 }
 
 function refreshConciliacaoCache(){
