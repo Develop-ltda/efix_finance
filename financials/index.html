@@ -4,6 +4,7 @@
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
 <script src="/shared/js/ga4.js"></script>
+<script src="/shared/js/config.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Financials — DRE | efix.finance</title>
@@ -104,6 +105,41 @@ tr:hover{background:rgba(0,0,0,.015)}
 .fb-miss{animation:fbBlink 1.2s ease-in-out infinite;color:#dc2626;font-weight:700;font-size:11px}
 .fb-miss-row{background:rgba(220,38,38,.04)}
 @keyframes fbBlink{0%,100%{opacity:1}50%{opacity:.3}}
+/* Conciliação */
+.conc-status{padding:14px 18px;border-radius:10px;margin-bottom:24px;font-size:13px;display:flex;align-items:center;gap:10px}
+.conc-status.empty{background:#fef9c3;color:#854d0e;border:1px solid #fde68a}
+.conc-status.partial{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.conc-status.ready{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.conc-status.error{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.conc-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.conc-toolbar button{padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-family:inherit;color:var(--text);transition:all .15s}
+.conc-toolbar button:hover{background:var(--bg);border-color:var(--text)}
+.conc-toolbar button.primary{background:var(--text);color:#fff;border-color:var(--text)}
+.conc-toolbar button.primary:hover{opacity:.85}
+.conc-toolbar input,.conc-toolbar select{padding:6px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;font-family:inherit;background:var(--surface);color:var(--text)}
+.conc-toolbar label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+.badge-conf{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;letter-spacing:.3px;text-transform:uppercase}
+.badge-conf.high{background:#dcfce7;color:#166534}
+.badge-conf.medium{background:#fef9c3;color:#854d0e}
+.badge-conf.low{background:#fee2e2;color:#991b1b}
+.src-pills{display:inline-flex;gap:4px}
+.src-pill{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.3px;text-transform:uppercase;font-family:'Space Mono',monospace}
+.src-pill.manual{background:#e0e7ff;color:#3730a3}
+.src-pill.bridge{background:#cffafe;color:#155e75}
+.src-pill.sumsub{background:#fce7f3;color:#9d174d}
+.src-pill.none{background:#f3f4f6;color:#6b7280}
+.conc-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.conc-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.conc-kpi-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px}
+.conc-kpi-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;letter-spacing:-.6px}
+.conc-kpi-sub{font-size:11px;color:var(--dim);margin-top:4px}
+.conc-table th,.conc-table td{padding:7px 8px;font-size:11px}
+.conc-table tr:hover{background:rgba(0,0,0,.02)}
+.conc-csv-drop{display:inline-block;border:1px dashed var(--border2);padding:6px 12px;border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer}
+.conc-csv-drop:hover{border-color:var(--text);color:var(--text)}
+.conc-nao-casados{margin-top:24px;padding:14px;border-radius:10px;background:#fffbeb;border:1px solid #fcd34d;font-size:12px}
+.conc-nao-casados summary{cursor:pointer;font-weight:600;color:#854d0e}
+.conc-nao-casados ul{margin:10px 0 0 18px;color:var(--dim);font-family:'Space Mono',monospace;font-size:11px}
 </style>
 </head>
 <body>
@@ -146,6 +182,7 @@ tr:hover{background:rgba(0,0,0,.015)}
   <button onclick="go('insights',this)">Insights</button>
   <button onclick="go('fireblocks',this)">🔥 Fireblocks</button>
   <button onclick="go('btg',this)">🏦 BTG</button>
+  <button onclick="go('conciliacao',this)">🔁 Conciliação</button>
 </div>
 
 <!-- DRE -->
@@ -234,7 +271,56 @@ tr:hover{background:rgba(0,0,0,.015)}
 </div>
 </div>
 
+<!-- CONCILIAÇÃO -->
+<div id="p-conciliacao" class="hide">
+<div class="sec-label">🔁 Conciliação BTG ↔ Fireblocks <span style="color:var(--muted);font-weight:400">· enriquecida via Bridge + Sumsub</span></div>
+
+<div id="concStatus" class="conc-status empty">Carregue arquivos nas abas 🔥 Fireblocks e 🏦 BTG primeiro para rodar a conciliação.</div>
+
+<div class="conc-toolbar">
+  <label>Mês <select id="concFilterMes"><option value="">Todos</option></select></label>
+  <label>Cliente <input id="concFilterCliente" type="search" placeholder="buscar nome..." style="width:160px"></label>
+  <label>Asset <select id="concFilterAsset"><option value="">Todos</option><option value="USDC">USDC</option><option value="USDT">USDT</option></select></label>
+  <label>Conf. <select id="concFilterConf"><option value="">Todas</option><option value="high">Alta</option><option value="medium">Média</option><option value="low">Baixa</option></select></label>
+  <label>Source <select id="concFilterSource"><option value="">Todas</option><option value="manual">Manual</option><option value="sumsub">Sumsub</option><option value="bridge">Bridge</option><option value="none">Não identificado</option></select></label>
+  <span style="flex:1"></span>
+  <button onclick="loadBridgeData(false)" id="btnBridge">Bridge</button>
+  <button onclick="loadSumsubData(false)" id="btnSumsub">Sumsub</button>
+  <button onclick="refreshConciliacaoCache()" title="Força re-fetch das APIs">↻ Refresh</button>
+  <button onclick="exportConciliacaoEnriquecimento()" class="primary">Exportar IN 1888</button>
+  <button onclick="exportConciliacaoSimple()">Exportar CSV</button>
 </div>
+
+<div id="concKPIs" class="conc-kpis"></div>
+
+<div class="card tbl-wrap" style="padding:0;margin-bottom:24px">
+  <table class="conc-table">
+    <thead><tr>
+      <th style="text-align:left">Data BTG</th>
+      <th style="text-align:left">Cliente</th>
+      <th style="text-align:left">CNPJ/CPF</th>
+      <th>País</th>
+      <th>BRL Bruto</th>
+      <th>Cot.</th>
+      <th style="text-align:left">FB Date</th>
+      <th>Asset</th>
+      <th>USD</th>
+      <th style="text-align:left">Destino FB</th>
+      <th>Δd</th>
+      <th>Conf.</th>
+      <th>Sources</th>
+    </tr></thead>
+    <tbody id="concTbody"></tbody>
+  </table>
+</div>
+
+<div id="concNaoCasados"></div>
+</div>
+
+</div>
+<script src="js/clientes_lookup.js"></script>
+<script src="js/sources.js"></script>
+<script src="js/conciliacao.js"></script>
 <script>
 // ============================================================
 // CONFIG: Cole a URL do Google Apps Script deployed
@@ -643,6 +729,7 @@ function handleFBFile(file){
     renderFB(rows);
     // Re-render deals table with FB matches
     if(DATA) render(DATA);
+    window.dispatchEvent(new Event('conc-data-loaded'));
   };
   reader.readAsText(file);
 }
@@ -777,6 +864,7 @@ function handleBTGFile(file){
     BTG_DATA=rows;
     renderBTG(rows);
     if(DATA) render(DATA); // re-render deals table with spread
+    window.dispatchEvent(new Event('conc-data-loaded'));
   };
   reader.readAsText(file);
 }
@@ -888,6 +976,246 @@ function renderBTG(rows){
   mHTML+=`</tbody></table></div>`;
   document.getElementById('btgMonthly').innerHTML=mHTML;
 }
+
+// ============================================================
+// CONCILIAÇÃO BTG ↔ FIREBLOCKS (multi-source)
+// ============================================================
+const CONC_STATE = {
+  matches: [],
+  naoCasados: [],
+  stats: {},
+  bridgeCustomers: null,
+  sumsubApplicants: null,
+  bridgeStatus: 'idle',   // 'idle' | 'loading' | 'ok' | 'error'
+  sumsubStatus: 'idle',
+  lastError: '',
+};
+
+function concSetStatus(kind, msg){
+  const el = document.getElementById('concStatus');
+  if(!el) return;
+  el.className = 'conc-status ' + kind;
+  el.innerHTML = msg;
+}
+
+function recomputeConciliacao(){
+  if(!BTG_DATA || !FB_INFLOWS){
+    const partial = !!(BTG_DATA || FB_INFLOWS);
+    const missing = !BTG_DATA && !FB_INFLOWS ? 'Fireblocks e BTG' : !BTG_DATA ? 'BTG' : 'Fireblocks';
+    concSetStatus(partial ? 'partial' : 'empty',
+      partial
+        ? `Aguardando aba <strong>${missing}</strong>. Drop o CSV pra ativar a conciliação.`
+        : 'Carregue arquivos nas abas 🔥 Fireblocks e 🏦 BTG primeiro para rodar a conciliação.');
+    CONC_STATE.matches = []; CONC_STATE.naoCasados = []; CONC_STATE.stats = {};
+    renderConciliacao();
+    return;
+  }
+  try {
+    const btg = window.Conciliacao.adaptBTG(BTG_DATA);
+    const fb  = window.Conciliacao.adaptFB(FB_INFLOWS);
+    const { matches, naoCasados, stats } = window.Conciliacao.reconciliar(btg, fb);
+    const enriched = window.Conciliacao.enrichMatches(matches, {
+      bridgeCustomers: CONC_STATE.bridgeCustomers,
+      sumsubApplicants: CONC_STATE.sumsubApplicants,
+    });
+    CONC_STATE.matches = enriched;
+    CONC_STATE.naoCasados = naoCasados;
+    CONC_STATE.stats = stats;
+    const enrichBits = [];
+    if(CONC_STATE.bridgeStatus === 'ok') enrichBits.push(`Bridge: ${CONC_STATE.bridgeCustomers.length}`);
+    if(CONC_STATE.sumsubStatus === 'ok') enrichBits.push(`Sumsub: ${CONC_STATE.sumsubApplicants.length}`);
+    const suffix = enrichBits.length ? ` · Enriquecido: ${enrichBits.join(' · ')}` : ' · Bridge/Sumsub: não carregados (carregue para enriquecer)';
+    concSetStatus('ready', `✓ ${stats.qtdMatches} matches · ${stats.qtdNaoCasados} não-casados · Taxa ${stats.taxaMatch}%${suffix}`);
+    renderConciliacao();
+  } catch(e){
+    console.error('[conciliacao] error:', e);
+    concSetStatus('error', `Erro ao processar: ${e.message}`);
+  }
+}
+
+function applyConciliacaoFilters(matches){
+  const mes = document.getElementById('concFilterMes').value;
+  const cli = (document.getElementById('concFilterCliente').value || '').toLowerCase().trim();
+  const asset = document.getElementById('concFilterAsset').value;
+  const conf = document.getElementById('concFilterConf').value;
+  const src = document.getElementById('concFilterSource').value;
+  return matches.filter(m => {
+    if(mes && window.Conciliacao.formatDate(m.btgData).slice(0,7) !== mes) return false;
+    if(cli && !m.cliente.toLowerCase().includes(cli) && !(m.razaoSocial||'').toLowerCase().includes(cli)) return false;
+    if(asset && m.fbAsset !== asset) return false;
+    if(conf && m.confidence !== conf) return false;
+    if(src){
+      const actual = m.sourceClient || 'none';
+      if(src === 'none' && actual !== 'none' && m.sourceClient) return false;
+      if(src !== 'none' && actual !== src) return false;
+    }
+    return true;
+  });
+}
+
+function renderConciliacao(){
+  // Populate month filter from data
+  const mesSel = document.getElementById('concFilterMes');
+  if(mesSel){
+    const meses = [...new Set(CONC_STATE.matches.map(m => window.Conciliacao.formatDate(m.btgData).slice(0,7)))].sort();
+    const cur = mesSel.value;
+    mesSel.innerHTML = '<option value="">Todos</option>' + meses.map(m => `<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
+  }
+  const filtered = applyConciliacaoFilters(CONC_STATE.matches);
+
+  // KPIs (computed on filtered for live response)
+  const volId = filtered.reduce((s,m)=>s+m.brlBruto,0);
+  const volNI = CONC_STATE.naoCasados.reduce((s,n)=>s+n.brl,0);
+  const cliUnicos = new Set(filtered.map(m=>m.cliente)).size;
+  const confH = filtered.filter(m=>m.confidence==='high').length;
+  const confM = filtered.filter(m=>m.confidence==='medium').length;
+  const confL = filtered.filter(m=>m.confidence==='low').length;
+  const withBridge = filtered.filter(m=>m.bridge).length;
+  const withSumsub = filtered.filter(m=>m.sumsub).length;
+  document.getElementById('concKPIs').innerHTML =
+    `<div class="conc-kpi"><div class="conc-kpi-lbl">Matches</div><div class="conc-kpi-val">${filtered.length}<span style="font-size:13px;color:var(--muted)"> / ${CONC_STATE.matches.length}</span></div><div class="conc-kpi-sub">Filtrado / total</div></div>`+
+    `<div class="conc-kpi"><div class="conc-kpi-lbl">Vol. Identificado</div><div class="conc-kpi-val" style="color:var(--pag)">${ff(volId)}</div><div class="conc-kpi-sub">${cliUnicos} clientes</div></div>`+
+    `<div class="conc-kpi"><div class="conc-kpi-lbl">Vol. Não Identificado</div><div class="conc-kpi-val" style="color:var(--amber)">${ff(volNI)}</div><div class="conc-kpi-sub">${CONC_STATE.naoCasados.length} PIX sem match</div></div>`+
+    `<div class="conc-kpi"><div class="conc-kpi-lbl">Vol. Intermediário</div><div class="conc-kpi-val" style="color:var(--muted)">${ff(CONC_STATE.stats.volumeIntermediario||0)}</div><div class="conc-kpi-sub">Transfero/Haus/etc</div></div>`+
+    `<div class="conc-kpi"><div class="conc-kpi-lbl">Confidence</div><div class="conc-kpi-val">${confH}/${confM}/${confL}</div><div class="conc-kpi-sub">High / Med / Low</div></div>`+
+    `<div class="conc-kpi"><div class="conc-kpi-lbl">Enriquecidos</div><div class="conc-kpi-val">${withBridge}/${withSumsub}</div><div class="conc-kpi-sub">Bridge / Sumsub</div></div>`;
+
+  // Table
+  const tb = document.getElementById('concTbody');
+  if(filtered.length === 0){
+    tb.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:32px;color:var(--muted)">Nenhum match com os filtros atuais.</td></tr>';
+  } else {
+    tb.innerHTML = filtered.map(m => {
+      const dataBTG = window.Conciliacao.formatDate(m.btgData);
+      const dataFB = window.Conciliacao.formatDate(m.fbDate);
+      const cli = (m.cliente||'').length>26 ? m.cliente.slice(0,24)+'…' : (m.cliente||'');
+      const cnpj = m.cnpj || '<span style="color:var(--muted)">—</span>';
+      const dst = (m.fbDstName||m.fbDstAddr||'').slice(0,18);
+      const pills = [];
+      if(m.sourceClient === 'manual') pills.push('<span class="src-pill manual">M</span>');
+      if(m.bridge) pills.push('<span class="src-pill bridge" title="Bridge: '+(m.bridgeEmail||m.bridgeId||'?')+'">B</span>');
+      if(m.sumsub) pills.push('<span class="src-pill sumsub" title="Sumsub: '+(m.sumsubEmail||m.sumsubApplicantId||'?')+'">S</span>');
+      if(pills.length === 0) pills.push('<span class="src-pill none">—</span>');
+      return `<tr>
+        <td style="text-align:left">${dataBTG}</td>
+        <td style="text-align:left" title="${m.cliente}"><strong>${cli}</strong></td>
+        <td style="text-align:left;font-family:'Space Mono',monospace;font-size:10.5px">${cnpj}</td>
+        <td>${m.pais||''}</td>
+        <td class="mono">${ff(m.brlBruto)}</td>
+        <td class="mono">${m.cotacaoImplicita.toFixed(3)}</td>
+        <td style="text-align:left">${dataFB}</td>
+        <td>${m.fbAsset}</td>
+        <td class="mono">${fd(m.fbUsd)}</td>
+        <td style="text-align:left">${dst}</td>
+        <td class="mono ${Math.abs(m.diasOffset)>2?'neg':''}">${m.diasOffset}</td>
+        <td><span class="badge-conf ${m.confidence}">${m.confidence}</span></td>
+        <td><span class="src-pills">${pills.join('')}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Não casados (collapsible)
+  const ncEl = document.getElementById('concNaoCasados');
+  if(CONC_STATE.naoCasados.length === 0){
+    ncEl.innerHTML = '';
+  } else {
+    const itemsTopBy = [...CONC_STATE.naoCasados].sort((a,b)=>b.brl-a.brl).slice(0,30);
+    ncEl.innerHTML = `<details class="conc-nao-casados"><summary>⚠ ${CONC_STATE.naoCasados.length} PIX BTG sem match Fireblocks (top 30 por valor)</summary>
+      <ul>${itemsTopBy.map(n=>`<li>${window.Conciliacao.formatDate(n.data)} · ${ff(n.brl)} · <strong>${n.cliente}</strong> <span style="color:var(--muted)">(esperado USD ${n.usdMin.toFixed(0)}–${n.usdMax.toFixed(0)})</span></li>`).join('')}</ul></details>`;
+  }
+}
+
+async function loadBridgeData(force){
+  if(!window.ConciliacaoSources) return;
+  const btn = document.getElementById('btnBridge');
+  CONC_STATE.bridgeStatus = 'loading';
+  if(btn){ btn.disabled = true; btn.textContent = 'Bridge …'; }
+  try {
+    const data = await window.ConciliacaoSources.getBridgeCustomers({force});
+    CONC_STATE.bridgeCustomers = data;
+    CONC_STATE.bridgeStatus = 'ok';
+    if(btn){ btn.textContent = `Bridge ✓ ${data.length}`; }
+  } catch(e){
+    CONC_STATE.bridgeStatus = 'error';
+    CONC_STATE.lastError = e.message;
+    console.warn('[bridge] fetch failed:', e);
+    if(btn){ btn.textContent = 'Bridge ✗'; btn.title = e.message; }
+  } finally {
+    if(btn) btn.disabled = false;
+    recomputeConciliacao();
+  }
+}
+
+async function loadSumsubData(force){
+  if(!window.ConciliacaoSources) return;
+  const btn = document.getElementById('btnSumsub');
+  CONC_STATE.sumsubStatus = 'loading';
+  if(btn){ btn.disabled = true; btn.textContent = 'Sumsub …'; }
+  try {
+    const data = await window.ConciliacaoSources.getSumsubApplicants({force});
+    CONC_STATE.sumsubApplicants = data;
+    CONC_STATE.sumsubStatus = 'ok';
+    if(btn){ btn.textContent = `Sumsub ✓ ${data.length}`; }
+  } catch(e){
+    CONC_STATE.sumsubStatus = 'error';
+    CONC_STATE.lastError = e.message;
+    console.warn('[sumsub] fetch failed:', e);
+    if(btn){ btn.textContent = 'Sumsub ✗'; btn.title = e.message; }
+  } finally {
+    if(btn) btn.disabled = false;
+    recomputeConciliacao();
+  }
+}
+
+function refreshConciliacaoCache(){
+  if(!window.ConciliacaoSources) return;
+  window.ConciliacaoSources.clearCache();
+  CONC_STATE.bridgeCustomers = null;
+  CONC_STATE.sumsubApplicants = null;
+  CONC_STATE.bridgeStatus = 'idle';
+  CONC_STATE.sumsubStatus = 'idle';
+  loadBridgeData(true);
+  loadSumsubData(true);
+}
+
+function exportConciliacaoEnriquecimento(){
+  if(!CONC_STATE.matches.length){ alert('Carregue Fireblocks + BTG e rode a conciliação primeiro.'); return; }
+  const csv = window.Conciliacao.exportEnriquecimentoCSV(CONC_STATE.matches);
+  const ts = new Date().toISOString().slice(0,10);
+  window.Conciliacao.downloadCSV(csv, `reconciliacao_enriquecida_${ts}.csv`);
+}
+
+function exportConciliacaoSimple(){
+  if(!CONC_STATE.matches.length){ alert('Carregue Fireblocks + BTG e rode a conciliação primeiro.'); return; }
+  const csv = window.Conciliacao.exportSimpleCSV(CONC_STATE.matches);
+  const ts = new Date().toISOString().slice(0,10);
+  window.Conciliacao.downloadCSV(csv, `reconciliacao_${ts}.csv`);
+}
+
+// Hook into FB/BTG drop completion
+window.addEventListener('conc-data-loaded', recomputeConciliacao);
+
+// Wire up filter inputs (idempotent — works after DOM is ready)
+function wireConciliacaoFilters(){
+  ['concFilterMes','concFilterCliente','concFilterAsset','concFilterConf','concFilterSource'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && !el._concWired){ el._concWired = true; el.addEventListener('input', renderConciliacao); el.addEventListener('change', renderConciliacao); }
+  });
+}
+
+// Auto-fetch APIs in background on first load of the page (non-blocking)
+function autoFetchSources(){
+  if(!window.ConciliacaoSources) return;
+  // Use cached data when fresh; fetch otherwise
+  loadBridgeData(false);
+  loadSumsubData(false);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  wireConciliacaoFilters();
+  autoFetchSources();
+  recomputeConciliacao();
+});
 
 init();
 </script>
