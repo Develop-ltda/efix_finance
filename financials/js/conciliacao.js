@@ -105,7 +105,8 @@
 
   function adaptFB(pageFbInflows) {
     return (pageFbInflows || []).map(r => ({
-      txid: r['Fireblocks TxId'] || r['TxHash'] || '',
+      txid: r['Fireblocks TxId'] || '',
+      txHash: r['TxHash'] || r['Tx Hash'] || '',
       date: r._date && r._date.iso ? new Date(r._date.iso + 'T00:00:00Z') : null,
       status: r['Status'] || '',
       asset: r['Asset Symbol'] || r.asset || '',
@@ -119,6 +120,25 @@
       dstAddr: r['Destination Address'] || '',
       note: r['Note'] || '',
     })).filter(t => t.date && !isNaN(t.date));
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // Helpers derivados pro display (custos EFIX)
+  // ════════════════════════════════════════════════════════════════
+  function computeCosts(brlBruto) {
+    const taxa3pct = brlBruto * TAXA_EFIX_PCT;
+    const iof = (brlBruto - taxa3pct) * IOF_CAMBIO_PCT;  // IOF câmbio incide sobre o valor líquido da taxa
+    const valNeg = brlBruto + iof;  // valor "negociado" (BRL exposto ao câmbio + IOF)
+    const repasse = taxa3pct;       // 3% que a EFIX retém (sinônimo de "Taxa 3%")
+    return { taxa3pct, iof, valNeg, repasse };
+  }
+
+  function explorerUrl(txHash, asset) {
+    if (!txHash) return '';
+    const h = String(txHash).trim();
+    if (h.startsWith('0x')) return 'https://polygonscan.com/tx/' + h;
+    if (asset === 'USDT' || /^[A-Za-z0-9]{60,70}$/.test(h)) return 'https://tronscan.org/#/transaction/' + h;
+    return '';
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -222,6 +242,7 @@
 
       const lookup = (global.CLIENTES_LOOKUP || {})[b.contraparte] || null;
 
+      const costs = computeCosts(b.valor);
       matches.push({
         btgData: b.data,
         btgDescricao: b.descricao,
@@ -234,9 +255,14 @@
         sourceClient: (lookup && lookup.source) || (lookup ? 'lookup' : null),
         brlBruto: b.valor,
         brlLiquido: round(brlLiquido, 2),
+        taxa3pct: round(costs.taxa3pct, 2),
+        iof: round(costs.iof, 2),
+        valNeg: round(costs.valNeg, 2),
+        repasse: round(costs.repasse, 2),
         cotacaoImplicita: round(best.cotacaoImpl, 4),
         fbDate: best.date,
         fbTxid: best.txid,
+        fbTxHash: best.txHash || '',
         fbAsset: best.asset,
         fbUsd: best.amount,
         fbDstName: best.dstName,
@@ -328,8 +354,9 @@
       'Cliente_TipoNI', 'Cliente_Pais', 'Source_Cliente',
       'Bridge_CustomerId', 'Bridge_Email', 'Bridge_KYC',
       'Sumsub_ApplicantId', 'Sumsub_Email', 'Sumsub_Review',
-      'BRL_Bruto', 'BRL_Liquido', 'Cotacao_Implicita',
-      'FB_Data', 'FB_TxId', 'FB_Asset', 'FB_USD_Entregue', 'FB_Destino', 'FB_Endereco',
+      'BRL_Bruto', 'Taxa_3pct', 'IOF', 'Val_Negociado', 'Repasse',
+      'BRL_Liquido', 'Cotacao_Implicita',
+      'FB_Data', 'FB_TxId', 'FB_TxHash', 'FB_Asset', 'FB_USD_Entregue', 'FB_Destino', 'FB_Endereco',
       'Dias_Offset', 'Qtd_Candidatos', 'Confidence',
       'Status', 'Matched_At', 'Reviewed_At', 'Reviewed_By', 'Status_Note',
       'Observacao', 'Descricao_BTG',
@@ -353,10 +380,15 @@
         m.sumsubEmail || '',
         m.sumsubReview || '',
         m.brlBruto.toFixed(2),
+        Number(m.taxa3pct || 0).toFixed(2),
+        Number(m.iof || 0).toFixed(2),
+        Number(m.valNeg || 0).toFixed(2),
+        Number(m.repasse || 0).toFixed(2),
         m.brlLiquido.toFixed(2),
         m.cotacaoImplicita.toFixed(4),
         formatDateTime(m.fbDate),
         m.fbTxid,
+        m.fbTxHash || '',
         m.fbAsset,
         Number(m.fbUsd).toFixed(8),
         m.fbDstName,
@@ -573,6 +605,8 @@
     parseBTGCounterparty,
     adaptBTG,
     adaptFB,
+    computeCosts,
+    explorerUrl,
     reconciliar,
     enrichMatches,
     exportEnriquecimentoCSV,

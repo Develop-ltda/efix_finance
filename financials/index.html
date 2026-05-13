@@ -133,8 +133,13 @@ tr:hover{background:rgba(0,0,0,.015)}
 .conc-kpi-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px}
 .conc-kpi-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;letter-spacing:-.6px}
 .conc-kpi-sub{font-size:11px;color:var(--dim);margin-top:4px}
-.conc-table th,.conc-table td{padding:7px 8px;font-size:11px}
+.conc-table{font-size:11px}
+.conc-table th{padding:6px 5px;font-size:10px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.conc-table td{padding:5px 5px;white-space:nowrap}
 .conc-table tr:hover{background:rgba(0,0,0,.02)}
+.conc-table .onchain a{color:#7c3aed;font-family:'Space Mono',monospace;font-size:10px;text-decoration:none}
+.conc-table .onchain a:hover{text-decoration:underline}
+.conc-table .nohash{color:var(--muted);font-style:italic;font-size:10px}
 .conc-csv-drop{display:inline-block;border:1px dashed var(--border2);padding:6px 12px;border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer}
 .conc-csv-drop:hover{border-color:var(--text);color:var(--text)}
 .conc-nao-casados{margin-top:24px;padding:14px;border-radius:10px;background:#fffbeb;border:1px solid #fcd34d;font-size:12px}
@@ -323,14 +328,16 @@ tr:hover{background:rgba(0,0,0,.015)}
       <th style="text-align:left">Data BTG</th>
       <th style="text-align:left">Cliente</th>
       <th style="text-align:left">CNPJ/CPF</th>
-      <th>País</th>
-      <th>BRL Bruto</th>
-      <th>Cot.</th>
-      <th style="text-align:left">FB Date</th>
-      <th>Asset</th>
+      <th title="Valor bruto do PIX recebido">Pgto Inc.</th>
+      <th title="3% taxa EFIX">Taxa 3%</th>
+      <th title="IOF câmbio 0.38% sobre BRL líquido">IOF</th>
+      <th title="Valor exposto ao câmbio = Pgto + IOF">Val. Neg.</th>
       <th>USD</th>
-      <th style="text-align:left">Destino FB</th>
-      <th>Δd</th>
+      <th title="Cotação implícita BRL/USD">Cot.</th>
+      <th style="text-align:left">FB Date</th>
+      <th title="Hash on-chain (clique pra ver explorer)">On-Chain</th>
+      <th title="Dias entre BTG e FB">Δd</th>
+      <th title="Repasse EFIX = 3% da Taxa">Repasse</th>
       <th>Conf.</th>
       <th>Sources</th>
       <th title="Click pra mudar · Shift-click pra anotar">Status</th>
@@ -1153,15 +1160,15 @@ function renderConciliacao(){
 
   // Table
   const tb = document.getElementById('concTbody');
+  const COLS = 16;
   if(filtered.length === 0){
-    tb.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:32px;color:var(--muted)">Nenhum match com os filtros atuais.</td></tr>';
+    tb.innerHTML = `<tr><td colspan="${COLS}" style="text-align:center;padding:32px;color:var(--muted)">Nenhum match com os filtros atuais.</td></tr>`;
   } else {
     tb.innerHTML = filtered.map(m => {
       const dataBTG = window.Conciliacao.formatDate(m.btgData);
       const dataFB = window.Conciliacao.formatDate(m.fbDate);
       const cli = (m.cliente||'').length>26 ? m.cliente.slice(0,24)+'…' : (m.cliente||'');
       const cnpj = m.cnpj || '<span style="color:var(--muted)">—</span>';
-      const dst = (m.fbDstName||m.fbDstAddr||'').slice(0,18);
       const pills = [];
       if(m.sourceClient === 'manual') pills.push('<span class="src-pill manual">M</span>');
       if(m.bridge) pills.push('<span class="src-pill bridge" title="Bridge: '+(m.bridgeEmail||m.bridgeId||'?')+'">B</span>');
@@ -1173,18 +1180,27 @@ function renderConciliacao(){
       const whenTitle = when ? new Date(when).toISOString() : '';
       const reviewedTip = si.reviewedBy ? `\nReviewer: ${si.reviewedBy}` : '';
       const noteTip = si.note ? `\nNota: ${si.note}` : '';
+      const onChainUrl = window.Conciliacao.explorerUrl(m.fbTxHash, m.fbAsset);
+      const onChainHtml = m.fbTxHash
+        ? (onChainUrl
+            ? `<a href="${onChainUrl}" target="_blank" rel="noopener" title="${m.fbAsset} · ${m.fbTxHash}">${m.fbTxHash.slice(0,8)}…</a>`
+            : `<span title="${m.fbTxHash}">${m.fbTxHash.slice(0,8)}…</span>`)
+        : `<span class="nohash" title="${m.fbDstName||m.fbDstAddr||'sem dado'}">${(m.fbDstName||m.fbDstAddr||'—').slice(0,14)}</span>`;
+      const cliTitle = `${m.cliente}${m.razaoSocial && m.razaoSocial !== m.cliente ? '\nRazão: '+m.razaoSocial : ''}${m.pais ? '\nPaís: '+m.pais : ''}${m.fbAsset ? '\nAsset: '+m.fbAsset : ''}`;
       return `<tr data-key="${m._key||m.fbTxid}">
         <td style="text-align:left">${dataBTG}</td>
-        <td style="text-align:left" title="${m.cliente}"><strong>${cli}</strong></td>
-        <td style="text-align:left;font-family:'Space Mono',monospace;font-size:10.5px">${cnpj}</td>
-        <td>${m.pais||''}</td>
+        <td style="text-align:left" title="${cliTitle}"><strong>${cli}</strong></td>
+        <td style="text-align:left;font-family:'Space Mono',monospace;font-size:10px">${cnpj}</td>
         <td class="mono">${ff(m.brlBruto)}</td>
+        <td class="mono">${ff(m.taxa3pct||0)}</td>
+        <td class="mono">${ff(m.iof||0)}</td>
+        <td class="mono">${ff(m.valNeg||0)}</td>
+        <td class="mono">${fd(m.fbUsd)} <span style="color:var(--muted);font-size:9px">${m.fbAsset||''}</span></td>
         <td class="mono">${m.cotacaoImplicita.toFixed(3)}</td>
         <td style="text-align:left">${dataFB}</td>
-        <td>${m.fbAsset}</td>
-        <td class="mono">${fd(m.fbUsd)}</td>
-        <td style="text-align:left">${dst}</td>
+        <td class="onchain" style="text-align:left">${onChainHtml}</td>
         <td class="mono ${Math.abs(m.diasOffset)>2?'neg':''}">${m.diasOffset}</td>
+        <td class="mono c-rem">${ff(m.repasse||0)}</td>
         <td><span class="badge-conf ${m.confidence}">${m.confidence}</span></td>
         <td><span class="src-pills">${pills.join('')}</span></td>
         <td>
