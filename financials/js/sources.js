@@ -159,13 +159,44 @@
     return arr;
   }
 
+  // Normaliza linhas do /sumsub/list (snake_case do Postgres) para o shape
+  // que enrichMatches/lookupByName esperam (applicantName, info.country, etc).
+  function normalizeFromList(row) {
+    return {
+      id: row.applicant_id,
+      applicantId: row.applicant_id,
+      externalUserId: row.external_user_id || '',
+      applicantName: row.applicant_name || '',
+      email: row.applicant_email || '',
+      info: {
+        firstName: row.applicant_name || '',
+        country: row.applicant_country || '',
+        phone: row.applicant_phone || '',
+      },
+      review: { reviewResult: { reviewAnswer: row.review_answer || '' } },
+      result: row.review_answer || '',
+      status: row.review_status || '',
+      applicantLevel: row.level_name || '',
+      rejectLabels: row.reject_labels || '',
+    };
+  }
+
   async function getSumsubApplicants(opts = {}) {
     if (!opts.force) {
       const cached = cacheGet('sumsub_applicants');
       if (cached) return cached;
     }
-    // Sem CSV ainda — devolve array vazio (não falha)
-    return [];
+    try {
+      const r = await fetch(`${PROXY_BASE}/sumsub/list?limit=2000`, { headers: { 'Accept': 'application/json' } });
+      if (!r.ok) throw new Error(`/sumsub/list → ${r.status}`);
+      const j = await r.json();
+      const arr = (j.data || []).map(normalizeFromList);
+      cacheSet('sumsub_applicants', arr);
+      return arr;
+    } catch (e) {
+      console.warn('[sumsub] /list fetch failed, falling back to cache/CSV:', e.message);
+      return cacheGet('sumsub_applicants') || [];
+    }
   }
 
   // Per-applicant live fetch (funciona via API)
