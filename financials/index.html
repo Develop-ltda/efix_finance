@@ -140,6 +140,27 @@ tr:hover{background:rgba(0,0,0,.015)}
 .conc-nao-casados{margin-top:24px;padding:14px;border-radius:10px;background:#fffbeb;border:1px solid #fcd34d;font-size:12px}
 .conc-nao-casados summary{cursor:pointer;font-weight:600;color:#854d0e}
 .conc-nao-casados ul{margin:10px 0 0 18px;color:var(--dim);font-family:'Space Mono',monospace;font-size:11px}
+.status-badge{cursor:pointer;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.3px;text-transform:uppercase;user-select:none;display:inline-block;border:1px solid transparent;transition:all .12s}
+.status-badge:hover{transform:translateY(-1px);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.status-pending{background:#f3f4f6;color:#4b5563;border-color:#d1d5db}
+.status-approved{background:#dcfce7;color:#166534;border-color:#86efac}
+.status-needs_review{background:#fef9c3;color:#854d0e;border-color:#fcd34d}
+.status-manual{background:#e0e7ff;color:#3730a3;border-color:#a5b4fc}
+.status-rejected{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.status-when{display:block;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px}
+.conc-audit{margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px}
+.conc-audit summary{cursor:pointer;font-weight:600;color:var(--text)}
+.conc-audit table{width:100%;margin-top:10px;font-size:11px;font-family:'Space Mono',monospace}
+.conc-audit th,.conc-audit td{padding:5px 6px;text-align:left;border-bottom:1px solid var(--border)}
+.conc-audit .empty{color:var(--muted);text-align:center;padding:14px}
+.nc-action-btn{cursor:pointer;font-size:10px;padding:3px 8px;margin-right:4px;border:1px solid var(--border2);border-radius:4px;background:var(--surface);font-family:inherit;color:var(--text)}
+.nc-action-btn:hover{background:var(--bg);border-color:var(--text)}
+.nc-action-btn.danger{color:#991b1b;border-color:#fca5a5}
+.nc-action-btn.success{color:#166534;border-color:#86efac}
+.nc-table{width:100%;font-size:11px}
+.nc-table th{background:#fffbeb;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#854d0e}
+.nc-table th,.nc-table td{padding:6px 8px;border-bottom:1px solid #fde68a;text-align:left}
+.nc-table td.num{text-align:right;font-family:'Space Mono',monospace}
 </style>
 </head>
 <body>
@@ -283,6 +304,7 @@ tr:hover{background:rgba(0,0,0,.015)}
   <label>Asset <select id="concFilterAsset"><option value="">Todos</option><option value="USDC">USDC</option><option value="USDT">USDT</option></select></label>
   <label>Conf. <select id="concFilterConf"><option value="">Todas</option><option value="high">Alta</option><option value="medium">Média</option><option value="low">Baixa</option></select></label>
   <label>Source <select id="concFilterSource"><option value="">Todas</option><option value="manual">Manual</option><option value="sumsub">Sumsub</option><option value="bridge">Bridge</option><option value="none">Não identificado</option></select></label>
+  <label>Status <select id="concFilterStatus"><option value="">Todos</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="needs_review">Needs review</option><option value="manual">Manual</option><option value="rejected">Rejected</option></select></label>
   <span style="flex:1"></span>
   <button onclick="loadBridgeData(false)" id="btnBridge" title="Auto-fetch via proxy (cache 24h)">Bridge</button>
   <input type="file" id="sumsubFileInput" accept=".csv" style="display:none" onchange="handleSumsubCSV(this.files[0])">
@@ -290,6 +312,7 @@ tr:hover{background:rgba(0,0,0,.015)}
   <button onclick="refreshConciliacaoCache()" title="Limpa cache + re-fetch Bridge + Sumsub">↻ Refresh</button>
   <button onclick="exportConciliacaoEnriquecimento()" class="primary">Exportar IN 1888</button>
   <button onclick="exportConciliacaoSimple()">Exportar CSV</button>
+  <button onclick="exportConciliacaoAudit()" title="CSV do log de mudanças de status">Audit log</button>
 </div>
 
 <div id="concKPIs" class="conc-kpis"></div>
@@ -310,12 +333,14 @@ tr:hover{background:rgba(0,0,0,.015)}
       <th>Δd</th>
       <th>Conf.</th>
       <th>Sources</th>
+      <th title="Click pra mudar · Shift-click pra anotar">Status</th>
     </tr></thead>
     <tbody id="concTbody"></tbody>
   </table>
 </div>
 
 <div id="concNaoCasados"></div>
+<div id="concAudit"></div>
 </div>
 
 </div>
@@ -1027,6 +1052,9 @@ function recomputeConciliacao(){
     if(CONC_STATE.sumsubStatus === 'ok') enrichBits.push(`Sumsub: ${CONC_STATE.sumsubApplicants.length}`);
     const suffix = enrichBits.length ? ` · Enriquecido: ${enrichBits.join(' · ')}` : ' · Bridge/Sumsub: não carregados (carregue para enriquecer)';
     concSetStatus('ready', `✓ ${stats.qtdMatches} matches · ${stats.qtdNaoCasados} não-casados · Taxa ${stats.taxaMatch}%${suffix}`);
+    // Hidrata status persistido nos matches + naoCasados (matchedAt/reviewedAt/etc)
+    window.Conciliacao.hydrateStatus(CONC_STATE.matches);
+    window.Conciliacao.hydrateNaoCasadosStatus(CONC_STATE.naoCasados);
     renderConciliacao();
   } catch(e){
     console.error('[conciliacao] error:', e);
@@ -1040,6 +1068,7 @@ function applyConciliacaoFilters(matches){
   const asset = document.getElementById('concFilterAsset').value;
   const conf = document.getElementById('concFilterConf').value;
   const src = document.getElementById('concFilterSource').value;
+  const status = document.getElementById('concFilterStatus') ? document.getElementById('concFilterStatus').value : '';
   return matches.filter(m => {
     if(mes && window.Conciliacao.formatDate(m.btgData).slice(0,7) !== mes) return false;
     if(cli && !m.cliente.toLowerCase().includes(cli) && !(m.razaoSocial||'').toLowerCase().includes(cli)) return false;
@@ -1050,8 +1079,49 @@ function applyConciliacaoFilters(matches){
       if(src === 'none' && actual !== 'none' && m.sourceClient) return false;
       if(src !== 'none' && actual !== src) return false;
     }
+    if(status){
+      const cur = (m._statusInfo && m._statusInfo.status) || 'pending';
+      if(cur !== status) return false;
+    }
     return true;
   });
+}
+
+function getReviewer(){
+  try {
+    if(window.EFIX_CONFIG && window.EFIX_CONFIG.userEmail) return window.EFIX_CONFIG.userEmail;
+  } catch {}
+  return localStorage.getItem('efix_conc_reviewer') || 'operator';
+}
+
+function cycleRowStatus(key, ev){
+  const C = window.Conciliacao;
+  const cur = C.getStatus(key);
+  let nextS = C.nextStatus(cur.status);
+  let note = cur.note || '';
+  // Shift-click: prompt for note before saving
+  if(ev && ev.shiftKey){
+    const n = prompt(`Mudando ${key.slice(0,20)}… para ${nextS}. Anotação (opcional):`, note);
+    if(n === null) return; // cancelled
+    note = n;
+  }
+  C.setStatus(key, { status: nextS, note }, getReviewer());
+  recomputeConciliacao();
+}
+
+function markNaoCasado(key, decision){
+  const C = window.Conciliacao;
+  if(decision === 'no_fb'){
+    C.setStatus(key, { status: 'rejected', note: 'Sem match Fireblocks (off-ramp não aconteceu)' }, getReviewer());
+  } else if(decision === 'manual'){
+    const cliente = prompt('Cliente / Razão Social:');
+    if(!cliente) return;
+    const cnpj = prompt('CNPJ/CPF (deixe em branco se desconhecido):') || '';
+    C.setStatus(key, { status: 'manual', note: `manual: cliente=${cliente} cnpj=${cnpj}` }, getReviewer());
+  } else if(decision === 'review'){
+    C.setStatus(key, { status: 'needs_review', note: 'Revisar manualmente' }, getReviewer());
+  }
+  recomputeConciliacao();
 }
 
 function renderConciliacao(){
@@ -1084,7 +1154,7 @@ function renderConciliacao(){
   // Table
   const tb = document.getElementById('concTbody');
   if(filtered.length === 0){
-    tb.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:32px;color:var(--muted)">Nenhum match com os filtros atuais.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:32px;color:var(--muted)">Nenhum match com os filtros atuais.</td></tr>';
   } else {
     tb.innerHTML = filtered.map(m => {
       const dataBTG = window.Conciliacao.formatDate(m.btgData);
@@ -1097,7 +1167,13 @@ function renderConciliacao(){
       if(m.bridge) pills.push('<span class="src-pill bridge" title="Bridge: '+(m.bridgeEmail||m.bridgeId||'?')+'">B</span>');
       if(m.sumsub) pills.push('<span class="src-pill sumsub" title="Sumsub: '+(m.sumsubEmail||m.sumsubApplicantId||'?')+'">S</span>');
       if(pills.length === 0) pills.push('<span class="src-pill none">—</span>');
-      return `<tr>
+      const si = m._statusInfo || window.Conciliacao.getStatus(m._key || m.fbTxid);
+      const when = si.reviewedAt || si.matchedAt;
+      const whenStr = window.Conciliacao.formatRelative(when);
+      const whenTitle = when ? new Date(when).toISOString() : '';
+      const reviewedTip = si.reviewedBy ? `\nReviewer: ${si.reviewedBy}` : '';
+      const noteTip = si.note ? `\nNota: ${si.note}` : '';
+      return `<tr data-key="${m._key||m.fbTxid}">
         <td style="text-align:left">${dataBTG}</td>
         <td style="text-align:left" title="${m.cliente}"><strong>${cli}</strong></td>
         <td style="text-align:left;font-family:'Space Mono',monospace;font-size:10.5px">${cnpj}</td>
@@ -1111,18 +1187,73 @@ function renderConciliacao(){
         <td class="mono ${Math.abs(m.diasOffset)>2?'neg':''}">${m.diasOffset}</td>
         <td><span class="badge-conf ${m.confidence}">${m.confidence}</span></td>
         <td><span class="src-pills">${pills.join('')}</span></td>
+        <td>
+          <span class="status-badge status-${si.status||'pending'}"
+                title="${si.status} · ${whenTitle}${reviewedTip}${noteTip}\n\nClick: ciclar · Shift+Click: anotar"
+                onclick="cycleRowStatus('${(m._key||m.fbTxid).replace(/'/g,"\\'")}', event)">${si.status||'pending'}</span>
+          <span class="status-when">${whenStr}</span>
+        </td>
       </tr>`;
     }).join('');
   }
 
-  // Não casados (collapsible)
+  // Não casados — agora drillable com ações
   const ncEl = document.getElementById('concNaoCasados');
   if(CONC_STATE.naoCasados.length === 0){
     ncEl.innerHTML = '';
   } else {
-    const itemsTopBy = [...CONC_STATE.naoCasados].sort((a,b)=>b.brl-a.brl).slice(0,30);
-    ncEl.innerHTML = `<details class="conc-nao-casados"><summary>⚠ ${CONC_STATE.naoCasados.length} PIX BTG sem match Fireblocks (top 30 por valor)</summary>
-      <ul>${itemsTopBy.map(n=>`<li>${window.Conciliacao.formatDate(n.data)} · ${ff(n.brl)} · <strong>${n.cliente}</strong> <span style="color:var(--muted)">(esperado USD ${n.usdMin.toFixed(0)}–${n.usdMax.toFixed(0)})</span></li>`).join('')}</ul></details>`;
+    // Filtra os que já têm decisão final (rejected/manual/needs_review) pra um summary separado
+    const pendentes = CONC_STATE.naoCasados.filter(n => !n._statusInfo || (n._statusInfo.status||'pending') === 'pending');
+    const decididos = CONC_STATE.naoCasados.filter(n => n._statusInfo && (n._statusInfo.status||'pending') !== 'pending');
+    const items = [...pendentes, ...decididos].sort((a,b)=>b.brl-a.brl);
+    ncEl.innerHTML = `<details class="conc-nao-casados" ${pendentes.length>0?'open':''}>
+      <summary>⚠ ${CONC_STATE.naoCasados.length} PIX BTG sem match Fireblocks · ${pendentes.length} pendentes · ${decididos.length} decididos</summary>
+      <div style="overflow-x:auto;margin-top:10px"><table class="nc-table">
+        <thead><tr><th>Data</th><th>Cliente</th><th class="num">BRL</th><th>USD esperado</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody>${items.map(n=>{
+          const si = n._statusInfo || window.Conciliacao.getStatus(n._key);
+          const key = (n._key||'').replace(/'/g,"\\'");
+          const isPending = (si.status||'pending') === 'pending';
+          const cli = (n.cliente||'').length>40 ? n.cliente.slice(0,38)+'…' : n.cliente;
+          return `<tr>
+            <td>${window.Conciliacao.formatDate(n.data)}</td>
+            <td title="${n.cliente}"><strong>${cli}</strong></td>
+            <td class="num">${ff(n.brl)}</td>
+            <td class="num" style="color:var(--muted)">$ ${n.usdMin.toFixed(0)}–${n.usdMax.toFixed(0)}</td>
+            <td><span class="status-badge status-${si.status||'pending'}" title="${si.note||''}\n${si.reviewedBy||''}">${si.status||'pending'}</span></td>
+            <td>${isPending ? `
+              <button class="nc-action-btn danger" onclick="markNaoCasado('${key}','no_fb')" title="Sem off-ramp on-chain correspondente">Sem FB</button>
+              <button class="nc-action-btn success" onclick="markNaoCasado('${key}','manual')" title="Identificar cliente manualmente">Manual</button>
+              <button class="nc-action-btn" onclick="markNaoCasado('${key}','review')" title="Sinalizar pra revisão">Revisar</button>
+            ` : `
+              <button class="nc-action-btn" onclick="cycleRowStatus('${key}', event)" title="Reverter status">↻</button>
+            `}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </details>`;
+  }
+
+  // Audit log — últimas 30 mudanças
+  const auEl = document.getElementById('concAudit');
+  if(auEl){
+    const log = window.Conciliacao.loadAuditLog().slice().reverse().slice(0,30);
+    if(log.length === 0){
+      auEl.innerHTML = `<details class="conc-audit"><summary>📋 Histórico de revisão (0 eventos)</summary><div class="empty">Sem mudanças de status ainda. Click num badge de status pra revisar.</div></details>`;
+    } else {
+      auEl.innerHTML = `<details class="conc-audit"><summary>📋 Histórico de revisão (${log.length} eventos recentes · ${window.Conciliacao.loadAuditLog().length} total)</summary>
+        <table>
+          <thead><tr><th>Quando</th><th>Item</th><th>Mudança</th><th>Reviewer</th><th>Nota</th></tr></thead>
+          <tbody>${log.map(e=>`<tr>
+            <td>${window.Conciliacao.formatRelative(e.ts)} <span style="color:var(--muted);font-size:10px">(${new Date(e.ts).toISOString().slice(5,16).replace('T',' ')})</span></td>
+            <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.key}">${(e.key||'').slice(0,40)}${(e.key||'').length>40?'…':''}</td>
+            <td><span class="status-badge status-${e.prevStatus||'pending'}">${e.prevStatus||'pending'}</span> → <span class="status-badge status-${e.newStatus}">${e.newStatus}</span></td>
+            <td>${e.reviewer||'—'}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.note||''}">${e.note||''}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </details>`;
+    }
   }
 }
 
@@ -1215,12 +1346,19 @@ function exportConciliacaoSimple(){
   window.Conciliacao.downloadCSV(csv, `reconciliacao_${ts}.csv`);
 }
 
+function exportConciliacaoAudit(){
+  const csv = window.Conciliacao.exportAuditCSV();
+  if(csv.split('\n').length <= 1){ alert('Sem histórico de revisão ainda.'); return; }
+  const ts = new Date().toISOString().slice(0,10);
+  window.Conciliacao.downloadCSV(csv, `reconciliacao_audit_${ts}.csv`);
+}
+
 // Hook into FB/BTG drop completion
 window.addEventListener('conc-data-loaded', recomputeConciliacao);
 
 // Wire up filter inputs (idempotent — works after DOM is ready)
 function wireConciliacaoFilters(){
-  ['concFilterMes','concFilterCliente','concFilterAsset','concFilterConf','concFilterSource'].forEach(id=>{
+  ['concFilterMes','concFilterCliente','concFilterAsset','concFilterConf','concFilterSource','concFilterStatus'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && !el._concWired){ el._concWired = true; el.addEventListener('input', renderConciliacao); el.addEventListener('change', renderConciliacao); }
   });

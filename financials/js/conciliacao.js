@@ -330,10 +330,13 @@
       'Sumsub_ApplicantId', 'Sumsub_Email', 'Sumsub_Review',
       'BRL_Bruto', 'BRL_Liquido', 'Cotacao_Implicita',
       'FB_Data', 'FB_TxId', 'FB_Asset', 'FB_USD_Entregue', 'FB_Destino', 'FB_Endereco',
-      'Dias_Offset', 'Qtd_Candidatos', 'Confidence', 'Observacao', 'Descricao_BTG',
+      'Dias_Offset', 'Qtd_Candidatos', 'Confidence',
+      'Status', 'Matched_At', 'Reviewed_At', 'Reviewed_By', 'Status_Note',
+      'Observacao', 'Descricao_BTG',
     ];
     const rows = [headers];
     for (const m of matches) {
+      const s = m._statusInfo || getStatus(m._key || m.fbTxid);
       rows.push([
         'ON_RAMP',
         formatDate(m.btgData),
@@ -361,6 +364,11 @@
         m.diasOffset,
         m.qtdCandidatos,
         m.confidence,
+        s.status || 'pending',
+        s.matchedAt ? new Date(s.matchedAt).toISOString() : '',
+        s.reviewedAt ? new Date(s.reviewedAt).toISOString() : '',
+        s.reviewedBy || '',
+        s.note || '',
         m.nota || (m.cnpj ? 'IDENTIFICADO' : 'NECESSITA REVISAO MANUAL'),
         m.btgDescricao,
       ]);
@@ -373,9 +381,11 @@
       'BTG_Data', 'Cliente', 'BRL', 'Cotacao_Impl',
       'FB_Data', 'FB_TxId', 'Asset', 'USD',
       'Destino', 'Dias', 'Conf', 'Source',
+      'Status', 'Reviewed_At', 'Reviewed_By',
     ];
     const rows = [headers];
     for (const m of matches) {
+      const s = m._statusInfo || getStatus(m._key || m.fbTxid);
       rows.push([
         formatDate(m.btgData),
         m.cliente,
@@ -389,6 +399,26 @@
         m.diasOffset,
         m.confidence,
         m.sourceClient || '',
+        s.status || 'pending',
+        s.reviewedAt ? new Date(s.reviewedAt).toISOString() : '',
+        s.reviewedBy || '',
+      ]);
+    }
+    return rowsToCSV(rows);
+  }
+
+  function exportAuditCSV() {
+    const log = loadAuditLog();
+    const headers = ['Timestamp', 'Key', 'Prev_Status', 'New_Status', 'Reviewer', 'Note'];
+    const rows = [headers];
+    for (const e of log) {
+      rows.push([
+        new Date(e.ts).toISOString(),
+        e.key,
+        e.prevStatus,
+        e.newStatus,
+        e.reviewer || '',
+        e.note || '',
       ]);
     }
     return rowsToCSV(rows);
@@ -431,6 +461,114 @@
     return `${date} ${hh}:${mi}`;
   }
 
+  // ════════════════════════════════════════════════════════════════
+  // Status + audit log persistence (localStorage, scoped by fbTxid).
+  // STATUS_CYCLE define a ordem do click-to-cycle no badge da UI.
+  // ════════════════════════════════════════════════════════════════
+  const STATUS_KEY = 'efix_conciliacao_status_v1';
+  const AUDIT_KEY  = 'efix_conciliacao_audit_v1';
+  const STATUS_LIST = ['pending', 'approved', 'needs_review', 'manual', 'rejected'];
+
+  function loadStatusMap() {
+    try { return JSON.parse(localStorage.getItem(STATUS_KEY) || '{}'); }
+    catch { return {}; }
+  }
+  function saveStatusMap(m) {
+    try { localStorage.setItem(STATUS_KEY, JSON.stringify(m)); } catch {}
+  }
+  function loadAuditLog() {
+    try { return JSON.parse(localStorage.getItem(AUDIT_KEY) || '[]'); }
+    catch { return []; }
+  }
+  function saveAuditLog(a) {
+    try { localStorage.setItem(AUDIT_KEY, JSON.stringify(a.slice(-500))); } catch {}
+  }
+  function appendAudit(entry) {
+    const log = loadAuditLog();
+    log.push({ ts: Date.now(), ...entry });
+    saveAuditLog(log);
+    return log;
+  }
+  function getStatus(key) {
+    const m = loadStatusMap();
+    return m[key] || { status: 'pending', matchedAt: null, reviewedAt: null, reviewedBy: '', note: '' };
+  }
+  function setStatus(key, patch, reviewer) {
+    const m = loadStatusMap();
+    const prev = m[key] || {};
+    const next = { ...prev, ...patch };
+    if (patch.status && patch.status !== prev.status) {
+      next.reviewedAt = Date.now();
+      next.reviewedBy = reviewer || next.reviewedBy || '';
+      appendAudit({
+        key, prevStatus: prev.status || 'pending', newStatus: patch.status,
+        reviewer: reviewer || '', note: patch.note || '',
+      });
+    }
+    m[key] = next;
+    saveStatusMap(m);
+    return next;
+  }
+  function nextStatus(current) {
+    const i = STATUS_LIST.indexOf(current || 'pending');
+    return STATUS_LIST[(i + 1) % STATUS_LIST.length];
+  }
+  // Quando um novo run de reconciliar() roda, hidrata cada match com seu status persistido
+  // ou cria um novo entry pending com matchedAt = now.
+  function hydrateStatus(matches, reviewer) {
+    const m = loadStatusMap();
+    let dirty = false;
+    const now = Date.now();
+    for (const match of matches) {
+      const key = match.fbTxid || `nofb:${match.btgDescricao}:${match.brlBruto}`;
+      const cur = m[key];
+      if (!cur) {
+        m[key] = { status: 'pending', matchedAt: now, reviewedAt: null, reviewedBy: '', note: '' };
+        dirty = true;
+      } else if (!cur.matchedAt) {
+        cur.matchedAt = now;
+        dirty = true;
+      }
+      match._key = key;
+      match._statusInfo = m[key];
+    }
+    if (dirty) saveStatusMap(m);
+    return matches;
+  }
+  // Mesmo pros não-casados (pra rastrear quando foram marcados como "sem match FB" etc)
+  function hydrateNaoCasadosStatus(naoCasados) {
+    const m = loadStatusMap();
+    let dirty = false;
+    const now = Date.now();
+    for (const n of naoCasados) {
+      const key = `nofb:${n.descricao}:${n.brl}`;
+      const cur = m[key];
+      if (!cur) {
+        m[key] = { status: 'pending', matchedAt: now, reviewedAt: null, reviewedBy: '', note: '' };
+        dirty = true;
+      }
+      n._key = key;
+      n._statusInfo = m[key];
+    }
+    if (dirty) saveStatusMap(m);
+    return naoCasados;
+  }
+  function clearAllStatus() {
+    localStorage.removeItem(STATUS_KEY);
+    localStorage.removeItem(AUDIT_KEY);
+  }
+  function formatRelative(ts) {
+    if (!ts) return '—';
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return `${s}s atrás`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}min atrás`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h atrás`;
+    const d = Math.floor(h / 24);
+    return d < 30 ? `${d}d atrás` : new Date(ts).toISOString().slice(0, 10);
+  }
+
   global.Conciliacao = {
     parseBTGCounterparty,
     adaptBTG,
@@ -439,11 +577,23 @@
     enrichMatches,
     exportEnriquecimentoCSV,
     exportSimpleCSV,
+    exportAuditCSV,
     downloadCSV,
     formatDate,
     formatDateTime,
+    formatRelative,
     isIntermediario,
     isDespesaOp,
+    // Status + audit
+    STATUS_LIST,
+    getStatus,
+    setStatus,
+    nextStatus,
+    hydrateStatus,
+    hydrateNaoCasadosStatus,
+    loadAuditLog,
+    appendAudit,
+    clearAllStatus,
     constants: { TAXA_EFIX_PCT, IOF_CAMBIO_PCT, COTACAO_MIN, COTACAO_MAX, TOLERANCIA_USD, JANELA_DIAS },
   };
 })(window);
