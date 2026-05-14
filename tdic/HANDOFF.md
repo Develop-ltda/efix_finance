@@ -4,6 +4,23 @@ Documento de transferência detalhado dos **19 itens pendentes** para construir 
 TDIC até produção real. Cada item tem: motivação, escopo, arquivos, comandos,
 pegadinhas e definição de pronto.
 
+> **Update 2026-05-08 (Contratos):** o sistema agora opera com **DOIS contratos
+> distintos**, ambos com aceite eletrônico + hash SHA-256:
+>
+> 1. **Instrumento Particular de Cessão de Direitos Creditórios** (v3.0.0)
+>    EFIX × CEDENTE (originador) — assinado no `/tdic/app/` durante o KYB.
+>    Texto-fonte: `Contrato_Cessao_EFIX_v3.docx`.
+>
+> 2. **Boletim de Subscrição de Certificado de Recebíveis** (v1.0.0)
+>    EFIX × SUBSCRITOR (cliente final que compra o CR) — assinado no
+>    `/tdic/pay/?cr=ID` antes do pagamento. Pagamento fica travado até o aceite.
+>    Texto inline em `tdic/pay/index.html`.
+>
+> Ambos os fluxos: nome + CPF + checkbox + hash SHA-256 do texto canônico,
+> persistidos via `TdicMock.logSubscriptionAcceptance` (subscritor) ou
+> `submitKyb` com `signedContract` (cedente). Sprint F (item 14) eleva
+> ambos para assinatura qualificada via Clicksign/D4Sign.
+
 > **Antes de começar:** leia `SESSION.md` neste mesmo diretório para o contexto
 > do que já foi entregue, e confirme que os deploys estão verdes (GH Pages
 > serve `efix.finance/tdic/`, Railway serve `efixdi-backend-production.up.railway.app/health`).

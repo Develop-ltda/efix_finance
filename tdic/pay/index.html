@@ -60,6 +60,46 @@ h1{font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.4rem}
 
 .note{margin-top:1rem;padding:0.85rem 1rem;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;font-size:0.78rem;color:#7c2d12;line-height:1.55}
 
+/* Termo de subscrição (boletim) */
+.subscribe-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem 1.4rem;margin-bottom:1rem}
+.subscribe-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:0.95rem}
+.subscribe-title{font-size:1rem;font-weight:700;letter-spacing:-0.01em;color:#0a0a0a;line-height:1.35}
+.link-btn{background:none;border:none;color:var(--brand-primary);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
+.link-btn:hover{opacity:0.8}
+.subscribe-bullets{list-style:none;padding:0;margin:0 0 1rem 0;font-size:0.82rem;line-height:1.65;color:#404040}
+.subscribe-bullets li{padding:0.3rem 0 0.3rem 1.4rem;position:relative}
+.subscribe-bullets li::before{content:"§";position:absolute;left:0;top:0.3rem;font-family:'Space Mono',monospace;color:var(--brand-primary);font-weight:700}
+.signer-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;margin-bottom:0.85rem}
+@media(max-width:640px){.signer-grid{grid-template-columns:1fr}}
+.signer-grid .field{display:flex;flex-direction:column}
+.signer-grid .field .lbl{font-family:'Space Mono',monospace;font-size:0.62rem;color:#737373;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;font-weight:700}
+.signer-grid input{font-family:inherit;font-size:0.85rem;padding:0.55rem 0.75rem;border:1px solid #d4d4d4;border-radius:8px;outline:none}
+.signer-grid input:focus{border-color:var(--brand-primary)}
+.subscribe-accept{display:flex;align-items:flex-start;gap:0.55rem;padding:0.7rem 0.85rem;background:#fafafa;border:1px solid #e5e5e5;border-radius:8px;font-size:0.8rem;line-height:1.55;color:#404040;cursor:pointer}
+.subscribe-accept input{margin-top:3px;flex-shrink:0;width:16px;height:16px;cursor:pointer;accent-color:var(--brand-primary)}
+.contract-inline-link{background:none;border:none;color:var(--brand-primary);font-family:inherit;font-size:inherit;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
+.signed-badge{margin-top:0.7rem;padding:0.6rem 0.85rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.78rem;color:#15803d;line-height:1.5}
+
+/* Gating do pagamento */
+.payment-locked{position:relative;opacity:0.55;pointer-events:none;filter:grayscale(60%)}
+.payment-locked-overlay{position:absolute;inset:0;background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;border-radius:12px;backdrop-filter:blur(2px)}
+.payment-locked-overlay span{background:#0a0a0a;color:#fff;padding:0.55rem 1rem;border-radius:50px;font-family:'Space Mono',monospace;font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,10,10,0.55);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-backdrop.open{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:780px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,0.25)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #e5e5e5}
+.modal-head h3{font-size:1rem;font-weight:700}
+.modal-head .x{background:none;border:none;font-size:1.4rem;color:#737373;cursor:pointer;line-height:1}
+.modal-body{padding:1rem 1.25rem}
+.modal-foot{padding:0.85rem 1.25rem;display:flex;justify-content:flex-end;gap:0.5rem;border-top:1px solid #e5e5e5;background:#fafafa}
+.contract-doc{font-size:0.82rem;line-height:1.75;color:#262626;max-height:60vh;overflow:auto;padding:1rem 1.1rem;background:#fafafa;border:1px solid #e5e5e5;border-radius:8px}
+.contract-doc h4{font-size:0.95rem;margin:1.25rem 0 0.5rem;color:#0a0a0a;letter-spacing:-0.005em}
+.contract-doc h4:first-child{margin-top:0}
+.contract-doc p{margin-bottom:0.6rem}
+.contract-doc .clause-num{font-family:'Space Mono',monospace;color:#525252;font-size:0.72rem;margin-right:0.3rem}
+
 footer{padding:2rem 1.5rem;border-top:1px solid #e5e5e5;background:#fff;text-align:center;font-size:0.72rem;color:#737373;font-family:'Space Mono',monospace}
 footer a{color:#525252;text-decoration:none;margin:0 0.5rem}
 footer a:hover{color:#0a0a0a}
@@ -103,7 +143,45 @@ footer a:hover{color:#0a0a0a}
     <div class="help">Valor de face menos deságio e taxa de serviço.</div>
   </div>
 
-  <div class="card">
+  <!-- TERMO DE SUBSCRIÇÃO — assinatura eletrônica obrigatória antes do pagamento -->
+  <div class="card subscribe-card" id="subscribeCard">
+    <div class="subscribe-head">
+      <div>
+        <div class="eyebrow">BOLETIM DE SUBSCRIÇÃO · CVM 88/2022</div>
+        <div class="subscribe-title">Termo de Subscrição do Certificado de Recebíveis</div>
+      </div>
+      <button type="button" class="link-btn" onclick="openSubscriptionModal()">Ler completo →</button>
+    </div>
+    <ul class="subscribe-bullets">
+      <li>Você (o <strong>subscritor</strong>) adquire em caráter <strong>definitivo</strong> o Certificado de Recebíveis <span id="bulletCrId" class="mono">—</span> emitido pela <strong>EFIX Securitizadora S.A.</strong> (CNPJ 60.756.859/0001-57), em <strong>patrimônio segregado</strong> (Lei 14.430/2022).</li>
+      <li>O pagamento pelo valor de subscrição deve ser efetuado em até <strong>1 (um) dia útil</strong>. Decorrido o prazo sem pagamento, a subscrição é cancelada automaticamente, sem ônus.</li>
+      <li>Após a confirmação do pagamento, a EFIX minta o token TDIC (ERC-1155) na sua smart wallet em Base mainnet. No vencimento do lastro, a EFIX repassa o valor recebido do devedor proporcionalmente ao supply, e o token é queimado.</li>
+      <li><strong>Riscos:</strong> não há garantia de retorno. Os riscos incluem (i) crédito do devedor, (ii) operacional da EFIX, (iii) tecnológico do contrato inteligente. Você declara ter capacidade de avaliá-los e aceita-os.</li>
+    </ul>
+    <div class="signer-grid">
+      <label class="field">
+        <span class="lbl">Nome completo do signatário</span>
+        <input type="text" id="subSignName" placeholder="Conforme contrato social / procuração / CPF" autocomplete="off">
+      </label>
+      <label class="field">
+        <span class="lbl">CPF do signatário</span>
+        <input type="text" id="subSignCpf" placeholder="000.000.000-00" autocomplete="off">
+      </label>
+    </div>
+    <label class="subscribe-accept">
+      <input type="checkbox" id="subSignAccept">
+      <span>
+        Declaro que li e aceito o <button type="button" class="contract-inline-link" onclick="openSubscriptionModal()">Termo de Subscrição do CR</button>,
+        que tenho poderes para representar o subscritor e que estou ciente dos riscos descritos.
+        Esta aceitação fica registrada com data, hora, hash SHA-256 do documento e identificação do dispositivo.
+      </span>
+    </label>
+    <div id="subSignedBadge" class="signed-badge" hidden>
+      ✓ Termo assinado eletronicamente em <span id="subSignedAt">—</span> · hash <span class="mono" id="subSignedHash">—</span>
+    </div>
+  </div>
+
+  <div class="card" id="paymentCard">
     <div class="tabs">
       <button class="tab active" data-method="pix">PIX (recomendado)</button>
       <button class="tab" data-method="ted">TED</button>
@@ -177,6 +255,68 @@ footer a:hover{color:#0a0a0a}
   </div>
 </main>
 
+<!-- MODAL — texto integral do Boletim de Subscrição -->
+<div class="modal-backdrop" id="modalSubscription">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Boletim de Subscrição de Certificado de Recebíveis</h3>
+      <button class="x" type="button" onclick="closeSubscriptionModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="contract-doc">
+        <h4>1. Partes</h4>
+        <p><span class="clause-num">1.1</span> <strong>EFIX Securitizadora S.A.</strong>, inscrita no CNPJ sob nº 60.756.859/0001-57, doravante denominada &ldquo;<strong>EFIX</strong>&rdquo; ou &ldquo;<strong>emissora</strong>&rdquo;.</p>
+        <p><span class="clause-num">1.2</span> A pessoa, física ou jurídica, identificada neste portal por meio de smart wallet e cadastro complementar, qualificada com seu nome/razão social, CPF/CNPJ e dados de contato, doravante denominada &ldquo;<strong>subscritor</strong>&rdquo;.</p>
+
+        <h4>2. Objeto</h4>
+        <p><span class="clause-num">2.1</span> Pelo presente instrumento, o subscritor adquire, em caráter <strong>definitivo, oneroso e irrevogável</strong>, o Certificado de Recebíveis (&ldquo;<strong>CR</strong>&rdquo;) emitido pela EFIX e identificado neste portal pelo respectivo <em>token ID</em>, lastreado no direito creditório descrito na cláusula 2.2.</p>
+        <p><span class="clause-num">2.2</span> Para fins deste boletim, o CR subscrito refere-se ao(s) direito(s) creditório(s) cedido(s) à EFIX por terceiro (&ldquo;cedente&rdquo;), conforme Instrumento Particular de Cessão de Direitos Creditórios previamente celebrado, e cujas características financeiras (devedor, valor de face, vencimento, deságio, valor de subscrição) estão detalhadas na tela de operação deste portal.</p>
+        <p><span class="clause-num">2.3</span> A subscrição é formalizada por meio de aceitação eletrônica neste portal, equivalente à manifestação prevista nos arts. 219 e 425 do Código Civil e no art. 10 da MP 2.200-2/2001, e somente se aperfeiçoa com o efetivo pagamento do preço de subscrição.</p>
+
+        <h4>3. Preço e forma de pagamento</h4>
+        <p><span class="clause-num">3.1</span> O preço de subscrição corresponde ao valor indicado na tela de operação deste portal, equivalente ao valor de face do CR líquido do <strong>deságio</strong> e demais encargos pactuados na emissão.</p>
+        <p><span class="clause-num">3.2</span> O pagamento é realizado pelo subscritor por meio de <strong>PIX</strong> ou <strong>TED</strong> em conta de titularidade da EFIX indicada no portal, com identificador único (<em>txid</em> PIX ou referência de TED) para fins de conciliação automática.</p>
+        <p><span class="clause-num">3.3</span> O pagamento deve ser efetuado no prazo de até <strong>1 (um) dia útil</strong> contado do aceite eletrônico deste boletim. Decorrido o prazo sem efetiva confirmação do pagamento, a subscrição ficará <strong>automaticamente cancelada</strong>, de pleno direito e independentemente de notificação, sem qualquer multa ou indenização devida pelas partes.</p>
+
+        <h4>4. Tokenização e custódia</h4>
+        <p><span class="clause-num">4.1</span> Confirmada a liquidação financeira na cláusula 3.3, a EFIX emite a posição do subscritor sob a forma de <em>token</em> padrão <strong>ERC-1155</strong> denominado <strong>TDIC</strong> (Token de Direito Creditório), mintado na rede <strong>Base mainnet</strong> (chain ID 8453) pelo contrato <code>TDICRegistry</code> mantido pela EFIX.</p>
+        <p><span class="clause-num">4.2</span> O token TDIC é mintado diretamente na <em>smart wallet</em> ERC-4337 do subscritor, cadastrada neste portal. O gás de cada operação é integralmente custeado pela EFIX por meio de <em>paymaster</em> dedicado, em modelo <em>gasless</em> para o subscritor.</p>
+        <p><span class="clause-num">4.3</span> A transferência dos tokens TDIC entre carteiras é restrita a endereços previamente inseridos em <em>whitelist</em> on-chain pela EFIX (<code>COMPLIANCE_ROLE</code>), em conformidade com a regulação de prevenção à lavagem de dinheiro aplicável.</p>
+
+        <h4>5. Patrimônio segregado</h4>
+        <p><span class="clause-num">5.1</span> Os direitos creditórios lastreadores do CR objeto desta subscrição são mantidos pela EFIX em <strong>patrimônio segregado</strong>, nos termos do art. 11 da Lei nº 14.430/2022 e da Resolução CVM nº 88/2022, isolando o lastro de qualquer outro patrimônio da emissora.</p>
+        <p><span class="clause-num">5.2</span> Os valores recebidos do devedor no vencimento serão canalizados exclusivamente para a liquidação financeira deste CR, na proporção da participação do subscritor no <em>supply</em> total do <em>token</em>.</p>
+
+        <h4>6. Liquidação no vencimento</h4>
+        <p><span class="clause-num">6.1</span> No vencimento do crédito lastreador, a EFIX receberá o pagamento do devedor e, no prazo de até <strong>1 (um) dia útil</strong> contado da confirmação do recebimento, repassará ao subscritor o valor proporcional à sua participação no supply do <em>token</em>, descontados eventuais tributos retidos na fonte e encargos pactuados.</p>
+        <p><span class="clause-num">6.2</span> Realizada a liquidação financeira, os tokens TDIC correspondentes serão <strong>queimados</strong> (<em>burn</em>) on-chain pela EFIX, encerrando a posição do subscritor.</p>
+        <p><span class="clause-num">6.3</span> Em caso de inadimplemento do devedor, o subscritor reconhece que a EFIX não responde, em hipótese alguma, pela solvência do devedor (cláusula 7), aplicando-se as regras de recuperação previstas no Instrumento de Cessão e na legislação aplicável.</p>
+
+        <h4>7. Riscos e declarações do subscritor</h4>
+        <p><span class="clause-num">7.1</span> O subscritor declara, sob as penas da lei, que está ciente e aceita os riscos inerentes a esta operação, em especial: (i) <strong>risco de crédito</strong> do devedor do lastro, podendo haver atraso ou inadimplemento; (ii) <strong>risco operacional</strong> da emissora, incluindo falhas em conciliação, segregação patrimonial ou trilha de auditoria; (iii) <strong>risco tecnológico</strong> do contrato inteligente <code>TDICRegistry</code> e da infraestrutura blockchain subjacente; (iv) <strong>risco regulatório</strong>, com possibilidade de mudanças no marco aplicável a securitização e ativos virtuais.</p>
+        <p><span class="clause-num">7.2</span> A EFIX <strong>não garante retorno</strong>. O recebimento de valores no vencimento depende do efetivo pagamento pelo devedor, e o subscritor declara ter capacidade técnica e financeira para avaliar e suportar tais riscos.</p>
+        <p><span class="clause-num">7.3</span> O subscritor declara: (a) ter capacidade jurídica plena para contratar; (b) que seu signatário tem poderes societários e/ou procuratórios suficientes; (c) que os recursos utilizados nesta subscrição têm <strong>origem lícita</strong>; (d) que cumpre as obrigações de PLD/FT aplicáveis; (e) (se for o caso de oferta pública nos termos da Resolução CVM 88/2022) que se enquadra na categoria de investidor declarada, observando os limites individuais por oferta e por ano.</p>
+
+        <h4>8. Confidencialidade e proteção de dados</h4>
+        <p><span class="clause-num">8.1</span> As partes obrigam-se a manter sigilo sobre informações sensíveis trocadas no contexto desta subscrição, observada a Lei Geral de Proteção de Dados (Lei nº 13.709/2018). O tratamento de dados pessoais pela EFIX se dá com base nas hipóteses legais de execução de contrato e cumprimento de obrigação regulatória.</p>
+
+        <h4>9. Compliance, prevenção à lavagem de dinheiro e sanções</h4>
+        <p><span class="clause-num">9.1</span> O subscritor declara não estar incluído em listas restritivas (OFAC, ONU, BACEN, listagens internas da EFIX) e compromete-se a cooperar com requisições de <em>Know-Your-Customer/Business</em> (KYC/KYB) e <em>Anti-Money Laundering</em> (AML) feitas pela EFIX a qualquer tempo.</p>
+
+        <h4>10. Vigência e foro</h4>
+        <p><span class="clause-num">10.1</span> Este boletim entra em vigor com a aceitação eletrônica registrada neste portal e permanece vigente enquanto houver token TDIC ativo na <em>smart wallet</em> do subscritor.</p>
+        <p><span class="clause-num">10.2</span> Fica eleito o foro da Comarca de <strong>São Paulo/SP</strong> para dirimir quaisquer controvérsias oriundas deste instrumento, com renúncia expressa a qualquer outro, por mais privilegiado que seja.</p>
+
+        <h4>11. Aceitação eletrônica</h4>
+        <p><span class="clause-num">11.1</span> A manifestação de vontade do subscritor é coletada por meio de <em>checkbox</em> eletrônico no portal, acompanhada de identificação do signatário (nome completo e CPF), data e hora (UTC e local), <em>hash</em> SHA-256 do texto integral deste boletim e identificação do dispositivo (<em>user agent</em>). O registro fica armazenado pela EFIX como prova da contratação.</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="closeSubscriptionModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <footer>
   <div>
     <a href="/tdic/">TDIC</a>·<a href="/tdic/app/">Painel cedente</a>·<a href="https://efix.finance">EFIX</a>
@@ -184,7 +324,7 @@ footer a:hover{color:#0a0a0a}
   <div style="margin-top:0.5rem">© EFIX Securitizadora S.A. · CNPJ 60.756.859/0001-57 · Resolução CVM 88/2022</div>
 </footer>
 
-<script src="/tdic/tdic-mock.js?v=20260508h"></script>
+<script src="/tdic/tdic-mock.js?v=20260508m"></script>
 <script>
 (function() {
   "use strict";
@@ -195,6 +335,8 @@ footer a:hover{color:#0a0a0a}
   const crId = params.get("cr");
 
   let _cr = null, _credito = null, _cedente = null;
+  const SUBSCRIPTION_VERSION = "1.0.0";
+  const SUBSCRIPTION_TITLE = "Boletim de Subscrição de Certificado de Recebíveis";
 
   async function load() {
     if (!crId) {
@@ -214,6 +356,7 @@ footer a:hover{color:#0a0a0a}
 
     $("#invCrId").textContent = _cr.id;
     $("#invCrInternalId").textContent = _cr.id;
+    $("#bulletCrId").textContent = _cr.id;
     $("#invCedente").textContent = _cedente?.razaoSocial || "—";
     $("#invDevedor").textContent = _credito?.devedorRazaoSocial || "—";
     $("#invVencto").textContent = fmtDate(_credito?.maturityDate);
@@ -221,7 +364,104 @@ footer a:hover{color:#0a0a0a}
     $("#invToken").textContent = _cr.tokenId.slice(0, 14) + "…" + _cr.tokenId.slice(-6);
     $("#invAmount").textContent = fmtBRL(_cr.netValue || _cr.subscriptionAmount);
     $("#tedRef").textContent = "TDIC-" + _cr.id.replace("CR-", "").toUpperCase();
+
+    // Se já tem subscription assinada para este CR, mostra badge e libera pagamento
+    if (_cr.signedSubscription && _cr.signedSubscription.documentHash) {
+      paintSigned(_cr.signedSubscription);
+    } else {
+      lockPayment();
+    }
   }
+
+  // ── Gate de pagamento ──────────────────────────────────────────
+  function lockPayment() {
+    const card = $("#paymentCard");
+    if (!card) return;
+    if (card.classList.contains("payment-locked")) return;
+    card.classList.add("payment-locked");
+    if (!card.querySelector(".payment-locked-overlay")) {
+      const o = document.createElement("div");
+      o.className = "payment-locked-overlay";
+      o.innerHTML = '<span>Assine o Termo de Subscrição acima</span>';
+      card.appendChild(o);
+    }
+    $("#simulatePaymentBtn").disabled = true;
+  }
+  function unlockPayment() {
+    const card = $("#paymentCard");
+    if (!card) return;
+    card.classList.remove("payment-locked");
+    card.querySelector(".payment-locked-overlay")?.remove();
+    $("#simulatePaymentBtn").disabled = false;
+  }
+
+  function paintSigned(rec) {
+    $("#subSignedBadge").hidden = false;
+    $("#subSignedAt").textContent = new Date(rec.signedAt).toLocaleString("pt-BR");
+    $("#subSignedHash").textContent = rec.documentHash.slice(0, 16) + "…" + rec.documentHash.slice(-6);
+    $("#subSignName").value = rec.signatory?.name || "";
+    $("#subSignCpf").value = rec.signatory?.cpf || "";
+    $("#subSignName").disabled = true;
+    $("#subSignCpf").disabled = true;
+    $("#subSignAccept").checked = true;
+    $("#subSignAccept").disabled = true;
+    unlockPayment();
+  }
+
+  async function sha256Hex(text) {
+    const data = new TextEncoder().encode(text);
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function canonicalSubscriptionText() {
+    // Extrai apenas o texto do .contract-doc (mantém numeração, sem HTML)
+    const el = document.querySelector(".contract-doc");
+    if (!el) return SUBSCRIPTION_TITLE;
+    return SUBSCRIPTION_TITLE + " v" + SUBSCRIPTION_VERSION + "\n\n" +
+           el.innerText.replace(/\s+/g, " ").trim();
+  }
+
+  // Aceite eletrônico → grava signedSubscription no mock
+  async function trySignSubscription() {
+    const name = $("#subSignName").value.trim();
+    const cpf = $("#subSignCpf").value.trim();
+    const accept = $("#subSignAccept").checked;
+    if (!accept || !name || cpf.replace(/\D/g, "").length !== 11) return;
+
+    const text = canonicalSubscriptionText();
+    const documentHash = await sha256Hex(text);
+    const rec = {
+      version: SUBSCRIPTION_VERSION,
+      title: SUBSCRIPTION_TITLE,
+      signatory: { name, cpf },
+      documentHash,
+      signedAt: new Date().toISOString(),
+      signedAtLocal: new Date().toString(),
+      userAgent: navigator.userAgent,
+      provider: "none", // poderá virar clicksign/d4sign/docusign no Sprint F
+      envelopeId: "EFIX-SUB-" + Date.now().toString(36) + Math.random().toString(36).slice(2,8),
+    };
+
+    // Persiste no CR via mock
+    try {
+      await window.TdicMock.logSubscriptionAcceptance({ crId: _cr.id, ...rec });
+      _cr.signedSubscription = rec;
+    } catch (e) {
+      console.warn("[pay] logSubscriptionAcceptance falhou:", e);
+    }
+    paintSigned(rec);
+  }
+
+  ["#subSignName", "#subSignCpf"].forEach(id =>
+    $(id)?.addEventListener("input", () => trySignSubscription())
+  );
+  $("#subSignAccept")?.addEventListener("change", () => trySignSubscription());
+
+  function openSubscriptionModal() { $("#modalSubscription").classList.add("open"); }
+  function closeSubscriptionModal() { $("#modalSubscription").classList.remove("open"); }
+  window.openSubscriptionModal = openSubscriptionModal;
+  window.closeSubscriptionModal = closeSubscriptionModal;
 
   // Toggle de método (PIX / TED)
   document.querySelectorAll(".tab").forEach(t => {

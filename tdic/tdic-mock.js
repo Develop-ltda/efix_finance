@@ -122,6 +122,39 @@
     return db.emails.filter((e) => !creditoId || e.creditoId === creditoId);
   }
 
+  // Aceite eletrônico do Boletim de Subscrição (CR × subscritor).
+  // Em produção: backend persiste em tdic_signatures com tipo='subscription'
+  // e notariza hash on-chain (Sprint F item 15).
+  async function logSubscriptionAcceptance(payload) {
+    await delay();
+    const db = load();
+    const cr = db.crs.find((c) => c.id === payload.crId);
+    if (!cr) throw new Error("CR não encontrado");
+    cr.signedSubscription = {
+      version: payload.version,
+      title: payload.title,
+      signatory: payload.signatory,
+      documentHash: payload.documentHash,
+      signedAt: payload.signedAt,
+      signedAtLocal: payload.signedAtLocal,
+      userAgent: payload.userAgent,
+      provider: payload.provider,
+      envelopeId: payload.envelopeId,
+    };
+    save(db);
+    return cr.signedSubscription;
+  }
+
+  async function listSubscriptionAcceptances() {
+    await delay();
+    const db = load();
+    return db.crs.filter((c) => !!c.signedSubscription).map((c) => ({
+      crId: c.id,
+      tokenId: c.tokenId,
+      ...c.signedSubscription,
+    }));
+  }
+
   async function getSignatureHistory(walletAddress) {
     await delay();
     const db = load();
@@ -476,6 +509,8 @@
     aprovarCR,
     logCREmail,
     listCREmails,
+    logSubscriptionAcceptance,
+    listSubscriptionAcceptances,
     liquidarVendaDireta,
     mintarCR,
     listCRs,
