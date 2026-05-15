@@ -66,11 +66,14 @@ const WalletLogic = {
     });
   },
 
-  async requestWithdraw(backend, address, amount, pixKey) {
+  // Post-cutover: address is bound to JWT in backend (req.user.address), NOT sent
+  // from frontend. burnTxHash is the on-chain commitment (Option B direct burn).
+  // EfixAuth.headers() must include the JWT — otherwise backend rejects 401.
+  async requestWithdraw(backend, amount, pixKey, burnTxHash) {
     const res = await fetch(backend + '/withdraw/request', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address, amount, pixKey })
+      headers: EfixAuth.headers(),
+      body: JSON.stringify({ amount, pixKey, burnTxHash })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Backend error');

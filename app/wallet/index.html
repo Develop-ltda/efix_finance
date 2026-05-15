@@ -289,7 +289,7 @@
         <div id="app-screen">
             <div class="address-bar" id="addressBar" onclick="copyAddress()">
                 <span class="chain-dot"></span>
-                <span>Polygon</span>
+                <span>Base</span>
                 <span style="color:var(--gray-700);">|</span>
                 <span id="shortAddr">0x...</span>
             </div>
@@ -818,8 +818,7 @@
             </div>
         </div>
         <div class="app-footer">
-            <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank">Token</a> ·
-            <a href="https://polygonscan.com/address/0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C" target="_blank">Vault</a> ·
+            <a href="https://basescan.org/address/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank">Token</a> ·
             <a href="https://app.morpho.org/base/vault/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank">Morpho</a>
             <br><br>© 2026 EFIX Plataforma de Tokenização e Crowdfunding Ltda · CVM Act 23.635/2025
         </div>
@@ -1214,7 +1213,7 @@
         // ═══ APP ═══
         async function ensureAccountDeployed(address) {
             try {
-                const res = await fetch('https://polygon-mainnet.g.alchemy.com/v2/' + EfixWallet.config.apiKey, {
+                const res = await fetch('https://base-mainnet.g.alchemy.com/v2/' + EfixWallet.config.apiKey, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_getCode', params: [address, 'latest'], id: 1 })
@@ -1246,6 +1245,8 @@
             await refreshBalance(address);
             loadHistory(address);
             loadOfferings(address);
+            // Check protocol pause status — disables Sacar/Depositar if backend paused
+            checkProtocolStatus().catch(() => {});
             // Deploy smart account in background if needed
             ensureAccountDeployed(address);
             // Sync balance to backend (async, non-blocking)
@@ -1273,13 +1274,15 @@
         })();
 
         // Fetch user's SALRIO / BRLE / future pool holdings on Base via the offerings backend.
-        // Same smart-account address (Alchemy LightAccount v2 deterministic) on Polygon + Base.
+        // Base-native after 2026-05 cutover. Alchemy LightAccount v2 smart-account
+        // address is deterministic per (owner, factory, salt) — Polygon-legacy users
+        // retain the same address on Base via migrate-mint.
         const OFFERINGS_API = 'https://efix-offerings-backend-production.up.railway.app';
         const BRLE_API = 'https://brle-protocol-production.up.railway.app';
 
         // ─────────────────────────────────────────────────────────
         // BRLE tab — buy BRLE with PIX via brle-protocol backend.
-        // Same smart-account address on Base as on Polygon, so userAddress works.
+        // Same smart-account address resolves cleanly to Base via Account Kit.
         // ─────────────────────────────────────────────────────────
         let _brleCurrentOrder = null;
         let _brlePollTimer = null;
@@ -1600,6 +1603,31 @@
             }
         }
 
+        // Public status check — runs on app load. Disables withdrawal/deposit buttons
+        // if backend reports pause_mints/pause_withdrawals (env or DB-set by reconcile drift).
+        async function checkProtocolStatus() {
+            try {
+                const r = await fetch(BACKEND_URL + '/api/wallet/status');
+                const s = await r.json();
+                const withdrawBtn = document.querySelector('#panel-withdraw button.btn-primary');
+                const depositArea = document.getElementById('panel-deposit');
+                if (s.pause_withdrawals && withdrawBtn) {
+                    withdrawBtn.disabled = true;
+                    withdrawBtn.textContent = 'Saques pausados';
+                    withdrawBtn.title = s.pause_reason || 'Manutenção';
+                }
+                if (s.pause_mints && depositArea) {
+                    const banner = document.createElement('div');
+                    banner.style.cssText = 'background:#fef3c7;color:#92400e;padding:8px;border-radius:4px;margin-bottom:8px;font-size:13px;';
+                    banner.textContent = '⚠️ Depósitos pausados: ' + (s.pause_reason || 'manutenção');
+                    depositArea.insertBefore(banner, depositArea.firstChild);
+                }
+                console.log('[Status]', s);
+            } catch (e) {
+                console.warn('[Status] check failed', e);
+            }
+        }
+
         async function refreshBalance(address) {
             try {
                 const bal = await WalletLogic.getBalance(EfixWallet, address || userAddress);
@@ -1781,6 +1809,10 @@
             if (code) copyText(code, { feedbackEl: 'pixCodeText' });
         }
 
+        // Post-cutover withdrawal flow (Option B):
+        //   1. User signs Account Kit UserOp to burn efixDIBase on Base
+        //   2. Frontend gets burnTxHash, POSTs to backend with JWT
+        //   3. Backend verifies burn on-chain, sends PIX, or refund-mints on failure
         async function handleWithdraw() {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const pixKey = document.getElementById('pixKey').value.trim();
@@ -1790,20 +1822,57 @@
             const bal = parseFloat(document.getElementById('tokenBalance').textContent);
             if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
 
-            if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nPIX será enviado para: ' + pixKey)) return;
+            if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nPIX será enviado para: ' + pixKey + '\n\nVocê assinará uma transação para queimar os tokens. O PIX será enviado em seguida.')) return;
 
+            const btn = document.querySelector('#panel-withdraw button.btn-primary');
+            const originalLabel = btn ? btn.textContent : 'Solicitar Saque';
             try {
-                const data = await WalletLogic.requestWithdraw(BACKEND_URL, userAddress, amount, pixKey);
-                if (data.success) {
-                    alert('Saque solicitado: R$ ' + data.amount + '\nPIX: ' + pixKey + '\n\n' + data.message);
+                if (btn) { btn.disabled = true; btn.textContent = 'Queimando tokens...'; }
+
+                // Step 1: burn efixDIBase on Base via Account Kit UserOp (gas-sponsored)
+                // burn(uint256) selector = 0x42966c68
+                const amountWei = BigInt(Math.round(amount * 1e18));
+                const padded = amountWei.toString(16).padStart(64, '0');
+                const burnData = '0x42966c68' + padded;
+                const tokenAddr = EfixWallet.config.contracts.efixDI;
+
+                const client = await EfixWallet.getClient();
+                const op = await client.sendUserOperation({
+                    uo: { target: tokenAddr, data: burnData, value: 0n }
+                });
+                const burnTxHash = await client.waitForUserOperationTransaction(op);
+                console.log('[Withdraw] burn confirmed:', burnTxHash);
+
+                // Step 2: POST burnTxHash to backend (JWT-authenticated)
+                if (btn) btn.textContent = 'Enviando PIX...';
+                const data = await WalletLogic.requestWithdraw(BACKEND_URL, amount, pixKey, burnTxHash);
+
+                if (data.success && data.status === 'completed') {
+                    alert('Saque concluído!\n\nR$ ' + data.amount + ' enviados via PIX para: ' + pixKey);
                     document.getElementById('withdrawAmount').value = '';
                     document.getElementById('pixKey').value = '';
+                    refreshBalance(userAddress);
+                    loadHistory(userAddress);
+                } else if (data.status === 'refunded') {
+                    alert('PIX falhou, mas seus efixDI foram restaurados na sua carteira.\n\nRefund tx: ' + (data.refund_tx_hash || 'verificar histórico'));
+                    refreshBalance(userAddress);
                     loadHistory(userAddress);
                 } else {
                     alert('Erro: ' + (data.error || 'tente novamente'));
                 }
             } catch (e) {
-                alert('Erro: ' + e.message);
+                console.error('[Withdraw] failed', e);
+                const msg = e.message || String(e);
+                // Common failure: user rejected the burn UserOp, or backend rejected after burn already happened
+                if (msg.toLowerCase().includes('reject') || msg.toLowerCase().includes('denied')) {
+                    alert('Transação cancelada. Seus tokens permanecem na carteira.');
+                } else if (msg.toLowerCase().includes('burn verification failed') || msg.toLowerCase().includes('already minted')) {
+                    alert('Erro de verificação: ' + msg + '\n\nContate o suporte se a queima foi confirmada on-chain.');
+                } else {
+                    alert('Erro no saque: ' + msg);
+                }
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
             }
         }
 

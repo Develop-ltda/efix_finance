@@ -3,19 +3,21 @@
 
 import { AlchemyWebSigner } from "@account-kit/signer";
 import { createSmartWalletClient } from "@account-kit/wallet-client";
-import { alchemy, polygon } from "@account-kit/infra";
+import { alchemy, base } from "@account-kit/infra";
 
 // ═══════════════════════════════════════════════════════════
 // EFIX WALLET SDK - Bundled for vanilla HTML
+// Base-native after 2026-05 bridge discontinuation. Polygon canonical
+// token remains on-chain for regulatory record but is not user-facing.
 // ═══════════════════════════════════════════════════════════
 
 const EFIX_CONFIG = {
   apiKey: "5QrXWREEtmi4gITNoJsJf",
   gasPolicyId: "7b22b464-38cd-4e6f-bccb-00f1280ac14c",
-  chain: polygon,
+  chain: base,
   contracts: {
-    efixDI: "0x04082b283818D9d0dd9Ee8742892eEe5CC396441",
-    vault: "0x2eA512b4C5e53A8c1302AC8ba2d43c5DA90b307C",
+    efixDI: "0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608",  // EfixDITokenBase on Base
+    morphoVault: "0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5",  // Morpho Vault V2 on Base
   }
 };
 
@@ -142,7 +144,7 @@ async function getAddress() {
  * @returns {Promise<string>} Balance in human-readable format
  */
 async function getBalance(address) {
-  const rpcUrl = `https://polygon-mainnet.g.alchemy.com/v2/${EFIX_CONFIG.apiKey}`;
+  const rpcUrl = `https://base-mainnet.g.alchemy.com/v2/${EFIX_CONFIG.apiKey}`;
   
   // balanceOf(address) selector = 0x70a08231
   const paddedAddress = address.toLowerCase().replace("0x", "").padStart(64, "0");
