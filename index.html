@@ -789,7 +789,7 @@
                 <li><a href="#regulatory" data-i18n="nav_compliance">Compliance</a></li>
             </ul>
             <a href="/app/wallet/" class="nav-cta" style="background:transparent;color:var(--black);border:1.5px solid var(--gray-300);" data-i18n="nav_wallet">Wallet</a>
-            <a href="/app" class="nav-cta" data-i18n="nav_launch">Launch App</a>
+            <a href="/app" class="nav-cta" data-i18n="nav_launch" hidden style="display:none">Launch App</a>
             <div class="lang-sel">
                 <div class="lang-btn" onclick="document.getElementById('langMenu').classList.toggle('open')">
                     <span id="langFlag">🇺🇸</span><span id="langCode">EN</span>
@@ -1148,12 +1148,12 @@
     </div>
 </section>
 
-<!-- ═══ CTA SECTION ═══ -->
-<section class="cta-section">
+<!-- ═══ CTA SECTION ═══ (oculta — fluxo /app é o antigo, esperando novo launch UX) -->
+<section class="cta-section" hidden style="display:none">
     <div class="container">
         <h2 class="section-title" data-i18n="cta_title">Start Earning 15%+ APY<br>on Brazilian Fixed Income</h2>
         <p class="cta-desc" data-i18n="cta_sub">Deposit via PIX. Earn CDI yields. Leverage on Morpho. All in one interface.</p>
-        <a href="/app" class="btn btn-primary" data-i18n="cta_btn">Launch App</a>
+        <a href="/app" class="btn btn-primary" data-i18n="cta_btn" hidden style="display:none">Launch App</a>
     </div>
 </section>
 
@@ -1189,8 +1189,8 @@
     </div>
 </footer>
 
-<!-- ═══ STICKY CTA BAR ═══ -->
-<div class="sticky-cta" id="stickyCta">
+<!-- ═══ STICKY CTA BAR ═══ (oculta — fluxo /app é o antigo, esperando novo launch UX) -->
+<div class="sticky-cta" id="stickyCta" hidden style="display:none">
     <span class="sticky-cta-text" data-i18n="bar_text"><strong>~25% APY</strong> on structural arbitrage — Brazilian yield, global credit</span>
     <a href="/app" class="btn btn-primary" data-i18n="bar_btn">Launch App</a>
 </div>
