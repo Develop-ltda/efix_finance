@@ -263,29 +263,35 @@ async function disconnect() {
  * Transfer efixDI tokens from smart wallet to a recipient
  * Uses UserOp via the smart wallet client
  */
-async function transferEfixDI(toAddress, amount) {
+// v4 UserOp helper — wraps sendCalls + waitForCallsStatus from @account-kit/wallet-client v4.
+// Replaces the legacy `client.sendUserOperation({uo: {...}})` API which was removed in v4.
+// Returns the on-chain tx hash once the UserOp is mined.
+async function sendUserOp(target, data, value = "0x0") {
   const client = await getClient();
-  const amountWei = BigInt(Math.round(amount * 1e18));
+  const address = await getAddress();
+  const sent = await client.sendCalls({
+    from: address,
+    calls: [{ to: target, data: data, value: value }],
+    capabilities: {
+      paymasterService: { policyId: EFIX_CONFIG.gasPolicyId },
+    },
+  });
+  const result = await client.waitForCallsStatus({ id: sent.id, timeout: 120000 });
+  const txHash = result.receipts?.[0]?.transactionHash;
+  if (!txHash) throw new Error("UserOp completed without tx hash: " + JSON.stringify(result).slice(0, 300));
+  console.log("[EfixWallet] UserOp tx:", txHash);
+  return txHash;
+}
 
+async function transferEfixDI(toAddress, amount) {
+  const amountWei = BigInt(Math.round(amount * 1e18));
   // ERC-20 transfer(address,uint256) selector = 0xa9059cbb
   const paddedTo = toAddress.toLowerCase().replace("0x", "").padStart(64, "0");
   const paddedAmount = amountWei.toString(16).padStart(64, "0");
   const data = "0xa9059cbb" + paddedTo + paddedAmount;
-
-  const hash = await client.sendUserOperation({
-    uo: {
-      target: EFIX_CONFIG.contracts.efixDI,
-      data: data,
-      value: 0n,
-    },
-  });
-
-  console.log("[EfixWallet] Transfer UserOp sent:", hash);
-
-  // Wait for UserOp to be mined
-  const txHash = await client.waitForUserOperationTransaction(hash);
+  // sendUserOp already waits for inclusion via waitForCallsStatus and returns tx hash
+  const txHash = await sendUserOp(EFIX_CONFIG.contracts.efixDI, data);
   console.log("[EfixWallet] Transfer confirmed:", txHash);
-
   return { hash: txHash };
 }
 
@@ -325,6 +331,7 @@ window.EfixWallet = {
   getSigner,
   transferEfixDI,
   collateralize,
+  sendUserOp,  // v4 helper — used by handleWithdraw in index.html
   config: EFIX_CONFIG,
 };
 

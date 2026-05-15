@@ -1223,11 +1223,9 @@
                     console.log('[EfixWallet] Account already deployed');
                     return true;
                 }
-                console.log('[EfixWallet] Account not deployed, deploying...');
-                const client = await EfixWallet.getClient();
-                const op = await client.sendUserOperation({ uo: { target: address, data: '0x', value: 0n } });
-                await client.waitForUserOperationTransaction(op);
-                console.log('[EfixWallet] Account deployed:', op.hash);
+                console.log('[EfixWallet] Account not deployed, deploying via no-op self-call...');
+                const deployTxHash = await EfixWallet.sendUserOp(address, '0x');
+                console.log('[EfixWallet] Account deployed:', deployTxHash);
                 return true;
             } catch (e) {
                 console.error('[EfixWallet] Account deployment failed:', e);
@@ -1829,18 +1827,16 @@
             try {
                 if (btn) { btn.disabled = true; btn.textContent = 'Queimando tokens...'; }
 
-                // Step 1: burn efixDIBase on Base via Account Kit UserOp (gas-sponsored)
+                // Step 1: burn efixDIBase on Base via Account Kit v4 UserOp (gas-sponsored)
                 // burn(uint256) selector = 0x42966c68
                 const amountWei = BigInt(Math.round(amount * 1e18));
                 const padded = amountWei.toString(16).padStart(64, '0');
                 const burnData = '0x42966c68' + padded;
                 const tokenAddr = EfixWallet.config.contracts.efixDI;
 
-                const client = await EfixWallet.getClient();
-                const op = await client.sendUserOperation({
-                    uo: { target: tokenAddr, data: burnData, value: 0n }
-                });
-                const burnTxHash = await client.waitForUserOperationTransaction(op);
+                // sendUserOp is exported from entry.js — wraps v4 sendCalls + waitForCallsStatus
+                // and returns the on-chain tx hash once mined.
+                const burnTxHash = await EfixWallet.sendUserOp(tokenAddr, burnData);
                 console.log('[Withdraw] burn confirmed:', burnTxHash);
 
                 // Step 2: POST burnTxHash to backend (JWT-authenticated)
