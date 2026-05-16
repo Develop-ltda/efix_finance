@@ -238,7 +238,7 @@ async function getClient(explicitSCA = null) {
       chain: EFIX_CONFIG.chain,
       signer: _signer,
       accountAddress: explicitSCA,
-      gasManagerConfig: { policyId: EFIX_CONFIG.gasPolicyId },
+      policyId: EFIX_CONFIG.gasPolicyId,
     });
   }
 
@@ -248,7 +248,7 @@ async function getClient(explicitSCA = null) {
       transport,
       chain: EFIX_CONFIG.chain,
       signer: _signer,
-      gasManagerConfig: { policyId: EFIX_CONFIG.gasPolicyId },
+      policyId: EFIX_CONFIG.gasPolicyId,
     });
   }
 

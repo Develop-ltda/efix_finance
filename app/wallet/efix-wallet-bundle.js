@@ -71483,7 +71483,7 @@ ${values.join("\n")}` : `${blockName} :`;
             chain: EFIX_CONFIG.chain,
             signer: _signer,
             accountAddress: explicitSCA,
-            gasManagerConfig: { policyId: EFIX_CONFIG.gasPolicyId }
+            policyId: EFIX_CONFIG.gasPolicyId
           });
         }
         if (!_client) {
@@ -71492,7 +71492,7 @@ ${values.join("\n")}` : `${blockName} :`;
             transport,
             chain: EFIX_CONFIG.chain,
             signer: _signer,
-            gasManagerConfig: { policyId: EFIX_CONFIG.gasPolicyId }
+            policyId: EFIX_CONFIG.gasPolicyId
           });
         }
         return _client;

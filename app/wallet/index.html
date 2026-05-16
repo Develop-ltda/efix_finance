@@ -1307,7 +1307,13 @@
         }
 
         // ═══ APP ═══
+        // Debounce: ensureAccountDeployed can be called from multiple post-login
+        // paths (session restore + fresh OTP + waitlist join). Sharing a promise
+        // prevents duplicate deploy UserOps with conflicting nonces.
+        let _ensureDeployPromise = null;
         async function ensureAccountDeployed(address) {
+            if (_ensureDeployPromise) return _ensureDeployPromise;
+            _ensureDeployPromise = (async () => {
             try {
                 const res = await fetch('https://base-mainnet.g.alchemy.com/v2/' + EfixWallet.config.apiKey, {
                     method: 'POST',
@@ -1328,6 +1334,8 @@
                 console.error('[EfixWallet] Account deployment failed:', e);
                 return false;
             }
+            })();
+            return _ensureDeployPromise;
         }
 
         async function showApp(address) {
