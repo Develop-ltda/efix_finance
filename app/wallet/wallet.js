@@ -71,8 +71,8 @@ const WalletLogic = {
   // optional when backend is in WITHDRAW_TRUST_MODE (v4 signer auth currently
   // blocked; burn deferred to admin cleanup).
   // EfixAuth.headers() must include the JWT — otherwise backend rejects 401.
-  async requestWithdraw(backend, amount, pixKey, burnTxHash) {
-    const body = { amount, pixKey };
+  async requestWithdraw(backend, amount, pixKey, burnTxHash, requestUuid) {
+    const body = { amount, pixKey, requestUuid };
     if (burnTxHash) body.burnTxHash = burnTxHash;  // omit in trust mode
     const res = await fetch(backend + '/withdraw/request', {
       method: 'POST',
@@ -80,6 +80,9 @@ const WalletLogic = {
       body: JSON.stringify(body)
     });
     const data = await res.json();
+    // 409 with idempotent_replay means a previous attempt with this UUID already
+    // exists — caller treats the returned status as authoritative instead of throwing.
+    if (res.status === 409 && data.idempotent_replay) return data;
     if (!res.ok) throw new Error(data.error || 'Backend error');
     return data;
   },

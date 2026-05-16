@@ -2,8 +2,19 @@
 // Entry point for esbuild bundle - exposes Alchemy Account Kit to window.EfixWallet
 
 import { AlchemyWebSigner } from "@account-kit/signer";
-import { createSmartWalletClient } from "@account-kit/wallet-client";
+import { createLightAccountClient } from "@account-kit/smart-contracts";
 import { alchemy, base } from "@account-kit/infra";
+
+// We use createLightAccountClient (not the higher-level createSmartWalletClient
+// from @account-kit/wallet-client) because the wallet-client v4 API replaced
+// sendUserOperation with sendCalls + waitForCallsStatus, and its internal
+// requestAccount → whoami path requires a fully hydrated signer.inner._user.
+// The Alchemy iframe storage post-OTP in 4.86.x leaves _user undefined on
+// session restore (observed 2026-05-15: "No orgId provided", "Signer not
+// authenticated"). createLightAccountClient uses the underlying @aa-sdk/core
+// SmartAccountClient with sendUserOperation + waitForUserOperationTransaction
+// — the same deterministic LightAccount v2 account address derivation that
+// existing migrated holders were created with, and no whoami precheck.
 
 // ═══════════════════════════════════════════════════════════
 // EFIX WALLET SDK - Bundled for vanilla HTML
@@ -160,8 +171,11 @@ async function checkSession() {
 }
 
 /**
- * Get the smart wallet client for sending UserOps
- * @returns {Promise<object>} Smart Wallet Client
+ * Get the smart wallet client for sending UserOps.
+ * Returns an AlchemySmartAccountClient bound to a LightAccount v2 — same SCA
+ * address derivation as previous migrations, but using the legacy
+ * sendUserOperation API path (not v4 wallet-client sendCalls).
+ * @returns {Promise<object>} LightAccount client
  */
 async function getClient() {
   if (!_signer) throw new Error("Signer not initialized");
@@ -169,31 +183,23 @@ async function getClient() {
   if (!_client) {
     const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
 
-    _client = createSmartWalletClient({
+    _client = await createLightAccountClient({
       transport,
       chain: EFIX_CONFIG.chain,
       signer: _signer,
+      gasManagerConfig: { policyId: EFIX_CONFIG.gasPolicyId },
     });
   }
 
   return _client;
 }
 
-// Base-chain smart wallet client (for BRLE, SALRIO, Bridge-Base USDC, etc.).
-// Same signer + same deterministic LightAccount v2 = same smart account address
-// as the Polygon client. Only the userOp destination chain differs.
-let _baseClient = null;
+// Base-chain client alias. Pre-Base-cutover this was a separate Polygon vs Base
+// client; post-cutover both default and Base are the same chain (Base 8453).
+// Kept as a function alias so existing index.html callers (admin tab, BRLE,
+// SALRIO) keep working without edits.
 async function getBaseClient() {
-  if (!_signer) throw new Error("Signer not initialized");
-  if (!_baseClient) {
-    const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
-    _baseClient = createSmartWalletClient({
-      transport,
-      chain: base,
-      signer: _signer,
-    });
-  }
-  return _baseClient;
+  return getClient();
 }
 
 /**
@@ -263,29 +269,23 @@ async function disconnect() {
  * Transfer efixDI tokens from smart wallet to a recipient
  * Uses UserOp via the smart wallet client
  */
-// v4 UserOp helper — wraps sendCalls + waitForCallsStatus from @account-kit/wallet-client v4.
-// Replaces the legacy `client.sendUserOperation({uo: {...}})` API which was removed in v4.
-// Returns the on-chain tx hash once the UserOp is mined.
-async function sendUserOp(target, data, value = "0x0", explicitAccount = null) {
+// Legacy-style UserOp helper using sendUserOperation + waitForUserOperationTransaction
+// from @aa-sdk/core via @account-kit/smart-contracts.createLightAccountClient.
+// LightAccount address is derived deterministically from the signer; no whoami
+// or orgId lookup is required at send time, which sidesteps the v4 wallet-client
+// "No orgId provided" / "Signer not authenticated" failures observed 2026-05-15.
+// `explicitAccount` is accepted for backward compat with existing call sites
+// (index.html passes userAddress as the 4th arg) but is unused — the client's
+// hoisted account is the source of truth.
+async function sendUserOp(target, data, value = "0x0", _explicitAccount = null) {
   const client = await getClient();
-  // Resolve account address — prefer explicit param (from caller who knows the
-  // current SCA address, e.g. from window.userAddress) to fully bypass the v4
-  // requestAccount → whoami path which fails with "No orgId provided" when the
-  // AlchemyWebSigner has partial state restored from iframe storage.
-  // Per bundle inspection: p0(transport, signer, {accountAddress: r.account ?? whoami()}).
-  // Passing `account` skips the whoami fallback entirely.
-  const address = explicitAccount || _signerAddress || (await getAddress());
-  const sent = await client.sendCalls({
-    from: address,
-    account: address,   // explicit — bypasses requestAccount → whoami → orgId throw
-    calls: [{ to: target, data: data, value: value }],
-    capabilities: {
-      paymasterService: { policyId: EFIX_CONFIG.gasPolicyId },
-    },
+  const valueBn = (typeof value === "string" && value.startsWith("0x"))
+    ? BigInt(value)
+    : (typeof value === "bigint" ? value : BigInt(value || 0));
+  const sent = await client.sendUserOperation({
+    uo: { target, data, value: valueBn },
   });
-  const result = await client.waitForCallsStatus({ id: sent.id, timeout: 120000 });
-  const txHash = result.receipts?.[0]?.transactionHash;
-  if (!txHash) throw new Error("UserOp completed without tx hash: " + JSON.stringify(result).slice(0, 300));
+  const txHash = await client.waitForUserOperationTransaction({ hash: sent.hash });
   console.log("[EfixWallet] UserOp tx:", txHash);
   return txHash;
 }

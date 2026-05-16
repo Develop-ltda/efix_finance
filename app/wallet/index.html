@@ -1808,6 +1808,13 @@
             if (code) copyText(code, { feedbackEl: 'pixCodeText' });
         }
 
+        // Per-intent UUID cache. Same (address|amount|pixKey) reuses the same UUID
+        // so any retry (including UI status-string mismatch like the 2026-05-15
+        // 'completed_trust_mode' regression) hits the backend dedup instead of
+        // triggering a second PIX. Cleared on terminal success/refund.
+        let _pendingWithdrawUuid = null;
+        let _pendingWithdrawKey = null;
+
         // Post-cutover withdrawal flow (Option B):
         //   1. User signs Account Kit UserOp to burn efixDIBase on Base
         //   2. Frontend gets burnTxHash, POSTs to backend with JWT
@@ -1822,6 +1829,15 @@
             if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
 
             if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nPIX será enviado para: ' + pixKey + '\n\nVocê assinará uma transação para queimar os tokens. O PIX será enviado em seguida.')) return;
+
+            // Idempotency key: same intent = same UUID. Changing any of (address,
+            // amount, pixKey) starts a new intent and generates a fresh UUID.
+            const intentKey = (userAddress || '') + '|' + amount.toFixed(2) + '|' + pixKey;
+            if (_pendingWithdrawKey !== intentKey || !_pendingWithdrawUuid) {
+                _pendingWithdrawUuid = (crypto.randomUUID ? crypto.randomUUID() : ('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); })));
+                _pendingWithdrawKey = intentKey;
+            }
+            const requestUuid = _pendingWithdrawUuid;
 
             const btn = document.querySelector('#panel-withdraw button.btn-primary');
             const originalLabel = btn ? btn.textContent : 'Solicitar Saque';
@@ -1857,21 +1873,35 @@
                     if (btn) btn.textContent = 'Enviando PIX...';
                 }
                 // Step 2: POST to backend (JWT-authenticated). Trust mode skips burnTxHash arg.
-                const data = await WalletLogic.requestWithdraw(BACKEND_URL, amount, pixKey, burnTxHash);
+                const data = await WalletLogic.requestWithdraw(BACKEND_URL, amount, pixKey, burnTxHash, requestUuid);
 
                 if (data.success && (data.status === 'completed' || data.status === 'completed_trust_mode')) {
+                    // Terminal success — clear intent cache so a future withdraw with the
+                    // same inputs gets a fresh UUID instead of an idempotent replay.
+                    _pendingWithdrawUuid = null;
+                    _pendingWithdrawKey = null;
                     const trustNote = data.status === 'completed_trust_mode'
                         ? '\n\n(Modo confiança ativo: tokens permanecem na sua carteira on-chain até cleanup admin.)'
                         : '';
-                    alert('Saque concluído!\n\nR$ ' + data.amount + ' enviados via PIX para: ' + pixKey + trustNote);
+                    const replayNote = data.idempotent_replay
+                        ? '\n\n(Solicitação já havia sido processada anteriormente.)'
+                        : '';
+                    alert('Saque concluído!\n\nR$ ' + data.amount + ' enviados via PIX para: ' + pixKey + trustNote + replayNote);
                     document.getElementById('withdrawAmount').value = '';
                     document.getElementById('pixKey').value = '';
                     refreshBalance(userAddress);
                     loadHistory(userAddress);
                 } else if (data.status === 'refunded') {
+                    _pendingWithdrawUuid = null;
+                    _pendingWithdrawKey = null;
                     alert('PIX falhou, mas seus efixDI foram restaurados na sua carteira.\n\nRefund tx: ' + (data.refund_tx_hash || 'verificar histórico'));
                     refreshBalance(userAddress);
                     loadHistory(userAddress);
+                } else if (data.idempotent_replay) {
+                    // Non-success replay (still processing or earlier failure). Keep cache
+                    // so the user's next click hits the same dedup path instead of
+                    // queueing another PIX. Surface the existing status so they wait.
+                    alert('Solicitação em andamento (status: ' + data.status + '). Aguarde — não é necessário tentar novamente.');
                 } else {
                     alert('Erro: ' + (data.error || 'tente novamente'));
                 }
