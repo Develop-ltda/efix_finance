@@ -266,14 +266,18 @@ async function disconnect() {
 // v4 UserOp helper — wraps sendCalls + waitForCallsStatus from @account-kit/wallet-client v4.
 // Replaces the legacy `client.sendUserOperation({uo: {...}})` API which was removed in v4.
 // Returns the on-chain tx hash once the UserOp is mined.
-async function sendUserOp(target, data, value = "0x0") {
+async function sendUserOp(target, data, value = "0x0", explicitAccount = null) {
   const client = await getClient();
-  // Use cached _signerAddress if populated to avoid signer.whoami which can throw
-  // "No orgId provided" when the AlchemyWebSigner has a partial session restored
-  // from iframe-based storage. Fall back to getAddress() only if no cache.
-  const address = _signerAddress || (await getAddress());
+  // Resolve account address — prefer explicit param (from caller who knows the
+  // current SCA address, e.g. from window.userAddress) to fully bypass the v4
+  // requestAccount → whoami path which fails with "No orgId provided" when the
+  // AlchemyWebSigner has partial state restored from iframe storage.
+  // Per bundle inspection: p0(transport, signer, {accountAddress: r.account ?? whoami()}).
+  // Passing `account` skips the whoami fallback entirely.
+  const address = explicitAccount || _signerAddress || (await getAddress());
   const sent = await client.sendCalls({
     from: address,
+    account: address,   // explicit — bypasses requestAccount → whoami → orgId throw
     calls: [{ to: target, data: data, value: value }],
     capabilities: {
       paymasterService: { policyId: EFIX_CONFIG.gasPolicyId },

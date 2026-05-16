@@ -1224,7 +1224,8 @@
                     return true;
                 }
                 console.log('[EfixWallet] Account not deployed, deploying via no-op self-call...');
-                const deployTxHash = await EfixWallet.sendUserOp(address, '0x');
+                // Pass `address` as explicitAccount to bypass whoami orgId throw
+                const deployTxHash = await EfixWallet.sendUserOp(address, '0x', '0x0', address);
                 console.log('[EfixWallet] Account deployed:', deployTxHash);
                 return true;
             } catch (e) {
@@ -1834,9 +1835,10 @@
                 const burnData = '0x42966c68' + padded;
                 const tokenAddr = EfixWallet.config.contracts.efixDI;
 
-                // sendUserOp is exported from entry.js — wraps v4 sendCalls + waitForCallsStatus
-                // and returns the on-chain tx hash once mined.
-                const burnTxHash = await EfixWallet.sendUserOp(tokenAddr, burnData);
+                // sendUserOp is exported from entry.js — wraps v4 sendCalls + waitForCallsStatus.
+                // Pass userAddress as 4th arg (explicitAccount) to bypass requestAccount→whoami
+                // path which fails with "No orgId provided" when session storage is partial.
+                const burnTxHash = await EfixWallet.sendUserOp(tokenAddr, burnData, '0x0', userAddress);
                 console.log('[Withdraw] burn confirmed:', burnTxHash);
 
                 // Step 2: POST burnTxHash to backend (JWT-authenticated)
