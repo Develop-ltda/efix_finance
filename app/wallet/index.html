@@ -1859,8 +1859,11 @@
                 // Step 2: POST to backend (JWT-authenticated). Trust mode skips burnTxHash arg.
                 const data = await WalletLogic.requestWithdraw(BACKEND_URL, amount, pixKey, burnTxHash);
 
-                if (data.success && data.status === 'completed') {
-                    alert('Saque concluído!\n\nR$ ' + data.amount + ' enviados via PIX para: ' + pixKey);
+                if (data.success && (data.status === 'completed' || data.status === 'completed_trust_mode')) {
+                    const trustNote = data.status === 'completed_trust_mode'
+                        ? '\n\n(Modo confiança ativo: tokens permanecem na sua carteira on-chain até cleanup admin.)'
+                        : '';
+                    alert('Saque concluído!\n\nR$ ' + data.amount + ' enviados via PIX para: ' + pixKey + trustNote);
                     document.getElementById('withdrawAmount').value = '';
                     document.getElementById('pixKey').value = '';
                     refreshBalance(userAddress);
