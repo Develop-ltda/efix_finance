@@ -52,9 +52,31 @@
         .user-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
         .user-pill.active{display:flex}
         main{max-width:480px;margin:0 auto;padding:40px 20px 80px}
-        #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center}
-        #auth-screen h1{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
-        #auth-screen .subtitle{color:var(--gray-400);font-size:15px;margin-bottom:40px;line-height:1.5}
+        #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:60vh;text-align:center;padding-top:8px}
+        #auth-screen h1{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:12px;line-height:1.15}
+        #auth-screen h1 .accent{background:linear-gradient(to right,var(--gray-400),var(--green),var(--gray-400));background-size:200% auto;color:transparent;-webkit-background-clip:text;background-clip:text;animation:shine 4s linear infinite}
+        @keyframes shine{to{background-position:200% center}}
+        #auth-screen .subtitle{color:var(--gray-400);font-size:15px;margin-bottom:32px;line-height:1.65;max-width:440px}
+        /* ── Hero tag (pre-auth) ── */
+        .hero-tag-pre{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--gray-800);border-radius:100px;font-family:var(--font-mono);font-size:10.5px;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:24px;background:var(--gray-900)}
+        .hero-tag-pre .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;box-shadow:0 0 8px rgba(34,197,94,0.55)}
+        /* ── Stats strip (pre-auth) ── */
+        .pre-auth-stats{width:100%;max-width:520px;margin:40px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:0;border:1px solid var(--gray-800);border-radius:12px;overflow:hidden;background:var(--gray-900)}
+        .pre-stat{padding:16px 14px;border-right:1px solid var(--gray-800);border-bottom:1px solid var(--gray-800);text-align:left}
+        .pre-stat:nth-child(2n){border-right:none}
+        .pre-stat:nth-last-child(-n+2){border-bottom:none}
+        .pre-stat .label{font-family:var(--font-mono);font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px}
+        .pre-stat .value{font-family:var(--font-mono);font-size:17px;font-weight:700;color:var(--white);letter-spacing:-0.3px}
+        .pre-stat .value .pct{color:var(--green)}
+        /* ── Feature cards (preview of wallet tabs) ── */
+        .features-section{width:100%;max-width:520px;margin:40px auto 0;text-align:left}
+        .features-label{font-family:var(--font-mono);font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:12px;text-align:center}
+        .features-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--gray-800);border:1px solid var(--gray-800);border-radius:12px;overflow:hidden}
+        .feature-card{background:var(--gray-900);padding:18px 16px;transition:background 0.2s}
+        .feature-card:hover{background:var(--gray-800)}
+        .feature-card .icon{font-size:20px;margin-bottom:8px;line-height:1}
+        .feature-card .title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:3px;letter-spacing:-0.2px}
+        .feature-card .desc{font-size:11px;color:var(--gray-500);line-height:1.5;font-family:var(--font-mono)}
         .auth-box{width:100%;max-width:380px}
         .input-group{display:flex;flex-direction:column;gap:12px}
         .input-group input{width:100%;padding:14px 16px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:12px;color:var(--white);font-family:var(--font-mono);font-size:14px;outline:none;transition:border-color .2s}
@@ -117,12 +139,34 @@
             }
             #auth-screen {
                 min-height: 70vh;
+                padding-top: 16px;
             }
             #auth-screen h1 {
                 font-size: 44px;
             }
             .auth-box {
                 max-width: 420px;
+            }
+            .pre-auth-stats {
+                grid-template-columns: repeat(4, 1fr);
+                max-width: 720px;
+                margin-top: 56px;
+            }
+            .pre-stat {
+                border-bottom: none;
+            }
+            .pre-stat:not(:last-child) {
+                border-right: 1px solid var(--gray-800);
+            }
+            .pre-stat:last-child {
+                border-right: none;
+            }
+            .features-section {
+                max-width: 720px;
+                margin-top: 56px;
+            }
+            .features-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
             #app-screen {
                 display: none; /* overridden by JS */
@@ -250,8 +294,12 @@
     <main>
         <!-- AUTH SCREEN -->
         <div id="auth-screen">
-            <h1 data-i18n="hero_title">Renda Fixa Tokenizada</h1>
-            <p class="subtitle" data-i18n="hero_subtitle">Deposite BRL via PIX. Receba rendimento CDI de até 25% a.a.<br>Sem MetaMask. Sem taxas de gas. Só email.</p>
+            <div class="hero-tag-pre">
+                <span class="dot"></span>
+                <span data-i18n="hero_badge">Live on Base Mainnet</span>
+            </div>
+            <h1 data-i18n="hero_title">Sua Renda Fixa em <span class="accent">Tokens</span></h1>
+            <p class="subtitle" data-i18n="hero_subtitle">Deposite via PIX. Receba CDI ~15% a.a. com resgate no mesmo dia.<br>Smart wallet — sem MetaMask, sem taxas de gas. Só email.</p>
             <div class="auth-box">
                 <!-- Step 1: Email -->
                 <div class="auth-step active" id="step-email">
@@ -274,8 +322,56 @@
                 </div>
                 <div class="status-msg" id="authStatus"></div>
             </div>
+
+            <!-- Protocol stats -->
+            <div class="pre-auth-stats">
+                <div class="pre-stat">
+                    <div class="label" data-i18n="stat_cdi">CDI Base</div>
+                    <div class="value"><span class="pct">~15%</span> a.a.</div>
+                </div>
+                <div class="pre-stat">
+                    <div class="label" data-i18n="stat_apy">Target Leveraged</div>
+                    <div class="value">25–35%</div>
+                </div>
+                <div class="pre-stat">
+                    <div class="label" data-i18n="stat_redemption">Resgate</div>
+                    <div class="value">D+0</div>
+                </div>
+                <div class="pre-stat">
+                    <div class="label" data-i18n="stat_reg">Regulação</div>
+                    <div class="value">CVM</div>
+                </div>
+            </div>
+
+            <!-- Feature preview — what's inside post-login -->
+            <div class="features-section">
+                <div class="features-label" data-i18n="features_label">Dentro do seu Wallet</div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="icon">💳</div>
+                        <div class="title" data-i18n="feat_deposit_title">Depositar PIX</div>
+                        <div class="desc" data-i18n="feat_deposit_desc">BRL → efixDI on-chain via HausBank, instantâneo.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">📤</div>
+                        <div class="title" data-i18n="feat_withdraw_title">Sacar PIX</div>
+                        <div class="desc" data-i18n="feat_withdraw_desc">Queime tokens, receba R$ na sua chave PIX.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">🔄</div>
+                        <div class="title" data-i18n="feat_brle_title">BRLE Swap</div>
+                        <div class="desc" data-i18n="feat_brle_desc">Converta para BRLE/USDC para usar em DeFi global.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">🌍</div>
+                        <div class="title" data-i18n="feat_send_title">USD/EUR Bridge</div>
+                        <div class="desc" data-i18n="feat_send_desc">Receba ACH/SEPA transfers via Bridge.xyz.</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Waitlist Capture -->
-            <div id="waitlist-box" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--gray-800);width:100%;max-width:380px;">
+            <div id="waitlist-box" style="margin-top:48px;padding-top:24px;border-top:1px solid var(--gray-800);width:100%;max-width:380px;">
                 <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px;font-family:var(--font-mono);text-align:center;" data-i18n="waitlist_text">Don't have an account yet? Join the early access list.</p>
                 <div style="display:flex;gap:8px;">
                     <input type="email" id="waitlistEmail" placeholder="your@email.com" style="flex:1;padding:12px 14px;background:var(--gray-900);border:1px solid var(--gray-700);border-radius:10px;color:var(--white);font-family:var(--font-mono);font-size:13px;outline:none;" data-i18n-placeholder="waitlist_placeholder">
@@ -873,8 +969,8 @@
 
         // ═══ i18n — 8 languages ═══
         const i18n = {
-          pt: { hero_title:'Renda Fixa Tokenizada', hero_subtitle:'Deposite BRL via PIX. Receba rendimento CDI de até 25% a.a.<br>Sem MetaMask. Sem taxas de gas. Só email.', btn_login:'Entrar com Email', otp_prompt:'Verifique seu email e insira o código de 6 dígitos:', btn_verify:'Verificar Código', btn_back:'Voltar', your_balance:'Seu Saldo', tab_deposit:'Depositar', tab_withdraw:'Sacar', deposit_title:'Depositar via PIX', btn_generate_qr:'Gerar QR Code PIX', scan_prompt:'Escaneie com seu app bancário', btn_copy_pix:'Copiar código PIX', btn_i_paid:'Já paguei o PIX', step_qr_generated:'QR Code gerado', step_pix_confirmed:'Pagamento PIX confirmado', step_minting:'Mintando tokens efixDI', step_credited:'Tokens creditados!', btn_cancel:'Cancelar', withdraw_title:'Sacar via PIX', pix_key_placeholder:'Chave PIX (CPF, email, telefone)', btn_withdraw:'Solicitar Saque', card_collateral:'Colateral efixDI', card_credit_rate:'Taxa de crédito', card_yield:'Rendimento do colateral', card_net_carry:'Carry líquido', btn_collateralize:'Depositar Colateral', card_desc:'Seu efixDI rende ~15% CDI enquanto colateral.<br>Crédito no cartão a ~5%. Carry positivo de +10%.', card_waitlist:'O cartão EFIX está em fase de produção.<br>Deposite colateral agora para garantir prioridade.', card_waitlist_active:'Fila de espera ativa', btn_disconnect:'Desconectar', history_title:'Histórico', waitlist_text:'Ainda não tem conta? Entre na lista de acesso antecipado.', waitlist_placeholder:'seu@email.com', waitlist_btn:'Entrar', waitlist_success:'Você está na lista! 🚀', waitlist_error:'Tente novamente.', flag:'🇧🇷', code:'PT' },
-          en: { hero_title:'Tokenized Fixed Income', hero_subtitle:'Deposit BRL via PIX. Earn up to 25% APY on CDI yield.<br>No MetaMask. No gas fees. Just email.', btn_login:'Login with Email', otp_prompt:'Check your email and enter the 6-digit code:', btn_verify:'Verify Code', btn_back:'Back', your_balance:'Your Balance', tab_deposit:'Deposit', tab_withdraw:'Withdraw', deposit_title:'Deposit via PIX', btn_generate_qr:'Generate PIX QR Code', scan_prompt:'Scan with your banking app', btn_copy_pix:'Copy PIX code', btn_i_paid:'I already paid', step_qr_generated:'QR Code generated', step_pix_confirmed:'PIX payment confirmed', step_minting:'Minting efixDI tokens', step_credited:'Tokens credited!', btn_cancel:'Cancel', withdraw_title:'Withdraw via PIX', pix_key_placeholder:'PIX Key (CPF, email, phone)', btn_withdraw:'Request Withdrawal', card_collateral:'efixDI Collateral', card_credit_rate:'Credit rate', card_yield:'Collateral yield', card_net_carry:'Net carry', btn_collateralize:'Deposit Collateral', card_desc:'Your efixDI earns ~15% CDI as collateral.<br>Card credit at ~5%. Positive carry of +10%.', card_waitlist:'The EFIX card is in production phase.<br>Deposit collateral now to secure priority.', card_waitlist_active:'Waitlist active', btn_disconnect:'Disconnect', history_title:'History', waitlist_text:'Don\'t have an account yet? Join the early access list.', waitlist_placeholder:'your@email.com', waitlist_btn:'Join', waitlist_success:'You\'re on the list! 🚀', waitlist_error:'Please try again.', flag:'🇺🇸', code:'EN' },
+          pt: { hero_badge:'Live on Base Mainnet', hero_title:'Sua Renda Fixa em <span class="accent">Tokens</span>', hero_subtitle:'Deposite via PIX. Receba CDI ~15% a.a. com resgate no mesmo dia.<br>Smart wallet — sem MetaMask, sem taxas de gas. Só email.', stat_cdi:'CDI Base', stat_apy:'Target Leveraged', stat_redemption:'Resgate', stat_reg:'Regulação', features_label:'Dentro do seu Wallet', feat_deposit_title:'Depositar PIX', feat_deposit_desc:'BRL → efixDI on-chain via HausBank, instantâneo.', feat_withdraw_title:'Sacar PIX', feat_withdraw_desc:'Queime tokens, receba R$ na sua chave PIX.', feat_brle_title:'BRLE Swap', feat_brle_desc:'Converta para BRLE/USDC para usar em DeFi global.', feat_send_title:'USD/EUR Bridge', feat_send_desc:'Receba ACH/SEPA transfers via Bridge.xyz.', btn_login:'Entrar com Email', otp_prompt:'Verifique seu email e insira o código de 6 dígitos:', btn_verify:'Verificar Código', btn_back:'Voltar', your_balance:'Seu Saldo', tab_deposit:'Depositar', tab_withdraw:'Sacar', deposit_title:'Depositar via PIX', btn_generate_qr:'Gerar QR Code PIX', scan_prompt:'Escaneie com seu app bancário', btn_copy_pix:'Copiar código PIX', btn_i_paid:'Já paguei o PIX', step_qr_generated:'QR Code gerado', step_pix_confirmed:'Pagamento PIX confirmado', step_minting:'Mintando tokens efixDI', step_credited:'Tokens creditados!', btn_cancel:'Cancelar', withdraw_title:'Sacar via PIX', pix_key_placeholder:'Chave PIX (CPF, email, telefone)', btn_withdraw:'Solicitar Saque', card_collateral:'Colateral efixDI', card_credit_rate:'Taxa de crédito', card_yield:'Rendimento do colateral', card_net_carry:'Carry líquido', btn_collateralize:'Depositar Colateral', card_desc:'Seu efixDI rende ~15% CDI enquanto colateral.<br>Crédito no cartão a ~5%. Carry positivo de +10%.', card_waitlist:'O cartão EFIX está em fase de produção.<br>Deposite colateral agora para garantir prioridade.', card_waitlist_active:'Fila de espera ativa', btn_disconnect:'Desconectar', history_title:'Histórico', waitlist_text:'Ainda não tem conta? Entre na lista de acesso antecipado.', waitlist_placeholder:'seu@email.com', waitlist_btn:'Entrar', waitlist_success:'Você está na lista! 🚀', waitlist_error:'Tente novamente.', flag:'🇧🇷', code:'PT' },
+          en: { hero_badge:'Live on Base Mainnet', hero_title:'Fixed Income, <span class="accent">Tokenized</span>', hero_subtitle:'Deposit via PIX. Earn ~15% CDI APY with same-day redemption.<br>Smart wallet — no MetaMask, no gas fees. Just email.', stat_cdi:'CDI Base', stat_apy:'Target Leveraged', stat_redemption:'Redemption', stat_reg:'Regulation', features_label:'Inside your Wallet', feat_deposit_title:'Deposit PIX', feat_deposit_desc:'BRL → efixDI on-chain via HausBank, instant.', feat_withdraw_title:'Withdraw PIX', feat_withdraw_desc:'Burn tokens, receive R$ to your PIX key.', feat_brle_title:'BRLE Swap', feat_brle_desc:'Convert to BRLE/USDC for global DeFi access.', feat_send_title:'USD/EUR Bridge', feat_send_desc:'Receive ACH/SEPA transfers via Bridge.xyz.', btn_login:'Login with Email', otp_prompt:'Check your email and enter the 6-digit code:', btn_verify:'Verify Code', btn_back:'Back', your_balance:'Your Balance', tab_deposit:'Deposit', tab_withdraw:'Withdraw', deposit_title:'Deposit via PIX', btn_generate_qr:'Generate PIX QR Code', scan_prompt:'Scan with your banking app', btn_copy_pix:'Copy PIX code', btn_i_paid:'I already paid', step_qr_generated:'QR Code generated', step_pix_confirmed:'PIX payment confirmed', step_minting:'Minting efixDI tokens', step_credited:'Tokens credited!', btn_cancel:'Cancel', withdraw_title:'Withdraw via PIX', pix_key_placeholder:'PIX Key (CPF, email, phone)', btn_withdraw:'Request Withdrawal', card_collateral:'efixDI Collateral', card_credit_rate:'Credit rate', card_yield:'Collateral yield', card_net_carry:'Net carry', btn_collateralize:'Deposit Collateral', card_desc:'Your efixDI earns ~15% CDI as collateral.<br>Card credit at ~5%. Positive carry of +10%.', card_waitlist:'The EFIX card is in production phase.<br>Deposit collateral now to secure priority.', card_waitlist_active:'Waitlist active', btn_disconnect:'Disconnect', history_title:'History', waitlist_text:'Don\'t have an account yet? Join the early access list.', waitlist_placeholder:'your@email.com', waitlist_btn:'Join', waitlist_success:'You\'re on the list! 🚀', waitlist_error:'Please try again.', flag:'🇺🇸', code:'EN' },
           es: { hero_title:'Renta Fija Tokenizada', hero_subtitle:'Deposite BRL vía PIX. Reciba rendimiento CDI de hasta 25% a.a.<br>Sin MetaMask. Sin tarifas de gas. Solo email.', btn_login:'Entrar con Email', otp_prompt:'Verifique su email e ingrese el código de 6 dígitos:', btn_verify:'Verificar Código', btn_back:'Volver', your_balance:'Su Saldo', tab_deposit:'Depositar', tab_withdraw:'Retirar', deposit_title:'Depositar vía PIX', btn_generate_qr:'Generar QR Code PIX', scan_prompt:'Escanee con su app bancaria', btn_copy_pix:'Copiar código PIX', btn_i_paid:'Ya pagué el PIX', step_qr_generated:'QR Code generado', step_pix_confirmed:'Pago PIX confirmado', step_minting:'Acuñando tokens efixDI', step_credited:'¡Tokens acreditados!', btn_cancel:'Cancelar', withdraw_title:'Retirar vía PIX', pix_key_placeholder:'Clave PIX (CPF, email, teléfono)', btn_withdraw:'Solicitar Retiro', card_collateral:'Colateral efixDI', card_credit_rate:'Tasa de crédito', card_yield:'Rendimiento del colateral', card_net_carry:'Carry neto', btn_collateralize:'Depositar Colateral', card_desc:'Su efixDI rinde ~15% CDI como colateral.<br>Crédito en tarjeta a ~5%. Carry positivo de +10%.', card_waitlist:'La tarjeta EFIX está en fase de producción.<br>Deposite colateral ahora para asegurar prioridad.', card_waitlist_active:'Lista de espera activa', btn_disconnect:'Desconectar', history_title:'Historial', waitlist_text:'¿Aún no tienes cuenta? Únete a la lista de acceso anticipado.', waitlist_placeholder:'tu@email.com', waitlist_btn:'Unirse', waitlist_success:'¡Estás en la lista! 🚀', waitlist_error:'Inténtalo de nuevo.', flag:'🇪🇸', code:'ES' },
           fr: { hero_title:'Revenu Fixe Tokenisé', hero_subtitle:'Déposez des BRL via PIX. Recevez un rendement CDI jusqu\'à 25% par an.<br>Sans MetaMask. Sans frais de gas. Juste un email.', btn_login:'Se connecter par Email', otp_prompt:'Vérifiez votre email et entrez le code à 6 chiffres:', btn_verify:'Vérifier le Code', btn_back:'Retour', your_balance:'Votre Solde', tab_deposit:'Déposer', tab_withdraw:'Retirer', deposit_title:'Déposer via PIX', btn_generate_qr:'Générer QR Code PIX', scan_prompt:'Scannez avec votre app bancaire', btn_copy_pix:'Copier le code PIX', btn_i_paid:'J\'ai déjà payé', step_qr_generated:'QR Code généré', step_pix_confirmed:'Paiement PIX confirmé', step_minting:'Frappe des tokens efixDI', step_credited:'Tokens crédités!', btn_cancel:'Annuler', withdraw_title:'Retirer via PIX', pix_key_placeholder:'Clé PIX (CPF, email, téléphone)', btn_withdraw:'Demander le Retrait', card_collateral:'Collatéral efixDI', card_credit_rate:'Taux de crédit', card_yield:'Rendement du collatéral', card_net_carry:'Carry net', btn_collateralize:'Déposer le Collatéral', card_desc:'Votre efixDI rapporte ~15% CDI en collatéral.<br>Crédit carte à ~5%. Carry positif de +10%.', card_waitlist:'La carte EFIX est en phase de production.<br>Déposez du collatéral maintenant pour garantir la priorité.', card_waitlist_active:'Liste d\'attente active', btn_disconnect:'Déconnecter', history_title:'Historique', waitlist_text:'Pas encore de compte? Rejoignez la liste d\'accès anticipé.', waitlist_placeholder:'votre@email.com', waitlist_btn:'Rejoindre', waitlist_success:'Vous êtes sur la liste! 🚀', waitlist_error:'Veuillez réessayer.', flag:'🇫🇷', code:'FR' },
           ja: { hero_title:'トークン化された固定利回り', hero_subtitle:'PIXでBRLを入金。CDI利回りで最大25%のAPYを獲得。<br>MetaMask不要。ガス代不要。メールだけ。', btn_login:'メールでログイン', otp_prompt:'メールを確認し、6桁のコードを入力してください：', btn_verify:'コードを確認', btn_back:'戻る', your_balance:'残高', tab_deposit:'入金', tab_withdraw:'出金', deposit_title:'PIXで入金', btn_generate_qr:'PIX QRコードを生成', scan_prompt:'銀行アプリでスキャン', btn_copy_pix:'PIXコードをコピー', btn_i_paid:'支払い済み', step_qr_generated:'QRコード生成済み', step_pix_confirmed:'PIX支払い確認済み', step_minting:'efixDIトークン発行中', step_credited:'トークン入金完了！', btn_cancel:'キャンセル', withdraw_title:'PIXで出金', pix_key_placeholder:'PIXキー（CPF、メール、電話）', btn_withdraw:'出金リクエスト', card_collateral:'efixDI担保', card_credit_rate:'信用レート', card_yield:'担保利回り', card_net_carry:'ネットキャリー', btn_collateralize:'担保を預ける', card_desc:'efixDIは担保として~15% CDIの利回り。<br>カード信用~5%。+10%のポジティブキャリー。', card_waitlist:'EFIXカードは生産フェーズです。<br>今すぐ担保を預けて優先権を確保。', card_waitlist_active:'ウェイトリスト受付中', btn_disconnect:'切断', history_title:'履歴', waitlist_text:'アカウントをお持ちでないですか？早期アクセスリストに参加。', waitlist_placeholder:'your@email.com', waitlist_btn:'参加', waitlist_success:'リストに登録されました！🚀', waitlist_error:'もう一度お試しください。', flag:'🇯🇵', code:'JA' },
