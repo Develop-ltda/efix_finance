@@ -1826,23 +1826,37 @@
             const btn = document.querySelector('#panel-withdraw button.btn-primary');
             const originalLabel = btn ? btn.textContent : 'Solicitar Saque';
             try {
-                if (btn) { btn.disabled = true; btn.textContent = 'Queimando tokens...'; }
+                // Check trust mode via status endpoint — when WITHDRAW_TRUST_MODE=true on backend,
+                // we skip the burn UserOp entirely (v4 SDK signer auth currently broken) and let
+                // the backend reconcile the burn later via admin cleanup. Tokens stay on-chain
+                // until cleanup. PIX-out validates the rest of the flow.
+                let trustMode = false;
+                try {
+                    const sr = await fetch(BACKEND_URL + '/api/wallet/status');
+                    const sj = await sr.json();
+                    trustMode = !!sj.withdraw_trust_mode;
+                } catch (e) { /* best-effort */ }
 
-                // Step 1: burn efixDIBase on Base via Account Kit v4 UserOp (gas-sponsored)
-                // burn(uint256) selector = 0x42966c68
-                const amountWei = BigInt(Math.round(amount * 1e18));
-                const padded = amountWei.toString(16).padStart(64, '0');
-                const burnData = '0x42966c68' + padded;
-                const tokenAddr = EfixWallet.config.contracts.efixDI;
-
-                // sendUserOp is exported from entry.js — wraps v4 sendCalls + waitForCallsStatus.
-                // Pass userAddress as 4th arg (explicitAccount) to bypass requestAccount→whoami
-                // path which fails with "No orgId provided" when session storage is partial.
-                const burnTxHash = await EfixWallet.sendUserOp(tokenAddr, burnData, '0x0', userAddress);
-                console.log('[Withdraw] burn confirmed:', burnTxHash);
-
-                // Step 2: POST burnTxHash to backend (JWT-authenticated)
-                if (btn) btn.textContent = 'Enviando PIX...';
+                let burnTxHash = null;
+                if (trustMode) {
+                    if (btn) btn.textContent = 'Modo confiança — enviando PIX...';
+                    console.log('[Withdraw] TRUST MODE active — skipping burn UserOp');
+                } else {
+                    if (btn) btn.disabled = true, btn.textContent = 'Queimando tokens...';
+                    // Step 1: burn efixDIBase on Base via Account Kit v4 UserOp (gas-sponsored)
+                    // burn(uint256) selector = 0x42966c68
+                    const amountWei = BigInt(Math.round(amount * 1e18));
+                    const padded = amountWei.toString(16).padStart(64, '0');
+                    const burnData = '0x42966c68' + padded;
+                    const tokenAddr = EfixWallet.config.contracts.efixDI;
+                    // sendUserOp is exported from entry.js — wraps v4 sendCalls + waitForCallsStatus.
+                    // Pass userAddress as 4th arg (explicitAccount) to bypass requestAccount→whoami
+                    // path which fails with "No orgId provided" when session storage is partial.
+                    burnTxHash = await EfixWallet.sendUserOp(tokenAddr, burnData, '0x0', userAddress);
+                    console.log('[Withdraw] burn confirmed:', burnTxHash);
+                    if (btn) btn.textContent = 'Enviando PIX...';
+                }
+                // Step 2: POST to backend (JWT-authenticated). Trust mode skips burnTxHash arg.
                 const data = await WalletLogic.requestWithdraw(BACKEND_URL, amount, pixKey, burnTxHash);
 
                 if (data.success && data.status === 'completed') {
