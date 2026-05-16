@@ -268,7 +268,10 @@ async function disconnect() {
 // Returns the on-chain tx hash once the UserOp is mined.
 async function sendUserOp(target, data, value = "0x0") {
   const client = await getClient();
-  const address = await getAddress();
+  // Use cached _signerAddress if populated to avoid signer.whoami which can throw
+  // "No orgId provided" when the AlchemyWebSigner has a partial session restored
+  // from iframe-based storage. Fall back to getAddress() only if no cache.
+  const address = _signerAddress || (await getAddress());
   const sent = await client.sendCalls({
     from: address,
     calls: [{ to: target, data: data, value: value }],
