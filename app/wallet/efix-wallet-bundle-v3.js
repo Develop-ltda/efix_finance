@@ -71382,6 +71382,13 @@ ${values.join("\n")}` : `${blockName} :`;
             }
           }
         });
+        try {
+          const stored = localStorage.getItem("efix_signer_addr");
+          if (stored && stored.startsWith("0x")) {
+            _pinSignerAddress(stored);
+          }
+        } catch {
+        }
         console.log("[EfixWallet] Signer initialized");
         return _signer;
       }
@@ -71413,11 +71420,26 @@ ${values.join("\n")}` : `${blockName} :`;
         console.log("[EfixWallet] OTP email initiated for:", email);
         return true;
       }
+      var _origSignerGetAddress = null;
+      function _pinSignerAddress(addr) {
+        if (!addr || !_signer) return;
+        _signerAddress = addr;
+        if (!_origSignerGetAddress) {
+          _origSignerGetAddress = _signer.getAddress.bind(_signer);
+        }
+        _signer.getAddress = async () => _signerAddress;
+        try {
+          localStorage.setItem("efix_signer_addr", addr);
+        } catch {
+        }
+        console.log("[EfixWallet] Signer address pinned:", addr);
+      }
       async function verifyOTP(otpCode) {
         if (!_signer) throw new Error("Signer not initialized");
         try {
           await _signer.authenticate({ type: "otp", otpCode });
-          _signerAddress = await _signer.getAddress();
+          const addr = await _signer.getAddress();
+          _pinSignerAddress(addr);
           console.log("[EfixWallet] OTP verified. Address:", _signerAddress);
           return _signerAddress;
         } catch (e) {
@@ -71442,7 +71464,8 @@ ${values.join("\n")}` : `${blockName} :`;
         try {
           const user = await _signer.getAuthDetails();
           if (user) {
-            _signerAddress = await _signer.getAddress();
+            const addr = _origSignerGetAddress ? await _origSignerGetAddress().catch(() => _signerAddress) : await _signer.getAddress();
+            if (addr) _pinSignerAddress(addr);
             console.log("[EfixWallet] Session recovered:", _signerAddress);
             return _signerAddress;
           }
@@ -71519,6 +71542,11 @@ ${values.join("\n")}` : `${blockName} :`;
         _signer = null;
         _client = null;
         _signerAddress = null;
+        _origSignerGetAddress = null;
+        try {
+          localStorage.removeItem("efix_signer_addr");
+        } catch {
+        }
         console.log("[EfixWallet] Disconnected");
       }
       async function sendUserOp(target, data, value = "0x0", explicitAccount = null) {

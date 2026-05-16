@@ -53,7 +53,18 @@ function init() {
       },
     },
   });
-  
+
+  // Recover previously-pinned signer address from localStorage. This lets a
+  // page reload (or a new tab) bypass the whoami throw if the iframe-side
+  // state degraded across visits but the SCA derivation is still wanted.
+  // The address is deterministic per email/orgId so a stale value still works.
+  try {
+    const stored = localStorage.getItem("efix_signer_addr");
+    if (stored && stored.startsWith("0x")) {
+      _pinSignerAddress(stored);
+    }
+  } catch {}
+
   console.log("[EfixWallet] Signer initialized");
   return _signer;
 }
@@ -113,6 +124,33 @@ async function sendOTP(email) {
   return true;
 }
 
+// Cache the original getAddress before any patching, so we can fall back if needed.
+let _origSignerGetAddress = null;
+
+/**
+ * Once we have a successfully resolved signer address (during OTP completion
+ * or session check, when the iframe-side state is freshest), pin getAddress
+ * to return that cached value forever. Reason: createLightAccount, called
+ * during every getClient(), unconditionally invokes `await signer.getAddress()`
+ * — even when accountAddress is passed. When the iframe-side _user/orgId
+ * state degrades shortly after OTP (observed 2026-05-15 & 2026-05-16), that
+ * call routes to whoami() and throws "No orgId provided". The cached value
+ * is stable because the AlchemyWebSigner address is deterministic per user.
+ *
+ * We also persist to localStorage so a page reload (or a new tab) can
+ * recover the same address without needing to re-OTP.
+ */
+function _pinSignerAddress(addr) {
+  if (!addr || !_signer) return;
+  _signerAddress = addr;
+  if (!_origSignerGetAddress) {
+    _origSignerGetAddress = _signer.getAddress.bind(_signer);
+  }
+  _signer.getAddress = async () => _signerAddress;
+  try { localStorage.setItem("efix_signer_addr", addr); } catch {}
+  console.log("[EfixWallet] Signer address pinned:", addr);
+}
+
 /**
  * Step 2 of email OTP flow — submits the 6-digit code.
  * Falls back to the background promise from sendOTP if verify itself fails.
@@ -121,7 +159,8 @@ async function verifyOTP(otpCode) {
   if (!_signer) throw new Error("Signer not initialized");
   try {
     await _signer.authenticate({ type: "otp", otpCode });
-    _signerAddress = await _signer.getAddress();
+    const addr = await _signer.getAddress();
+    _pinSignerAddress(addr);
     console.log("[EfixWallet] OTP verified. Address:", _signerAddress);
     return _signerAddress;
   } catch (e) {
@@ -156,11 +195,17 @@ async function completeAuth(bundle) {
  */
 async function checkSession() {
   if (!_signer) init();
-  
+
   try {
     const user = await _signer.getAuthDetails();
     if (user) {
-      _signerAddress = await _signer.getAddress();
+      // Use the raw (un-pinned) getAddress here if possible to refresh the
+      // cached value with a fresh iframe-resolved address. If iframe state is
+      // already degraded, the pinned getter returns the stored value instead.
+      const addr = _origSignerGetAddress
+        ? await _origSignerGetAddress().catch(() => _signerAddress)
+        : await _signer.getAddress();
+      if (addr) _pinSignerAddress(addr);
       console.log("[EfixWallet] Session recovered:", _signerAddress);
       return _signerAddress;
     }
@@ -278,6 +323,10 @@ async function disconnect() {
   _signer = null;
   _client = null;
   _signerAddress = null;
+  _origSignerGetAddress = null;
+  // Clear pinned address — next login derives a fresh one (may be a different
+  // SCA if user logs in with a different email).
+  try { localStorage.removeItem("efix_signer_addr"); } catch {}
   console.log("[EfixWallet] Disconnected");
 }
 
