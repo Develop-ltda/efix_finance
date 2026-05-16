@@ -172,17 +172,33 @@ async function checkSession() {
 
 /**
  * Get the smart wallet client for sending UserOps.
- * Returns an AlchemySmartAccountClient bound to a LightAccount v2 — same SCA
- * address derivation as previous migrations, but using the legacy
- * sendUserOperation API path (not v4 wallet-client sendCalls).
- * @returns {Promise<object>} LightAccount client
+ * @param {string|null} explicitSCA — Smart Contract Account address (e.g. the
+ *   user's LightAccount address). When provided, bypasses the SDK's internal
+ *   signer.getAddress()→whoami() call which throws "No orgId provided" once
+ *   the AlchemyWebSigner's iframe-side session has degraded post-OTP.
+ *   Caller MUST pass this when the signer state may be stale (i.e., any
+ *   action after the initial login moment).
+ * @returns {Promise<object>} LightAccount client bound to explicit SCA if given
  */
-async function getClient() {
+async function getClient(explicitSCA = null) {
   if (!_signer) throw new Error("Signer not initialized");
+
+  // With explicit SCA we always build fresh — different callers may use
+  // different accounts, and we don't want a cached client tied to a previous
+  // address. The cache is only used for the no-explicit fast path.
+  if (explicitSCA) {
+    const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
+    return await createLightAccountClient({
+      transport,
+      chain: EFIX_CONFIG.chain,
+      signer: _signer,
+      accountAddress: explicitSCA,
+      gasManagerConfig: { policyId: EFIX_CONFIG.gasPolicyId },
+    });
+  }
 
   if (!_client) {
     const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
-
     _client = await createLightAccountClient({
       transport,
       chain: EFIX_CONFIG.chain,
@@ -198,8 +214,8 @@ async function getClient() {
 // client; post-cutover both default and Base are the same chain (Base 8453).
 // Kept as a function alias so existing index.html callers (admin tab, BRLE,
 // SALRIO) keep working without edits.
-async function getBaseClient() {
-  return getClient();
+async function getBaseClient(explicitSCA = null) {
+  return getClient(explicitSCA);
 }
 
 /**
@@ -271,14 +287,17 @@ async function disconnect() {
  */
 // Legacy-style UserOp helper using sendUserOperation + waitForUserOperationTransaction
 // from @aa-sdk/core via @account-kit/smart-contracts.createLightAccountClient.
-// LightAccount address is derived deterministically from the signer; no whoami
-// or orgId lookup is required at send time, which sidesteps the v4 wallet-client
-// "No orgId provided" / "Signer not authenticated" failures observed 2026-05-15.
-// `explicitAccount` is accepted for backward compat with existing call sites
-// (index.html passes userAddress as the 4th arg) but is unused — the client's
-// hoisted account is the source of truth.
-async function sendUserOp(target, data, value = "0x0", _explicitAccount = null) {
-  const client = await getClient();
+//
+// `explicitAccount` is the user's SCA address (e.g. window.userAddress in
+// index.html). When passed, we forward it to createLightAccountClient as
+// `accountAddress`, which bypasses the SDK's internal signer.getAddress() →
+// whoami() call. The whoami call throws "No orgId provided" once the
+// AlchemyWebSigner's iframe-side session degrades post-OTP (observed
+// 2026-05-15 and again 2026-05-16). Even within a single session this can
+// happen seconds after login — so passing explicitAccount is the safe path
+// for ANY post-login action.
+async function sendUserOp(target, data, value = "0x0", explicitAccount = null) {
+  const client = await getClient(explicitAccount);
   const valueBn = (typeof value === "string" && value.startsWith("0x"))
     ? BigInt(value)
     : (typeof value === "bigint" ? value : BigInt(value || 0));

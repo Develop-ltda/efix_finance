@@ -71451,8 +71451,18 @@ ${values.join("\n")}` : `${blockName} :`;
         }
         return null;
       }
-      async function getClient() {
+      async function getClient(explicitSCA = null) {
         if (!_signer) throw new Error("Signer not initialized");
+        if (explicitSCA) {
+          const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
+          return await createLightAccountClient({
+            transport,
+            chain: EFIX_CONFIG.chain,
+            signer: _signer,
+            accountAddress: explicitSCA,
+            gasManagerConfig: { policyId: EFIX_CONFIG.gasPolicyId }
+          });
+        }
         if (!_client) {
           const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
           _client = await createLightAccountClient({
@@ -71464,8 +71474,8 @@ ${values.join("\n")}` : `${blockName} :`;
         }
         return _client;
       }
-      async function getBaseClient() {
-        return getClient();
+      async function getBaseClient(explicitSCA = null) {
+        return getClient(explicitSCA);
       }
       async function getAddress3() {
         if (_signerAddress) return _signerAddress;
@@ -71511,8 +71521,8 @@ ${values.join("\n")}` : `${blockName} :`;
         _signerAddress = null;
         console.log("[EfixWallet] Disconnected");
       }
-      async function sendUserOp(target, data, value = "0x0", _explicitAccount = null) {
-        const client = await getClient();
+      async function sendUserOp(target, data, value = "0x0", explicitAccount = null) {
+        const client = await getClient(explicitAccount);
         const valueBn = typeof value === "string" && value.startsWith("0x") ? BigInt(value) : typeof value === "bigint" ? value : BigInt(value || 0);
         const sent = await client.sendUserOperation({
           uo: { target, data, value: valueBn }
