@@ -899,8 +899,8 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
 <section class="section section-border" id="contracts">
   <div class="container">
     <div class="section-label" data-i18n="sec_contracts">Smart Contracts · Base mainnet</div>
-    <div class="section-title" data-i18n="contracts_title">Contracts to be deployed on offering open</div>
-    <div class="section-desc" data-i18n="contracts_desc">Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path. Same audited framework as SALRIO Pool #1, with LATITUDE-specific instances.</div>
+    <div class="section-title" data-i18n="contracts_title">Live on Base mainnet · 2026-05-06</div>
+    <div class="section-desc" data-i18n="contracts_desc">Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path. Same audited framework as SALRIO Pool #1, with LATITUDE-specific instances of HausBTRShare and SalRioOracleV1.</div>
     <div class="chain-card">
       <div class="chain-header">
         <span style="font-size:18px">🔵</span>
@@ -909,19 +909,19 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
       </div>
       <div class="contract-row">
         <span class="contract-label">HausBTRShare (LATITUDE)</span>
-        <span class="contract-tbd">0x0000…0000 · TBD</span>
+        <a href="https://basescan.org/address/0xf7663CAFa4df1ee8d5AD3e8fE8D7C4767D3F3046#code" target="_blank" class="contract-addr">0xf766…3046</a>
       </div>
       <div class="contract-row">
-        <span class="contract-label">LatitudeOracleV1</span>
-        <span class="contract-tbd">0x0000…0000 · TBD</span>
+        <span class="contract-label">LatitudeOracleV1 (par × Chainlink)</span>
+        <a href="https://basescan.org/address/0x4a6E652dD525B3EC94a36Ce60EC0e97c6f464b77#code" target="_blank" class="contract-addr">0x4a6E…4b77</a>
       </div>
       <div class="contract-row">
         <span class="contract-label">Uniswap V3 Pool (LATITUDE/BRLE 0.3%)</span>
-        <span class="contract-tbd">0x0000…0000 · TBD</span>
+        <span class="contract-tbd">Phase 5 · pending LP seed</span>
       </div>
       <div class="contract-row">
-        <span class="contract-label">Morpho Blue Market</span>
-        <span class="contract-tbd">0x0000…0000 · TBD</span>
+        <span class="contract-label">Morpho Blue Market (LATITUDE/USDC)</span>
+        <span class="contract-tbd">Phase 5 · LLTV 50%</span>
       </div>
       <div class="contract-row">
         <span class="contract-label">Lobie-Haus-Btr Safe (2-of-3)</span>
@@ -940,7 +940,7 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
         <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank" class="contract-addr">0x7D12…82F6</a>
       </div>
     </div>
-    <div class="tbd-note" data-i18n="tbd_note"><strong>Note:</strong> LATITUDE-specific contracts (token, oracle, AMM pool, Morpho market) will be deployed on offering open in November 2026. Shared infrastructure (BTROfferingRegistry, Lobie Unit Registry, BRLE, Lobie-Haus-Btr Safe) is already live and reused across all BTR pools.</div>
+    <div class="tbd-note" data-i18n="tbd_note"><strong>Note:</strong> HausBTRShare (LATITUDE) and LatitudeOracleV1 deployed and registered in BTROfferingRegistry on 2026-05-06. Total supply (4.050.000 LATITUDE) currently held by the deployer EOA; transfer to the Lobie-Haus-Btr Safe (2-of-3) lands in Phase 5 along with role handoff. Uniswap V3 pool + Morpho Blue market remain pending capital seed.</div>
   </div>
 </section>
 
