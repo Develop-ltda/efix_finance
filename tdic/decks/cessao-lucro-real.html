@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EFIX — Funding inteligente para a sua empresa (Cessão · Lucro Real)</title>
+<link rel="icon" href="/logo_efix_400x400.jpg" type="image/jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #0a0a0a;
+  --white: #fff;
+  --gray-100: #f5f5f5;
+  --gray-200: #e5e5e5;
+  --gray-300: #d4d4d4;
+  --gray-400: #a3a3a3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+  --green: #22c55e;
+  --green-dark: #16a34a;
+  --green-bg: #f0fdf4;
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --amber: #f59e0b;
+  --amber-bg: #fffbeb;
+  --blue: #3b82f6;
+  --blue-bg: #eff6ff;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--gray-100); }
+body {
+  font-family: 'Syne', -apple-system, sans-serif;
+  color: var(--black);
+  -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: 'Space Mono', monospace; }
+
+/* ── Slide canvas — A4 landscape ───────────────────────────────── */
+.slide {
+  width: 297mm;
+  height: 210mm;
+  background: var(--white);
+  margin: 8mm auto;
+  position: relative;
+  overflow: hidden;
+  padding: 18mm 22mm;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.06);
+}
+
+@media print {
+  html, body { background: var(--white); }
+  .slide {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+  .slide:last-child { page-break-after: auto; }
+}
+
+@page { size: A4 landscape; margin: 0; }
+
+/* ── Header / Footer chrome ──────────────────────────────────── */
+.slide-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8mm;
+}
+.eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 9pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+.eyebrow .dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.slide-foot {
+  position: absolute;
+  bottom: 8mm;
+  left: 22mm;
+  right: 22mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 8pt;
+  color: var(--gray-400);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.slide-foot .brand-lock { color: var(--gray-600); }
+.slide-foot .page-num { color: var(--gray-500); }
+
+h1.deck-title {
+  font-size: 56pt;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  margin: 0;
+  max-width: 80%;
+}
+h1.deck-title span.shine {
+  background: linear-gradient(90deg, var(--gray-400), var(--green), var(--gray-400));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+h2.section-title {
+  font-size: 32pt;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0 0 6mm 0;
+  color: var(--black);
+}
+h2.section-title small {
+  display: block;
+  font-size: 11pt;
+  font-weight: 400;
+  color: var(--gray-500);
+  margin-top: 3mm;
+  letter-spacing: 0;
+}
+
+.subtitle {
+  font-size: 13pt;
+  color: var(--gray-600);
+  max-width: 200mm;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Card primitives ────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 6mm 7mm;
+}
+.card .label {
+  font-family: 'Space Mono', monospace;
+  font-size: 8.5pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin-bottom: 2mm;
+}
+.card .title {
+  font-size: 15pt;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 2mm;
+  color: var(--black);
+}
+.card .body {
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--gray-700);
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5mm; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3mm; }
+
+.divider {
+  border-top: 1px solid var(--gray-200);
+  margin: 5mm 0;
+}
+
+/* ── Flow connectors ────────────────────────────────────────── */
+.flow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.flow-step {
+  padding: 6mm 5mm;
+  border-right: 1px solid var(--gray-200);
+  position: relative;
+}
+.flow-step:last-child { border-right: none; }
+.flow-step .num {
+  font-family: 'Space Mono', monospace;
+  font-size: 9pt;
+  color: var(--gray-400);
+  margin-bottom: 3mm;
+  letter-spacing: 0.06em;
+}
+.flow-step .title {
+  font-size: 13pt;
+  font-weight: 700;
+  margin-bottom: 2mm;
+  color: var(--black);
+  line-height: 1.2;
+}
+.flow-step .desc {
+  font-size: 9.5pt;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+/* ── Cover ─────────────────────────────────────────────────── */
+.cover {
+  padding: 28mm 28mm;
+  background:
+    linear-gradient(rgba(0,0,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px);
+  background-size: 22mm 22mm;
+  background-color: var(--white);
+}
+.cover .brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18mm;
+}
+.cover .brand-lockup .brand-mark {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 28pt;
+  letter-spacing: -0.04em;
+}
+.cover .brand-lockup .brand-mark .dot { color: var(--green); }
+.cover .brand-lockup .brand-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 9pt;
+  color: var(--gray-500);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding-left: 12px;
+  border-left: 1px solid var(--gray-200);
+}
+.cover h1 {
+  font-size: 62pt;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  margin: 0 0 10mm 0;
+  max-width: 95%;
+}
+.cover h1 .shine {
+  background: linear-gradient(90deg, var(--gray-400), var(--green), var(--gray-400));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.cover .lead {
+  font-size: 16pt;
+  color: var(--gray-600);
+  max-width: 160mm;
+  line-height: 1.5;
+  margin: 0;
+}
+.cover .corner-tag {
+  position: absolute;
+  bottom: 14mm;
+  right: 14mm;
+  font-family: 'Space Mono', monospace;
+  font-size: 8.5pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+.cover .corner-tag .dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* ── Problema cards (slide 2) ──────────────────────────────── */
+.problem-card .label { color: var(--red); }
+.problem-card .title { color: var(--black); }
+.problem-card { border-left: 3px solid var(--red); }
+
+/* ── Solução flow (slide 3) ────────────────────────────────── */
+.solution-flow .flow-step .num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28pt;
+  height: 28pt;
+  border-radius: 50%;
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 13pt;
+  margin-bottom: 3mm;
+  border: 1.5px solid var(--green);
+}
+.green-callout {
+  background: var(--green-bg);
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  padding: 5mm 7mm;
+  color: var(--green-dark);
+  font-size: 11pt;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* ── Benefícios (slide 4) ──────────────────────────────────── */
+.benefit-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+.benefit-card .benefit-head {
+  padding: 5mm 7mm;
+  color: var(--white);
+  font-size: 13pt;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.benefit-card.green .benefit-head { background: var(--green); }
+.benefit-card.black .benefit-head { background: var(--black); }
+.benefit-card.gray .benefit-head { background: var(--gray-800); }
+.benefit-card .benefit-body {
+  padding: 5mm 7mm;
+  font-size: 10.5pt;
+  line-height: 1.7;
+  color: var(--gray-700);
+}
+.benefit-card .benefit-body p { margin: 0 0 3mm 0; }
+.benefit-card .benefit-body p:last-child { margin-bottom: 0; }
+
+/* ── Simulação (slide 5) ───────────────────────────────────── */
+.premissas {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 4mm 6mm;
+  font-family: 'Space Mono', monospace;
+  font-size: 10pt;
+  color: var(--gray-600);
+  margin-bottom: 6mm;
+  letter-spacing: 0.02em;
+}
+.sim-col {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 5mm 6mm;
+  border-top: 4px solid var(--gray-400);
+  display: flex;
+  flex-direction: column;
+}
+.sim-col.benchmark { border-top-color: var(--gray-400); }
+.sim-col.gcap { border-top-color: var(--blue); }
+.sim-col.econ-pj { border-top-color: var(--green); }
+.sim-col.consolidado { border-top-color: var(--amber); }
+.sim-col h3 {
+  font-size: 13pt;
+  font-weight: 700;
+  margin: 0 0 1mm 0;
+  letter-spacing: -0.01em;
+}
+.sim-col .ribbon {
+  font-family: 'Space Mono', monospace;
+  font-size: 8pt;
+  color: var(--gray-500);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4mm;
+}
+.sim-col .row {
+  font-size: 10pt;
+  margin-bottom: 2mm;
+  color: var(--gray-700);
+}
+.sim-col .row.mono { font-family: 'Space Mono', monospace; }
+.sim-col .rentab {
+  margin-top: auto;
+  padding-top: 3mm;
+  border-top: 1px dashed var(--gray-200);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 15pt;
+  letter-spacing: -0.01em;
+}
+.sim-col.benchmark .rentab { color: var(--gray-600); }
+.sim-col.gcap .rentab { color: var(--blue); }
+.sim-col.econ-pj .rentab { color: var(--green); }
+.sim-col.consolidado .rentab { color: var(--amber); }
+
+/* ── Bar chart (slide 6) ───────────────────────────────────── */
+.chart-area {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8mm;
+  align-items: stretch;
+}
+.bars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6mm;
+  padding: 6mm 8mm;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  height: 110mm;
+  position: relative;
+}
+.bars .bar {
+  align-self: end;
+  position: relative;
+  border-radius: 6px 6px 0 0;
+  text-align: center;
+  color: var(--white);
+  padding-top: 6mm;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 12pt;
+}
+.bars .bar .label-bottom {
+  position: absolute;
+  bottom: -10mm;
+  left: 0; right: 0;
+  font-size: 9pt;
+  color: var(--gray-600);
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+}
+.bars .bar.gray  { background: var(--gray-500); height: 18%; }
+.bars .bar.blue  { background: var(--blue);     height: 50%; }
+.bars .bar.green { background: var(--green);    height: 78%; }
+.bars .bar.amber { background: var(--amber);    height: 90%; }
+
+.kpi-stack {
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 3mm;
+}
+.kpi {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 4mm 6mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.kpi .val {
+  font-family: 'Space Mono', monospace;
+  font-size: 26pt;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.kpi .lbl {
+  font-family: 'Space Mono', monospace;
+  font-size: 9pt;
+  color: var(--gray-500);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2mm;
+}
+.kpi.gray .val { color: var(--gray-600); }
+.kpi.blue .val { color: var(--blue); }
+.kpi.green .val { color: var(--green); }
+.kpi.amber .val { color: var(--amber); }
+
+/* ── Lei (slide 7) ─────────────────────────────────────────── */
+.lei-col {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 6mm 8mm;
+}
+.lei-col h3 {
+  font-size: 13pt;
+  margin: 0 0 5mm 0;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.lei-col.before h3 { color: var(--gray-500); }
+.lei-col.after  h3 { color: var(--green-dark); }
+.lei-col ul { padding: 0; margin: 0; list-style: none; }
+.lei-col li {
+  padding: 2mm 0 2mm 7mm;
+  position: relative;
+  font-size: 10pt;
+  line-height: 1.6;
+  color: var(--gray-700);
+}
+.lei-col li::before {
+  content: "§";
+  position: absolute;
+  left: 0;
+  top: 2mm;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  color: var(--gray-400);
+}
+.lei-col.after li::before { color: var(--green); }
+
+.arrow-between {
+  font-size: 28pt;
+  color: var(--green);
+  text-align: center;
+  align-self: center;
+}
+
+/* ── Como começar (slide 8) ────────────────────────────────── */
+.step-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 5mm 6mm 6mm 6mm;
+  border-top: 4px solid var(--green);
+  display: flex;
+  flex-direction: column;
+}
+.step-card .num {
+  font-family: 'Space Mono', monospace;
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 0.1em;
+  margin-bottom: 3mm;
+}
+.step-card .title {
+  font-size: 13pt;
+  font-weight: 700;
+  margin-bottom: 3mm;
+}
+.step-card .body {
+  font-size: 10pt;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+
+/* ── Segurança jurídica (slide 9) ──────────────────────────── */
+.security-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 0;
+  display: flex;
+  overflow: hidden;
+}
+.security-card .accent {
+  width: 8mm;
+  flex-shrink: 0;
+}
+.security-card .accent.green { background: var(--green); }
+.security-card .accent.amber { background: var(--amber); }
+.security-card .accent.blue { background: var(--blue); }
+.security-card .accent.black { background: var(--black); }
+.security-card .content {
+  padding: 5mm 7mm;
+  flex: 1;
+}
+.security-card .content .title {
+  font-size: 13pt;
+  font-weight: 700;
+  margin-bottom: 2mm;
+}
+.security-card .content .body {
+  font-size: 10pt;
+  color: var(--gray-600);
+  line-height: 1.55;
+}
+
+/* ── Tabela Cessão vs FIDC (slide 10) ──────────────────────── */
+.comparison {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11pt;
+}
+.comparison th {
+  text-align: left;
+  font-family: 'Space Mono', monospace;
+  font-size: 9pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  padding: 5mm 6mm;
+  background: var(--gray-100);
+  font-weight: 700;
+  border-bottom: 2px solid var(--gray-200);
+}
+.comparison th.cessao { background: var(--green-bg); color: var(--green-dark); }
+.comparison th.fidc { background: var(--gray-100); color: var(--gray-600); }
+.comparison td {
+  padding: 4mm 6mm;
+  border-bottom: 1px solid var(--gray-200);
+}
+.comparison tr:last-child td { border-bottom: none; }
+.comparison .label-col {
+  font-weight: 700;
+  color: var(--black);
+  font-size: 11pt;
+  background: var(--white);
+}
+.comparison .cessao-cell {
+  color: var(--green-dark);
+  background: rgba(34, 197, 94, 0.04);
+}
+.comparison .fidc-cell {
+  color: var(--gray-600);
+  background: rgba(0,0,0, 0.015);
+}
+.comparison .check { color: var(--green); font-weight: 700; margin-right: 4px; }
+.comparison .cross { color: var(--red); font-weight: 700; margin-right: 4px; }
+
+/* ── Closing (slide 13) ────────────────────────────────────── */
+.closing h1 {
+  font-size: 56pt;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+}
+.closing h1 .shine {
+  background: linear-gradient(90deg, var(--gray-400), var(--green), var(--gray-400));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.closing .cta-block {
+  border-top: 1px solid var(--gray-200);
+  padding-top: 8mm;
+  margin-top: 10mm;
+}
+.closing .cta-block .cta-eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 10pt;
+  color: var(--green);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 3mm;
+}
+.closing .cta-block .cta-title {
+  font-size: 22pt;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 3mm 0;
+}
+.closing .cta-block .cta-sub {
+  font-size: 12pt;
+  color: var(--gray-600);
+}
+.closing .disclaimer {
+  position: absolute;
+  bottom: 8mm;
+  left: 22mm;
+  right: 22mm;
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5pt;
+  color: var(--gray-400);
+  line-height: 1.5;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+/* ── Print helpers ───────────────────────────────────────── */
+.no-print { display: none; }
+@media screen and (min-width: 1000px) {
+  .no-print {
+    display: block;
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 100;
+    background: var(--black);
+    color: var(--white);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10pt;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .no-print:hover { background: var(--gray-800); }
+}
+@media print { .no-print { display: none !important; } }
+</style>
+</head>
+<body>
+
+<button class="no-print" onclick="window.print()">↓ Salvar como PDF</button>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1 — COVER                                             -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide cover">
+  <div class="brand-lockup">
+    <div class="brand-mark">EFIX<span class="dot">.</span></div>
+    <div class="brand-sub">Securitizadora</div>
+  </div>
+  <h1>
+    Funding inteligente<br>
+    <span class="shine">para a sua empresa.</span>
+  </h1>
+  <p class="lead">
+    Cessão de recebíveis com vantagem para empresa e sócios — sem burocracia bancária.
+  </p>
+  <div class="corner-tag"><span class="dot"></span>Documento confidencial · uso exclusivo do destinatário</div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2 — O PROBLEMA                                        -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Diagnóstico</div>
+    <div class="eyebrow">02 / 13</div>
+  </div>
+  <h2 class="section-title">
+    O problema que resolvemos
+    <small>O caixa de empresas Lucro Real é estrangulado por quatro vetores. Todos têm a mesma raiz: capital de giro caro, com peso no balanço.</small>
+  </h2>
+
+  <div class="grid-2" style="margin-top:6mm">
+    <div class="card problem-card">
+      <div class="label">Problema 01</div>
+      <div class="title">Capital de giro caro</div>
+      <div class="body">Linhas bancárias a CDI + spread, garantias exigidas, burocracia operacional e covenants restritivos.</div>
+    </div>
+    <div class="card problem-card">
+      <div class="label">Problema 02</div>
+      <div class="title">Dívida no balanço</div>
+      <div class="body">Cada captação aumenta o endividamento e piora indicadores de cobertura, restringindo crescimento.</div>
+    </div>
+    <div class="card problem-card">
+      <div class="label">Problema 03</div>
+      <div class="title">Sócio mal remunerado</div>
+      <div class="body">Dividendo agora tributado a 10% (Lei 15.270/2025). Aplicações tradicionais não acompanham o CDI líquido.</div>
+    </div>
+    <div class="card problem-card">
+      <div class="label">Problema 04</div>
+      <div class="title">Ciclo financeiro longo</div>
+      <div class="body">Recebíveis a prazo travam o caixa enquanto custos operacionais são à vista — pressão constante sobre o working capital.</div>
+    </div>
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">02 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3 — A SOLUÇÃO                                         -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Solução</div>
+    <div class="eyebrow">03 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Como funciona
+    <small>Cinco passos. Cessão pro soluto, sem coobrigação, com liquidação em até 3 dias úteis.</small>
+  </h2>
+
+  <div class="flow solution-flow" style="margin-top:6mm">
+    <div class="flow-step">
+      <div class="num-badge">1</div>
+      <div class="title">Empresa cede recebíveis</div>
+      <div class="desc">À EFIX, em caráter <strong>pro soluto</strong>, sem coobrigação pela solvência do devedor.</div>
+    </div>
+    <div class="flow-step">
+      <div class="num-badge">2</div>
+      <div class="title">EFIX paga a empresa</div>
+      <div class="desc">Recursos novos no caixa em até 3 dias úteis, em conta indicada no Termo de Cessão.</div>
+    </div>
+    <div class="flow-step">
+      <div class="num-badge">3</div>
+      <div class="title">Investidor aporta na EFIX</div>
+      <div class="desc">Adquire os créditos com deságio, em modalidade privada (auto-securitização) ou pública.</div>
+    </div>
+    <div class="flow-step">
+      <div class="num-badge">4</div>
+      <div class="title">Devedor paga à EFIX</div>
+      <div class="desc">No vencimento original do título, sem alteração da relação comercial subjacente.</div>
+    </div>
+    <div class="flow-step">
+      <div class="num-badge">5</div>
+      <div class="title">Investidor recebe remuneração</div>
+      <div class="desc">Liquidação financeira proporcional ao supply. Desintermediação bancária completa.</div>
+    </div>
+  </div>
+
+  <div class="green-callout" style="margin-top:8mm">
+    <strong>Dívida fora do balanço</strong> · despesa financeira dedutível · sócio com acesso a investimento de rentabilidade superior.
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">03 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4 — TRÊS BENEFÍCIOS                                  -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Por que cessão</div>
+    <div class="eyebrow">04 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Três benefícios reais — para empresa e sócios
+    <small>Funding alternativo, vantagem tributária e retorno superior ao CDI. Tudo na mesma operação.</small>
+  </h2>
+
+  <div class="grid-3" style="margin-top:6mm">
+    <div class="benefit-card green card">
+      <div class="benefit-head">Funding alternativo</div>
+      <div class="benefit-body">
+        <p>Alternativa adicional de funding sem comprometer covenants existentes.</p>
+        <p>Custo competitivo vs. linhas bancárias tradicionais.</p>
+        <p>Sem garantias reais exigidas.</p>
+        <p>Dívida fora do balanço (off-balance), preservando endividamento.</p>
+      </div>
+    </div>
+    <div class="benefit-card black card">
+      <div class="benefit-head">Vantagem tributária</div>
+      <div class="benefit-body">
+        <p>Deságio dedutível como <strong>despesa financeira</strong> para Lucro Real.</p>
+        <p>Sem valores mínimos ou custos fixos operacionais.</p>
+        <p>Alternativa a dividendo — IR de 10% sobre distribuições (Lei 15.270/2025).</p>
+        <p>Retorno tributado a 15% (GCAP), e não pela tabela regressiva até 22,5%.</p>
+      </div>
+    </div>
+    <div class="benefit-card gray card">
+      <div class="benefit-head">Retorno superior ao CDI</div>
+      <div class="benefit-body">
+        <p><strong>Superior a 200% do CDI</strong> na camada GCAP pura.</p>
+        <p>Consolidado com benefício fiscal: <strong>mais de 300% do CDI</strong>.</p>
+        <p>Recolhimento de IR simples via DARF mensal.</p>
+        <p>Consolidado com IR-dividendo evitado: <strong>mais de 350% do CDI</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">04 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5 — SIMULAÇÃO                                         -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Números</div>
+    <div class="eyebrow">05 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Simulação · R$ 1.000.000 de recebíveis, 30 dias
+    <small>Quatro camadas progressivas de retorno. Cada camada incremental sobre a anterior.</small>
+  </h2>
+
+  <div class="premissas">
+    <strong>Premissas</strong> · Taxa de desconto 3% a.m. · Capital aportado pelo sócio: R$ 970.000 · CDI 14,75% a.a.
+  </div>
+
+  <div class="grid-4" style="margin-top:4mm">
+    <div class="sim-col benchmark">
+      <h3>100% CDI</h3>
+      <div class="ribbon">benchmark</div>
+      <div class="row">Rendimento bruto</div>
+      <div class="row mono">R$ 11.148</div>
+      <div class="row" style="margin-top:3mm">IR (tabela 22,5%)</div>
+      <div class="row mono">R$ 2.508</div>
+      <div class="row" style="margin-top:3mm"><strong>Líquido</strong></div>
+      <div class="row mono"><strong>R$ 8.640</strong></div>
+      <div class="rentab">0,89% a.m.</div>
+    </div>
+    <div class="sim-col gcap">
+      <h3>GCAP puro</h3>
+      <div class="ribbon">retorno direto · sócio</div>
+      <div class="row">Ganho bruto</div>
+      <div class="row mono">R$ 27.000</div>
+      <div class="row" style="margin-top:3mm">GCAP 15%</div>
+      <div class="row mono">R$ 4.050</div>
+      <div class="row" style="margin-top:3mm"><strong>Líquido</strong></div>
+      <div class="row mono"><strong>R$ 22.950</strong></div>
+      <div class="rentab">2,37% a.m.</div>
+    </div>
+    <div class="sim-col econ-pj">
+      <h3>+ Econ. IRPJ/CSLL</h3>
+      <div class="ribbon">benefício implícito · empresa</div>
+      <div class="row">R$ 30.000 × 34%</div>
+      <div class="row mono">R$ 10.200</div>
+      <div class="row" style="margin-top:3mm">Economia realizada na PJ</div>
+      <div class="row" style="margin-top:3mm"><strong>Acumulado</strong></div>
+      <div class="row mono"><strong>R$ 33.150</strong></div>
+      <div class="rentab">3,42% a.m.</div>
+    </div>
+    <div class="sim-col consolidado">
+      <h3>+ IR dividendo evit.</h3>
+      <div class="ribbon">benefício total consolidado</div>
+      <div class="row">R$ 27.000 × 10%</div>
+      <div class="row mono">R$ 2.700</div>
+      <div class="row" style="margin-top:3mm">IR que não será pago</div>
+      <div class="row" style="margin-top:3mm"><strong>Acumulado</strong></div>
+      <div class="row mono"><strong>R$ 35.850</strong></div>
+      <div class="rentab">3,70% a.m.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:5mm;font-size:8.5pt;color:var(--gray-500);font-style:italic;line-height:1.5">
+    * Camadas 3 e 4 são benefícios implícitos — realizados no balanço da empresa e na declaração do sócio, não diretamente no extrato.
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">05 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6 — COMPARATIVO RENTABILIDADE                         -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Comparativo</div>
+    <div class="eyebrow">06 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Rentabilidade mensal líquida
+    <small>Quatro estratégias, mesmo capital. A consolidação chega a 4,2× o CDB líquido.</small>
+  </h2>
+
+  <div class="chart-area" style="margin-top:6mm">
+    <div class="bars">
+      <div class="bar gray">
+        0,89%
+        <div class="label-bottom">CDB 100% CDI</div>
+      </div>
+      <div class="bar blue">
+        2,37%
+        <div class="label-bottom">GCAP puro</div>
+      </div>
+      <div class="bar green">
+        3,42%
+        <div class="label-bottom">+ Econ. IRPJ/CSLL</div>
+      </div>
+      <div class="bar amber">
+        3,70%
+        <div class="label-bottom">Consolidado total</div>
+      </div>
+    </div>
+
+    <div class="kpi-stack">
+      <div class="kpi gray">
+        <div class="val">0,89%</div>
+        <div class="lbl">CDB líquido · a.m.</div>
+      </div>
+      <div class="kpi blue">
+        <div class="val">2,37%</div>
+        <div class="lbl">GCAP direto · a.m.</div>
+      </div>
+      <div class="kpi green">
+        <div class="val">3,42%</div>
+        <div class="lbl">c/ econ. PJ · a.m.</div>
+      </div>
+      <div class="kpi amber">
+        <div class="val">3,70%</div>
+        <div class="lbl">Consolidado · a.m.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">06 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7 — LEI 15.270                                        -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Marco regulatório</div>
+    <div class="eyebrow">07 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Lei nº 15.270/2025 — o cenário mudou
+    <small>O argumento histórico "prefiro dividendo isento" perdeu força. A securitização ficou ainda mais competitiva.</small>
+  </h2>
+
+  <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6mm;align-items:stretch;margin-top:6mm">
+    <div class="lei-col before">
+      <h3>Antes da Lei</h3>
+      <ul>
+        <li>Dividendo: <strong>0% de IR</strong> — totalmente isento.</li>
+        <li>GCAP: 15% — menos atrativo que dividendo.</li>
+        <li>Diferença: <strong>-15 p.p.</strong> — dividendo era claramente melhor para o sócio.</li>
+        <li>Empresa: sem dedução equivalente no Lucro Real.</li>
+      </ul>
+    </div>
+
+    <div class="arrow-between">→</div>
+
+    <div class="lei-col after">
+      <h3>Após a Lei 15.270/2025</h3>
+      <ul>
+        <li>Dividendo: <strong>10% IRRF</strong> sobre distribuições &gt; R$ 50k/mês.</li>
+        <li>GCAP: 15% — diferença caiu de 15 p.p. para apenas <strong>5 p.p.</strong></li>
+        <li>IRPF Mínimo: 10% sobre renda &gt; R$ 1,2M — inclui dividendos.</li>
+        <li>Empresa: dedução de <strong>34%</strong> na securitização → vantagem consolidada.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="green-callout" style="margin-top:8mm">
+    <strong>Conclusão:</strong> o argumento "prefiro dividendo isento" perdeu força. A securitização ficou ainda mais competitiva — agora a vantagem é estrutural, não apenas tributária.
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">07 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8 — COMO COMEÇAR                                      -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Onboarding</div>
+    <div class="eyebrow">08 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Como começar — 4 passos simples
+    <small>Da análise inicial à primeira cessão em conta: até 3 dias úteis.</small>
+  </h2>
+
+  <div class="grid-4" style="margin-top:6mm">
+    <div class="step-card">
+      <div class="num">01 · DIAGNÓSTICO</div>
+      <div class="title">Análise da carteira</div>
+      <div class="body">Análise da carteira de recebíveis e perfil tributário da empresa. Sem custo e sem compromisso.</div>
+    </div>
+    <div class="step-card">
+      <div class="num">02 · PROPOSTA</div>
+      <div class="title">Proposta comercial</div>
+      <div class="body">Taxa de desconto, prazo e volume definidos. Carta-proposta com simulação financeira e cronograma.</div>
+    </div>
+    <div class="step-card">
+      <div class="num">03 · FORMALIZAÇÃO</div>
+      <div class="title">Instrumento de cessão</div>
+      <div class="body">Instrumento Particular de Cessão assinado eletronicamente. Processo 100% digital.</div>
+    </div>
+    <div class="step-card">
+      <div class="num">04 · 1ª CESSÃO</div>
+      <div class="title">Primeira cessão</div>
+      <div class="body">Créditos cedidos, recursos em conta em até <strong>3 dias úteis</strong>. Operação recorrente a partir daí.</div>
+    </div>
+  </div>
+
+  <div class="green-callout" style="margin-top:8mm;text-align:center">
+    <strong>Próximo passo:</strong> agende uma reunião de diagnóstico. Sem custo. Sem compromisso.
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">08 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 9 — SEGURANÇA JURÍDICA                                -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Compliance</div>
+    <div class="eyebrow">09 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Segurança jurídica — por que a estrutura é sólida
+    <small>Quatro pilares que atendem aos testes de validade da operação perante Receita Federal e auditoria externa.</small>
+  </h2>
+
+  <div class="grid-2" style="margin-top:6mm;gap:5mm">
+    <div class="security-card">
+      <div class="accent green"></div>
+      <div class="content">
+        <div class="title">Partes independentes</div>
+        <div class="body">EFIX tem sócios distintos e opera com dezenas de clientes de mercado. <strong>Nenhum vínculo societário</strong> com a empresa cedente.</div>
+      </div>
+    </div>
+    <div class="security-card">
+      <div class="accent amber"></div>
+      <div class="content">
+        <div class="title">Propósito negocial real</div>
+        <div class="body">Funding real: recursos novos chegam ao caixa da empresa em até 3 dias. Atende plenamente o <em>business purpose test</em>.</div>
+      </div>
+    </div>
+    <div class="security-card">
+      <div class="accent blue"></div>
+      <div class="content">
+        <div class="title">Preço de mercado</div>
+        <div class="body">Taxa compatível com o mercado de cessão de recebíveis. Sem deságio atípico. Comparáveis disponíveis para auditoria.</div>
+      </div>
+    </div>
+    <div class="security-card">
+      <div class="accent black"></div>
+      <div class="content">
+        <div class="title">Sem <em>yellow flag</em></div>
+        <div class="body">Partes independentes, preço de mercado e propósito negocial real. Estrutura defensável perante questionamentos da RFB.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">09 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 10 — CESSÃO VS FIDC                                   -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Comparativo estrutural</div>
+    <div class="eyebrow">10 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Cessão vs FIDC — qual é a diferença?
+    <small>FIDC faz sentido para volumes acima de R$ 50M. Cessão direta domina o ticket médio.</small>
+  </h2>
+
+  <table class="comparison" style="margin-top:6mm">
+    <thead>
+      <tr>
+        <th style="width:30%">Característica</th>
+        <th class="cessao" style="width:35%">Cessão EFIX</th>
+        <th class="fidc" style="width:35%">FIDC tradicional</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-col">Custo de Administração</td>
+        <td class="cessao-cell"><span class="check">✓</span> Nenhum</td>
+        <td class="fidc-cell"><span class="cross">✗</span> 0,3% a 0,5% a.a.</td>
+      </tr>
+      <tr>
+        <td class="label-col">Custo de Gestão</td>
+        <td class="cessao-cell"><span class="check">✓</span> Nenhum</td>
+        <td class="fidc-cell"><span class="cross">✗</span> 0,5% a 1,5% a.a.</td>
+      </tr>
+      <tr>
+        <td class="label-col">Taxa CVM / Rating</td>
+        <td class="cessao-cell"><span class="check">✓</span> Nenhum</td>
+        <td class="fidc-cell"><span class="cross">✗</span> 0,2% a 0,5% obrigatório</td>
+      </tr>
+      <tr>
+        <td class="label-col">Valor Mínimo</td>
+        <td class="cessao-cell"><span class="check">✓</span> Qualquer valor (R$ 10k+)</td>
+        <td class="fidc-cell"><span class="cross">✗</span> Mín. R$ 15M a R$ 50M</td>
+      </tr>
+      <tr>
+        <td class="label-col">Tempo de Aprovação</td>
+        <td class="cessao-cell"><span class="check">✓</span> 3 a 5 dias</td>
+        <td class="fidc-cell"><span class="cross">✗</span> 30 a 45 dias</td>
+      </tr>
+      <tr>
+        <td class="label-col">Complexidade Legal</td>
+        <td class="cessao-cell"><span class="check">✓</span> Simples</td>
+        <td class="fidc-cell"><span class="cross">✗</span> Muito complexa</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">10 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 11 — COMECE A CESSÃO                                  -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Vantagens operacionais</div>
+    <div class="eyebrow">11 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Comece a cessão — sem mínimos, sem esperas
+    <small>Quatro vantagens operacionais que tornam a cessão direta acessível para qualquer porte de empresa Lucro Real.</small>
+  </h2>
+
+  <div class="grid-2" style="margin-top:6mm;gap:5mm">
+    <div class="card" style="border-left:4px solid var(--green)">
+      <div class="label" style="color:var(--green-dark)">Pilar 01</div>
+      <div class="title">Zero custos fixos</div>
+      <div class="body">Sem taxa de administração, gestão, CVM ou rating. Você só "paga" o deságio negociado — e ele é dedutível.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--blue)">
+      <div class="label" style="color:var(--blue)">Pilar 02</div>
+      <div class="title">Comece com qualquer valor</div>
+      <div class="body">Não há volume mínimo. Uma operação de R$ 10 mil é totalmente viável. FIDC exige R$ 15M a R$ 50M.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--amber)">
+      <div class="label" style="color:var(--amber)">Pilar 03</div>
+      <div class="title">Processo rápido · 3 dias</div>
+      <div class="body">Da aprovação ao dinheiro em conta: até 3 dias úteis. FIDC leva 30 a 45 dias só de preparação.</div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--black)">
+      <div class="label">Pilar 04</div>
+      <div class="title">Sem burocracia pesada</div>
+      <div class="body">Sem rating obrigatório, sem prospecto complexo. Documentação simples e ágil para começar.</div>
+    </div>
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">11 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 12 — PARA QUEM É                                      -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-head">
+    <div class="eyebrow"><span class="dot"></span>Persona</div>
+    <div class="eyebrow">12 / 13</div>
+  </div>
+  <h2 class="section-title">
+    Para quem é essa estrutura?
+    <small>O encaixe é máximo para a combinação Lucro Real + CFO experiente + sócio com perfil investidor.</small>
+  </h2>
+
+  <div class="grid-3" style="margin-top:6mm">
+    <div class="card" style="border-top:4px solid var(--green)">
+      <div class="label" style="color:var(--green-dark)">Persona 01</div>
+      <div class="title">Empresas no Lucro Real</div>
+      <div class="body" style="line-height:1.7">
+        <p style="margin:0 0 3mm 0">▸ Receita acima de R$ 24M/ano.</p>
+        <p style="margin:0 0 3mm 0">▸ Buscam alternativas sem incorrer em custos fixos.</p>
+        <p style="margin:0 0 3mm 0">▸ Carteira de recebíveis com boa qualidade de crédito.</p>
+        <p style="margin:0">▸ Interesse em reduzir endividamento no balanço.</p>
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--blue)">
+      <div class="label" style="color:var(--blue)">Persona 02</div>
+      <div class="title">CFOs</div>
+      <div class="body" style="line-height:1.7">
+        <p style="margin:0 0 3mm 0">▸ Buscam diversificar fontes de funding.</p>
+        <p style="margin:0 0 3mm 0">▸ Precisam de capital sem comprometer covenants.</p>
+        <p style="margin:0 0 3mm 0">▸ Querem desvincular crescimento do crédito bancário.</p>
+        <p style="margin:0">▸ Reportam para sócios que monitoram endividamento.</p>
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--amber)">
+      <div class="label" style="color:var(--amber)">Persona 03</div>
+      <div class="title">Sócios com perfil investidor</div>
+      <div class="body" style="line-height:1.7">
+        <p style="margin:0 0 3mm 0">▸ Distribuição mensal potencial &gt; R$ 50k.</p>
+        <p style="margin:0 0 3mm 0">▸ Buscam alternativas de investimento mais rentáveis.</p>
+        <p style="margin:0 0 3mm 0">▸ Renda anual acima do piso da <strong>Lei 15.270/2025</strong>.</p>
+        <p style="margin:0">▸ Querem retorno superior com simplicidade operacional.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:8mm;padding:5mm 7mm;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:10px;font-size:9.5pt;color:var(--gray-600);line-height:1.55;font-style:italic">
+    Não indicado para empresas no Simples Nacional ou Lucro Presumido sem análise específica — a vantagem tributária é maximizada no <strong>Lucro Real</strong>.
+  </div>
+
+  <div class="slide-foot">
+    <span class="brand-lock">EFIX Securitizadora · Confidencial</span>
+    <span class="page-num">12 / 13</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 13 — CLOSING                                          -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="slide closing cover">
+  <div class="brand-lockup">
+    <div class="brand-mark">EFIX<span class="dot">.</span></div>
+    <div class="brand-sub">Securitizadora</div>
+  </div>
+  <h1>
+    Funding inteligente.<br>
+    Retorno superior.<br>
+    <span class="shine">Estrutura sólida.</span>
+  </h1>
+
+  <div class="cta-block">
+    <div class="cta-eyebrow">Vamos conversar?</div>
+    <div class="cta-title">Diagnóstico gratuito da sua carteira de recebíveis</div>
+    <div class="cta-sub">Escreva para <strong>contato@efix.finance</strong> · ou visite <strong>efix.finance</strong></div>
+  </div>
+
+  <div class="disclaimer">
+    As informações desta apresentação são de caráter informativo e não constituem assessoria jurídica, tributária ou financeira.
+    EFIX Securitizadora S.A. · CNPJ 60.756.859/0001-57.
+  </div>
+</section>
+
+</body>
+</html>
