@@ -1033,20 +1033,16 @@
       const routerData  = routerIface.encodeFunctionData("claimAll", [addr]);
       const claimData   = claimIface.encodeFunctionData("claim", []);
 
-      // Build the call list. Always include the router (handles lens-registered
-      // series like SALRIO/LATITUDE). For series that aren't in the router yet
-      // (HFBPOC POC), append a direct .claim() call so the smart account
-      // collects them in the same atomic batch.
-      const calls = [{ target: router, data: routerData, value: 0n }];
-
-      // Hardcoded list of "not in router" series. Check pending balance on
-      // chain (via raw eth_call against the Base public RPC) so we don't depend
-      // on potentially stale window.__ownershipPortfolio cache.
+      // Discover what actually has pending balance ON-CHAIN right now (not from
+      // potentially stale cache). The router handles its registered series in
+      // one shot via claimAll(user); per-token series not yet in the router
+      // (HFBPOC POC) need a direct .claim() call.
       const NOT_IN_ROUTER = [
         "0x3A09A093999Cd837cEbFF09BC91B7ed563Fe81f1", // HFBPOC POC
       ];
       const BASE_RPC = "https://mainnet.base.org";
       const pendCallData = pendIface.encodeFunctionData("pendingDividends", [addr]);
+      const directClaims = [];
       for (const token of NOT_IN_ROUTER) {
         try {
           const resp = await fetch(BASE_RPC, {
@@ -1060,36 +1056,44 @@
           const j = await resp.json();
           const pending = BigInt(j.result || "0x0");
           if (pending > 0n) {
-            console.log("[claimAllBTR] adding direct claim for", token, "pending=", pending.toString());
-            calls.push({ target: token, data: claimData, value: 0n });
+            console.log("[claimAllBTR] direct claim needed for", token, "pending=", pending.toString());
+            directClaims.push(token);
           }
         } catch (e) {
           console.warn("[claimAllBTR] pendingDividends check failed for", token, e);
         }
       }
-      console.log("[claimAllBTR] sending", calls.length, "calls in batch");
 
       const client = await window.EfixWallet.getBaseClient();
 
-      let txHash = null;
-      // Account-Kit's smart client exposes either sendUserOperation or sendCalls
-      // depending on version. Mirror the pattern used for BRLE swap in this file.
-      // sendCalls is preferred — atomic batch that includes router + per-token
-      // claims (e.g. HFBPOC) in a single UserOp.
-      if (typeof client.sendCalls === "function") {
-        const result = await client.sendCalls({ calls });
-        txHash = result?.transactionHashes?.[0] || result?.id || null;
-      } else if (typeof client.sendUserOperation === "function") {
-        // Fallback: send the router call (covers most pools); per-token claims
-        // would need to be sequential, which we skip in this fallback path.
-        const op = await client.sendUserOperation({
-          uo: { target: router, data: routerData, value: 0n },
-        });
-        const wait = await client.waitForUserOperationTransaction({ hash: op.hash });
-        txHash = wait || op.hash;
-      } else {
-        throw new Error("EfixWallet client doesn't expose sendCalls or sendUserOperation");
+      // Build the ordered list of (target, data) ops we need to broadcast.
+      // 1st: router.claimAll(user) — covers SALRIO/LATITUDE if they have pending
+      // 2nd..Nth: direct claim() per NOT_IN_ROUTER series with pending > 0
+      const ops = [{ target: router, data: routerData, label: "router.claimAll" }];
+      for (const t of directClaims) ops.push({ target: t, data: claimData, label: `claim ${t.slice(0,10)}…` });
+      console.log("[claimAllBTR] dispatching", ops.length, "userOps sequentially");
+
+      let lastTxHash = null;
+      // Send each op as a separate UserOp + wait. sendCalls in this Account Kit
+      // version was observed to silently drop the second call; sequential
+      // sendUserOperation is reliable.
+      for (const op of ops) {
+        setStatus(`Enviando ${op.label}…`);
+        if (typeof client.sendUserOperation === "function") {
+          const sent = await client.sendUserOperation({
+            uo: { target: op.target, data: op.data, value: 0n },
+          });
+          const wait = await client.waitForUserOperationTransaction({ hash: sent.hash });
+          lastTxHash = wait || sent.hash;
+          console.log("[claimAllBTR]", op.label, "tx", lastTxHash);
+        } else if (typeof client.sendCalls === "function") {
+          const result = await client.sendCalls({ calls: [{ target: op.target, data: op.data, value: 0n }] });
+          lastTxHash = result?.transactionHashes?.[0] || result?.id || lastTxHash;
+        } else {
+          throw new Error("EfixWallet client doesn't expose sendUserOperation or sendCalls");
+        }
       }
+      const txHash = lastTxHash;
 
       setStatus(`Confirmando${txHash ? " · " + String(txHash).slice(0, 12) + "…" : ""}`);
       // Re-load the BTR positions to show the new pending=0 state.
