@@ -554,6 +554,7 @@ async function loadBtr() {
   }
 }
 
+window.__btrSnapshot = null;
 async function btrLoadSnapshot() {
   const poolId = document.getElementById('btr-pool').value;
   if (!poolId) return;
@@ -561,16 +562,32 @@ async function btrLoadSnapshot() {
   box.textContent = 'Loading on-chain state…';
   try {
     const r = await api('/v1/admin/btr/' + poolId + '/snapshot');
+    window.__btrSnapshot = r;
     const s = r.state;
+    const f = r.funds || {};
     const formatted = (raw, dec=18) => (Number(BigInt(raw)) / 10**dec).toLocaleString('pt-BR', { maximumFractionDigits: 4 });
     const lastTs = s.lastDistributionTimestamp ? new Date(s.lastDistributionTimestamp * 1000).toLocaleString('pt-BR') : 'never';
-    const pool = BTR_POOLS.find(p => p.id === poolId);
+    const tokBrle = f.tokenizadora ? formatted(f.tokenizadora.brle) : '—';
+    const origBrle = f.originador ? formatted(f.originador.brle) : null;
+
+    const fundsBlock = f.tokenizadora ? `
+      <div style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px dashed #e5e5e5">
+        <div class="muted" style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">BRLE disponível</div>
+        <div>Tokenizadora <span class="muted">(${f.tokenizadora.role})</span>: <strong style="color:#059669">${tokBrle}</strong> BRLE
+          <span class="muted" style="font-size:0.7rem">(distribuível agora via depositDividend)</span></div>
+        ${f.originador ? `
+          <div>Originador <span class="muted">(${f.originador.role})</span>: <strong>${origBrle}</strong> BRLE
+            <span class="muted" style="font-size:0.7rem">(precisa transferir → tokenizadora antes de distribuir)</span></div>
+        ` : ''}
+      </div>` : '';
+
     box.innerHTML = `
       <div><strong>${s.name}</strong> (${s.symbol}) · <code>${r.pool.address}</code> · ${r.pool.variant}</div>
       <div>Total supply: <strong>${formatted(s.totalSupply)}</strong> ${s.symbol}</div>
       <div>Total dividends distributed: <strong>${formatted(s.totalDividendsDistributed)}</strong> BRLE</div>
       <div>Distribution count: ${s.distributionCount} · Last: ${lastTs}</div>
       <div>Paused: ${s.paused ? '<span style="color:#b91c1c">yes</span>' : '<span style="color:#059669">no</span>'}</div>
+      ${fundsBlock}
       <div style="margin-top:0.5rem"><a href="https://basescan.org/address/${r.pool.address}" target="_blank" rel="noopener" style="color:#d97706;text-decoration:none">View on Basescan ↗</a></div>
     `;
   } catch (err) {
