@@ -1029,6 +1029,7 @@
 
       const routerIface = new window.ethers.Interface(["function claimAll(address user)"]);
       const claimIface  = new window.ethers.Interface(["function claim() returns (uint256)"]);
+      const pendIface   = new window.ethers.Interface(["function pendingDividends(address) view returns (uint256)"]);
       const routerData  = routerIface.encodeFunctionData("claimAll", [addr]);
       const claimData   = claimIface.encodeFunctionData("claim", []);
 
@@ -1037,19 +1038,36 @@
       // (HFBPOC POC), append a direct .claim() call so the smart account
       // collects them in the same atomic batch.
       const calls = [{ target: router, data: routerData, value: 0n }];
-      // Hardcoded list of "not in router" series. When a series gets registered
-      // in the DividendRouter (via Safe TX), remove it from here to avoid
-      // a no-op revert on the second claim attempt.
-      const NOT_IN_ROUTER = new Set([
-        "0x3a09a093999cd837cebff09bc91b7ed563fe81f1", // HFBPOC POC
-      ]);
-      const portfolioBtr = (window.__ownershipPortfolio?.btrPositions) || [];
-      for (const b of portfolioBtr) {
-        const pending = parseFloat(b.pendingBRLE || "0");
-        if (pending <= 0) continue;
-        if (!NOT_IN_ROUTER.has(String(b.token).toLowerCase())) continue;
-        calls.push({ target: b.token, data: claimData, value: 0n });
+
+      // Hardcoded list of "not in router" series. Check pending balance on
+      // chain (via raw eth_call against the Base public RPC) so we don't depend
+      // on potentially stale window.__ownershipPortfolio cache.
+      const NOT_IN_ROUTER = [
+        "0x3A09A093999Cd837cEbFF09BC91B7ed563Fe81f1", // HFBPOC POC
+      ];
+      const BASE_RPC = "https://mainnet.base.org";
+      const pendCallData = pendIface.encodeFunctionData("pendingDividends", [addr]);
+      for (const token of NOT_IN_ROUTER) {
+        try {
+          const resp = await fetch(BASE_RPC, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0", id: 1, method: "eth_call",
+              params: [{ to: token, data: pendCallData }, "latest"],
+            }),
+          });
+          const j = await resp.json();
+          const pending = BigInt(j.result || "0x0");
+          if (pending > 0n) {
+            console.log("[claimAllBTR] adding direct claim for", token, "pending=", pending.toString());
+            calls.push({ target: token, data: claimData, value: 0n });
+          }
+        } catch (e) {
+          console.warn("[claimAllBTR] pendingDividends check failed for", token, e);
+        }
       }
+      console.log("[claimAllBTR] sending", calls.length, "calls in batch");
 
       const client = await window.EfixWallet.getBaseClient();
 
