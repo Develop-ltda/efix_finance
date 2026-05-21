@@ -976,10 +976,18 @@
 
   function btrRow(b) {
     const pending = parseFloat(b.pendingBRLE || "0");
+    const balance = parseFloat(b.balance || "0");
     const pendingClass = pending > 0 ? "has-pending" : "";
-    const balanceFmt = parseFloat(b.balance).toLocaleString("pt-BR", {
+    const balanceFmt = balance.toLocaleString("pt-BR", {
       minimumFractionDigits: 0, maximumFractionDigits: 4,
     });
+    // Yield % = pending dividends ÷ invested-at-par × 100. Par is R$1 per cota,
+    // so invested-at-par equals the balance count. Display only if non-zero so
+    // empty positions don't show "0,00%" noise.
+    const yieldPct = balance > 0 ? (pending / balance) * 100 : 0;
+    const yieldStr = yieldPct >= 0.01
+      ? yieldPct.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + "%"
+      : (yieldPct > 0 ? "<0,01%" : "—");
     return `
       <div class="btr-row">
         <div class="btr-info">
@@ -989,6 +997,7 @@
         <div class="btr-pending">
           <div class="btr-pending-label">Pendente</div>
           <div class="btr-pending-value ${pendingClass}">${fmtBRL(b.pendingBRLE)}</div>
+          ${pending > 0 ? `<div class="btr-pending-label" style="margin-top:0.25rem">Rendimento: <span style="color:#059669;font-weight:600">${yieldStr}</span></div>` : ""}
         </div>
         <a class="btr-row-link" href="${b.basescan}" target="_blank" rel="noopener" title="Ver na Basescan">›</a>
       </div>
