@@ -1027,20 +1027,45 @@
       btn.disabled = true;
       setStatus("Preparando UserOp…");
 
-      const iface = new window.ethers.Interface(["function claimAll(address user)"]);
-      const data = iface.encodeFunctionData("claimAll", [addr]);
+      const routerIface = new window.ethers.Interface(["function claimAll(address user)"]);
+      const claimIface  = new window.ethers.Interface(["function claim() returns (uint256)"]);
+      const routerData  = routerIface.encodeFunctionData("claimAll", [addr]);
+      const claimData   = claimIface.encodeFunctionData("claim", []);
+
+      // Build the call list. Always include the router (handles lens-registered
+      // series like SALRIO/LATITUDE). For series that aren't in the router yet
+      // (HFBPOC POC), append a direct .claim() call so the smart account
+      // collects them in the same atomic batch.
+      const calls = [{ target: router, data: routerData, value: 0n }];
+      // Hardcoded list of "not in router" series. When a series gets registered
+      // in the DividendRouter (via Safe TX), remove it from here to avoid
+      // a no-op revert on the second claim attempt.
+      const NOT_IN_ROUTER = new Set([
+        "0x3a09a093999cd837cebff09bc91b7ed563fe81f1", // HFBPOC POC
+      ]);
+      const portfolioBtr = (window.__ownershipPortfolio?.btrPositions) || [];
+      for (const b of portfolioBtr) {
+        const pending = parseFloat(b.pendingBRLE || "0");
+        if (pending <= 0) continue;
+        if (!NOT_IN_ROUTER.has(String(b.token).toLowerCase())) continue;
+        calls.push({ target: b.token, data: claimData, value: 0n });
+      }
 
       const client = await window.EfixWallet.getBaseClient();
 
       let txHash = null;
       // Account-Kit's smart client exposes either sendUserOperation or sendCalls
       // depending on version. Mirror the pattern used for BRLE swap in this file.
+      // sendCalls is preferred — atomic batch that includes router + per-token
+      // claims (e.g. HFBPOC) in a single UserOp.
       if (typeof client.sendCalls === "function") {
-        const result = await client.sendCalls({ calls: [{ target: router, data, value: 0n }] });
+        const result = await client.sendCalls({ calls });
         txHash = result?.transactionHashes?.[0] || result?.id || null;
       } else if (typeof client.sendUserOperation === "function") {
+        // Fallback: send the router call (covers most pools); per-token claims
+        // would need to be sequential, which we skip in this fallback path.
         const op = await client.sendUserOperation({
-          uo: { target: router, data, value: 0n },
+          uo: { target: router, data: routerData, value: 0n },
         });
         const wait = await client.waitForUserOperationTransaction({ hash: op.hash });
         txHash = wait || op.hash;
