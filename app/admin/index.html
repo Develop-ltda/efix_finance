@@ -174,6 +174,7 @@ tbody tr:hover{background:#fffbeb}
       <button class="tab" data-tab="investors" onclick="switchTab('investors')">Investors</button>
       <button class="tab" data-tab="deposits" onclick="switchTab('deposits')">Deposits</button>
       <button class="tab" data-tab="compliance" onclick="switchTab('compliance')">CVM 88</button>
+      <button class="tab" data-tab="btr" onclick="switchTab('btr')">BTR Ops</button>
     </div>
 
     <!-- Overview -->
@@ -308,6 +309,59 @@ tbody tr:hover{background:#fffbeb}
         <div class="muted" style="font-size:0.85rem;margin-top:0.5rem">5-day cooling-off between <code>deposit_received</code> and <code>settled</code>. Enforcement via allocation <code>cooling_off_until</code> timestamp — admin advance currently bypasses. Automation pending.</div>
       </div>
     </div>
+
+    <!-- BTR Ops (protocol admin actions) -->
+    <div id="tab-btr" class="hidden">
+      <div class="card">
+        <div class="card-title">Pool snapshot</div>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:0.85rem">
+          <label class="mono" style="font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase">Pool</label>
+          <select id="btr-pool" onchange="btrLoadSnapshot()" style="padding:0.5rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.8rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+            <option value="">Loading…</option>
+          </select>
+          <button class="btn-action" onclick="btrLoadSnapshot()">Refresh snapshot</button>
+        </div>
+        <div id="btr-snapshot" class="mono" style="font-size:0.78rem;line-height:1.6;color:#525252">Select a pool to load on-chain state.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Deposit dividend</div>
+        <div class="muted" style="font-size:0.8rem;margin-bottom:1rem">
+          Backend builds <code>BRLE.approve(share, amount)</code> + <code>share.depositDividend(amount, phase, ref)</code> and signs via the pool's configured signer.
+          <br>SALRIO/LATITUDE → hot wallet (<code>DISTRIBUTOR_PRIVATE_KEY</code>). HFBPOC → <strong>Fireblocks MPC vault 131</strong> with <code>hausbank_prod_api</code> co-signer auto-approval.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.85rem;align-items:end">
+          <div>
+            <label class="mono" style="display:block;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">Amount (BRLE)</label>
+            <input id="btr-amount" type="text" inputmode="decimal" placeholder="0.1" value="0.1"
+                   style="width:100%;padding:0.55rem 0.75rem;font-family:'Space Mono',monospace;font-size:0.85rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+          </div>
+          <div>
+            <label class="mono" style="display:block;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">Phase</label>
+            <select id="btr-phase" style="width:100%;padding:0.55rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.85rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+              <option value="0">0 · ConstructionProxy (sBRLE / CDI proxy)</option>
+              <option value="1">1 · RampUp (partial habite-se)</option>
+              <option value="2">2 · Operational (rent cashflow)</option>
+              <option value="3">3 · ExtraordinaryDist (one-off)</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1">
+            <label class="mono" style="display:block;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">Reference (free-form, max 200 chars)</label>
+            <input id="btr-ref" type="text" placeholder="e.g. 2026-05 demo Firstrio + Latitude"
+                   style="width:100%;padding:0.55rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.85rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+          </div>
+          <div style="grid-column:1/-1;display:flex;gap:0.75rem;align-items:center">
+            <button id="btr-submit" class="btn-action primary" onclick="btrDepositDividend()" style="font-size:0.7rem">Deposit dividend</button>
+            <span id="btr-status" class="mono muted" style="font-size:0.75rem">idle</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="btr-result-card" style="display:none">
+        <div class="card-title">Result</div>
+        <div id="btr-result" class="mono" style="font-size:0.78rem;line-height:1.7"></div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -416,7 +470,7 @@ function showApp(name, pic) {
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelector(`[data-tab="${name}"]`).classList.add('active');
-  ['overview','allocations','investors','deposits','compliance'].forEach(t => {
+  ['overview','allocations','investors','deposits','compliance','btr'].forEach(t => {
     document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
   });
   if (name === 'overview') loadOverview();
@@ -424,6 +478,99 @@ function switchTab(name) {
   if (name === 'investors') loadInvestors();
   if (name === 'deposits') loadDeposits();
   if (name === 'compliance') loadCompliance();
+  if (name === 'btr') loadBtr();
+}
+
+// ───────── BTR Ops
+let BTR_POOLS = [];
+async function loadBtr() {
+  try {
+    const r = await api('/v1/admin/btr/pools');
+    BTR_POOLS = r.pools || [];
+    const sel = document.getElementById('btr-pool');
+    if (!BTR_POOLS.length) {
+      sel.innerHTML = '<option value="">(no pools configured)</option>';
+      return;
+    }
+    // Prefer Fireblocks-variant pool first (HFBPOC) for the demo.
+    BTR_POOLS.sort((a,b) => (b.variant === 'fireblocks') - (a.variant === 'fireblocks'));
+    sel.innerHTML = BTR_POOLS.map(p =>
+      `<option value="${p.id}">${p.symbol} · ${p.name} · ${p.variant}</option>`
+    ).join('');
+    btrLoadSnapshot();
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+async function btrLoadSnapshot() {
+  const poolId = document.getElementById('btr-pool').value;
+  if (!poolId) return;
+  const box = document.getElementById('btr-snapshot');
+  box.textContent = 'Loading on-chain state…';
+  try {
+    const r = await api('/v1/admin/btr/' + poolId + '/snapshot');
+    const s = r.state;
+    const formatted = (raw, dec=18) => (Number(BigInt(raw)) / 10**dec).toLocaleString('pt-BR', { maximumFractionDigits: 4 });
+    const lastTs = s.lastDistributionTimestamp ? new Date(s.lastDistributionTimestamp * 1000).toLocaleString('pt-BR') : 'never';
+    const pool = BTR_POOLS.find(p => p.id === poolId);
+    box.innerHTML = `
+      <div><strong>${s.name}</strong> (${s.symbol}) · <code>${r.pool.address}</code> · ${r.pool.variant}</div>
+      <div>Total supply: <strong>${formatted(s.totalSupply)}</strong> ${s.symbol}</div>
+      <div>Total dividends distributed: <strong>${formatted(s.totalDividendsDistributed)}</strong> BRLE</div>
+      <div>Distribution count: ${s.distributionCount} · Last: ${lastTs}</div>
+      <div>Paused: ${s.paused ? '<span style="color:#b91c1c">yes</span>' : '<span style="color:#059669">no</span>'}</div>
+      <div style="margin-top:0.5rem"><a href="https://basescan.org/address/${r.pool.address}" target="_blank" rel="noopener" style="color:#d97706;text-decoration:none">View on Basescan ↗</a></div>
+    `;
+  } catch (err) {
+    box.innerHTML = '<span style="color:#b91c1c">ERROR: ' + err.message + '</span>';
+  }
+}
+
+async function btrDepositDividend() {
+  const btn = document.getElementById('btr-submit');
+  const stat = document.getElementById('btr-status');
+  const resultCard = document.getElementById('btr-result-card');
+  const result = document.getElementById('btr-result');
+  const poolId = document.getElementById('btr-pool').value;
+  const amount = document.getElementById('btr-amount').value.trim();
+  const phase = Number(document.getElementById('btr-phase').value);
+  const ref = document.getElementById('btr-ref').value.trim() || ('demo ' + new Date().toISOString().slice(0,10));
+
+  if (!poolId) { toast('Select a pool', true); return; }
+  if (!/^\d+(\.\d+)?$/.test(amount)) { toast('Amount must be a decimal like 0.1', true); return; }
+
+  btn.disabled = true;
+  stat.textContent = 'submitting…';
+  stat.style.color = '#d97706';
+  resultCard.style.display = 'none';
+
+  try {
+    const r = await api('/v1/admin/btr/' + poolId + '/deposit-dividend', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ amount, phase, ref }),
+    });
+    stat.textContent = '✓ confirmed';
+    stat.style.color = '#059669';
+    resultCard.style.display = 'block';
+    result.innerHTML = `
+      <div>Pool: <strong>${r.pool}</strong></div>
+      <div>Amount: <strong>${r.amount}</strong> BRLE · Phase: ${r.phase} · Ref: <em>${r.ref}</em></div>
+      <div>Signer: <code>${r.signer}</code></div>
+      ${r.approveTx ? `<div>Approve tx: <a href="https://basescan.org/tx/${r.approveTx}" target="_blank" rel="noopener" style="color:#d97706">${r.approveTx.slice(0,18)}…</a></div>` : '<div class="muted">Approve skipped (allowance already sufficient)</div>'}
+      <div>Deposit tx: <a href="${r.basescan.depositTx}" target="_blank" rel="noopener" style="color:#d97706">${r.depositTx.slice(0,18)}… ↗</a></div>
+      <div style="margin-top:0.5rem"><a href="${r.basescan.contract}" target="_blank" rel="noopener" style="color:#d97706">View contract on Basescan ↗</a></div>
+    `;
+    btrLoadSnapshot();
+  } catch (err) {
+    stat.textContent = '✗ failed';
+    stat.style.color = '#b91c1c';
+    resultCard.style.display = 'block';
+    result.innerHTML = '<span style="color:#b91c1c">ERROR: ' + err.message + '</span>';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ───────── Overview
