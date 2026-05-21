@@ -1733,12 +1733,27 @@
 
         async function refreshBalance(address) {
             try {
-                const bal = await WalletLogic.getBalance(EfixWallet, address || userAddress);
+                const addr = address || userAddress;
+                const bal = await WalletLogic.getBalance(EfixWallet, addr);
+                const efixDIamount = parseFloat(bal.formatted);
                 document.getElementById('tokenBalance').textContent = bal.formatted + ' efixDI';
-                const brl = parseFloat(bal.formatted);
-                document.getElementById('balanceDisplay').textContent = 'R$ ' + brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+                // Try to fetch the unified totalNetWorthBRL from the portfolio
+                // lens (sums efixDI + BRLE + SALRIO + HFBPOC + LATITUDE + USDC
+                // converted to BRL). Fall back to efixDI-only if the call fails.
+                let headlineBRL = efixDIamount;
+                try {
+                    const r = await fetch(BACKEND_URL + '/wallet/portfolio/' + addr);
+                    if (r.ok) {
+                        const p = await r.json();
+                        const nw = parseFloat(p.totalNetWorthBRL || '0');
+                        if (Number.isFinite(nw) && nw > 0) headlineBRL = nw;
+                    }
+                } catch (_) { /* fall through to efixDI-only */ }
+
+                document.getElementById('balanceDisplay').textContent = 'R$ ' + headlineBRL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
                 // Update card spending power
-                if (brl > 0) updateSpendingPower(brl);
+                if (headlineBRL > 0) updateSpendingPower(headlineBRL);
 
                 // Fetch locked collateral info
                 try {
@@ -1835,9 +1850,9 @@
             WalletLogic.pollBalanceChange(EfixWallet, userAddress, currentBal, 20).then(result => {
                 if (result.changed) {
                     document.getElementById('tokenBalance').textContent = result.bal.formatted + ' efixDI';
-                    const brl = parseFloat(result.bal.formatted);
-                    document.getElementById('balanceDisplay').textContent =
-                        'R$ ' + brl.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+                    // Re-fetch unified net worth from the portfolio lens so the
+                    // headline reflects the new efixDI mint plus other holdings.
+                    refreshBalance(userAddress);
 
                     setStep(3, true); setStep(4, true);
                     document.getElementById('btnIPaid').style.display = 'none';
