@@ -357,6 +357,29 @@ tbody tr:hover{background:#fffbeb}
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-title">Transfer shares (settlement / IPO allocation)</div>
+        <div class="muted" style="font-size:0.8rem;margin-bottom:1rem">
+          Backend calls <code>share.transfer(to, amount)</code> via the pool's signer. For HFBPOC this routes through Fireblocks + co-signer. New holder immediately accrues dividends on next <code>depositDividend</code>.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.85rem;align-items:end">
+          <div style="grid-column:1/-1">
+            <label class="mono" style="display:block;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">Recipient address (smart account or EOA)</label>
+            <input id="btr-xfer-to" type="text" placeholder="0x… (42 hex chars)"
+                   style="width:100%;padding:0.55rem 0.75rem;font-family:'Space Mono',monospace;font-size:0.78rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+          </div>
+          <div>
+            <label class="mono" style="display:block;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">Amount (shares)</label>
+            <input id="btr-xfer-amount" type="text" inputmode="decimal" placeholder="100" value="100"
+                   style="width:100%;padding:0.55rem 0.75rem;font-family:'Space Mono',monospace;font-size:0.85rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+          </div>
+          <div style="display:flex;gap:0.75rem;align-items:center">
+            <button id="btr-xfer-submit" class="btn-action" onclick="btrTransferShares()" style="font-size:0.7rem">Transfer shares</button>
+            <span id="btr-xfer-status" class="mono muted" style="font-size:0.75rem">idle</span>
+          </div>
+        </div>
+      </div>
+
       <div class="card" id="btr-result-card" style="display:none">
         <div class="card-title">Result</div>
         <div id="btr-result" class="mono" style="font-size:0.78rem;line-height:1.7"></div>
@@ -560,6 +583,54 @@ async function btrDepositDividend() {
       <div>Signer: <code>${r.signer}</code></div>
       ${r.approveTx ? `<div>Approve tx: <a href="https://basescan.org/tx/${r.approveTx}" target="_blank" rel="noopener" style="color:#d97706">${r.approveTx.slice(0,18)}…</a></div>` : '<div class="muted">Approve skipped (allowance already sufficient)</div>'}
       <div>Deposit tx: <a href="${r.basescan.depositTx}" target="_blank" rel="noopener" style="color:#d97706">${r.depositTx.slice(0,18)}… ↗</a></div>
+      <div style="margin-top:0.5rem"><a href="${r.basescan.contract}" target="_blank" rel="noopener" style="color:#d97706">View contract on Basescan ↗</a></div>
+    `;
+    btrLoadSnapshot();
+  } catch (err) {
+    stat.textContent = '✗ failed';
+    stat.style.color = '#b91c1c';
+    resultCard.style.display = 'block';
+    result.innerHTML = '<span style="color:#b91c1c">ERROR: ' + err.message + '</span>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function btrTransferShares() {
+  const btn = document.getElementById('btr-xfer-submit');
+  const stat = document.getElementById('btr-xfer-status');
+  const resultCard = document.getElementById('btr-result-card');
+  const result = document.getElementById('btr-result');
+  const poolId = document.getElementById('btr-pool').value;
+  const to = document.getElementById('btr-xfer-to').value.trim();
+  const amount = document.getElementById('btr-xfer-amount').value.trim();
+
+  if (!poolId) { toast('Select a pool', true); return; }
+  if (!/^0x[0-9a-fA-F]{40}$/.test(to)) { toast('Recipient must be a 0x… 42-hex address', true); return; }
+  if (!/^\d+(\.\d+)?$/.test(amount)) { toast('Amount must be a decimal like 100', true); return; }
+
+  btn.disabled = true;
+  stat.textContent = 'submitting…';
+  stat.style.color = '#d97706';
+  resultCard.style.display = 'none';
+
+  try {
+    const r = await api('/v1/admin/btr/' + poolId + '/transfer-shares', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ to, amount }),
+    });
+    stat.textContent = '✓ confirmed';
+    stat.style.color = '#059669';
+    resultCard.style.display = 'block';
+    const pool = BTR_POOLS.find(p => p.id === poolId);
+    const sym = pool?.symbol || 'shares';
+    result.innerHTML = `
+      <div>Pool: <strong>${r.pool}</strong></div>
+      <div>Transferred: <strong>${r.amount}</strong> ${sym}</div>
+      <div>From: <code>${r.signer}</code> (tokenizadora signer)</div>
+      <div>To: <a href="${r.basescan.recipientAddress}" target="_blank" rel="noopener" style="color:#d97706">${r.to}</a></div>
+      <div>Transfer tx: <a href="${r.basescan.transferTx}" target="_blank" rel="noopener" style="color:#d97706">${r.transferTx.slice(0,18)}… ↗</a></div>
       <div style="margin-top:0.5rem"><a href="${r.basescan.contract}" target="_blank" rel="noopener" style="color:#d97706">View contract on Basescan ↗</a></div>
     `;
     btrLoadSnapshot();
