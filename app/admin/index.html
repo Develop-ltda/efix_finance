@@ -380,6 +380,34 @@ tbody tr:hover{background:#fffbeb}
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-title">Originator BRL payout (PIX via HausBank)</div>
+        <div class="muted" style="font-size:0.8rem;margin-bottom:1rem">
+          Backend calls HausBank <code>sendPix({ key, amount, description })</code> — looks up the PIX key, gets <code>end_to_end_id</code>, posts <code>/api/pix/cashouts/key</code> with the secret-password header. PIX cleared in ~30s. POC cap: R$10.000/call.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.85rem;align-items:end">
+          <div style="grid-column:1/-1">
+            <label class="mono" style="display:block;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">PIX key (CPF / CNPJ / email / phone / random)</label>
+            <input id="btr-pix-key" type="text" placeholder="ex: ernesto.otero@hausbank.com.br"
+                   style="width:100%;padding:0.55rem 0.75rem;font-family:'Space Mono',monospace;font-size:0.78rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+          </div>
+          <div>
+            <label class="mono" style="display:block;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">Amount (BRL)</label>
+            <input id="btr-pix-amount" type="text" inputmode="decimal" placeholder="1.00" value="1.00"
+                   style="width:100%;padding:0.55rem 0.75rem;font-family:'Space Mono',monospace;font-size:0.85rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+          </div>
+          <div>
+            <label class="mono" style="display:block;font-size:0.65rem;color:#737373;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">Description</label>
+            <input id="btr-pix-desc" type="text" placeholder="EFIX BTR demo payout" value="EFIX BTR demo"
+                   style="width:100%;padding:0.55rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.85rem;border:1px solid #e5e5e5;border-radius:6px;background:#fff;color:#0a0a0a">
+          </div>
+          <div style="grid-column:1/-1;display:flex;gap:0.75rem;align-items:center">
+            <button id="btr-pix-submit" class="btn-action" onclick="btrSendPix()" style="font-size:0.7rem">Send PIX</button>
+            <span id="btr-pix-status" class="mono muted" style="font-size:0.75rem">idle</span>
+          </div>
+        </div>
+      </div>
+
       <div class="card" id="btr-result-card" style="display:none">
         <div class="card-title">Result</div>
         <div id="btr-result" class="mono" style="font-size:0.78rem;line-height:1.7"></div>
@@ -586,6 +614,54 @@ async function btrDepositDividend() {
       <div style="margin-top:0.5rem"><a href="${r.basescan.contract}" target="_blank" rel="noopener" style="color:#d97706">View contract on Basescan ↗</a></div>
     `;
     btrLoadSnapshot();
+  } catch (err) {
+    stat.textContent = '✗ failed';
+    stat.style.color = '#b91c1c';
+    resultCard.style.display = 'block';
+    result.innerHTML = '<span style="color:#b91c1c">ERROR: ' + err.message + '</span>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function btrSendPix() {
+  const btn = document.getElementById('btr-pix-submit');
+  const stat = document.getElementById('btr-pix-status');
+  const resultCard = document.getElementById('btr-result-card');
+  const result = document.getElementById('btr-result');
+  const pixKey = document.getElementById('btr-pix-key').value.trim();
+  const amount = document.getElementById('btr-pix-amount').value.trim();
+  const description = document.getElementById('btr-pix-desc').value.trim() || 'EFIX BTR demo';
+
+  if (!pixKey) { toast('PIX key required', true); return; }
+  if (!/^\d+(\.\d+)?$/.test(amount) || Number(amount) <= 0) { toast('Amount must be positive decimal (BRL)', true); return; }
+  if (Number(amount) > 10000) { toast('POC cap R$10.000/call', true); return; }
+
+  if (!confirm(`Send R$ ${amount} via PIX to "${pixKey}"?\n\nDescription: ${description}\n\nThis is a real cash-out — HausBank will debit the operating account.`)) {
+    return;
+  }
+
+  btn.disabled = true;
+  stat.textContent = 'submitting…';
+  stat.style.color = '#d97706';
+  resultCard.style.display = 'none';
+
+  try {
+    const r = await api('/v1/admin/btr/originator-payout', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ pixKey, amount: Number(amount), description }),
+    });
+    stat.textContent = '✓ sent';
+    stat.style.color = '#059669';
+    resultCard.style.display = 'block';
+    result.innerHTML = `
+      <div>PIX key: <code>${r.pixKey}</code></div>
+      <div>Amount: <strong>R$ ${Number(r.amount).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></div>
+      <div>Description: <em>${r.description}</em></div>
+      <div>HausBank HTTP: ${r.status}</div>
+      <div style="margin-top:0.5rem;font-size:0.7rem;color:#737373">Recipient sees PIX in their bank app within ~30s.</div>
+    `;
   } catch (err) {
     stat.textContent = '✗ failed';
     stat.style.color = '#b91c1c';
