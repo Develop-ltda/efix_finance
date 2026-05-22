@@ -1546,13 +1546,20 @@
         }
 
         // ─── BRLE → USDC swap via Uniswap V3 ───────────────────
-        // Pool: 0xb9d4b6e911fdd6e10a603c1fb286a00aa7003310 (BRLE/USDC fee 100)
+        // Pool: 0x1988E7507C0502c68B2DCbEC4C38CF8787680d6D (BRLE/USDC fee 3000 = 30bps).
+        // This is the CANONICAL Pool C from /api/metrics/triangle, with real
+        // liquidity (~52 BRLE + ~9 USDC). The previous 1bps pool at
+        // 0xb9d4b6e911fdd6e10a603c1fb286a00aa7003310 was a zombie with stale
+        // tick — it returned quotes ~50% off vs the FX oracle (1 BRLE ≈ 0.08 USDC
+        // there vs 0.19 USDC in the canonical pool) and the swap reverted at
+        // the bundler. Backend efixdi-backend-v3.js:2982 documents this as
+        // "(was 5bps zombie 0x5EABF53B)" — same pattern.
         // Router (SwapRouter02): 0x2626664c2603336E57B271c5C0b26F421741e481
         // Quoter V2: 0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a
         const UNI_V3 = {
             router: '0x2626664c2603336E57B271c5C0b26F421741e481',
             quoter: '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a',
-            feeTier: 100,
+            feeTier: 3000,
         };
         let _brleSwapQuoteTimer = null;
         let _brleLastQuote = null;
