@@ -1592,6 +1592,47 @@
             }, 250);
         }
 
+        // One-shot fetch interceptor — captures Alchemy RPC requests + 4xx
+        // response bodies verbatim into the console. Bypasses viem's error
+        // wrapping which strips the bundler's actual error message before
+        // surfacing it to userland. Installed on first reference so it never
+        // runs unless something fails.
+        let _alchemyFetchPatched = false;
+        function patchFetchForAlchemyDebug() {
+            if (_alchemyFetchPatched) return;
+            _alchemyFetchPatched = true;
+            const original = window.fetch.bind(window);
+            window.fetch = async function patchedFetch(input, init) {
+                const url = typeof input === 'string' ? input : (input && input.url) || '';
+                const isAlchemyRPC = /\.g\.alchemy\.com|alchemy\.com\/v2\//.test(url);
+                if (!isAlchemyRPC) return original(input, init);
+
+                let reqBody = null;
+                try { reqBody = init?.body && (typeof init.body === 'string' ? init.body : JSON.stringify(init.body)); } catch {}
+
+                const res = await original(input, init);
+                if (!res.ok) {
+                    try {
+                        const cloned = res.clone();
+                        const text = await cloned.text();
+                        let parsedReq = null;
+                        try { parsedReq = reqBody ? JSON.parse(reqBody) : null; } catch {}
+                        let parsedRes = null;
+                        try { parsedRes = JSON.parse(text); } catch {}
+                        console.group(`[Alchemy] ${res.status} ${url.split('/').slice(-2,-1)[0] || 'rpc'}`);
+                        console.log('method:', parsedReq?.method, 'id:', parsedReq?.id);
+                        console.log('request:', parsedReq || reqBody);
+                        console.log('response:', parsedRes || text);
+                        console.groupEnd();
+                    } catch (e) {
+                        console.warn('[Alchemy] failed to read response body', e);
+                    }
+                }
+                return res;
+            };
+            console.log('[debug] Alchemy fetch interceptor installed — logs 4xx bodies verbatim');
+        }
+
         // Walks a viem/aa-sdk error and pulls out every diagnostic field worth
         // showing. The default error.toString() just gives the generic
         // "Invalid parameters were provided to the RPC method" without the
@@ -1728,6 +1769,10 @@
                     sqrtPriceLimitX96: 0n,
                 }]);
 
+                // Install network interceptor BEFORE the call so we capture
+                // every Alchemy RPC body on failure (most reliable diagnostic).
+                patchFetchForAlchemyDebug();
+
                 // Diagnostic shape dump — surfaces the userOp inputs so we can
                 // compare against bundler rejection details. Logged BEFORE the
                 // call so we still see it even if sendUserOperation throws.
@@ -1758,23 +1803,25 @@
                     txHash = await client.waitForUserOperationTransaction({ hash: opHash });
                 } catch (batchErr) {
                     dumpUserOpError('[BRLE swap] batch failed', batchErr);
-                    if (batchErr?.code === -32602 || /invalid param/i.test(String(batchErr?.shortMessage || batchErr?.message || ''))) {
-                        // Bundler rejected — try sequential to localize.
-                        setBrleSwapMsg('Batch rejeitado. Tentando approve + swap em duas transações…');
-                        const sentApprove = await client.sendUserOperation({ uo: calls[0] }).catch(e => {
-                            dumpUserOpError('[BRLE swap] sequential approve failed', e);
-                            throw new Error('Approve failed: ' + (e?.shortMessage || e?.message || 'unknown'));
-                        });
-                        await client.waitForUserOperationTransaction({ hash: sentApprove?.hash || sentApprove });
-                        setBrleSwapMsg('Approve confirmado. Enviando swap…');
-                        const sentSwap = await client.sendUserOperation({ uo: calls[1] }).catch(e => {
-                            dumpUserOpError('[BRLE swap] sequential swap failed', e);
-                            throw new Error('Swap failed: ' + (e?.shortMessage || e?.message || 'unknown'));
-                        });
-                        txHash = await client.waitForUserOperationTransaction({ hash: sentSwap?.hash || sentSwap });
-                    } else {
-                        throw batchErr;
+                    if (isAlchemySessionDeadError(batchErr)) {
+                        throw batchErr;  // let outer catch route to re-OTP
                     }
+                    // Trigger fallback on ANY batch error (viem may not preserve
+                    // the -32602 code through its wrapping). Sequential mode
+                    // isolates the offending call so the next iteration knows
+                    // exactly what to fix.
+                    setBrleSwapMsg('Batch rejeitado. Tentando approve + swap em duas transações…');
+                    const sentApprove = await client.sendUserOperation({ uo: calls[0] }).catch(e => {
+                        dumpUserOpError('[BRLE swap] sequential approve failed', e);
+                        throw new Error('Approve failed: ' + (e?.shortMessage || e?.message || 'unknown'));
+                    });
+                    await client.waitForUserOperationTransaction({ hash: sentApprove?.hash || sentApprove });
+                    setBrleSwapMsg('Approve confirmado. Enviando swap…');
+                    const sentSwap = await client.sendUserOperation({ uo: calls[1] }).catch(e => {
+                        dumpUserOpError('[BRLE swap] sequential swap failed', e);
+                        throw new Error('Swap failed: ' + (e?.shortMessage || e?.message || 'unknown'));
+                    });
+                    txHash = await client.waitForUserOperationTransaction({ hash: sentSwap?.hash || sentSwap });
                 }
                 setBrleSwapMsg(`✓ Swapped — ${Number(ethers.formatUnits(minOut, 6)).toFixed(4)}+ USDC · tx ${txHash.slice(0,10)}…`);
                 document.getElementById('brleSwapAmount').value = '';
