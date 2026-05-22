@@ -1028,10 +1028,11 @@
         });
         let userAddress = null;
         let userEmail = '';
-        // owner-tabs.js runs in a separate IIFE and reads window.userEmail to
-        // gate /wallet/properties + /wallet/upcoming-receivables probes.
-        // Mirror local userEmail to window on every assignment, otherwise the
-        // Lobie Units / Antecipação tabs stay hidden for non-admin sessions.
+        // owner-tabs.js receives address via loadOwnership(address) parameter
+        // so it doesn't depend on window.userAddress — but exposing it on
+        // window is useful for console debugging + lets future modules avoid
+        // re-deriving from the smart-account flow. Same pattern as userEmail.
+        window.userAddress = userAddress;
         window.userEmail = userEmail;
 
         // ═══ WAITLIST ═══
@@ -1211,6 +1212,7 @@
         window._efixAuthCallback = async (signerAddr) => {
             if (!userAddress) {
                 userAddress = await getSmartAccountAddress();
+                window.userAddress = userAddress;
                 showApp(userAddress);
             } else {
                 // We were already "logged in" (userAddress set) but the
@@ -1241,6 +1243,7 @@
                 if (session) {
                     userAddress = session.user.address;
                     userEmail = session.user.email || '';
+                    window.userAddress = userAddress;
                     window.userEmail = userEmail;
                     showApp(userAddress);
                     return;
@@ -1250,6 +1253,7 @@
                 const signerAddr = await EfixWallet.checkSession();
                 if (signerAddr) {
                     userAddress = await getSmartAccountAddress();
+                    window.userAddress = userAddress;
                     console.log('[EfixWallet] Signer:', signerAddr, '| Smart account:', userAddress);
                     showApp(userAddress);
                 }
@@ -1313,6 +1317,7 @@
             try {
                 await EfixWallet.verifyOTP(code);
                 userAddress = await getSmartAccountAddress();
+                window.userAddress = userAddress;
 
                 // Persist to backend
                 try {
@@ -2707,6 +2712,7 @@
             await EfixAuth.logout();
             userAddress = null;
             userEmail = '';
+            window.userAddress = userAddress;
             window.userEmail = userEmail;
             document.getElementById('app-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = '';
