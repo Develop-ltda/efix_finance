@@ -1023,6 +1023,11 @@
         });
         let userAddress = null;
         let userEmail = '';
+        // owner-tabs.js runs in a separate IIFE and reads window.userEmail to
+        // gate /wallet/properties + /wallet/upcoming-receivables probes.
+        // Mirror local userEmail to window on every assignment, otherwise the
+        // Lobie Units / Antecipação tabs stay hidden for non-admin sessions.
+        window.userEmail = userEmail;
 
         // ═══ WAITLIST ═══
         async function joinWaitlist() {
@@ -1192,6 +1197,36 @@
         }
 
         // ═══ INIT ═══
+        // Bound to window so handleVerifyOTP + the background-promise from
+        // sendOTP both call the same resume logic. Declared at module scope
+        // so it survives the `return` shortcut in DOMContentLoaded's session
+        // restore branch — otherwise on a normal page reload (valid JWT,
+        // dead iframe) this would be undefined and re-auth-resume would
+        // silently no-op.
+        window._efixAuthCallback = async (signerAddr) => {
+            if (!userAddress) {
+                userAddress = await getSmartAccountAddress();
+                showApp(userAddress);
+            } else {
+                // We were already "logged in" (userAddress set) but the
+                // iframe session had degraded — promptReauthForPendingAction
+                // toggled us back to auth-screen, so flip back now that
+                // the signer is fresh.
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'block';
+            }
+            // Resume whatever was queued before the re-OTP.
+            const pending = window._pendingAction;
+            if (pending) {
+                delete window._pendingAction;
+                if (pending === 'swap') {
+                    setBrleSwapMsg('Sessão renovada. Refazendo swap…');
+                    // Small delay lets the iframe finalize internal state.
+                    setTimeout(() => handleBrleSwap(), 400);
+                }
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 EfixWallet.init();
@@ -1201,6 +1236,7 @@
                 if (session) {
                     userAddress = session.user.address;
                     userEmail = session.user.email || '';
+                    window.userEmail = userEmail;
                     showApp(userAddress);
                     return;
                 }
@@ -1216,14 +1252,6 @@
 
             document.getElementById('emailInput')?.addEventListener('keydown', e => { if(e.key==='Enter') handleSendOTP(); });
             document.getElementById('otpInput').addEventListener('keydown', e => { if(e.key==='Enter') handleVerifyOTP(); });
-
-            // Callback if auth completes via background promise
-            window._efixAuthCallback = async (signerAddr) => {
-                if (!userAddress) {
-                    userAddress = await getSmartAccountAddress();
-                    showApp(userAddress);
-                }
-            };
         });
 
         // ═══ STEP 1: Send OTP ═══
@@ -1231,6 +1259,7 @@
             const email = document.getElementById('emailInput').value.trim();
             if (!email || !email.includes('@')) { setStatus('Email inválido','error'); return; }
             userEmail = email;
+            window.userEmail = userEmail;
 
             const btn = document.getElementById('btnSendOTP');
             btn.disabled = true;
@@ -1290,6 +1319,19 @@
 
                 setStatus('');
                 showApp(userAddress);
+
+                // Resume any action that was queued before re-OTP. Mirrors
+                // the _efixAuthCallback path for the background-promise auth
+                // flow — verifyOTP uses the explicit OTP-code path, so we
+                // need a sibling resume here.
+                const pending = window._pendingAction;
+                if (pending) {
+                    delete window._pendingAction;
+                    if (pending === 'swap') {
+                        setBrleSwapMsg('Sessão renovada. Refazendo swap…');
+                        setTimeout(() => handleBrleSwap(), 400);
+                    }
+                }
             } catch(e) {
                 setStatus('Erro: ' + e.message, 'error');
                 console.error('OTP verify error:', e);
@@ -1304,6 +1346,17 @@
             document.getElementById('step-email').classList.add('active');
             document.getElementById('otpInput').value = '';
             setStatus('');
+            // If we got here via re-auth-mid-action (promptReauthForPendingAction
+            // hid the app-screen and queued _pendingAction), clicking "Voltar"
+            // should drop the queued action AND restore the app view. Without
+            // this, the user is stuck on the auth screen unable to return to
+            // the app without completing OTP.
+            if (window._pendingAction && userAddress) {
+                delete window._pendingAction;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'block';
+                if (typeof setBrleSwapMsg === 'function') setBrleSwapMsg('Swap cancelado.');
+            }
         }
 
         // ═══ APP ═══
@@ -1539,6 +1592,50 @@
             }, 250);
         }
 
+        // Detects the family of errors that mean the Alchemy iframe session
+        // has gone stale even though our EfixAuth JWT is still valid. The
+        // iframe lives on signer.alchemy.com, so its cookies expire on a
+        // separate clock from our localStorage JWT — user appears "logged in"
+        // (balance loads, account deployed) but signing throws.
+        function isAlchemySessionDeadError(err) {
+            const msg = String(err?.shortMessage || err?.message || err || '');
+            return /signer not authenticated|please authenticate to use this signer|no orgid provided|orgid is required/i.test(msg);
+        }
+
+        // Preflight: probe the Alchemy iframe session before building the
+        // userOp. Returns true if signer can sign, false if user needs to
+        // re-OTP. Wrapped in a 4s race because a fully-dead iframe (3p-cookie
+        // blocked, signer.alchemy.com unreachable) can leave getAuthDetails
+        // hanging indefinitely.
+        async function isSignerSessionFresh() {
+            try {
+                const addr = await Promise.race([
+                    EfixWallet.checkSession(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('checkSession timeout')), 4000)),
+                ]);
+                return !!addr;
+            } catch (e) {
+                console.warn('[EfixWallet] Session probe failed:', e.message);
+                return false;
+            }
+        }
+
+        // Surface the OTP step inline so the user re-auths without losing
+        // their swap input. The form values in #brleSwapAmount/#brleSwapSlippage
+        // survive the display:none toggle, so after re-auth we just re-fire
+        // handleBrleSwap() from _efixAuthCallback.
+        function promptReauthForPendingAction(action) {
+            window._pendingAction = action;
+            document.getElementById('auth-screen').style.display = 'block';
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('step-email').classList.add('active');
+            document.getElementById('step-otp').classList.remove('active');
+            if (userEmail) {
+                const emailInput = document.getElementById('emailInput');
+                if (emailInput) emailInput.value = userEmail;
+            }
+        }
+
         async function handleBrleSwap() {
             const amt = Number(document.getElementById('brleSwapAmount').value);
             if (!amt || amt <= 0) { setBrleSwapMsg('Enter an amount'); return; }
@@ -1559,7 +1656,23 @@
                 if (!window.EfixWallet?.getBaseClient) {
                     throw new Error('Base swap temporarily disabled — bundle does not expose getBaseClient. Use /brle/operator/ for swap until Base client is re-added.');
                 }
-                const client = await window.EfixWallet.getBaseClient();
+
+                // Iframe-session preflight. If it returns false, swap will
+                // throw "Signer not authenticated" deep in @account-kit;
+                // we'd rather catch it here and route to a re-OTP flow that
+                // preserves the form state.
+                setBrleSwapMsg('Verificando sessão…');
+                const fresh = await isSignerSessionFresh();
+                if (!fresh) {
+                    setBrleSwapMsg('Sessão Alchemy expirou — reenviando código por email para continuar o swap.');
+                    promptReauthForPendingAction('swap');
+                    return;
+                }
+
+                // Pass userAddress as explicit SCA to bypass any signer.getAddress
+                // → whoami() throw if the iframe state degraded mid-call. Same
+                // pattern as ensureAccountDeployed/handleWithdraw/burn.
+                const client = await window.EfixWallet.getBaseClient(userAddress);
 
                 const erc20 = new ethers.Interface(['function approve(address,uint256) returns (bool)']);
                 const router = new ethers.Interface([
@@ -1590,7 +1703,14 @@
                 loadBrleBalance();
                 loadOfferings(userAddress);
             } catch (err) {
-                setBrleSwapMsg('Swap failed: ' + (err.shortMessage || err.message));
+                if (isAlchemySessionDeadError(err)) {
+                    // Race: preflight said fresh but signing still failed. Iframe
+                    // can degrade between probe and sign. Same fallback.
+                    setBrleSwapMsg('Sessão Alchemy expirou durante o swap — reenviando código por email.');
+                    promptReauthForPendingAction('swap');
+                } else {
+                    setBrleSwapMsg('Swap failed: ' + (err.shortMessage || err.message));
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Swap BRLE for USDC';
@@ -2325,9 +2445,13 @@
         }
 
         async function handleDisconnect() {
+            // Drop any queued action — we're logging out, anything pending
+            // is no longer valid (different user might log in next).
+            delete window._pendingAction;
             await EfixAuth.logout();
             userAddress = null;
             userEmail = '';
+            window.userEmail = userEmail;
             document.getElementById('app-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = '';
             document.getElementById('userPill').classList.remove('active');
