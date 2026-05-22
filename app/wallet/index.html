@@ -1592,6 +1592,45 @@
             }, 250);
         }
 
+        // Walks a viem/aa-sdk error and pulls out every diagnostic field worth
+        // showing. The default error.toString() just gives the generic
+        // "Invalid parameters were provided to the RPC method" without the
+        // bundler-side details. Logs as a structured group so the user can
+        // copy/paste the whole thing.
+        function dumpUserOpError(label, err) {
+            const safe = (v) => {
+                try { return typeof v === 'bigint' ? v.toString() : v; }
+                catch { return '<unserializable>'; }
+            };
+            const info = {
+                name: err?.name,
+                code: err?.code,
+                message: err?.message,
+                shortMessage: err?.shortMessage,
+                details: err?.details,
+                metaMessages: err?.metaMessages,
+                docsPath: err?.docsPath,
+                cause: err?.cause ? {
+                    name: err.cause.name,
+                    code: err.cause.code,
+                    message: err.cause.message,
+                    details: err.cause.details,
+                    data: safe(err.cause.data),
+                    shortMessage: err.cause.shortMessage,
+                    cause: err.cause.cause ? {
+                        name: err.cause.cause.name,
+                        message: err.cause.cause.message,
+                        details: err.cause.cause.details,
+                        data: safe(err.cause.cause.data),
+                    } : null,
+                } : null,
+            };
+            console.group(label);
+            console.error(err);
+            console.log('parsed:', info);
+            console.groupEnd();
+        }
+
         // Detects the family of errors that mean the Alchemy iframe session
         // has gone stale even though our EfixAuth JWT is still valid. The
         // iframe lives on signer.alchemy.com, so its cookies expire on a
@@ -1689,15 +1728,54 @@
                     sqrtPriceLimitX96: 0n,
                 }]);
 
-                setBrleSwapMsg('Signing userOp…');
-                const { hash } = await client.sendUserOperation({
-                    uo: [
-                        { target: EFIX_CONFIG.brle.token, data: approveData, value: 0n },
-                        { target: UNI_V3.router, data: swapData, value: 0n },
-                    ],
+                // Diagnostic shape dump — surfaces the userOp inputs so we can
+                // compare against bundler rejection details. Logged BEFORE the
+                // call so we still see it even if sendUserOperation throws.
+                console.log('[BRLE swap] dispatching', {
+                    sca: userAddress,
+                    callsCount: 2,
+                    approve: { target: EFIX_CONFIG.brle.token, dataLen: approveData.length, amountIn: amountIn.toString() },
+                    swap: { target: UNI_V3.router, dataLen: swapData.length, amountIn: amountIn.toString(), minOut: minOut.toString(), recipient: userAddress, fee: UNI_V3.feeTier },
                 });
-                setBrleSwapMsg('Waiting for confirmation…');
-                const txHash = await client.waitForUserOperationTransaction({ hash });
+
+                const calls = [
+                    { target: EFIX_CONFIG.brle.token, data: approveData, value: 0n },
+                    { target: UNI_V3.router, data: swapData, value: 0n },
+                ];
+
+                // Try batch first (1 userOp, atomic). If the bundler rejects
+                // with InvalidParams (-32602), fall back to sequential single
+                // userOps — this isolates "is batch encoding broken?" vs "is
+                // a specific target rejected by gas policy?". The fallback
+                // costs 2 userOps (still gasless if policy covers) but tells
+                // us exactly which call is the offender.
+                setBrleSwapMsg('Signing userOp (batch)…');
+                let txHash;
+                try {
+                    const sent = await client.sendUserOperation({ uo: calls });
+                    const opHash = sent?.hash || sent;
+                    setBrleSwapMsg('Waiting for confirmation…');
+                    txHash = await client.waitForUserOperationTransaction({ hash: opHash });
+                } catch (batchErr) {
+                    dumpUserOpError('[BRLE swap] batch failed', batchErr);
+                    if (batchErr?.code === -32602 || /invalid param/i.test(String(batchErr?.shortMessage || batchErr?.message || ''))) {
+                        // Bundler rejected — try sequential to localize.
+                        setBrleSwapMsg('Batch rejeitado. Tentando approve + swap em duas transações…');
+                        const sentApprove = await client.sendUserOperation({ uo: calls[0] }).catch(e => {
+                            dumpUserOpError('[BRLE swap] sequential approve failed', e);
+                            throw new Error('Approve failed: ' + (e?.shortMessage || e?.message || 'unknown'));
+                        });
+                        await client.waitForUserOperationTransaction({ hash: sentApprove?.hash || sentApprove });
+                        setBrleSwapMsg('Approve confirmado. Enviando swap…');
+                        const sentSwap = await client.sendUserOperation({ uo: calls[1] }).catch(e => {
+                            dumpUserOpError('[BRLE swap] sequential swap failed', e);
+                            throw new Error('Swap failed: ' + (e?.shortMessage || e?.message || 'unknown'));
+                        });
+                        txHash = await client.waitForUserOperationTransaction({ hash: sentSwap?.hash || sentSwap });
+                    } else {
+                        throw batchErr;
+                    }
+                }
                 setBrleSwapMsg(`✓ Swapped — ${Number(ethers.formatUnits(minOut, 6)).toFixed(4)}+ USDC · tx ${txHash.slice(0,10)}…`);
                 document.getElementById('brleSwapAmount').value = '';
                 loadBrleBalance();
@@ -1709,7 +1787,9 @@
                     setBrleSwapMsg('Sessão Alchemy expirou durante o swap — reenviando código por email.');
                     promptReauthForPendingAction('swap');
                 } else {
-                    setBrleSwapMsg('Swap failed: ' + (err.shortMessage || err.message));
+                    dumpUserOpError('[BRLE swap] terminal error', err);
+                    const deep = err?.cause?.details || err?.details || err?.cause?.message;
+                    setBrleSwapMsg('Swap failed: ' + (err.shortMessage || err.message) + (deep ? ` — ${deep}` : ''));
                 }
             } finally {
                 btn.disabled = false;
