@@ -392,10 +392,15 @@
             <div class="desktop-grid">
             <div class="desktop-left">
             <div class="balance-card">
-                <div class="balance-label" data-i18n="your_balance">Seu Saldo</div>
+                <div class="balance-label" data-i18n="your_balance">Seu Saldo Total</div>
                 <div class="balance-value" id="balanceDisplay">R$ 0,00</div>
                 <div class="balance-sub" id="tokenBalance">0.00 efixDI</div>
                 <div class="apy-badge">~22% APY</div>
+                <div id="assetsBreakdown" style="margin-top:16px;display:none;">
+                    <div style="font-size:10px;color:var(--gray-500);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;border-top:1px solid var(--gray-800);padding-top:12px;">Ativos</div>
+                    <div id="assetsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+                    <div id="assetsBreakdownNote" style="font-size:10px;color:var(--gray-600);font-family:var(--font-mono);margin-top:10px;line-height:1.3;"></div>
+                </div>
             </div>
             </div>
             <div class="desktop-right">
@@ -1831,9 +1836,32 @@
                     txHash = await client.waitForUserOperationTransaction({ hash: sentSwap?.hash || sentSwap });
                 }
                 setBrleSwapMsg(`✓ Swapped — ${Number(ethers.formatUnits(minOut, 6)).toFixed(4)}+ USDC · tx ${txHash.slice(0,10)}…`);
+
+                // Record the swap in localStorage so loadHistory can show it
+                // alongside backend-tracked PIX deposits/withdrawals. Backend
+                // doesn't track on-chain swaps and adding that pipeline would
+                // require new endpoints — localStorage is the pragmatic path.
+                try {
+                    const key = `efix_swap_history_${userAddress.toLowerCase()}`;
+                    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                    existing.unshift({
+                        type: 'swap',
+                        from: 'BRLE',
+                        to: 'USDC',
+                        amountIn: ethers.formatUnits(amountIn, 18),
+                        amountOut: ethers.formatUnits(minOut, 6),  // estimate (min); actual may be higher
+                        txHash,
+                        date: new Date().toISOString(),
+                        status: 'completed'
+                    });
+                    localStorage.setItem(key, JSON.stringify(existing.slice(0, 50)));
+                } catch (_) { /* localStorage full or disabled — non-fatal */ }
+
                 document.getElementById('brleSwapAmount').value = '';
                 loadBrleBalance();
                 loadOfferings(userAddress);
+                refreshBalance(userAddress);   // re-pull lens → updates USDC balance + per-asset list
+                loadHistory(userAddress);      // re-render history with the new swap entry
             } catch (err) {
                 if (isAlchemySessionDeadError(err)) {
                     // Race: preflight said fresh but signing still failed. Iframe
@@ -1926,32 +1954,50 @@
         async function loadHistory(address) {
             const container = document.getElementById('txHistory');
             try {
-                const history = await WalletLogic.fetchHistory(BACKEND_URL, address);
+                // Merge: backend history (PIX deposit/withdraw/collateral) + local
+                // swap log (on-chain Uniswap V3 BRLE↔USDC, not tracked backend-side).
+                const backend = await WalletLogic.fetchHistory(BACKEND_URL, address).catch(() => []);
+                let local = [];
+                try {
+                    local = JSON.parse(localStorage.getItem(`efix_swap_history_${(address || '').toLowerCase()}`) || '[]');
+                } catch {}
+                const history = [...(Array.isArray(backend) ? backend : []), ...local]
+                    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                if (!history || history.length === 0) {
+                if (!history.length) {
                     container.innerHTML = '<div style="text-align:center;color:var(--gray-600);font-size:13px;font-family:var(--font-mono);padding:20px;">Nenhuma transação ainda</div>';
                     return;
                 }
 
                 container.innerHTML = history.map(tx => {
-                    const icons = { deposit: '↓', collateral: '🔒', withdrawal: '↑' };
-                    const colors = { deposit: 'var(--green)', collateral: '#eab308', withdrawal: 'var(--red)' };
-                    const labels = { deposit: 'Depósito', collateral: 'Colateral', withdrawal: 'Saque' };
+                    const icons  = { deposit: '↓', collateral: '🔒', withdrawal: '↑', swap: '⇄' };
+                    const colors = { deposit: 'var(--green)', collateral: '#eab308', withdrawal: 'var(--red)', swap: '#3b82f6' };
+                    const labels = { deposit: 'Depósito', collateral: 'Colateral', withdrawal: 'Saque', swap: 'Swap' };
                     const statusColors = { confirmed: 'var(--green)', minted: 'var(--green)', pending: '#eab308', failed: 'var(--red)', completed: 'var(--green)' };
 
                     let amountStr = tx.amount + ' efixDI';
                     if (tx.type === 'collateral') amountStr = tx.amount + ' efixDI → $' + tx.usdcCredit;
-                    if (tx.type === 'deposit') amountStr = 'R$ ' + tx.amount;
+                    if (tx.type === 'deposit')    amountStr = 'R$ ' + tx.amount;
+                    if (tx.type === 'swap') {
+                        const inAmt  = Number(tx.amountIn  || 0).toFixed(2);
+                        const outAmt = Number(tx.amountOut || 0).toFixed(4);
+                        amountStr = `${inAmt} ${tx.from} → ${outAmt} ${tx.to}`;
+                    }
+
+                    const type = tx.type || 'unknown';
+                    const txHashLink = tx.txHash
+                        ? `<a href="https://basescan.org/tx/${tx.txHash}" target="_blank" rel="noopener" style="color:var(--gray-500);text-decoration:none;font-family:var(--font-mono);font-size:10px;">${tx.txHash.slice(0,8)}…</a>`
+                        : '';
 
                     return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--gray-900);border:1px solid var(--gray-800);border-radius:12px;">
-                        <div style="width:32px;height:32px;border-radius:50%;background:${colors[tx.type]}20;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${icons[tx.type]}</div>
+                        <div style="width:32px;height:32px;border-radius:50%;background:${colors[type] || 'var(--gray-700)'}20;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:${colors[type] || 'var(--gray-500)'};">${icons[type] || '•'}</div>
                         <div style="flex:1;min-width:0;">
-                            <div style="font-size:13px;font-weight:600;color:var(--white);">${labels[tx.type]}</div>
-                            <div style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);">${fmtDate(tx.date)}</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--white);">${labels[type] || type}</div>
+                            <div style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);">${fmtDate(tx.date)}${txHashLink ? ' · ' + txHashLink : ''}</div>
                         </div>
                         <div style="text-align:right;">
                             <div style="font-size:13px;font-family:var(--font-mono);color:var(--white);">${amountStr}</div>
-                            <div style="font-size:11px;font-family:var(--font-mono);color:${statusColors[tx.status] || 'var(--gray-500)'};">${tx.status}</div>
+                            <div style="font-size:11px;font-family:var(--font-mono);color:${statusColors[tx.status] || 'var(--gray-500)'};">${tx.status || ''}</div>
                         </div>
                     </div>`;
                 }).join('');
@@ -1985,6 +2031,76 @@
             }
         }
 
+        // Renders the per-asset list inside the SEU SALDO card. Driven entirely
+        // by /wallet/portfolio response shape (balances + btrPositions + market).
+        // Asset valuation rules:
+        //   • efixDI → 1 efixDI ≈ 1 BRL (par; NAV drift typically <50bps)
+        //   • BRLE   → 1 BRLE = 1 BRL (stablecoin par by design)
+        //   • USDC   → qty × market.brlPerUSD (Chainlink BRL/USD oracle)
+        //   • BTR    → qty × 1 BRL each (nominal par — actual NAV varies, see
+        //              specific BTR tabs for live NAV; this is just a first-cut
+        //              spend equivalent so the sidebar isn't blank).
+        // Total displayed in headline is the lens's authoritative totalNetWorthBRL,
+        // not the sum of these rows — small discrepancies expected.
+        function renderAssetsBreakdown(p) {
+            try {
+                const container = document.getElementById('assetsList');
+                const wrap      = document.getElementById('assetsBreakdown');
+                const noteEl    = document.getElementById('assetsBreakdownNote');
+                if (!container || !wrap) return;
+
+                const brlPerUSD = Number(p.market?.brlPerUSD || 5);
+                const bal       = p.balances || {};
+                const btr       = Array.isArray(p.btrPositions) ? p.btrPositions : [];
+
+                const rows = [];
+                const pushRow = (sym, qty, brl, sub) => {
+                    const q = Number(qty || 0);
+                    if (q <= 0.0000001) return;
+                    rows.push({ sym, qty: q, brl: Number(brl || 0), sub: sub || '' });
+                };
+
+                pushRow('efixDI', bal.efixDI, Number(bal.efixDI || 0) * 1,        'CDI ~15% a.a.');
+                pushRow('BRLE',   bal.brle,   Number(bal.brle   || 0) * 1,        'Stablecoin BRL');
+                pushRow('USDC',   bal.usdc,   Number(bal.usdc   || 0) * brlPerUSD, `1 USD = R$ ${brlPerUSD.toFixed(2)}`);
+
+                for (const b of btr) {
+                    pushRow(b.symbol, b.balance, Number(b.balance || 0) * 1, `Pool BTR · ${Number(b.ownershipPct || 0).toFixed(2)}% ownership`);
+                }
+
+                // Sort descending by BRL value so the biggest position is at top.
+                rows.sort((a, b) => b.brl - a.brl);
+
+                if (rows.length === 0) {
+                    wrap.style.display = 'none';
+                    return;
+                }
+
+                container.innerHTML = rows.map(r => `
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-family:var(--font-mono);">
+                        <div style="min-width:0;flex:1;">
+                            <div style="font-size:12px;font-weight:600;color:var(--white);">${escapeHtml(r.sym)}</div>
+                            <div style="font-size:10px;color:var(--gray-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(r.sub)}</div>
+                        </div>
+                        <div style="text-align:right;flex-shrink:0;">
+                            <div style="font-size:12px;color:var(--white);">${r.qty.toLocaleString('pt-BR',{minimumFractionDigits:r.qty < 10 ? 4 : 2, maximumFractionDigits: r.qty < 10 ? 4 : 2})}</div>
+                            <div style="font-size:10px;color:var(--gray-500);">R$ ${r.brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                if (noteEl) {
+                    const ageMin = p.market?.ageSec ? Math.floor(p.market.ageSec / 60) : null;
+                    noteEl.textContent = ageMin != null
+                        ? `Cotação BRL/USD: R$ ${brlPerUSD.toFixed(4)} (atualizado há ${ageMin}min)`
+                        : '';
+                }
+                wrap.style.display = 'block';
+            } catch (e) {
+                console.error('[assetsBreakdown] render failed', e);
+            }
+        }
+
         async function refreshBalance(address) {
             try {
                 const addr = address || userAddress;
@@ -1996,11 +2112,12 @@
                 // lens (sums efixDI + BRLE + SALRIO + HFBPOC + LATITUDE + USDC
                 // converted to BRL). Fall back to efixDI-only if the call fails.
                 let headlineBRL = efixDIamount;
+                let portfolio = null;
                 try {
                     const r = await fetch(BACKEND_URL + '/wallet/portfolio/' + addr);
                     if (r.ok) {
-                        const p = await r.json();
-                        const nw = parseFloat(p.totalNetWorthBRL || '0');
+                        portfolio = await r.json();
+                        const nw = parseFloat(portfolio.totalNetWorthBRL || '0');
                         if (Number.isFinite(nw) && nw > 0) headlineBRL = nw;
                     }
                 } catch (_) { /* fall through to efixDI-only */ }
@@ -2008,6 +2125,11 @@
                 document.getElementById('balanceDisplay').textContent = 'R$ ' + headlineBRL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
                 // Update card spending power
                 if (headlineBRL > 0) updateSpendingPower(headlineBRL);
+
+                // Per-asset breakdown — surfaces what's actually in the wallet
+                // instead of only the efixDI subtitle. Pulls from the lens
+                // response; computes BRL value with the lens's brlPerUSD oracle.
+                if (portfolio) renderAssetsBreakdown(portfolio);
 
                 // Fetch locked collateral info
                 try {
