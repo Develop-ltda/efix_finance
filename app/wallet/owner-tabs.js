@@ -18,6 +18,19 @@
 (function () {
   "use strict";
 
+  // ── Master OTP allowlist ────────────────────────────────────────────────
+  // Emails listed here get the Lobie/Antecipação/Cotas tabs + admin tray
+  // auto-revealed via OTP login alone — no separate Google admin OAuth needed.
+  // Used to bypass the bleed-through check in getAdminToken() for operators
+  // who own the orchestration but aren't a registered Lobie proprietário.
+  // Backend admin endpoints still require a real Bearer token; for master
+  // OTP we surface a manual email input instead of the populated dropdown.
+  const MASTER_OTP_EMAILS = new Set([
+    "ernesto.otero@efix.finance",
+  ]);
+  const isMasterOtp = (email) =>
+    !!email && MASTER_OTP_EMAILS.has(String(email).toLowerCase());
+
   // ── Helpers ──────────────────────────────────────────────────────────────
   const fmtBRL = (s) => {
     if (s === null || s === undefined || s === "") return "—";
@@ -177,19 +190,65 @@
     return r.json();
   }
 
-  // Mount the admin tray once on first auth — populates the dropdown if
-  // an admin token is present. Otherwise, no-op.
+  // Mount the admin tray once on first auth. Three visibility modes:
+  //   1. Full admin (Google JWT in sessionStorage matches OTP email):
+  //      populates the 418-clients dropdown via /admin/lobie-clients.
+  //   2. Master OTP fallback (OTP email is in MASTER_OTP_EMAILS but no
+  //      admin token): swaps the dropdown for a manual email input so
+  //      the operator can still pick a client to impersonate without
+  //      doing the second Google login.
+  //   3. Neither: hidden.
   async function setupAdminTray() {
     const tray   = document.getElementById("adminTray");
     if (!tray) return;
     const token  = getAdminToken();
-    if (!token) { tray.style.display = "none"; return; }
+    const otpEmail = (typeof window.userEmail === "string") ? window.userEmail.toLowerCase() : "";
+    const masterFallback = !token && isMasterOtp(otpEmail);
+
+    if (!token && !masterFallback) { tray.style.display = "none"; return; }
 
     const select = document.getElementById("adminClientSelect");
     const apply  = document.getElementById("adminTrayApply");
     const clear  = document.getElementById("adminTrayClear");
     const hint   = document.getElementById("adminTrayHint");
+    const label  = tray.querySelector('label[for="adminClientSelect"]');
     tray.style.display = "block";
+
+    if (masterFallback) {
+      // No /admin/lobie-clients call — backend rejects OTP JWT on admin routes.
+      // Replace the select element with a free-form email input + datalist
+      // hint, so the master can type any client email and hit Aplicar.
+      const input = document.createElement("input");
+      input.type        = "email";
+      input.id          = "adminClientSelect"; // keep id so clear logic works
+      input.placeholder = "email do cliente Lobie";
+      input.autocomplete = "off";
+      input.style.cssText = select.style.cssText; // inherit current styling
+      // Pre-fill from active ?as= override
+      const current = getEmailOverride();
+      if (current) input.value = current;
+      select.parentNode.replaceChild(input, select);
+      if (label) label.textContent = "Impersonar cliente (master)";
+      hint.textContent = "Master OTP — digite o email do proprietário e clique Aplicar.";
+      apply.onclick = () => {
+        const email = (input.value || "").trim().toLowerCase();
+        if (!email || !/.+@.+\..+/.test(email)) {
+          hint.textContent = "Email inválido. Tente novamente.";
+          return;
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.set("as", email);
+        url.searchParams.delete("as_address");
+        window.location.href = url.toString();
+      };
+      clear.onclick = () => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("as");
+        url.searchParams.delete("as_address");
+        window.location.href = url.toString();
+      };
+      return;
+    }
 
     try {
       const data = await fetchAdminClients();
@@ -285,11 +344,20 @@
     }
     window.__ownershipReceivablesPreview = receivablesPreview;
 
-    const hasLobie = (portfolio.lobieUnits || []).length > 0
+    // Master OTP bypass: ernesto.otero@efix.finance (and any future entry in
+    // MASTER_OTP_EMAILS) sees all three tabs unconditionally. This lets the
+    // operator land in the wallet, hit the admin tray below to type a client
+    // email, and view that client's data without doing the separate Google
+    // admin login dance.
+    const isMaster = isMasterOtp(effectiveEmail);
+    const hasLobie = isMaster
+                  || (portfolio.lobieUnits || []).length > 0
                   || (propertiesPreview.counts?.virtual || 0) > 0;
-    const hasBTR   = (portfolio.btrPositions || [])
-      .some(b => parseFloat(b.balance) > 0);
-    const hasReceivables = (receivablesPreview.summary?.count || 0) > 0;
+    const hasBTR   = isMaster
+                  || (portfolio.btrPositions || [])
+                       .some(b => parseFloat(b.balance) > 0);
+    const hasReceivables = isMaster
+                        || (receivablesPreview.summary?.count || 0) > 0;
 
     const tabImoveis     = document.getElementById("tabImoveis");
     const tabAntecipacao = document.getElementById("tabAntecipacao");
