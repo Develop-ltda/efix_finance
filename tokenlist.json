@@ -1,0 +1,50 @@
+{
+  "name": "EFIX Protocol",
+  "logoURI": "https://efix.finance/logo_efix_400x400.jpg",
+  "keywords": ["efix", "rwa", "brazilian", "cdi", "defi", "morpho"],
+  "tags": {
+    "stablecoin": {
+      "name": "Stablecoin",
+      "description": "Tokens with mechanisms designed to maintain a stable peg"
+    },
+    "yield": {
+      "name": "Yield Bearing",
+      "description": "Tokens that accrue yield from underlying assets"
+    },
+    "rwa": {
+      "name": "Real World Asset",
+      "description": "Tokens backed by regulated assets held in custody"
+    }
+  },
+  "timestamp": "2026-05-23T18:11:11.854Z",
+  "version": { "major": 1, "minor": 0, "patch": 0 },
+  "tokens": [
+    {
+      "chainId": 8453,
+      "address": "0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6",
+      "name": "Brazilian Real Electronic",
+      "symbol": "BRLE",
+      "decimals": 18,
+      "logoURI": "https://efix.finance/tokens/brle.png",
+      "tags": ["stablecoin", "rwa"]
+    },
+    {
+      "chainId": 8453,
+      "address": "0xC65069694e32ef72CD94649BC5174DF9D18475D0",
+      "name": "Staked BRLE",
+      "symbol": "sBRLE",
+      "decimals": 18,
+      "logoURI": "https://efix.finance/tokens/sbrle.png",
+      "tags": ["yield", "rwa"]
+    },
+    {
+      "chainId": 8453,
+      "address": "0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608",
+      "name": "efixDI Plus — Brazilian DI Yield Token",
+      "symbol": "efixDI+",
+      "decimals": 18,
+      "logoURI": "https://efix.finance/tokens/efixdi-plus.png",
+      "tags": ["yield", "rwa"]
+    }
+  ]
+}

@@ -160,6 +160,49 @@
             .listing-item-right { width: 100%; justify-content: space-between; }
         }
 
+        /* TOKEN REGISTRY */
+        .token-registry { max-width: 1120px; margin: 0 auto; padding: 30px 2rem 10px; }
+        .token-registry-notice {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-left: 3px solid var(--accent-blue); border-radius: 8px;
+            padding: 14px 18px; margin-bottom: 22px; font-size: 0.9rem; color: var(--text-secondary);
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .token-registry-notice strong { color: var(--text-primary); font-weight: 600; }
+        .token-registry-notice code {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+            background: var(--bg-item); padding: 3px 8px; border-radius: 5px;
+            color: var(--accent-blue); user-select: all; word-break: break-all;
+        }
+        .token-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); }
+        table.token-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        table.token-table th, table.token-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
+        table.token-table th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600; background: var(--bg-secondary); }
+        table.token-table tbody tr:last-child td { border-bottom: none; }
+        table.token-table .tok-logo { width: 32px; height: 32px; border-radius: 50%; vertical-align: middle; margin-right: 10px; background: var(--bg-item); }
+        table.token-table .tok-sym { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        table.token-table .tok-addr {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--text-secondary);
+            background: var(--bg-item); padding: 3px 8px; border-radius: 5px; user-select: all;
+        }
+        table.token-table .add-btn {
+            font-size: 0.78rem; font-weight: 600; color: var(--white);
+            background: var(--accent-blue); border: none; padding: 7px 12px;
+            border-radius: 6px; cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
+        }
+        table.token-table .add-btn:hover { opacity: 0.85; }
+        table.token-table .add-btn:disabled { background: var(--bg-item); color: var(--text-muted); cursor: not-allowed; opacity: 1; }
+        table.token-table .copy-btn {
+            font-size: 0.72rem; font-weight: 500; color: var(--text-secondary);
+            background: transparent; border: 1px solid var(--border);
+            padding: 4px 8px; border-radius: 5px; cursor: pointer; margin-left: 6px;
+        }
+        table.token-table .copy-btn:hover { color: var(--accent-blue); border-color: var(--accent-blue); }
+        @media (max-width: 768px) {
+            table.token-table th, table.token-table td { padding: 10px 12px; }
+            table.token-table .tok-addr { font-size: 0.72rem; }
+        }
+
         /* ANIMATIONS */
         .listing-card { animation: fadeUp 0.4s ease forwards; opacity: 0; }
         .listing-card:nth-child(1){animation-delay:.04s}
@@ -217,6 +260,92 @@
         <div class="stat-item"><div class="stat-value">19</div><div class="stat-label" data-i18n="stat_total">Total</div></div>
     </div>
 </section>
+
+<section class="token-registry">
+    <div class="section-header">
+        <h2 data-i18n="sec_tokens">Token Registry</h2>
+        <p data-i18n="tokens_desc">Canonical EFIX tokens on Base mainnet (chainId 8453). Verified addresses, decimals, and one-click wallet import.</p>
+    </div>
+    <div class="token-registry-notice">
+        <div data-i18n="tokens_notice_lead"><strong>Bulk import.</strong> Wallets that support Uniswap-format token lists (Safe Wallet, Uniswap, MetaMask Snaps, others) can load all EFIX tokens at once from:</div>
+        <div><code id="tokenlistUrl">https://efix.finance/tokenlist.json</code><button class="copy-btn" type="button" onclick="copyText('https://efix.finance/tokenlist.json', this)" data-i18n="copy">Copy</button></div>
+    </div>
+    <div class="token-table-wrap">
+        <table class="token-table">
+            <thead>
+                <tr>
+                    <th data-i18n="th_token">Token</th>
+                    <th data-i18n="th_symbol">Symbol</th>
+                    <th data-i18n="th_contract">Contract (Base)</th>
+                    <th data-i18n="th_decimals">Decimals</th>
+                    <th data-i18n="th_add">Add to Wallet</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><img class="tok-logo" src="/tokens/brle.png" alt="BRLE" />Brazilian Real Electronic</td>
+                    <td class="tok-sym">BRLE</td>
+                    <td>
+                        <a class="tok-addr" href="https://basescan.org/token/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6" target="_blank" rel="noopener">0x7D12…782F6</a>
+                        <button class="copy-btn" type="button" onclick="copyText('0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6', this)" data-i18n="copy">Copy</button>
+                    </td>
+                    <td>18</td>
+                    <td><button class="add-btn" type="button" onclick="addToken('0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6','BRLE',18,'https://efix.finance/tokens/brle.png', this)">Add BRLE</button></td>
+                </tr>
+                <tr>
+                    <td><img class="tok-logo" src="/tokens/sbrle.png" alt="sBRLE" />Staked BRLE</td>
+                    <td class="tok-sym">sBRLE</td>
+                    <td>
+                        <a class="tok-addr" href="https://basescan.org/token/0xC65069694e32ef72CD94649BC5174DF9D18475D0" target="_blank" rel="noopener">0xC650…75D0</a>
+                        <button class="copy-btn" type="button" onclick="copyText('0xC65069694e32ef72CD94649BC5174DF9D18475D0', this)" data-i18n="copy">Copy</button>
+                    </td>
+                    <td>18</td>
+                    <td><button class="add-btn" type="button" onclick="addToken('0xC65069694e32ef72CD94649BC5174DF9D18475D0','sBRLE',18,'https://efix.finance/tokens/sbrle.png', this)">Add sBRLE</button></td>
+                </tr>
+                <tr>
+                    <td><img class="tok-logo" src="/tokens/efixdi-plus.png" alt="efixDI+" />efixDI Plus</td>
+                    <td class="tok-sym">efixDI+</td>
+                    <td>
+                        <a class="tok-addr" href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">0xF5cA…5608</a>
+                        <button class="copy-btn" type="button" onclick="copyText('0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608', this)" data-i18n="copy">Copy</button>
+                    </td>
+                    <td>18</td>
+                    <td><button class="add-btn" type="button" onclick="addToken('0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608','efixDI',18,'https://efix.finance/tokens/efixdi-plus.png', this)">Add efixDI+</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+<script>
+async function addToken(address, symbol, decimals, image, btn) {
+    if (!window.ethereum || !window.ethereum.request) {
+        alert('No EVM wallet detected. Install MetaMask or another browser wallet, then retry.');
+        return;
+    }
+    const originalText = btn ? btn.textContent : null;
+    try {
+        if (btn) { btn.disabled = true; btn.textContent = 'Approve in wallet…'; }
+        const ok = await window.ethereum.request({
+            method: 'wallet_watchAsset',
+            params: { type: 'ERC20', options: { address, symbol, decimals, image } },
+        });
+        if (btn) { btn.textContent = ok ? 'Added ✓' : 'Try again'; }
+    } catch (e) {
+        console.error('wallet_watchAsset failed', e);
+        if (btn) { btn.textContent = 'Failed — retry'; }
+    } finally {
+        if (btn) setTimeout(() => { btn.disabled = false; if (originalText) btn.textContent = originalText; }, 3500);
+    }
+}
+async function copyText(value, btn) {
+    try {
+        await navigator.clipboard.writeText(value);
+        if (btn) { const o = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(() => { btn.textContent = o; }, 1500); }
+    } catch (e) {
+        console.error('clipboard copy failed', e);
+    }
+}
+</script>
 
 <section class="section">
     <div class="section-header">
