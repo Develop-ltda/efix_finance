@@ -215,25 +215,14 @@ I can't drive web UIs or sign wallet txs. These are on you.
 
 ### 4a. BaseScan token info (HIGHEST PRIORITY — visible to Steakhouse / Lucian during DD)
 
-For each token, deployer wallet must be connected, then submit:
+**Use the dedicated packet:** [`BASESCAN_PACKET.md`](./BASESCAN_PACKET.md) — copy-paste-ready blocks per token with descriptions, links, Twitter handle (`@efix_finance`), and logo download commands.
 
+Quick links (also in the packet):
 - **BRLE:** https://basescan.org/token/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#tokenInfo
 - **sBRLE:** https://basescan.org/token/0xC65069694e32ef72CD94649BC5174DF9D18475D0#tokenInfo
 - **efixDI:** https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608#tokenInfo
 
-Checklist per token:
-
-- [ ] Logo (256×256 PNG, transparent bg preferred)
-- [ ] Website: `https://efix.finance`
-- [ ] Description (paste boilerplate below + token-specific sentence)
-- [ ] Contact email: `contato@efix.finance` (or your preferred)
-- [ ] Twitter/X handle (if you have one — confirm canonical handle first)
-- [ ] Discord / Telegram (optional)
-- [ ] Whitepaper link: `https://efix.finance/efixDI_Whitepaper_v1.pdf`
-
-Boilerplate:
-
-> EFIX is a Brazilian, CVM-licensed (Resolution 88/2022) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Built on Base.
+Deployer wallet (the address that signed the constructor tx) must be connected to BaseScan before the form will accept the update.
 
 ### 4b. CoinGecko
 
