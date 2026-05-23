@@ -72,34 +72,28 @@ foreach ($addr in @(
 - Verified rendered output locally (Python static server on `:8000`)
 - Commit: `45bbba4f feat(listings): Token Registry section with wallet_watchAsset + tokenlist URL`
 
-### ⚠️ Task 3 — TrustWallet/assets fork: staged, **not forked**
+### ✅ Task 3 — TrustWallet/assets PR: **SUBMITTED**
 
-`gh` CLI is not authenticated on this machine (`gh auth status` reported "not logged in"). Without `gh auth`, the fork step couldn't run. All files are prepared in a staging directory ready to drop into a fork.
+PR: **https://github.com/trustwallet/assets/pull/36824**
+Title: "Add EFIX RWA tokens on Base: BRLE, sBRLE, efixDI"
+State: OPEN — MERGEABLE — awaiting TrustWallet review
+Fork: `Ernesto711/assets` @ branch `feat/add-efix-tokens-base`
 
-**Staging location:** `C:\Users\ernes\efix_token_listings_staging\trustwallet-assets\`
+Submitted via GitHub Contents API (no local clone of the 700MB upstream). 6 files added:
 
-**Structure:**
+- `blockchains/base/assets/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6/{info.json,logo.png}` (BRLE)
+- `blockchains/base/assets/0xC65069694e32ef72CD94649BC5174DF9D18475D0/{info.json,logo.png}` (sBRLE)
+- `blockchains/base/assets/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608/{info.json,logo.png}` (efixDI)
 
-```
-trustwallet-assets/
-├── PR_BODY_trustwallet.md
-└── blockchains/base/assets/
-    ├── 0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6/
-    │   ├── info.json
-    │   └── logo.png  (placeholder 256×256)
-    ├── 0xC65069694e32ef72CD94649BC5174DF9D18475D0/
-    │   ├── info.json
-    │   └── logo.png  (placeholder 256×256)
-    └── 0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608/
-        ├── info.json
-        └── logo.png  (placeholder 256×256)
-```
-
-**Tag deviation from prompt template:** TrustWallet's allowed tag set is `[stablecoin, wrapped, synthetics, nft, governance, defi, staking, staking-native, privacy, nsfw, binance-peg, deflationary, memes, gamefi]`. `"rwa"` is not on that list. The staged `info.json` files use:
+**Tag deviation from prompt template:** TrustWallet's allowed tag set is `[stablecoin, wrapped, synthetics, nft, governance, defi, staking, staking-native, privacy, nsfw, binance-peg, deflationary, memes, gamefi]`. `"rwa"` is not on that list, so the submitted `info.json` files use:
 
 - BRLE: `["stablecoin"]`
 - sBRLE: `["defi", "staking"]`
-- efixDI+: `["defi"]`
+- efixDI: `["defi"]`
+
+**Local staging** (snapshot of what was submitted): `C:\Users\ernes\efix_token_listings_staging\trustwallet-assets\`
+
+Monitor status: `gh pr view 36824 --repo trustwallet/assets` or `gh pr checks 36824 --repo trustwallet/assets`. Reviewers typically respond within 2-7 days.
 
 ### ⚠️ Task 4 — MetaMask/contract-metadata: **skipped (deprecated)**
 
@@ -178,32 +172,26 @@ git merge feat/token-list-canonical
 git push
 ```
 
-### 3b. TrustWallet/assets (fork + branch + PR)
+### 3b. TrustWallet/assets — **already submitted** (PR #36824)
 
-Auth required: run `gh auth login` first if you haven't.
+No further action required to open. Monitor / respond:
 
 ```powershell
-# 1. Fork upstream into your account (clones into C:\Users\ernes\assets or asks where)
-cd C:\Users\ernes
-gh repo fork trustwallet/assets --clone --remote
-cd assets
-git checkout -b feat/add-efix-tokens-base
+gh pr view 36824 --repo trustwallet/assets               # quick state
+gh pr view 36824 --repo trustwallet/assets --comments    # any reviewer feedback
+gh pr checks 36824 --repo trustwallet/assets             # CI status
+```
 
-# 2. Mirror the staged files into the fork
-$stage = "C:\Users\ernes\efix_token_listings_staging\trustwallet-assets"
-robocopy "$stage\blockchains" ".\blockchains" /E
-# robocopy returns 1 on success-with-changes; ignore exit code
+If TrustWallet requests changes (common: tag tweaks, description edits, larger logo), update the file via Contents API on the existing branch:
 
-# 3. Commit + push
-git add blockchains/base/assets/
-git commit -m "Add EFIX RWA tokens on Base: BRLE, sBRLE, efixDI"
-git push -u origin feat/add-efix-tokens-base
-
-# 4. Open the PR (body already drafted)
-gh pr create --repo trustwallet/assets `
-  --base master --head "$(gh api user --jq .login):feat/add-efix-tokens-base" `
-  --title "Add EFIX RWA tokens on Base: BRLE, sBRLE, efixDI" `
-  --body-file "$stage\PR_BODY_trustwallet.md"
+```powershell
+# Example: re-upload a single file after editing it locally
+$repoPath = "blockchains/base/assets/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6/info.json"
+$local    = "C:\Users\ernes\efix_token_listings_staging\trustwallet-assets\$repoPath".Replace("/","\")
+$sha = gh api "/repos/Ernesto711/assets/contents/$($repoPath)?ref=feat/add-efix-tokens-base" --jq '.sha'
+$b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($local))
+@{ message = "addr review feedback"; content = $b64; branch = "feat/add-efix-tokens-base"; sha = $sha } |
+  ConvertTo-Json -Compress | gh api -X PUT "/repos/Ernesto711/assets/contents/$repoPath" --input -
 ```
 
 ### 3c. MetaMask/contract-metadata
@@ -285,19 +273,22 @@ Quick wallet test (any browser with MetaMask installed):
 
 ## 6. Próximo passo recomendado
 
-**1st: merge `feat/token-list-canonical` to `main`** — cheap deploy, unlocks `https://efix.finance/tokenlist.json` and the in-page `wallet_watchAsset` flow as a permanent reference. The new EFIX-hex logos go live with the merge.
+**1st: BaseScan token info** for all three contracts (deployer wallet required) — the most visible artifact during the Steakhouse / Lucian DD. They will click the BaseScan link for each Morpho market collateral, and a token with a real logo + description reads as production-grade. Links in §4a.
 
-**2nd: BaseScan token info** for all three contracts (deployer wallet required). That's the most visible artifact during the Steakhouse / Lucian DD — they will click the BaseScan link for each Morpho market collateral, and a token with a real logo + description reads as production-grade.
+**2nd: monitor TrustWallet PR #36824.** If reviewers comment, update via the Contents-API snippet in §3b.
 
-**3rd: TrustWallet PR.** Logos are now brand-aligned (no longer placeholders), so the PR is good to submit. Commands in §3b.
+**Done already:**
+- `main` merged + pushed (commit `22860953`) — `https://efix.finance/tokenlist.json` deploying now via Pages
+- TrustWallet PR submitted upstream (`trustwallet/assets#36824`)
+- EFIX-hex logos live (no longer placeholders)
 
-**Defer:** MetaMask/contract-metadata (frozen, see §1); CoinGecko / CMC submissions — useful but lower DD-week leverage.
+**Defer:** MetaMask/contract-metadata (frozen); CoinGecko / CMC — useful but lower DD-week leverage.
 
 ---
 
 ## 7. Stop conditions that fired during this run
 
-- ⚠️ **`gh` CLI sem auth** — Stopped at Task 3 fork step. Local prep done in staging; you authenticate + run the commands above.
+- ⚠️ **`gh` CLI sem auth** — Initially blocked Task 3. User ran `gh auth login`; fork + PR submitted via Contents API end-to-end (no clone needed). PR: trustwallet/assets#36824.
 - ⚠️ **Logos PNG não encontrados** — Resolved mid-run. Extracted the EFIX hex mark from `logo_efix_400x400.jpg`, generated colored variants per token (green / blue / purple) at 256 and 512. Production-ready for an initial deploy; can be replaced later if design team produces per-token marks.
 - ⚠️ **MetaMask contract-metadata deprecated** — Skipped Task 4, documented above. EIP-747 alternative already live in Task 2.
 
