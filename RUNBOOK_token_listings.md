@@ -54,10 +54,10 @@ foreach ($addr in @(
 - 3 tokens (BRLE / sBRLE / efixDI+), chainId 8453, decimals 18
 - Schema validates against `@uniswap/token-lists` Ajv schema
 - Validator at `scripts/validate-tokenlist.mjs` (run anytime: `cd scripts && node validate-tokenlist.mjs`)
-- Logo assets in `tokens/`:
-  - `brle.png` (256×256), `brle-512.png` (512×512)
-  - `sbrle.png`, `sbrle-512.png`
-  - `efixdi-plus.png`, `efixdi-plus-512.png`
+- Logo assets in `tokens/` — EFIX hex "E" mark, per-token color (green/blue/purple), white-on-color:
+  - `brle.png` (256×256), `brle-512.png` (512×512) — green `#16A34A`
+  - `sbrle.png`, `sbrle-512.png` — blue `#2563EB`
+  - `efixdi-plus.png`, `efixdi-plus-512.png` — purple `#7C3AED`
 - Commit: `578bb62a feat: canonical EFIX token list (Uniswap schema) + logo assets`
 - Tag changes from prompt template: `tags.rwa.description` adjusted ("Tokens backed by regulated assets held in custody") — the original had a hyphen in "off-chain" which Uniswap schema's regex `^[ \w\.,:]+$` rejects.
 
@@ -113,22 +113,19 @@ You're reading it.
 
 ---
 
-## 2. Logos pendentes (HUMAN ACTION)
+## 2. Logos — brand-aligned (acceptable as final, can be upgraded later)
 
-**All three logos are currently placeholders** (colored circles with the symbol text). They were generated via PowerShell `System.Drawing` because the only existing token logo in the repo was `assets/efixDI-token-32x32.svg` — a 32×32 base64-embedded PNG, too small for any production listing.
+Token logos now use the official EFIX hex "E" mark (extracted from `logo_efix_400x400.jpg` in the repo) on a colored circular background per token. Black hex pixels were inverted to white so the mark reads cleanly on the solid color.
 
-| Token   | Path in `efix_finance` repo                              | Required size  | Current state |
-|---------|----------------------------------------------------------|----------------|---------------|
-| BRLE    | `tokens/brle.png`                                        | 256×256        | placeholder (green circle) |
-| BRLE    | `tokens/brle-512.png`                                    | 512×512        | placeholder |
-| sBRLE   | `tokens/sbrle.png`                                       | 256×256        | placeholder (blue circle) |
-| sBRLE   | `tokens/sbrle-512.png`                                   | 512×512        | placeholder |
-| efixDI+ | `tokens/efixdi-plus.png`                                 | 256×256        | placeholder (purple circle) |
-| efixDI+ | `tokens/efixdi-plus-512.png`                             | 512×512        | placeholder |
+| Token   | Path                                                     | Size     | Background                |
+|---------|----------------------------------------------------------|----------|---------------------------|
+| BRLE    | `tokens/brle.png` / `tokens/brle-512.png`                | 256/512  | green (`#16A34A`)         |
+| sBRLE   | `tokens/sbrle.png` / `tokens/sbrle-512.png`              | 256/512  | blue (`#2563EB`)          |
+| efixDI+ | `tokens/efixdi-plus.png` / `tokens/efixdi-plus-512.png`  | 256/512  | purple (`#7C3AED`)        |
 
-Also need final art at:
+TrustWallet staging directory was mirrored — `efix_token_listings_staging/trustwallet-assets/blockchains/base/assets/<CHECKSUMMED_ADDR>/logo.png` carries the same 256×256 versions, each well under TrustWallet's de-facto 100KB ceiling (~7KB each).
 
-- `efix_token_listings_staging/trustwallet-assets/blockchains/base/assets/<CHECKSUMMED_ADDR>/logo.png` (256×256, ≤100KB, PNG with lowercase `.png` extension — uppercase is rejected by TrustWallet validators)
+Open question for you: if a design team has a *per-token* mark in mind (e.g. a brazilian-flag accent on BRLE), drop them in `tokens/` with the same filenames and re-push — no other code changes needed.
 
 **Replacement workflow:**
 
@@ -288,22 +285,20 @@ Quick wallet test (any browser with MetaMask installed):
 
 ## 6. Próximo passo recomendado
 
-**1st priority: BaseScan token info** for all three contracts. That's the most visible artifact during the Steakhouse / Lucian DD — they will click the BaseScan link for each Morpho market collateral and any token without a logo/description looks unfinished.
+**1st: merge `feat/token-list-canonical` to `main`** — cheap deploy, unlocks `https://efix.finance/tokenlist.json` and the in-page `wallet_watchAsset` flow as a permanent reference. The new EFIX-hex logos go live with the merge.
 
-**2nd: open the `feat/token-list-canonical` PR / merge to `main`.** Cheap deploy, unlocks `https://efix.finance/tokenlist.json` as a permanent canonical reference you can hand to anyone asking how to add the tokens. The placeholder logos go live too, which is fine — they're already better than the wallet-default blank circle.
+**2nd: BaseScan token info** for all three contracts (deployer wallet required). That's the most visible artifact during the Steakhouse / Lucian DD — they will click the BaseScan link for each Morpho market collateral, and a token with a real logo + description reads as production-grade.
 
-**3rd: replace placeholder PNGs with final art**, push to `main`, no further coordination needed.
+**3rd: TrustWallet PR.** Logos are now brand-aligned (no longer placeholders), so the PR is good to submit. Commands in §3b.
 
-**4th: TrustWallet PR** (only after final logos exist — TrustWallet reviewers reject placeholder art).
-
-**Defer:** MetaMask/contract-metadata (frozen, see §1); other aggregators (CoinGecko / CMC) — they don't help with DD visibility this week.
+**Defer:** MetaMask/contract-metadata (frozen, see §1); CoinGecko / CMC submissions — useful but lower DD-week leverage.
 
 ---
 
 ## 7. Stop conditions that fired during this run
 
 - ⚠️ **`gh` CLI sem auth** — Stopped at Task 3 fork step. Local prep done in staging; you authenticate + run the commands above.
-- ⚠️ **Logos PNG não encontrados** — Generated colored placeholders via PowerShell `System.Drawing`. Replacement workflow in §2.
+- ⚠️ **Logos PNG não encontrados** — Resolved mid-run. Extracted the EFIX hex mark from `logo_efix_400x400.jpg`, generated colored variants per token (green / blue / purple) at 256 and 512. Production-ready for an initial deploy; can be replaced later if design team produces per-token marks.
 - ⚠️ **MetaMask contract-metadata deprecated** — Skipped Task 4, documented above. EIP-747 alternative already live in Task 2.
 
 No `❌` hard stops. No writes to `main`. No external PRs opened. No on-chain transactions.
