@@ -72,12 +72,21 @@ foreach ($addr in @(
 - Verified rendered output locally (Python static server on `:8000`)
 - Commit: `45bbba4f feat(listings): Token Registry section with wallet_watchAsset + tokenlist URL`
 
-### ✅ Task 3 — TrustWallet/assets PR: **SUBMITTED**
+### ⏸ Task 3 — TrustWallet/assets PR: **submitted + closed (deferred)**
 
-PR: **https://github.com/trustwallet/assets/pull/36824**
-Title: "Add EFIX RWA tokens on Base: BRLE, sBRLE, efixDI"
-State: OPEN — MERGEABLE — awaiting TrustWallet review
-Fork: `Ernesto711/assets` @ branch `feat/add-efix-tokens-base`
+PR: **https://github.com/trustwallet/assets/pull/36824** — CLOSED 2026-05-23
+Fork: `Ernesto711/assets` @ branch `feat/add-efix-tokens-base` (kept — can be reopened anytime)
+
+**Why closed:** TrustWallet's `merge-fee-bot` validated the PR cleanly (files OK, schema OK, all 3 tokens parsed) but requires a non-refundable merge fee (500 TWT or 2.5 BNB ≈ US$1.5–2k) before review. At current circulation (BRLE ~247, sBRLE 0, efixDI+ ~1523) the tokens would likely fail TrustWallet's manual "minimum circulation / organic activity" check anyway, so paying first is high-risk. Decision: close with a comment, reopen post-distribution milestone.
+
+**To reopen later** (after EFIX hits meaningful holder count):
+
+```powershell
+gh pr reopen 36824 --repo trustwallet/assets
+# Then pay the fee per the bot's instructions in the PR thread.
+```
+
+The branch `Ernesto711/assets:feat/add-efix-tokens-base` still has the 6 commits — no rebuild needed.
 
 Submitted via GitHub Contents API (no local clone of the 700MB upstream). 6 files added:
 
@@ -275,14 +284,14 @@ Quick wallet test (any browser with MetaMask installed):
 
 **1st: BaseScan token info** for all three contracts (deployer wallet required) — the most visible artifact during the Steakhouse / Lucian DD. They will click the BaseScan link for each Morpho market collateral, and a token with a real logo + description reads as production-grade. Links in §4a.
 
-**2nd: monitor TrustWallet PR #36824.** If reviewers comment, update via the Contents-API snippet in §3b.
+**2nd: CoinGecko / CoinMarketCap submissions** — free, slow review queues, worth filing now so they're in flight before BRLE/efixDI+ distribution scales.
 
 **Done already:**
 - `main` merged + pushed (commit `22860953`) — `https://efix.finance/tokenlist.json` deploying now via Pages
-- TrustWallet PR submitted upstream (`trustwallet/assets#36824`)
 - EFIX-hex logos live (no longer placeholders)
+- TrustWallet PR submitted, validated cleanly, **closed deferred** pending distribution milestone (see §3 for context — branch retained, reopen anytime)
 
-**Defer:** MetaMask/contract-metadata (frozen); CoinGecko / CMC — useful but lower DD-week leverage.
+**Defer:** MetaMask/contract-metadata (frozen); TrustWallet reopen (post-distribution).
 
 ---
 
