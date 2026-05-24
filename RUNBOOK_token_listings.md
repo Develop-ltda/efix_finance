@@ -234,10 +234,17 @@ Deployer wallet (the address that signed the constructor tx) must be connected t
 
 - All three tokens: https://coinmarketcap.com/request/
 
-### 4d. Base / OP Stack community token list — **SUBMITTED** ✅
+### 4d. Base / OP Stack community token list — **SUBMITTED, CI GREEN** ✅
 
-PR: **https://github.com/ethereum-optimism/ethereum-optimism.github.io/pull/1322** — OPEN — MERGEABLE
+PR: **https://github.com/ethereum-optimism/ethereum-optimism.github.io/pull/1322** — OPEN, MERGEABLE, all 4 CircleCI checks passing
 Fork: `Ernesto711/ethereum-optimism.github.io` @ branch `feat/add-efix-tokens-base`
+
+**CI history:**
+- First run: `validate-workflow` failed — their validator cross-checks `data.json#name` against on-chain `name()` for each token's address. My initial `name` values were branding-friendly ("Brazilian Real Electronic", "efixDI Plus") but didn't match the contract's `name()`.
+- Fix: aligned `data/BRLE/data.json#name` = `"BRLE"` and `data/efixDI/data.json#name` = `"efixDI+ Base"` (exact on-chain values). sBRLE already matched ("Staked BRLE"). Re-uploaded via Contents API.
+- Second run: all 4 checks green.
+
+**Trade-off:** the OP token list will display the tokens with their on-chain names ("BRLE", "Staked BRLE", "efixDI+ Base") rather than EFIX's preferred branding ("Brazilian Real Electronic", "efixDI Plus"). This is enforced by the validator and not overridable for the listing chain (only for testnet `overrides`). Acceptable trade-off for the institutional-signal listing.
 
 **Correction to original RUNBOOK note:** `base/web` is archived (read-only). The canonical community list for tokens on Base + OP-stack chains lives in `ethereum-optimism/ethereum-optimism.github.io` ("Unified token list for OP Mainnet, Base, and other OP Chains" — 851 forks, actively maintained). That's where this PR went. No fee, no merge bot — just a CI validator + human review.
 
