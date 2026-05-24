@@ -234,11 +234,28 @@ Deployer wallet (the address that signed the constructor tx) must be connected t
 
 - All three tokens: https://coinmarketcap.com/request/
 
-### 4d. Base Token List PR (community list)
+### 4d. Base / OP Stack community token list — **SUBMITTED** ✅
 
-- Find / open the active community PR (last known: #1300 — verify status: https://github.com/base/web/pulls?q=is%3Apr+token+list)
-- Confirm all three EFIX tokens carry `logoURI` pointing to `https://efix.finance/tokens/*.png`
-- Or: submit a fresh entry citing our `https://efix.finance/tokenlist.json` as canonical source
+PR: **https://github.com/ethereum-optimism/ethereum-optimism.github.io/pull/1322** — OPEN — MERGEABLE
+Fork: `Ernesto711/ethereum-optimism.github.io` @ branch `feat/add-efix-tokens-base`
+
+**Correction to original RUNBOOK note:** `base/web` is archived (read-only). The canonical community list for tokens on Base + OP-stack chains lives in `ethereum-optimism/ethereum-optimism.github.io` ("Unified token list for OP Mainnet, Base, and other OP Chains" — 851 forks, actively maintained). That's where this PR went. No fee, no merge bot — just a CI validator + human review.
+
+Files added:
+- `data/BRLE/{data.json,logo.png}`
+- `data/sBRLE/{data.json,logo.png}`
+- `data/efixDI/{data.json,logo.png}`
+
+Submitted via Contents API (no clone needed for the 44 MB upstream).
+
+Monitor:
+```powershell
+gh pr view 1322 --repo ethereum-optimism/ethereum-optimism.github.io
+gh pr checks 1322 --repo ethereum-optimism/ethereum-optimism.github.io
+gh pr view 1322 --repo ethereum-optimism/ethereum-optimism.github.io --comments
+```
+
+If CI rejects (validator script enforces JSON shape, logo size ≤ ~10 KB, etc.), edit the failing file in staging and re-PUT via the same Contents-API pattern used for TrustWallet (§3b).
 
 ---
 
@@ -276,9 +293,10 @@ Quick wallet test (any browser with MetaMask installed):
 **2nd: CoinGecko / CoinMarketCap submissions** — free, slow review queues, worth filing now so they're in flight before BRLE/efixDI+ distribution scales.
 
 **Done already:**
-- `main` merged + pushed (commit `22860953`) — `https://efix.finance/tokenlist.json` deploying now via Pages
-- EFIX-hex logos live (no longer placeholders)
-- TrustWallet PR submitted, validated cleanly, **closed deferred** pending distribution milestone (see §3 for context — branch retained, reopen anytime)
+- `main` merged + pushed — `https://efix.finance/tokenlist.json` and `https://efix.finance/tokens/*.png` live on Pages
+- EFIX-hex logos generated (green/blue/purple per token)
+- TrustWallet PR submitted, validated cleanly, **closed deferred** pending distribution milestone (§3 — branch retained, reopen anytime)
+- **Optimism/Base unified token list PR submitted** — `ethereum-optimism/ethereum-optimism.github.io#1322` — OPEN, awaiting CI + review (§4d)
 
 **Defer:** MetaMask/contract-metadata (frozen); TrustWallet reopen (post-distribution).
 
