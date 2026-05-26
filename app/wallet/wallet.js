@@ -20,11 +20,14 @@ const WalletLogic = {
     return data;
   },
 
-  async confirmPayment(backend, reference) {
+  async confirmPayment(backend, reference, address) {
+    // address (optional but recommended) — backend uses it as a soft-bind
+    // check so user A can't confirm-paid for user B's deposit reference.
+    // See F-005-residual in SEC_AUDIT_2026-05-26.md.
     const res = await fetch(backend + '/deposit/confirm-paid', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reference })
+      body: JSON.stringify({ reference, address })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Backend error');

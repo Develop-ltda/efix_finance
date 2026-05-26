@@ -454,6 +454,13 @@
                             <p style="color:var(--gray-600);font-size:11px;font-family:var(--font-mono);margin-top:12px;word-break:break-all;max-height:60px;overflow:hidden;cursor:pointer;" id="pixCodeText" onclick="copyPixCode()">...</p>
                             <button class="btn btn-secondary" style="margin-top:8px;background:var(--gray-100);color:var(--black);border:none;width:auto;padding:8px 20px;font-size:13px;" onclick="copyPixCode()" data-i18n="btn_copy_pix">Copiar código PIX</button>
                         </div>
+                        <!-- F-005-residual: customer_ref bloco (mostrado quando backend retorna customerRef) -->
+                        <div id="customerRefBlock" style="display:none;background:#FEF3C7;border:2px solid #F59E0B;border-radius:12px;padding:16px;margin-bottom:16px;text-align:center;">
+                            <p style="color:#92400E;font-size:13px;font-weight:600;margin-bottom:8px;">⚠️ <span data-i18n="ref_instruction">Cole este código na descrição do PIX</span></p>
+                            <div style="font-family:var(--font-mono);font-size:24px;font-weight:700;letter-spacing:4px;color:#78350F;padding:8px 16px;background:#FFFBEB;border-radius:8px;display:inline-block;cursor:pointer;user-select:all;" id="customerRefText" onclick="copyCustomerRef()">EEVB75</div>
+                            <button class="btn btn-secondary" style="margin-top:8px;display:block;margin-left:auto;margin-right:auto;background:#F59E0B;color:white;border:none;width:auto;padding:8px 20px;font-size:13px;" onclick="copyCustomerRef()" data-i18n="btn_copy_ref">Copiar código</button>
+                            <p style="color:#78350F;font-size:11px;margin-top:8px;font-style:italic;" id="customerRefEmailHint" data-i18n="ref_email_hint">Sem esse código, seu crédito pode demorar mais.</p>
+                        </div>
                         <button class="btn btn-primary" id="btnIPaid" style="margin-top:16px;background:var(--green);color:var(--black);" onclick="handleIPaid()" data-i18n="btn_i_paid">Já paguei o PIX</button>
                         <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;" id="depositSteps">
                             <div class="prog-step done" id="ds-1"><span class="prog-icon">✓</span> <span data-i18n="step_qr_generated">QR Code gerado</span></div>
@@ -2174,7 +2181,25 @@
                     document.getElementById('pixCodeText').dataset.code = data.pixCode;
                 }
 
-                setDepositMsg('Pague o PIX e clique em "Já paguei o PIX"');
+                // F-005-residual: customer_ref bloco. Mostra apenas quando o
+                // backend retorna o código (sandbox novo schema). Sem ele
+                // a wallet UI segue funcionando (graceful degradation).
+                if (data.customerRef) {
+                    document.getElementById('customerRefBlock').style.display = 'block';
+                    const refEl = document.getElementById('customerRefText');
+                    refEl.textContent = data.customerRef;
+                    refEl.dataset.code = data.customerRef;
+                    const hintEl = document.getElementById('customerRefEmailHint');
+                    if (data.userEmail) {
+                        hintEl.textContent = 'Você também pode usar seu email (' + data.userEmail + ') no lugar do código.';
+                    } else {
+                        hintEl.textContent = 'Sem esse código, seu crédito pode demorar mais.';
+                    }
+                } else {
+                    document.getElementById('customerRefBlock').style.display = 'none';
+                }
+
+                setDepositMsg('Pague o PIX (com o código na descrição) e clique em "Já paguei o PIX"');
 
             } catch (e) {
                 alert('Erro: ' + e.message);
@@ -2194,7 +2219,9 @@
             startStatusPoll();
 
             try {
-                const data = await WalletLogic.confirmPayment(BACKEND_URL, currentDepositRef);
+                // F-005-residual: pass userAddress as soft-bind so backend
+                // can verify the caller owns this deposit reference.
+                const data = await WalletLogic.confirmPayment(BACKEND_URL, currentDepositRef, userAddress);
 
                 if (data.status === 'confirmed' || data.status === 'minted') {
                     setStep(2, true); setStep(3, true); setStep(4, true);
@@ -2289,6 +2316,7 @@
             if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
             document.getElementById('deposit-form').style.display = 'block';
             document.getElementById('deposit-qr').style.display = 'none';
+            document.getElementById('customerRefBlock').style.display = 'none';
             document.getElementById('btnIPaid').style.display = '';
             document.getElementById('btnIPaid').disabled = false;
             document.getElementById('btnIPaid').textContent = 'Já paguei o PIX';
@@ -2306,6 +2334,11 @@
         function copyPixCode() {
             const code = document.getElementById('pixCodeText').dataset.code;
             if (code) copyText(code, { feedbackEl: 'pixCodeText' });
+        }
+
+        function copyCustomerRef() {
+            const code = document.getElementById('customerRefText').dataset.code;
+            if (code) copyText(code, { feedbackEl: 'customerRefText' });
         }
 
         // Per-intent UUID cache. Same (address|amount|pixKey) reuses the same UUID
