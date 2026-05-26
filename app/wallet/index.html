@@ -1252,17 +1252,53 @@
                     userEmail = session.user.email || '';
                     window.userAddress = userAddress;
                     window.userEmail = userEmail;
+                    // Persist email to long-lived cache so JWT re-mint on
+                    // future session restore (after JWT expires) can find it.
+                    if (userEmail) {
+                        try { localStorage.setItem('efix_last_email', userEmail.toLowerCase()); } catch {}
+                    }
                     showApp(userAddress);
                     return;
                 }
 
                 // Fallback: check Alchemy session
+                // 2026-05-26: if Alchemy session is alive but JWT expired, we
+                // MUST re-mint the JWT here. Skipping this caused 10 efixDI
+                // burned + zero PIX out (user signed burn, /withdraw/request
+                // returned 401 because no Authorization header existed). The
+                // backend issues JWTs via /users/login (safe-mode existing-
+                // users-only path), so we need the cached email to call it.
                 const signerAddr = await EfixWallet.checkSession();
                 if (signerAddr) {
                     userAddress = await getSmartAccountAddress();
                     window.userAddress = userAddress;
                     console.log('[EfixWallet] Signer:', signerAddr, '| Smart account:', userAddress);
-                    showApp(userAddress);
+
+                    // Try to recover the user's email from a long-lived cache
+                    // (efix_last_email) — set on every successful login and
+                    // NOT cleared by EfixAuth.clear() when JWT expires.
+                    let cachedEmail = null;
+                    try { cachedEmail = localStorage.getItem('efix_last_email'); } catch {}
+
+                    if (cachedEmail) {
+                        try {
+                            const sess = await EfixAuth.login(cachedEmail, userAddress);
+                            userEmail = sess.user.email || cachedEmail;
+                            window.userEmail = userEmail;
+                            console.log('[EfixAuth] JWT re-minted on session restore for', userEmail);
+                            showApp(userAddress);
+                            return;
+                        } catch (e) {
+                            console.warn('[EfixAuth] login failed on session restore — forcing OTP screen:', e.message);
+                            // Fall through to OTP screen below
+                        }
+                    } else {
+                        console.warn('[EfixAuth] no cached email — forcing OTP screen');
+                    }
+                    // Either no cached email or backend login failed →
+                    // do NOT show the app degraded (no JWT means every
+                    // money-moving endpoint will 401). User must re-OTP.
+                    // Don't return — fall through so OTP listeners are wired.
                 }
             } catch(e) { console.log('Init:', e.message); }
 
@@ -1276,6 +1312,9 @@
             if (!email || !email.includes('@')) { setStatus('Email inválido','error'); return; }
             userEmail = email;
             window.userEmail = userEmail;
+            // 2026-05-26: long-lived cache so the JWT re-mint on session
+            // restore (DOMContentLoaded fallback path) can find the email.
+            try { localStorage.setItem('efix_last_email', email.toLowerCase()); } catch {}
 
             const btn = document.getElementById('btnSendOTP');
             btn.disabled = true;
