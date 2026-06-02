@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>efixDI+ Carry Feasibility &amp; Lender Yield</title>
 <link rel="canonical" href="https://efix.finance/economics">
+<link rel="icon" type="image/jpeg" href="/logo_efix_400x400.jpg">
 <meta name="description" content="The USDC borrow rate that keeps the efixDI leveraged loop worth running, and the lender yield that follows. A stochastic BRL/USD model for Morpho curators.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://efix.finance/economics">
@@ -144,19 +145,15 @@
   a{color:var(--green-d);text-decoration:none;} a:hover{text-decoration:underline;}
   .xlink{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;padding:10px 16px;border:1px solid var(--border-strong);border-radius:8px;color:var(--ink);text-decoration:none;transition:border-color .15s;}
   .xlink:hover{border-color:var(--green);text-decoration:none;}
+  .efxlogo{background:url(data:image/png;base64,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) center/contain no-repeat;display:inline-block;vertical-align:middle;}
+  .efxlogo.nav{height:26px;width:69px;}
+  .efxlogo.foot{height:20px;width:53px;opacity:.85;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-    <linearGradient id="efxg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16a35a"/><stop offset="1" stop-color="#2bbf78"/></linearGradient>
-    <symbol id="efxhex" viewBox="0 0 100 100">
-      <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="url(#efxg)" stroke-width="6"/>
-      <path d="M38 32 H66 M38 50 H60 M38 68 H66 M38 32 V68" fill="none" stroke="url(#efxg)" stroke-width="6" stroke-linecap="square"/>
-    </symbol></defs></svg>
-
   <nav class="nav">
-    <a class="brand" href="/"><svg class="mark"><use href="#efxhex"/></svg><span class="name">EFIX</span></a>
+    <a class="brand" href="/"><span class="efxlogo nav" role="img" aria-label="EFIX"></span></a>
     <div class="navlinks">
       <a href="/economics" class="active">Economics</a>
       <a href="/economics/stress">Stress Matrix</a>
@@ -189,9 +186,47 @@
     </div>
   </div>
 
+  <!-- 01 HOW THE BAND IS BUILT -->
+  <section>
+    <div class="seclabel">01 · How the band is built</div>
+    <h2>Where the range comes from</h2>
+    <p class="lead">The whole band turns on one number: how much of each borrow-rate point actually reaches the lender. Only the
+    borrowed fraction earns, and the performance fee skims part of that.</p>
+
+    <div class="formula">pass-through = utilisation × (1 − fee) = <b id="dPtA">85%</b> × <b id="dPtB">80%</b> = <b id="dPt">0.68</b></div>
+    <p>A lender sees <span id="dPt2" style="font-family:var(--mono);color:var(--green-d)">0.68</span> of whatever a borrower pays.
+    That single factor maps the borrow band to the lender band in both directions.</p>
+
+    <h3>The floor, lowest borrow rate</h3>
+    <p>Suppliers will not allocate below Treasuries plus a premium. Take that required yield and divide by the pass-through to find
+    the borrow rate that produces it.</p>
+    <div class="formula">
+      floor yield = UST + premium = <b id="dTb">4.0%</b> + <b id="dPrem">1.5%</b> = <b id="dFloorY">5.5%</b><br>
+      borrow floor = floor yield / pass-through = <b id="dFloorY2">5.5%</b> / <b id="dPt3">0.68</b> = <b id="dRFloor">8.1%</b>
+    </div>
+
+    <h3>The ceiling, highest borrow rate</h3>
+    <p>The borrower's carry per loop is CDI minus the borrow rate. Push the rate to CDI and the carry hits zero, so there is no
+    reason to loop above it.</p>
+    <div class="formula">borrow ceiling = CDI = <b id="dRCeil">14.4%</b></div>
+
+    <h3>Back to the lender yield</h3>
+    <p>Run the borrow band back through the pass-through to get what suppliers earn, then subtract the Treasury rate.</p>
+    <div class="formula">
+      borrow <b id="dRFloor2">8.1%</b> × <b id="dPt4">0.68</b> = <b id="dLyLo">5.5%</b> lender &nbsp;→&nbsp; <b id="dPpLo">+1.5 pp</b> over UST<br>
+      borrow <b id="dRCeil2">14.4%</b> × <b id="dPt5">0.68</b> = <b id="dLyHi">9.8%</b> lender &nbsp;→&nbsp; <b id="dPpHi">+5.8 pp</b> over UST
+    </div>
+
+    <div class="callout"><div class="ct">Consistency check</div>
+      <p>The low end, <span id="dPpLo2">+1.5 pp</span>, is just your premium coming straight back out, because the floor was
+      defined as the rate that delivers exactly Treasury plus premium. The high end, <span id="dPpHi2">+5.8 pp</span>, is what falls
+      out when the borrow rate is pushed all the way to CDI. Everything between is the curator's dial: pick a borrow rate, multiply
+      by the pass-through, and that is what suppliers see.</p></div>
+  </section>
+
   <!-- 01 -->
   <section>
-    <div class="seclabel">01 · The model</div>
+    <div class="seclabel">02 · The model</div>
     <h2>Borrow rate in, lender yield out</h2>
     <p class="lead">Two forces set the band. A <strong>floor</strong>: the rate must be high enough that the USDC yield beats
     Treasuries by a premium, or no one supplies the vault. A <strong>ceiling</strong>: the rate must stay below CDI so the loop
@@ -233,7 +268,7 @@
 
   <!-- 02 -->
   <section>
-    <div class="seclabel">02 · The tradeoff</div>
+    <div class="seclabel">03 · The tradeoff</div>
     <h2>Lender yield rises, borrower Sharpe falls</h2>
     <p class="lead">The borrow rate is the dial. Push it up and the lender earns more, but the borrower's risk-adjusted carry thins,
     and past a point borrowers unwind and utilisation drops, taking the lender yield with it. The viable window is shaded.</p>
@@ -247,7 +282,7 @@
 
   <!-- 03 -->
   <section>
-    <div class="seclabel">03 · FX-crash survival</div>
+    <div class="seclabel">04 · FX-crash survival</div>
     <h2>Liquidation probability over a week and a month</h2>
     <p class="lead">The borrow rate does not move this. Liquidation is set by the FX buffer at your leverage and by how violent the
     pair gets over the window. Probability that BRL depreciates past the liquidation buffer, by implied vol and horizon, at the
@@ -260,7 +295,7 @@
 
   <!-- 04 -->
   <section>
-    <div class="seclabel">04 · Grid</div>
+    <div class="seclabel">05 · Grid</div>
     <h2>Lender yield across borrow rate and vol</h2>
     <p class="lead">The readable surface. Each cell is the USDC-supplier yield at that borrow rate. Cells past the borrower comfort
     line at a given vol are dimmed, since those rates ask the borrower to carry more FX risk than set.</p>
@@ -270,7 +305,7 @@
 
   <!-- 05 -->
   <section>
-    <div class="seclabel">05 · Methodology</div>
+    <div class="seclabel">06 · Methodology</div>
     <h2>The model, fully derived</h2>
 
     <h3>FX as the only risk, and how leverage amplifies it</h3>
@@ -323,7 +358,7 @@
       weekly or monthly figure here.</p>
     </div>
 
-    <div style="margin-top:28px;"><a class="xlink" href="/economics/stress"><svg width="14" height="14" style="opacity:.7"><use href="#efxhex"/></svg> See the Stress Matrix &amp; bad-debt model →</a></div>
+    <div style="margin-top:28px;"><a class="xlink" href="/economics/stress">See the Stress Matrix &amp; bad-debt model →</a></div>
   </section>
 
   <p class="disclaimer">Internal quantitative aid for due-diligence discussion. Figures are illustrative and parametric, not a
@@ -331,13 +366,14 @@
   USD-equivalent return has been positive every year over 2021 to 2026; the forward, vol-based loss probability is a distinct
   number and is the one a risk team should price against.</p>
 
-  <div class="foot"><svg class="mark"><use href="#efxhex"/></svg>
+  <div class="foot"><span class="efxlogo foot" role="img" aria-label="EFIX"></span>
     <span class="txt">EFIX · Haus Serviços Financeiros Ltda. · CNPJ 57.362.914/0001-10 · CVM Act 23.635/2025 · ernesto.otero@efix.finance</span></div>
 </div>
 
 <script>
 (function(){
   const $=id=>document.getElementById(id), clamp01=x=>Math.max(0,Math.min(1,x)), pct=(x,d=1)=>(x*100).toFixed(d);
+  function setTxt(ids,v){ids.forEach(i=>{const e=$(i);if(e)e.textContent=v;});}
   const LLTV=0.77;
   const S={cdi:$('sCdi'),sig:$('sSig'),pl:$('sPL'),ltv:$('sLtv'),util:$('sUtil'),fee:$('sFee'),tb:$('sTb'),prem:$('sPrem'),mu:$('sMu')};
 
@@ -377,6 +413,15 @@
     const lyLo=m.lYield(m.lo), lyHi=m.lYield(m.hi);
     const bandTxt=pct(lyLo,1)+' to '+pct(lyHi,1);
     const borrowTxt=pct(m.lo,1)+' to '+pct(m.hi,1);
+    const pt=m.util*(1-m.fee), floorY=m.tb+m.prem, ppLo=lyLo-m.tb, ppHi=lyHi-m.tb;
+    setTxt(['dPt','dPt2','dPt3','dPt4','dPt5'], pt.toFixed(2));
+    setTxt(['dPtA'], pct(m.util,0)+'%'); setTxt(['dPtB'], pct(1-m.fee,0)+'%');
+    setTxt(['dTb'], pct(m.tb,1)+'%'); setTxt(['dPrem'], pct(m.prem,1)+'%');
+    setTxt(['dFloorY','dFloorY2'], pct(floorY,1)+'%');
+    setTxt(['dRFloor','dRFloor2'], pct(m.rFloor,1)+'%');
+    setTxt(['dRCeil','dRCeil2'], pct(m.rCeil,1)+'%');
+    setTxt(['dLyLo'], pct(lyLo,1)+'%'); setTxt(['dLyHi'], pct(lyHi,1)+'%');
+    setTxt(['dPpLo','dPpLo2'], '+'+pct(ppLo,1)+' pp'); setTxt(['dPpHi','dPpHi2'], '+'+pct(ppHi,1)+' pp');
 
     // range panel
     $('rngLo').textContent=pct(lyLo,1)+'%'; $('rngHi').textContent=pct(lyHi,1)+'%';
