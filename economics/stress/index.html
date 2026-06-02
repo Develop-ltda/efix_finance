@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>efixDI+ Stress Matrix &amp; Bad-Debt Model</title>
+<link rel="canonical" href="https://efix.finance/economics/stress">
+<meta name="description" content="A live, parametric model of USDC-lender tail loss on the efixDI/USDC vault on Morpho. T+0 NAV redemption bounds bad-debt slippage by construction.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://efix.finance/economics/stress">
+<meta property="og:title" content="efixDI+ Stress Matrix &amp; Bad-Debt Model">
+<meta property="og:description" content="Depositor tail loss on the efixDI/USDC market: liquidation is a pure FX problem and bad-debt slippage stays bounded by D+0 NAV redemption.">
+<meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="efixDI+ Stress Matrix &amp; Bad-Debt Model">
+<meta name="twitter:description" content="Bounded bad debt on the efixDI/USDC vault, derived from D+0 NAV redemption and a BRL/USD oracle.">
+<meta name="twitter:image" content="https://efix.finance/logo_efix_400x400.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff; --soft:#f7f8fa; --surface:#ffffff; --surface-2:#fafbfc;
+    --border:#e7e9ec; --border-strong:#d9dde2;
+    --ink:#0b0d12; --ink-2:#3c434e; --muted:#8a93a0;
+    --green:#16a35a; --green-d:#0f8a4a; --green-bg:rgba(22,163,90,.08);
+    --amber:#c47f12; --amber-bg:rgba(196,127,18,.12); --orange:#e0851f; --orange-bg:rgba(224,133,31,.12);
+    --red:#cf3f3a; --red-bg:rgba(207,63,58,.10);
+    --grid:rgba(11,13,18,.038);
+    --mono:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --display:"Space Grotesk",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--ink-2);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;position:relative;}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:42px 42px;mask-image:linear-gradient(180deg,#000 0%,transparent 60%);}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 32px 110px;position:relative;z-index:1;}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--border);}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);}
+  .brand .mark{width:26px;height:26px;}
+  .brand .name{font-family:var(--display);font-weight:700;letter-spacing:.02em;font-size:15px;}
+  .navlinks{display:flex;align-items:center;gap:26px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;}
+  .navlinks a{color:var(--muted);text-decoration:none;transition:color .15s;}
+  .navlinks a:hover{color:var(--ink);} .navlinks a.active{color:var(--green);}
+  @media(max-width:620px){.navlinks{gap:16px;font-size:11px;}}
+  .hero{padding:54px 0 30px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:26px;}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+  h1{font-family:var(--display);font-size:50px;line-height:1.05;letter-spacing:-.02em;font-weight:700;color:var(--ink);margin-bottom:20px;}
+  h1 .g{color:var(--green);}
+  .hero-sub{font-size:18px;color:var(--ink-2);max-width:780px;line-height:1.55;}
+  .hero-meta{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:20px;letter-spacing:.02em;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:34px 0 0;}
+  @media(max-width:620px){.stats{grid-template-columns:repeat(2,1fr);}}
+  .stat{padding:20px 22px;border-right:1px solid var(--border);}
+  .stat:last-child{border-right:none;}
+  @media(max-width:620px){.stat:nth-child(2){border-right:none;}.stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--border);}}
+  .stat .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .stat .v{font-family:var(--display);font-size:24px;font-weight:700;color:var(--ink);line-height:1;}
+  .stat .v small{font-size:13px;color:var(--ink-2);font-weight:500;}
+  section{padding:50px 0;border-bottom:1px solid var(--border);}
+  section:last-of-type{border-bottom:none;}
+  .seclabel{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin-bottom:12px;}
+  h2{font-family:var(--display);font-size:30px;line-height:1.15;letter-spacing:-.015em;font-weight:700;color:var(--ink);margin-bottom:10px;}
+  h3{font-family:var(--display);font-size:17px;font-weight:600;margin:30px 0 10px;color:var(--ink);}
+  p{color:var(--ink-2);font-size:15.5px;margin-bottom:14px;}
+  p strong{color:var(--ink);font-weight:600;} em{color:var(--ink);font-style:italic;}
+  .lead{font-size:16.5px;margin-bottom:22px;}
+  ul{margin:14px 0;padding-left:0;list-style:none;}
+  li{color:var(--ink-2);margin-bottom:9px;padding-left:22px;position:relative;font-size:15px;}
+  li::before{content:"";position:absolute;left:2px;top:10px;width:6px;height:6px;background:var(--green);border-radius:50%;}
+  code{font-family:var(--mono);background:var(--soft);border:1px solid var(--border);padding:2px 6px;border-radius:5px;font-size:13px;color:var(--green-d);}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin:24px 0;}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:24px 40px;}
+  @media(max-width:620px){.controls{grid-template-columns:1fr;}}
+  .ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink-2);margin-bottom:9px;font-weight:500;}
+  .ctrl label .val{font-family:var(--mono);font-size:15px;color:var(--green-d);font-weight:600;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;background:var(--border-strong);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 1px var(--green),0 1px 3px rgba(0,0,0,.2);}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 1px var(--green);}
+  .ctrl .hint{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4;}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 8px;}
+  @media(max-width:620px){.cards{grid-template-columns:repeat(2,1fr);}}
+  .card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:17px 19px;}
+  .card .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
+  .card .v{font-family:var(--display);font-size:22px;font-weight:700;color:var(--ink);line-height:1.05;}
+  .card .v small{font-size:13px;color:var(--ink-2);font-weight:500;}
+  .card .note{font-size:11px;color:var(--muted);margin-top:7px;}
+  .status{border-radius:12px;padding:16px 20px;margin:20px 0;border:1px solid var(--border);display:flex;align-items:center;gap:14px;font-size:15px;}
+  .status .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+  .status .label{font-weight:600;color:var(--ink);}
+  .st-ok{background:var(--green-bg);border-color:rgba(22,163,90,.3);} .st-ok .dot{background:var(--green);}
+  .st-warn{background:var(--amber-bg);border-color:rgba(196,127,18,.3);} .st-warn .dot{background:var(--amber);}
+  .st-orange{background:var(--orange-bg);border-color:rgba(224,133,31,.3);} .st-orange .dot{background:var(--orange);}
+  .st-bad{background:var(--red-bg);border-color:rgba(207,63,58,.3);} .st-bad .dot{background:var(--red);}
+  .cascade{position:relative;height:56px;border-radius:10px;margin:18px 0 34px;
+    background:linear-gradient(90deg,var(--green) 0%,var(--green) 22%,var(--amber) 22%,var(--amber) 36%,var(--orange) 36%,var(--orange) 60%,var(--red) 60%,var(--red) 100%);opacity:.92;}
+  .cascade .seg-label{position:absolute;top:66px;font-family:var(--mono);font-size:10.5px;color:var(--muted);transform:translateX(-50%);text-align:center;white-space:nowrap;line-height:1.3;}
+  .cascade .marker{position:absolute;top:-8px;bottom:-8px;width:3px;background:var(--ink);border-radius:2px;}
+  .cascade .marker::after{content:attr(data-l);position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:#fff;background:var(--ink);padding:2px 7px;border-radius:4px;white-space:nowrap;}
+  .cascade-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:0;}
+  .chartbox{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;margin:24px 0;}
+  canvas{width:100%;height:auto;display:block;}
+  .legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:16px;font-size:13px;}
+  .legend span{display:flex;align-items:center;gap:8px;color:var(--ink-2);}
+  .legend .sw{width:16px;height:3px;border-radius:2px;}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px;}
+  th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--border);}
+  th:first-child,td:first-child{text-align:left;}
+  thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border-strong);}
+  tbody td{font-family:var(--mono);color:var(--ink-2);}
+  tbody td:first-child{font-family:var(--sans);color:var(--ink);font-weight:500;}
+  tbody tr:hover{background:var(--surface-2);}
+  .gridcell{font-family:var(--mono);font-weight:600;border-radius:4px;}
+  .callout{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);padding:20px 24px;border-radius:10px;margin:22px 0;}
+  .callout.warn{border-left-color:var(--amber);}
+  .callout .ct{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--green-d);font-weight:600;margin-bottom:9px;}
+  .callout.warn .ct{color:var(--amber);}
+  .callout p{margin-bottom:0;color:var(--ink);} .callout p+p{margin-top:11px;}
+  .formula{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:14px 0;font-family:var(--mono);font-size:13.5px;color:var(--ink-2);overflow-x:auto;line-height:1.75;}
+  .formula b{color:var(--green-d);font-weight:600;}
+  .footnote{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.55;}
+  .disclaimer{font-size:11.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:24px;margin-top:8px;}
+  .foot{display:flex;align-items:center;gap:11px;margin-top:40px;padding-top:26px;border-top:1px solid var(--border);}
+  .foot .mark{width:24px;height:24px;} .foot .txt{font-size:12.5px;color:var(--muted);}
+  a{color:var(--green-d);text-decoration:none;} a:hover{text-decoration:underline;}
+  .xlink{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;padding:10px 16px;border:1px solid var(--border-strong);border-radius:8px;color:var(--ink);text-decoration:none;transition:border-color .15s;}
+  .xlink:hover{border-color:var(--green);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <linearGradient id="efxg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16a35a"/><stop offset="1" stop-color="#2bbf78"/></linearGradient>
+    <symbol id="efxhex" viewBox="0 0 100 100">
+      <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="url(#efxg)" stroke-width="6"/>
+      <path d="M38 32 H66 M38 50 H60 M38 68 H66 M38 32 V68" fill="none" stroke="url(#efxg)" stroke-width="6" stroke-linecap="square"/>
+    </symbol></defs></svg>
+
+  <nav class="nav">
+    <a class="brand" href="/"><svg class="mark"><use href="#efxhex"/></svg><span class="name">EFIX</span></a>
+    <div class="navlinks">
+      <a href="/economics">Economics</a>
+      <a href="/economics/stress" class="active">Stress Matrix</a>
+      <a href="/">efix.finance</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <span class="eyebrow"><span class="dot"></span>Risk Model · Bad-Debt</span>
+    <h1>Stress Matrix<br>&amp; <span class="g">bad-debt model</span></h1>
+    <p class="hero-sub">A live, parametric model of USDC-lender tail loss on the efixDI/USDC market. efixDI is a 1-BRL parity claim
+    redeemable at NAV the same business day, so liquidation reduces to an FX problem and bad-debt slippage stays bounded by two
+    stress-testable inputs rather than by market liquidity.</p>
+    <div class="hero-meta">Vault 0xf4A3…ACBd5 · Market 0x31d6…345a · Morpho Blue Base · LLTV 77% · Chainlink BRL/USD</div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">Market LLTV</div><div class="v">77<small>%</small></div></div>
+      <div class="stat"><div class="k">Liquidation incentive</div><div class="v">7.4<small>%</small></div></div>
+      <div class="stat"><div class="k">FX buffer to liquidation</div><div class="v" id="sBufLiq">32.5<small>%</small></div></div>
+      <div class="stat"><div class="k">FX buffer to bad debt</div><div class="v" id="sBufBd">48.0<small>%</small></div></div>
+    </div>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="seclabel">01 · Model</div>
+    <h2>Position &amp; stress inputs</h2>
+    <p class="lead">Move the inputs. Everything recomputes from closed-form arithmetic a curator can reproduce. Defaults sit at the
+    recommended 2-loop position at the live market LLTV.</p>
+    <div class="panel">
+      <div class="controls">
+        <div class="ctrl"><label>Market LLTV <span class="val" id="vLltv">77%</span></label>
+          <input type="range" id="sLltv" min="50" max="90" value="77" step="1"><div class="hint">Liquidation loan-to-value. The live market is 77%. It sets the liquidation incentive and every buffer below.</div></div>
+        <div class="ctrl"><label>Borrower LTV at entry <span class="val" id="vLtv">52%</span></label>
+          <input type="range" id="sLtv" min="20" max="76" value="52" step="1"><div class="hint">The recommended 2-loop position sits near 52% (health factor 1.49). Leverage is a derived readout below.</div></div>
+        <div class="ctrl"><label>BRL/USD depreciation, total <span class="val" id="vDrop">0%</span></label>
+          <input type="range" id="sDrop" min="0" max="60" value="0" step="1"><div class="hint">The cumulative move from entry. It sets whether the position is past deleverage, liquidation, or underwater.</div></div>
+        <div class="ctrl"><label>FX move in 3h redemption window <span class="val" id="vWin">1.0%</span></label>
+          <input type="range" id="sWin" min="0" max="150" value="10" step="1"><div class="hint">The intraday move a liquidator carries while redeeming. It governs whether liquidation clears profitably.</div></div>
+        <div class="ctrl"><label>Liquidator op cost <span class="val" id="vCost">1.5%</span></label>
+          <input type="range" id="sCost" min="0" max="50" value="15" step="1"><div class="hint">Gas, capital, and KYC cost. Added to the window move when testing whether liquidation clears.</div></div>
+        <div class="ctrl"><label>Outstanding USDC borrow <span class="val" id="vNot">$1.0M</span></label>
+          <input type="range" id="sNot" min="1" max="100" value="10" step="1"><div class="hint">Total debt on the position. It scales the dollar bad-debt figure.</div></div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card"><div class="k">Health factor now</div><div class="v" id="rHf">1.49</div><div class="note" id="rHfNote">at entry</div></div>
+      <div class="card"><div class="k">Leverage (derived)</div><div class="v" id="rLev">2.08<small>×</small></div><div class="note">exposure / equity</div></div>
+      <div class="card"><div class="k">FX buffer to liquidation</div><div class="v" id="rBufLiq">32.5<small>%</small></div><div class="note">BRL drop, HF→1.0</div></div>
+      <div class="card"><div class="k">FX buffer to bad debt</div><div class="v" id="rBufBd">48.0<small>%</small></div><div class="note">collateral &lt; debt</div></div>
+    </div>
+
+    <div class="status st-ok" id="statusBanner"><span class="dot"></span><span><span class="label" id="statusLabel">Healthy.</span> <span id="statusText"></span></span></div>
+
+    <h3>Liquidation cascade</h3>
+    <div class="cascade" id="cascade">
+      <div class="marker" id="cascadeMarker" data-l="entry" style="left:0%"></div>
+      <span class="seg-label" style="left:11%">Healthy</span>
+      <span class="seg-label" style="left:29%">Auto-deleverage<br>HF&lt;1.15</span>
+      <span class="seg-label" style="left:48%">Liquidatable,<br>lender covered</span>
+      <span class="seg-label" style="left:80%">Underwater,<br>bad debt</span>
+    </div>
+    <div class="cascade-scale"><span>0%</span><span>15%</span><span>30%</span><span>45%</span><span>60% BRL drop</span></div>
+
+    <div class="status" id="liqBanner" style="margin-top:48px;"><span class="dot"></span><span><span class="label" id="liqLabel"></span> <span id="liqText"></span></span></div>
+
+    <div class="cards" style="margin-top:20px;">
+      <div class="card"><div class="k">Bad debt to lenders</div><div class="v" id="rBdPct" style="color:var(--green)">0.0<small>%</small></div><div class="note">of outstanding borrow</div></div>
+      <div class="card"><div class="k">Dollar bad debt</div><div class="v" id="rBdUsd" style="color:var(--green)">$0</div><div class="note">at this notional</div></div>
+      <div class="card"><div class="k">Liquidator P&amp;L on exit</div><div class="v" id="rLiqPnl">+5.3<small>%</small></div><div class="note">bonus less window FX, less cost</div></div>
+      <div class="card"><div class="k">Net carry, borrower</div><div class="v" id="rCarry">+9.4<small>pp</small></div><div class="note">CDI less USDC borrow</div></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="seclabel">02 · Why Sharpe Diverges</div>
+    <h2>Bad debt vs. FX shock</h2>
+    <p class="lead">Expected tail loss decomposes as <code>P(stress) × E[slippage | stress] × notional</code>. The slippage term is
+    where RWA vaults separate. For D+0 NAV collateral it is two clean, stress-testable inputs. For volatile collateral it is an
+    open-ended AMM walk.</p>
+    <div class="chartbox"><canvas id="chart" width="1000" height="430"></canvas>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--green)"></span> efixDI+ (D+0 NAV redemption, slippage bounded by the FX window plus the 7.4% bonus)</span>
+        <span><span class="sw" style="background:var(--red)"></span> Volatile collateral (AMM-only exit, slippage about 1.5× the shock), illustrative</span>
+      </div></div>
+    <div class="callout"><div class="ct">What the chart shows</div>
+      <p>The efixDI curve stays at zero until BRL falls past the bad-debt threshold. Prompt liquidation at the oracle price plus the
+      7.4% incentive keeps lenders whole while collateral still exceeds debt. The volatile-collateral curve leaves the floor far
+      earlier, because AMM-exit slippage erodes recovery before the position is even nominally underwater. Same LLTV, same borrow
+      rate, opposite tail.</p></div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="seclabel">03 · Stress Grid</div>
+    <h2>Health-factor surface across FX shock and LTV</h2>
+    <p class="lead">Position health across the BRL/USD and LTV plane at your chosen LLTV. Colour marks the regime. Change LLTV above
+    to recompute.</p>
+    <table id="grid"><thead><tr><th>BRL/USD drop / entry LTV</th></tr></thead><tbody></tbody></table>
+    <p class="footnote">
+      <span style="color:var(--green)">■</span> Healthy (HF ≥ 1.15)
+      &nbsp; <span style="color:var(--amber)">■</span> Auto-deleverage (1.00 to 1.15)
+      &nbsp; <span style="color:var(--orange)">■</span> Liquidatable, lender covered (LLTV to 1.00)
+      &nbsp; <span style="color:var(--red)">■</span> Underwater (HF below LLTV)
+    </p>
+    <p class="footnote">Reference: BRL/USD held a 4.80 to 5.95 band across 2021 to 2026, roughly 20% peak to trough, over months.
+    COVID March 2020, the sharpest modern episode, ran about 30%, also over weeks rather than the intraday window that bounds lender loss.</p>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="seclabel">04 · Demand</div>
+    <h2>Carry surface across CDI and USDC borrow rate</h2>
+    <p class="lead">What pulls borrowers in, and the input for IRM-curve tuning. The full lender-yield treatment lives on the
+    <a href="/economics">Economics</a> page. Cells show leveraged net carry on equity at the LTV set above.</p>
+    <table id="carryGrid"><thead><tr><th>CDI / USDC borrow</th></tr></thead><tbody></tbody></table>
+    <p class="footnote">Leveraged net carry on equity = L·CDI less (L−1)·borrow, before the vault performance fee, which is charged
+    to lenders rather than borrowers.</p>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="seclabel">05 · Methodology</div>
+    <h2>Assumptions and formulas, fully reproducible</h2>
+    <h3>Why liquidation is an FX problem</h3>
+    <p>efixDI is a 1-BRL parity claim, not a NAV-accreting share token. It is mint and burnable at par against DI fund-share
+    entitlements held in bankruptcy-remote segregated patrimony under CVM Resolution 88/2022. CDI yield reaches holders as monthly
+    BRL cash distributions, never as token appreciation. The token's BRL price stays at 1, so its USD collateral value moves only
+    with BRL/USD.</p>
+    <div class="formula">collateral<sub>USD</sub> = quantity × <b>1 BRL</b> × FX<sub>BRL/USD</sub></div>
+    <p>No fund-NAV oracle sits in the liquidation path. Pricing is Chainlink BRL/USD, the same feed Morpho already uses for BRZ,
+    BRLA, and other BRL-stable collateral.</p>
+    <h3>Health factor and the three thresholds</h3>
+    <div class="formula">
+      LTV<sub>0</sub> = (L − 1) / L &nbsp;·&nbsp; HF = <b>LLTV</b> / LTV &nbsp;·&nbsp; after BRL drop d: &nbsp; HF(d) = LLTV · (1 − d) / LTV<sub>0</sub><br><br>
+      FX drop to auto-deleverage (HF 1.15): &nbsp; d<sub>dlv</sub> = 1 − LTV<sub>0</sub> / (LLTV / 1.15)<br>
+      FX drop to liquidation (HF 1.00): &nbsp;&nbsp;&nbsp;&nbsp; d<sub>liq</sub> = 1 − LTV<sub>0</sub> / LLTV<br>
+      FX drop to bad debt (collateral = debt): &nbsp; d<sub>bd</sub> = 1 − LTV<sub>0</sub>
+    </div>
+    <h3>Liquidation incentive (Morpho Blue)</h3>
+    <div class="formula">LIF = min( 1.15 , 1 / ( 1 − 0.3 · (1 − LLTV) ) ) &nbsp;→&nbsp; at LLTV 77%, <b>LIF = 1.0741</b> (7.41% bonus)</div>
+    <p>At the liquidation trigger the position holds 30% over-collateralisation against debt (1 / 0.77). A liquidator repays debt D,
+    seizes D × LIF of collateral at the oracle price, then exits through NAV redemption over the settlement window.</p>
+    <h3>Liquidator participation and lender bad debt</h3>
+    <div class="formula">
+      Liquidator clears if: &nbsp; (FX window move w) + (op cost c) ≤ <b>LIF − 1 = 6.9%</b><br><br>
+      Lender bad debt per $1 of debt = max( 0 , 1 − (1 − d) / LTV<sub>0</sub> ) , non-zero only once d &gt; d<sub>bd</sub>
+    </div>
+    <p>Two independent things must both fail for lenders to lose. First, the intraday window move exceeds the 6.9% bonus, so
+    liquidators step back. Second, BRL gaps past the bad-debt threshold faster than the position can be cleared. For BRL, a liquid
+    G20 currency with circuit breakers, a 3-hour move beyond 6.9% is a 10-sigma event under normal volatility, and a sub-3-hour
+    move past the bad-debt threshold implies a sovereign-grade dislocation with capital controls.</p>
+    <h3>The binding operational parameter, for curator calibration</h3>
+    <p>The real constraint is not AMM depth. On-chain efixDI/USDC depth is thin today and serves only the residual fraction. The
+    live liquidation path is NAV redemption through EFIX's regulated infrastructure, whose throughput is finite. The safe supply
+    cap therefore comes out of the redemption-pipe throughput over the liquidation horizon, plus instant AMM-residual depth. This
+    is the parameter we want the curator's risk team to own and size, next to the IRM curve and the deleverage trigger.</p>
+    <div class="callout warn"><div class="ct">Two scope honesties</div>
+      <p><strong>1. Audit scope.</strong> OpenZeppelin audited the efixDI token (15/15 resolved, including one high-severity finding
+      fixed with a custody redesign). The collateral vault as a whole and the off-chain backing sat outside that scope. A dedicated
+      vault audit is being scoped to the curator's go-live, and the off-chain backing is covered by the monthly Harris &amp; Trotter
+      supply-vs-NAV attestation.</p>
+      <p><strong>2. Oracle.</strong> The May 2026 staleness incident came from a threshold set inside the 24-hour heartbeat. The fix
+      has three parts: a staleness threshold above 25 hours, an external uptime monitor with hourly checks, and webhooks on low
+      operator-wallet gas and on RPC failure.</p></div>
+    <div style="margin-top:28px;"><a class="xlink" href="/economics"><svg width="14" height="14" style="opacity:.7"><use href="#efxhex"/></svg> See the borrow-rate &amp; lender-yield model →</a></div>
+  </section>
+
+  <p class="disclaimer">Internal quantitative aid for due-diligence discussion. Figures are illustrative and parametric, not a
+  representation of returns, a solvency guarantee, or investment advice. The volatile-collateral comparison curve is a stylised
+  illustration of AMM-exit slippage, not a model of any specific asset.</p>
+
+  <div class="foot"><svg class="mark"><use href="#efxhex"/></svg>
+    <span class="txt">EFIX · Haus Serviços Financeiros Ltda. · CNPJ 57.362.914/0001-10 · CVM Act 23.635/2025 · ernesto.otero@efix.finance</span></div>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id), clamp01=x=>Math.max(0,Math.min(1,x)), pct=(x,d=1)=>(x*100).toFixed(d);
+  const S={lltv:$('sLltv'),ltv:$('sLtv'),drop:$('sDrop'),win:$('sWin'),cost:$('sCost'),not:$('sNot')};
+
+  function compute(){
+    const lltv=+S.lltv.value/100, ltv0=+S.ltv.value/100, d=+S.drop.value/100, w=+S.win.value/1000, c=+S.cost.value/1000, notional=+S.not.value/10*1e6;
+    const L=1/(1-ltv0), lif=Math.min(1.15,1/(1-0.3*(1-lltv))), hf0=lltv/ltv0, hfd=lltv*(1-d)/ltv0;
+    const dDlv=Math.max(0,1-ltv0/(lltv/1.15)), dLiq=Math.max(0,1-ltv0/lltv), dBd=Math.max(0,1-ltv0);
+    const participates=(w+c)<=(lif-1)+1e-9, liqPnl=(lif-1)-w-c;
+    const bdPer=Math.max(0,1-(1-d)/ltv0), bdUsd=bdPer*notional;
+    const cdi=0.144, borrow=0.05, carry=cdi-borrow;
+    return {lltv,ltv0,d,w,c,notional,L,lif,hf0,hfd,dDlv,dLiq,dBd,participates,liqPnl,bdPer,bdUsd,carry};
+  }
+  function statusFor(hf,lltv){
+    if(hf>=1.15) return {cls:'st-ok',col:'var(--green)',label:'Healthy.',text:'Above the auto-deleverage trigger. The keeper is idle and there is no liquidation risk at this FX level.'};
+    if(hf>=1.00) return {cls:'st-warn',col:'var(--amber)',label:'Auto-deleverage zone.',text:'Below health factor 1.15. The keeper unwinds leverage to restore the buffer before any liquidation.'};
+    if(hf>=lltv) return {cls:'st-orange',col:'var(--orange)',label:'Liquidatable.',text:'Below health factor 1.00 and open to liquidation. Collateral still exceeds debt, so prompt liquidation leaves lenders whole.'};
+    return {cls:'st-bad',col:'var(--red)',label:'Underwater.',text:'Collateral has fallen below debt. Bad debt accrues to lenders unless the position is cleared before this point.'};
+  }
+  function fmtUsd(x){if(x>=1e6)return '$'+(x/1e6).toFixed(2)+'M';if(x>=1e3)return '$'+(x/1e3).toFixed(0)+'k';return '$'+x.toFixed(0);}
+
+  function render(){
+    const m=compute();
+    $('vLltv').textContent=pct(m.lltv,0)+'%'; $('vLtv').textContent=pct(m.ltv0,0)+'%'; $('vDrop').textContent=pct(m.d,0)+'%';
+    $('vWin').textContent=pct(m.w,1)+'%'; $('vCost').textContent=pct(m.c,1)+'%'; $('vNot').textContent=fmtUsd(m.notional);
+    $('rHf').textContent=m.hfd.toFixed(2); $('rHfNote').textContent=m.d===0?'at entry':'after '+pct(m.d,0)+'% BRL drop';
+    $('rLev').innerHTML=m.L.toFixed(2)+'<small>×</small>'; $('rBufLiq').innerHTML=pct(m.dLiq,1)+'<small>%</small>'; $('rBufBd').innerHTML=pct(m.dBd,1)+'<small>%</small>';
+    $('sBufLiq').innerHTML=pct(m.dLiq,1)+'<small>%</small>'; $('sBufBd').innerHTML=pct(m.dBd,1)+'<small>%</small>';
+    const st=statusFor(m.hfd,m.lltv); $('statusBanner').className='status '+st.cls; $('statusLabel').textContent=st.label; $('statusText').textContent=st.text;
+    $('cascadeMarker').style.left=clamp01(m.d/0.60)*100+'%'; $('cascadeMarker').setAttribute('data-l',m.d===0?'entry':pct(m.d,0)+'%');
+    const lb=$('liqBanner');
+    if(m.hfd>=1.0){lb.className='status st-ok';$('liqLabel').textContent='No liquidation needed.';$('liqText').textContent='The position is not yet liquidatable at this FX level.';}
+    else if(m.participates){lb.className='status st-ok';$('liqLabel').textContent='Liquidation clears.';$('liqText').textContent='A liquidator nets +'+pct(m.liqPnl,1)+'% once the '+pct(m.w,1)+'% window move and '+pct(m.c,1)+'% cost clear the 7.4% bonus. The position is cleared and lenders are protected.';}
+    else {lb.className='status st-bad';$('liqLabel').textContent='Liquidation may stall.';$('liqText').textContent='The '+pct(m.w,1)+'% window move plus '+pct(m.c,1)+'% cost exceed the 7.4% bonus, so liquidators step back and decay can run toward the bad-debt threshold. This needs a move above 6.9% inside a single 3-hour window.';}
+    const bdEl=$('rBdPct'),usdEl=$('rBdUsd'); bdEl.innerHTML=pct(m.bdPer,1)+'<small>%</small>'; usdEl.textContent=fmtUsd(m.bdUsd);
+    const bdCol=m.bdPer>0?'var(--red)':'var(--green)'; bdEl.style.color=bdCol; usdEl.style.color=bdCol;
+    $('rLiqPnl').innerHTML=(m.liqPnl>=0?'+':'')+pct(m.liqPnl,1)+'<small>%</small>'; $('rLiqPnl').style.color=m.liqPnl>=0?'var(--green)':'var(--red)';
+    $('rCarry').innerHTML='+'+(m.carry*100).toFixed(1)+'<small>pp</small>';
+    buildGrid(); buildCarry(); drawChart(m);
+  }
+
+  function buildGrid(){
+    const lltv=+S.lltv.value/100, ltvs=[0.30,0.40,0.50,0.60,0.70], drops=[0,0.10,0.20,0.30,0.40,0.50,0.60];
+    document.querySelector('#grid thead tr').innerHTML='<th>BRL/USD drop / entry LTV</th>'+ltvs.map(l=>'<th>'+(l*100).toFixed(0)+'%</th>').join('');
+    const tb=document.querySelector('#grid tbody'); tb.innerHTML='';
+    drops.forEach(d=>{
+      let cells='<td>'+(d*100).toFixed(0)+'%</td>';
+      ltvs.forEach(ltv0=>{
+        const hf=lltv*(1-d)/ltv0, st=statusFor(hf,lltv);
+        const bg=st.col.replace('var(--green)','rgba(22,163,90,.12)').replace('var(--amber)','rgba(196,127,18,.14)').replace('var(--orange)','rgba(224,133,31,.14)').replace('var(--red)','rgba(207,63,58,.12)');
+        cells+='<td class="gridcell" style="background:'+bg+';color:'+st.col+'">'+hf.toFixed(2)+'</td>';
+      });
+      const tr=document.createElement('tr'); tr.innerHTML=cells; tb.appendChild(tr);
+    });
+  }
+  function buildCarry(){
+    const ltv0=+S.ltv.value/100, L=1/(1-ltv0), cdis=[0.10,0.12,0.144,0.16], borrows=[0.04,0.05,0.06,0.07];
+    document.querySelector('#carryGrid thead tr').innerHTML='<th>CDI / USDC borrow</th>'+borrows.map(b=>'<th>'+(b*100).toFixed(0)+'%</th>').join('');
+    const tb=document.querySelector('#carryGrid tbody'); tb.innerHTML='';
+    cdis.forEach(cdi=>{
+      let cells='<td>'+(cdi*100).toFixed(1)+'%</td>';
+      borrows.forEach(b=>{const lev=L*cdi-(L-1)*b;cells+='<td class="gridcell" style="color:'+(lev>0?'var(--green)':'var(--red)')+'">'+(lev>=0?'+':'')+(lev*100).toFixed(1)+'%</td>';});
+      const tr=document.createElement('tr'); tr.innerHTML=cells; tb.appendChild(tr);
+    });
+  }
+  function drawChart(m){
+    const cv=$('chart'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height; ctx.clearRect(0,0,W,H);
+    const padL=62,padR=24,padT=22,padB=50,x0=padL,x1=W-padR,y0=H-padB,y1=padT;
+    const maxShock=0.60,maxBd=1.0,X=s=>x0+(s/maxShock)*(x1-x0),Y=v=>y0-(v/maxBd)*(y0-y1);
+    ctx.strokeStyle='#e7e9ec';ctx.font='11px "SF Mono",monospace';ctx.lineWidth=1;
+    for(let i=0;i<=5;i++){const v=i/5,yy=Y(v);ctx.beginPath();ctx.moveTo(x0,yy);ctx.lineTo(x1,yy);ctx.stroke();ctx.textAlign='right';ctx.fillStyle='#8a93a0';ctx.fillText((v*100).toFixed(0)+'%',x0-8,yy+4);}
+    for(let i=0;i<=6;i++){const s=i*0.10,xx=X(s);ctx.textAlign='center';ctx.fillStyle='#8a93a0';ctx.fillText((s*100).toFixed(0)+'%',xx,y0+18);}
+    ctx.fillStyle='#3c434e';ctx.textAlign='center';ctx.fillText('BRL/USD depreciation',(x0+x1)/2,y0+38);
+    ctx.save();ctx.translate(16,(y0+y1)/2);ctx.rotate(-Math.PI/2);ctx.fillText('Bad debt (% of borrow)',0,0);ctx.restore();
+    const ltv0=m.ltv0,lltv=m.lltv,dLiq=Math.max(0,1-ltv0/lltv),dBd=Math.max(0,1-ltv0);
+    [['liq',dLiq],['bad-debt',dBd]].forEach(([k,dd])=>{if(dd>maxShock)return;
+      ctx.strokeStyle='#b9c0c9';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(X(dd),y1);ctx.lineTo(X(dd),y0);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#8a93a0';ctx.textAlign='center';ctx.font='10px "SF Mono",monospace';ctx.fillText(k+' '+(dd*100).toFixed(0)+'%',X(dd),y1+(k==='liq'?10:24));});
+    function plot(fn,color,w){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.beginPath();let st=false;
+      for(let px=0;px<=300;px++){const s=px/300*maxShock;const v=clamp01(fn(s));const xx=X(s),yy=Y(v);if(!st){ctx.moveTo(xx,yy);st=true;}else ctx.lineTo(xx,yy);}ctx.stroke();}
+    const efix=s=>Math.max(0,1-(1-s)/ltv0), vol=s=>{const slip=Math.min(0.6,1.5*s);return Math.max(0,1-(1-s)*(1-slip)/ltv0);};
+    plot(vol,'#cf3f3a',2.5); plot(efix,'#16a35a',3);
+    const cs=m.d; if(cs<=maxShock){const xx=X(cs),yy=Y(clamp01(efix(cs)));ctx.fillStyle='#0b0d12';ctx.beginPath();ctx.arc(xx,yy,5,0,7);ctx.fill();ctx.strokeStyle='#16a35a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(xx,yy,8,0,7);ctx.stroke();}
+  }
+  Object.values(S).forEach(el=>el.addEventListener('input',render));
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>efixDI+ Carry Feasibility &amp; Lender Yield</title>
+<link rel="canonical" href="https://efix.finance/economics">
+<meta name="description" content="The USDC borrow rate that keeps the efixDI leveraged loop worth running, and the lender yield that follows. A stochastic BRL/USD model for Morpho curators.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://efix.finance/economics">
+<meta property="og:title" content="efixDI+ Economics: Borrow Rate and Lender Yield">
+<meta property="og:description" content="The borrow-rate band that keeps the loop worth running for borrowers and the vault attractive to USDC suppliers, derived from a stochastic BRL/USD model.">
+<meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="efixDI+ Economics: Borrow Rate and Lender Yield">
+<meta name="twitter:description" content="The lender-yield band for the efixDI/USDC vault on Morpho, with the full carry-feasibility model.">
+<meta name="twitter:image" content="https://efix.finance/logo_efix_400x400.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff; --soft:#f7f8fa; --surface:#ffffff; --surface-2:#fafbfc;
+    --border:#e7e9ec; --border-strong:#d9dde2;
+    --ink:#0b0d12; --ink-2:#3c434e; --muted:#8a93a0;
+    --green:#16a35a; --green-d:#0f8a4a; --green-bg:rgba(22,163,90,.08);
+    --amber:#c47f12; --red:#cf3f3a;
+    --grid:rgba(11,13,18,.038);
+    --mono:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --display:"Space Grotesk",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--ink-2);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;position:relative;}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:42px 42px;mask-image:linear-gradient(180deg,#000 0%,transparent 60%);}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 32px 110px;position:relative;z-index:1;}
+
+  /* top nav */
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--border);}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);}
+  .brand .mark{width:26px;height:26px;}
+  .brand .name{font-family:var(--display);font-weight:700;letter-spacing:.02em;font-size:15px;}
+  .navlinks{display:flex;align-items:center;gap:26px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;}
+  .navlinks a{color:var(--muted);text-decoration:none;transition:color .15s;}
+  .navlinks a:hover{color:var(--ink);}
+  .navlinks a.active{color:var(--green);}
+  @media(max-width:620px){.navlinks{gap:16px;font-size:11px;}}
+
+  /* hero */
+  .hero{padding:54px 0 30px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:26px;}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+  h1{font-family:var(--display);font-size:52px;line-height:1.04;letter-spacing:-.02em;font-weight:700;color:var(--ink);margin-bottom:20px;}
+  h1 .g{color:var(--green);}
+  .hero-sub{font-size:18px;color:var(--ink-2);max-width:760px;line-height:1.55;}
+
+  /* RANGE PANEL: the headline answer */
+  .range{margin:38px 0 0;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:34px 38px;box-shadow:0 1px 0 rgba(11,13,18,.02),0 30px 60px -50px rgba(11,13,18,.25);}
+  .range .lab{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+  .range .big{display:flex;align-items:baseline;gap:18px;margin:14px 0 22px;font-family:var(--display);font-weight:700;color:var(--ink);}
+  .range .big .num{font-size:64px;line-height:1;letter-spacing:-.02em;}
+  .range .big .to{font-size:20px;color:var(--muted);font-weight:500;font-family:var(--sans);}
+  @media(max-width:560px){.range .big .num{font-size:46px;}}
+  .gauge{position:relative;height:14px;border-radius:8px;background:var(--soft);border:1px solid var(--border);overflow:hidden;}
+  .gauge .band{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,var(--green),#2bbf78);}
+  .gauge-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:7px;}
+  .gauge-ends{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;margin-top:10px;color:var(--ink);}
+  .gauge-ends b{color:var(--green);}
+  .range .support{margin-top:20px;padding-top:18px;border-top:1px solid var(--border);font-size:14px;color:var(--ink-2);font-family:var(--mono);letter-spacing:.01em;}
+
+  /* stat strip */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:24px 0 0;}
+  @media(max-width:620px){.stats{grid-template-columns:repeat(2,1fr);}}
+  .stat{padding:20px 22px;border-right:1px solid var(--border);}
+  .stat:last-child{border-right:none;}
+  @media(max-width:620px){.stat:nth-child(2){border-right:none;}.stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--border);}}
+  .stat .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .stat .v{font-family:var(--display);font-size:24px;font-weight:700;color:var(--ink);line-height:1;}
+  .stat .v small{font-size:13px;color:var(--ink-2);font-weight:500;}
+
+  section{padding:50px 0;border-bottom:1px solid var(--border);}
+  section:last-of-type{border-bottom:none;}
+  .seclabel{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin-bottom:12px;}
+  h2{font-family:var(--display);font-size:30px;line-height:1.15;letter-spacing:-.015em;font-weight:700;color:var(--ink);margin-bottom:10px;}
+  h3{font-family:var(--display);font-size:17px;font-weight:600;margin:30px 0 10px;color:var(--ink);}
+  p{color:var(--ink-2);font-size:15.5px;margin-bottom:14px;}
+  p strong{color:var(--ink);font-weight:600;}
+  em{color:var(--ink);font-style:italic;}
+  .lead{font-size:16.5px;margin-bottom:22px;}
+  ul{margin:14px 0;padding-left:0;list-style:none;}
+  li{color:var(--ink-2);margin-bottom:9px;padding-left:22px;position:relative;font-size:15px;}
+  li::before{content:"";position:absolute;left:2px;top:10px;width:6px;height:6px;background:var(--green);border-radius:50%;}
+  code{font-family:var(--mono);background:var(--soft);border:1px solid var(--border);padding:2px 6px;border-radius:5px;font-size:13px;color:var(--green-d);}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin:24px 0;}
+  .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px 36px;}
+  @media(max-width:900px){.controls{grid-template-columns:1fr 1fr;}}
+  @media(max-width:560px){.controls{grid-template-columns:1fr;}}
+  .ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink-2);margin-bottom:9px;font-weight:500;}
+  .ctrl label .val{font-family:var(--mono);font-size:15px;color:var(--green-d);font-weight:600;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;background:var(--border-strong);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 1px var(--green),0 1px 3px rgba(0,0,0,.2);}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 1px var(--green);}
+  .ctrl .hint{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4;}
+
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 8px;}
+  @media(max-width:620px){.cards{grid-template-columns:repeat(2,1fr);}}
+  .card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:17px 19px;}
+  .card.hl{border-color:rgba(22,163,90,.4);background:linear-gradient(180deg,var(--green-bg),var(--surface-2));}
+  .card .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
+  .card .v{font-family:var(--display);font-size:22px;font-weight:700;color:var(--ink);line-height:1.05;}
+  .card .v small{font-size:13px;color:var(--ink-2);font-weight:500;}
+  .card .note{font-size:11px;color:var(--muted);margin-top:7px;}
+
+  .chartbox{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;margin:24px 0;}
+  canvas{width:100%;height:auto;display:block;}
+  .legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:16px;font-size:13px;}
+  .legend span{display:flex;align-items:center;gap:8px;color:var(--ink-2);}
+  .legend .sw{width:16px;height:3px;border-radius:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px;}
+  th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--border);}
+  th:first-child,td:first-child{text-align:left;}
+  thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border-strong);}
+  tbody td{font-family:var(--mono);color:var(--ink-2);}
+  tbody td:first-child{font-family:var(--sans);color:var(--ink);font-weight:500;}
+  tbody tr:hover{background:var(--surface-2);}
+  .gridcell{font-family:var(--mono);font-weight:600;}
+
+  .callout{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);padding:20px 24px;border-radius:10px;margin:22px 0;}
+  .callout.warn{border-left-color:var(--amber);}
+  .callout .ct{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--green-d);font-weight:600;margin-bottom:9px;}
+  .callout.warn .ct{color:var(--amber);}
+  .callout p{margin-bottom:0;color:var(--ink);} .callout p+p{margin-top:11px;}
+  .formula{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:14px 0;font-family:var(--mono);font-size:13.5px;color:var(--ink-2);overflow-x:auto;line-height:1.75;}
+  .formula b{color:var(--green-d);font-weight:600;}
+  .footnote{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.55;}
+  .disclaimer{font-size:11.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:24px;margin-top:8px;}
+  .foot{display:flex;align-items:center;gap:11px;margin-top:40px;padding-top:26px;border-top:1px solid var(--border);}
+  .foot .mark{width:24px;height:24px;} .foot .txt{font-size:12.5px;color:var(--muted);}
+  a{color:var(--green-d);text-decoration:none;} a:hover{text-decoration:underline;}
+  .xlink{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;padding:10px 16px;border:1px solid var(--border-strong);border-radius:8px;color:var(--ink);text-decoration:none;transition:border-color .15s;}
+  .xlink:hover{border-color:var(--green);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <linearGradient id="efxg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16a35a"/><stop offset="1" stop-color="#2bbf78"/></linearGradient>
+    <symbol id="efxhex" viewBox="0 0 100 100">
+      <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="url(#efxg)" stroke-width="6"/>
+      <path d="M38 32 H66 M38 50 H60 M38 68 H66 M38 32 V68" fill="none" stroke="url(#efxg)" stroke-width="6" stroke-linecap="square"/>
+    </symbol></defs></svg>
+
+  <nav class="nav">
+    <a class="brand" href="/"><svg class="mark"><use href="#efxhex"/></svg><span class="name">EFIX</span></a>
+    <div class="navlinks">
+      <a href="/economics" class="active">Economics</a>
+      <a href="/economics/stress">Stress Matrix</a>
+      <a href="/">efix.finance</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <span class="eyebrow"><span class="dot"></span>Carry Feasibility &amp; Lender Yield</span>
+    <h1>The borrow-rate band<br>and <span class="g">what lenders earn</span></h1>
+    <p class="hero-sub">The single number a curator needs to price the vault: the USDC borrow rate that keeps the leveraged loop
+    worth running for borrowers, and the USDC-supplier yield that follows from it. Derived from a stochastic BRL/USD model, scaled
+    across weekly and monthly volatility.</p>
+
+    <!-- THE RANGE -->
+    <div class="range">
+      <div class="lab">USDC Supplier Yield · per annum</div>
+      <div class="big"><span class="num" id="rngLo">5.5%</span><span class="to">to</span><span class="num" id="rngHi">9.8%</span></div>
+      <div class="gauge"><div class="band" id="rngBand" style="left:46%;width:36%"></div></div>
+      <div class="gauge-scale"><span>0%</span><span>3%</span><span>6%</span><span>9%</span><span>12%</span></div>
+      <div class="gauge-ends"><span>floor <b id="rngLo2">5.5%</b></span><span>ceiling <b id="rngHi2">9.8%</b></span></div>
+      <div class="support" id="rngSupport">+1.5 to +5.8 pp over US Treasuries · borrow 8.1% to 14.4% · 85% utilisation, 20% fee</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">CDI base rate</div><div class="v" id="sCdiV">~14.4<small>%</small></div></div>
+      <div class="stat"><div class="k">Leverage · HF</div><div class="v" id="sLevV">2.08× <small id="sHfV">HF 1.48</small></div></div>
+      <div class="stat"><div class="k">Net carry / loop</div><div class="v" id="sCarryV">+9.4<small>pp</small></div></div>
+      <div class="stat"><div class="k">Liquidation</div><div class="v">D+0</div></div>
+    </div>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="seclabel">01 · The model</div>
+    <h2>Borrow rate in, lender yield out</h2>
+    <p class="lead">Two forces set the band. A <strong>floor</strong>: the rate must be high enough that the USDC yield beats
+    Treasuries by a premium, or no one supplies the vault. A <strong>ceiling</strong>: the rate must stay below CDI so the loop
+    keeps positive carry, and far enough below that the borrower's risk-adjusted return stays attractive. Everything recomputes
+    from the inputs.</p>
+
+    <div class="panel">
+      <div class="controls">
+        <div class="ctrl"><label>CDI (collateral base rate) <span class="val" id="vCdi">14.4%</span></label>
+          <input type="range" id="sCdi" min="80" max="180" value="144" step="1"><div class="hint">Annual BRL money-market yield. About 14.9% as of Feb 2026.</div></div>
+        <div class="ctrl"><label>BRL/USD implied vol (annual) <span class="val" id="vSig">15%</span></label>
+          <input type="range" id="sSig" min="8" max="40" value="15" step="1"><div class="hint">At-the-money implied volatility of the pair. Normal regime 12 to 16%, stress 20 to 30% and up.</div></div>
+        <div class="ctrl"><label>Borrower loss tolerance, 1y <span class="val" id="vPL">20%</span></label>
+          <input type="range" id="sPL" min="5" max="45" value="20" step="1"><div class="hint">Max acceptable probability of a negative USD year for the borrower. Sets the comfort line.</div></div>
+        <div class="ctrl"><label>Entry LTV (leverage) <span class="val" id="vLtv">52%</span></label>
+          <input type="range" id="sLtv" min="20" max="72" value="52" step="1"><div class="hint">Recommended 2-loop sits near 52%, health factor 1.49. Leverage is derived.</div></div>
+        <div class="ctrl"><label>Vault utilisation <span class="val" id="vUtil">85%</span></label>
+          <input type="range" id="sUtil" min="50" max="98" value="85" step="1"><div class="hint">Share of supplied USDC that is borrowed. Lender yield scales with it.</div></div>
+        <div class="ctrl"><label>Performance fee <span class="val" id="vFee">20%</span></label>
+          <input type="range" id="sFee" min="0" max="50" value="20" step="1"><div class="hint">Charged on the vault yield, to lenders. Split 50/50 to 70/30 with the curator.</div></div>
+        <div class="ctrl"><label>Treasury benchmark <span class="val" id="vTb">4.0%</span></label>
+          <input type="range" id="sTb" min="20" max="60" value="40" step="1"><div class="hint">The risk-free alternative a USDC supplier compares against.</div></div>
+        <div class="ctrl"><label>Lender premium over UST <span class="val" id="vPrem">1.5%</span></label>
+          <input type="range" id="sPrem" min="0" max="50" value="15" step="1"><div class="hint">The extra yield a supplier needs to take vault risk. Sets the borrow-rate floor.</div></div>
+        <div class="ctrl"><label>FX drift (annual) <span class="val" id="vMu">0.0%</span></label>
+          <input type="range" id="sMu" min="-100" max="40" value="0" step="1"><div class="hint">Expected BRL/USD trend. 0 is neutral. Carry theory implies a small negative.</div></div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card hl"><div class="k">Lender yield band</div><div class="v" id="rLenderBand">5.5 to 9.8<small>%</small></div><div class="note">what USDC suppliers earn</div></div>
+      <div class="card"><div class="k">Sustainable borrow band</div><div class="v" id="rBorrowBand">8.1 to 14.4<small>%</small></div><div class="note">floor to CDI ceiling</div></div>
+      <div class="card"><div class="k">Leverage (derived)</div><div class="v" id="rLev">2.08<small>×</small></div><div class="note">HF <span id="rHf">1.49</span></div></div>
+      <div class="card"><div class="k">Net carry per loop</div><div class="v" id="rCarry1">+9.4<small>pp</small></div><div class="note">CDI less borrow</div></div>
+    </div>
+
+    <div class="callout" id="readout"><div class="ct">Reading the band</div><p id="readoutText"></p></div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="seclabel">02 · The tradeoff</div>
+    <h2>Lender yield rises, borrower Sharpe falls</h2>
+    <p class="lead">The borrow rate is the dial. Push it up and the lender earns more, but the borrower's risk-adjusted carry thins,
+    and past a point borrowers unwind and utilisation drops, taking the lender yield with it. The viable window is shaded.</p>
+    <div class="chartbox"><canvas id="chart" width="1000" height="430"></canvas>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--green)"></span> Lender yield (USDC supplier)</span>
+        <span><span class="sw" style="background:var(--amber)"></span> Borrower Sharpe (right axis)</span>
+        <span><span class="sw" style="background:var(--muted)"></span> Lender floor and CDI ceiling</span>
+      </div></div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="seclabel">03 · FX-crash survival</div>
+    <h2>Liquidation probability over a week and a month</h2>
+    <p class="lead">The borrow rate does not move this. Liquidation is set by the FX buffer at your leverage and by how violent the
+    pair gets over the window. Probability that BRL depreciates past the liquidation buffer, by implied vol and horizon, at the
+    LTV set above.</p>
+    <table id="survival"><thead><tr><th>Implied vol / horizon</th></tr></thead><tbody></tbody></table>
+    <p class="footnote" id="survNote"></p>
+    <p class="footnote">Gaussian estimates. BRL/USD carries negative skew and fat tails, so realised tail probabilities run above
+    Gaussian. The methodology gives the Cornish-Fisher adjustment and the practice of stressing implied vol upward to capture it.</p>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="seclabel">04 · Grid</div>
+    <h2>Lender yield across borrow rate and vol</h2>
+    <p class="lead">The readable surface. Each cell is the USDC-supplier yield at that borrow rate. Cells past the borrower comfort
+    line at a given vol are dimmed, since those rates ask the borrower to carry more FX risk than set.</p>
+    <table id="grid"><thead><tr><th>Implied vol / borrow rate</th></tr></thead><tbody></tbody></table>
+    <p class="footnote">Lender yield = borrow rate × utilisation × (1 − fee).</p>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="seclabel">05 · Methodology</div>
+    <h2>The model, fully derived</h2>
+
+    <h3>FX as the only risk, and how leverage amplifies it</h3>
+    <p>efixDI holds a fixed 1-BRL price, so a position's USD value moves only with BRL/USD. Model the pair as geometric Brownian
+    motion: over horizon T the log-return is <code>X ~ Normal(μT, σ²T)</code>, with σ the annual implied vol. A position at
+    leverage L has collateral L·E in BRL and debt (L−1)·E in USD, so equity carries an FX exposure levered by L. A BRL move x
+    changes equity by L·x.</p>
+
+    <h3>Borrower return and the borrow-rate ceiling</h3>
+    <div class="formula">
+      L = 1 / (1 − LTV<sub>0</sub>)<br>
+      Expected annual return on equity: &nbsp; E[R](r) = L·CDI − (L−1)·r + L·μ<br>
+      Annual return volatility: &nbsp; σ<sub>R</sub> = L·σ &nbsp;·&nbsp; Sharpe(r) = E[R](r) / σ<sub>R</sub><br>
+      Loss probability over horizon T: &nbsp; P(loss) = Φ( −Sharpe(r) · √T )
+    </div>
+    <p>The loop accrues carry linearly in T while FX risk grows as √T, so the carry dominates over the holding horizon. Setting a
+    target loss probability p over the holding horizon gives the comfort rate, with z = Φ⁻¹(1 − p):</p>
+    <div class="formula">r<sub>comfort</sub> = [ L·(CDI + μ) − z · L · σ / √T ] / (L − 1)</div>
+
+    <h3>The floor and the lender yield</h3>
+    <div class="formula">
+      Lender yield(r) = r · U · (1 − f) &nbsp;&nbsp;[ U = utilisation, f = performance fee ]<br>
+      Floor yield = UST + premium &nbsp;→&nbsp; r<sub>floor</sub> = (UST + premium) / ( U · (1 − f) )<br>
+      Carry ceiling: &nbsp; r &lt; CDI &nbsp; (positive carry per loop)
+    </div>
+    <p>The viable borrow band runs from r<sub>floor</sub> to the CDI ceiling, mapped through the yield equation for the lender
+    band. Where the comfort rate sits below the floor, the operating point accepts a borrower loss probability above the set
+    tolerance, the honest cost of a vol regime this size at this leverage. Lower leverage moves the comfort line to the right.</p>
+
+    <h3>Liquidation probability over a window</h3>
+    <div class="formula">
+      Liquidation buffer (from the Stress Matrix): &nbsp; d<sub>liq</sub> = 1 − LTV<sub>0</sub> / LLTV<br>
+      P(liquidation over T) = Φ( ( ln(1 − d<sub>liq</sub>) − μT ) / ( σ √T ) )
+    </div>
+
+    <h3>Carry-crash skew (the vanguard correction)</h3>
+    <p>Carry trades are short FX volatility, and BRL/USD shows negative skew and excess kurtosis, so the Gaussian understates the
+    far left tail. The Cornish-Fisher expansion adjusts the quantile used in the tail:</p>
+    <div class="formula">z<sub>CF</sub> = z + (z² − 1)·S/6 + (z³ − 3z)·K/24 − (2z³ − 5z)·S²/36</div>
+    <p>With negative S and positive excess K, the deep left-tail quantile grows more extreme than Gaussian. In practice the same
+    effect is captured by stressing the implied vol upward by roughly 1.3 to 2 times for the operating ceiling, the conservative
+    reading worth presenting to a risk team. Φ and Φ⁻¹ here are an erf approximation and the Acklam rational approximation,
+    computed in-page.</p>
+
+    <div class="callout warn">
+      <div class="ct">Who bears what</div>
+      <p>The FX loss probability on this page is the <strong>borrower's</strong>, taken on purpose for the carry. The USDC lender
+      does not carry it. Lender loss is the bounded liquidation tail in the <a href="/economics/stress">Stress Matrix</a>: it
+      appears only if BRL gaps past the liquidation buffer faster than the position clears, which needs a move far beyond any
+      weekly or monthly figure here.</p>
+    </div>
+
+    <div style="margin-top:28px;"><a class="xlink" href="/economics/stress"><svg width="14" height="14" style="opacity:.7"><use href="#efxhex"/></svg> See the Stress Matrix &amp; bad-debt model →</a></div>
+  </section>
+
+  <p class="disclaimer">Internal quantitative aid for due-diligence discussion. Figures are illustrative and parametric, not a
+  representation of returns, a solvency guarantee, or investment advice. FX dynamics are modelled, not predicted. Realised
+  USD-equivalent return has been positive every year over 2021 to 2026; the forward, vol-based loss probability is a distinct
+  number and is the one a risk team should price against.</p>
+
+  <div class="foot"><svg class="mark"><use href="#efxhex"/></svg>
+    <span class="txt">EFIX · Haus Serviços Financeiros Ltda. · CNPJ 57.362.914/0001-10 · CVM Act 23.635/2025 · ernesto.otero@efix.finance</span></div>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id), clamp01=x=>Math.max(0,Math.min(1,x)), pct=(x,d=1)=>(x*100).toFixed(d);
+  const LLTV=0.77;
+  const S={cdi:$('sCdi'),sig:$('sSig'),pl:$('sPL'),ltv:$('sLtv'),util:$('sUtil'),fee:$('sFee'),tb:$('sTb'),prem:$('sPrem'),mu:$('sMu')};
+
+  function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+    const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+  function normCDF(x){return 0.5*(1+erf(x/Math.SQRT2));}
+  function normInv(p){if(p<=0)return -10;if(p>=1)return 10;
+    const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+    const b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+    const c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+    const d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+    const pl=0.02425,ph=1-pl;let q,r;
+    if(p<pl){q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+    if(p<=ph){q=p-0.5;r=q*q;return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+    q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+
+  function compute(){
+    const cdi=+S.cdi.value/1000, sig=+S.sig.value/100, pl=+S.pl.value/100, ltv0=+S.ltv.value/100,
+          util=+S.util.value/100, fee=+S.fee.value/100, tb=+S.tb.value/1000, prem=+S.prem.value/1000, mu=+S.mu.value/1000;
+    const L=1/(1-ltv0), Th=1.0, z=normInv(1-pl);
+    const ER=r=>L*cdi-(L-1)*r+L*mu, volR=L*sig, sharpe=r=>ER(r)/volR;
+    const rFloor=(tb+prem)/(util*(1-fee));
+    const rCeil=cdi;
+    const rComfort=(L*(cdi+mu)-z*L*sig/Math.sqrt(Th))/(L-1);
+    const lYield=r=>r*util*(1-fee);
+    const lo=Math.max(0,rFloor), hi=Math.max(lo,rCeil);
+    const dLiq=Math.max(0,1-ltv0/LLTV), hf0=LLTV/ltv0;
+    return {cdi,sig,pl,ltv0,util,fee,tb,prem,mu,L,z,Th,ER,volR,sharpe,rFloor,rCeil,rComfort,lYield,lo,hi,dLiq,hf0};
+  }
+
+  function render(){
+    const m=compute();
+    $('vCdi').textContent=pct(m.cdi,1)+'%'; $('vSig').textContent=pct(m.sig,0)+'%'; $('vPL').textContent=pct(m.pl,0)+'%';
+    $('vLtv').textContent=pct(m.ltv0,0)+'%'; $('vUtil').textContent=pct(m.util,0)+'%'; $('vFee').textContent=pct(m.fee,0)+'%';
+    $('vTb').textContent=pct(m.tb,1)+'%'; $('vPrem').textContent=pct(m.prem,1)+'%'; $('vMu').textContent=(m.mu>=0?'+':'')+pct(m.mu,1)+'%';
+
+    const lyLo=m.lYield(m.lo), lyHi=m.lYield(m.hi);
+    const bandTxt=pct(lyLo,1)+' to '+pct(lyHi,1);
+    const borrowTxt=pct(m.lo,1)+' to '+pct(m.hi,1);
+
+    // range panel
+    $('rngLo').textContent=pct(lyLo,1)+'%'; $('rngHi').textContent=pct(lyHi,1)+'%';
+    $('rngLo2').textContent=pct(lyLo,1)+'%'; $('rngHi2').textContent=pct(lyHi,1)+'%';
+    const gsc=x=>clamp01(x/0.12)*100;
+    $('rngBand').style.left=gsc(lyLo)+'%'; $('rngBand').style.width=Math.max(2,gsc(lyHi)-gsc(lyLo))+'%';
+    $('rngSupport').textContent='+'+pct(lyLo-m.tb,1)+' to +'+pct(lyHi-m.tb,1)+' pp over US Treasuries · borrow '+pct(m.lo,1)+'% to '+pct(m.hi,1)+'% · '+pct(m.util,0)+'% utilisation, '+pct(m.fee,0)+'% fee';
+
+    // stat strip
+    $('sCdiV').innerHTML='~'+pct(m.cdi,1)+'<small>%</small>';
+    $('sLevV').innerHTML=m.L.toFixed(2)+'× <small id="sHfV">HF '+m.hf0.toFixed(2)+'</small>';
+    $('sCarryV').innerHTML='+'+pct(m.cdi-0.05,1)+'<small>pp</small>';
+
+    // cards
+    $('rLenderBand').innerHTML=bandTxt+'<small>%</small>'; $('rBorrowBand').innerHTML=borrowTxt+'<small>%</small>';
+    $('rLev').innerHTML=m.L.toFixed(2)+'<small>×</small>'; $('rHf').textContent=m.hf0.toFixed(2);
+    $('rCarry1').innerHTML='+'+pct(m.cdi-0.05,1)+'<small>pp</small>';
+
+    // readout
+    const shFloor=m.sharpe(m.rFloor), plFloor=normCDF(-shFloor*Math.sqrt(m.Th));
+    let txt;
+    if(m.rComfort>=m.rFloor){
+      const ly=m.lYield(Math.min(m.rComfort,m.rCeil));
+      txt='At these inputs the loop stays inside your '+pct(m.pl,0)+'% borrower loss tolerance up to a '+pct(Math.min(m.rComfort,m.rCeil),1)+'% borrow rate, which pays suppliers about '+pct(ly,1)+'%. The full carry-positive band runs to '+pct(m.rCeil,1)+'% borrow ('+pct(lyHi,1)+'% to lenders). Target the lower half to keep borrowers comfortable and utilisation high.';
+    } else {
+      txt='At '+pct(m.sig,0)+'% BRL vol and '+m.L.toFixed(2)+'x leverage, holding the borrower inside a '+pct(m.pl,0)+'% annual loss probability would need a borrow rate below the '+pct(m.rFloor,1)+'% lender floor. The realistic operating point sits near the floor: borrow about '+pct(m.rFloor,1)+'%, lenders earn about '+pct(lyLo,1)+'%, and the borrower carries a '+pct(plFloor,0)+'% chance of a down USD year, taken on purpose for a +'+pct(m.ER(m.rFloor),0)+'% expected carry (Sharpe '+shFloor.toFixed(2)+'). Drop leverage or hedge FX to widen the comfort zone.';
+    }
+    $('readoutText').textContent=txt;
+
+    buildSurvival(m); buildGrid(m); drawChart(m);
+  }
+
+  function buildSurvival(m){
+    const vols=[0.12,0.15,0.20,0.30], hors=[['1 week',1/52],['1 month',1/12],['1 year',1]];
+    document.querySelector('#survival thead tr').innerHTML='<th>Implied vol / horizon</th>'+hors.map(h=>'<th>'+h[0]+'</th>').join('');
+    const tb=document.querySelector('#survival tbody'); tb.innerHTML='';
+    vols.forEach(sg=>{
+      let cells='<td>'+pct(sg,0)+'%'+(Math.abs(sg-m.sig)<0.005?' (set)':'')+'</td>';
+      hors.forEach(([_,T])=>{
+        const p=normCDF((Math.log(1-m.dLiq)-m.mu*T)/(sg*Math.sqrt(T)));
+        const disp=p<1e-6?'<0.0001%':pct(p,p<0.001?4:3)+'%';
+        const col=p<0.001?'var(--green)':(p<0.02?'var(--amber)':'var(--red)');
+        cells+='<td class="gridcell" style="color:'+col+'">'+disp+'</td>';
+      });
+      const tr=document.createElement('tr'); tr.innerHTML=cells; tb.appendChild(tr);
+    });
+    $('survNote').textContent='Liquidation buffer at this leverage: BRL would need to fall '+pct(m.dLiq,1)+'% (health factor 1.0). At normal vol the weekly and monthly probabilities round to zero; the tail only opens at stress vol and higher leverage.';
+  }
+
+  function buildGrid(m){
+    const vols=[0.12,0.15,0.20,0.30], rates=[0.06,0.08,0.10,0.12,0.14];
+    document.querySelector('#grid thead tr').innerHTML='<th>Implied vol / borrow rate</th>'+rates.map(r=>'<th>'+pct(r,0)+'%</th>').join('');
+    const tb=document.querySelector('#grid tbody'); tb.innerHTML='';
+    vols.forEach(sg=>{
+      const rComfort=(m.L*(m.cdi+m.mu)-m.z*m.L*sg/Math.sqrt(m.Th))/(m.L-1);
+      let cells='<td>'+pct(sg,0)+'%'+(Math.abs(sg-m.sig)<0.005?' (set)':'')+'</td>';
+      rates.forEach(r=>{
+        const ly=r*m.util*(1-m.fee), past=r>rComfort;
+        cells+='<td class="gridcell" style="color:'+(past?'var(--muted)':'var(--green)')+';opacity:'+(past?'.55':'1')+'">'+pct(ly,1)+'%</td>';
+      });
+      const tr=document.createElement('tr'); tr.innerHTML=cells; tb.appendChild(tr);
+    });
+  }
+
+  function drawChart(m){
+    const cv=$('chart'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height; ctx.clearRect(0,0,W,H);
+    const padL=58,padR=58,padT=22,padB=50,x0=padL,x1=W-padR,y0=H-padB,y1=padT;
+    const maxR=Math.max(0.16,m.cdi+0.01), maxLY=Math.max(0.10,m.lYield(maxR)+0.01), maxSh=Math.max(1.2,m.sharpe(0)+0.1);
+    const X=r=>x0+(r/maxR)*(x1-x0), YL=v=>y0-(v/maxLY)*(y0-y1), YS=v=>y0-(v/maxSh)*(y0-y1);
+    const bx0=X(Math.max(0,m.rFloor)), bx1=X(Math.min(maxR,m.rCeil));
+    if(bx1>bx0){ctx.fillStyle='rgba(22,163,90,.07)';ctx.fillRect(bx0,y1,bx1-bx0,y0-y1);}
+    ctx.strokeStyle='#e7e9ec';ctx.font='11px "SF Mono",monospace';ctx.lineWidth=1;
+    for(let i=0;i<=5;i++){const v=i/5,yy=YL(v*maxLY);ctx.beginPath();ctx.moveTo(x0,yy);ctx.lineTo(x1,yy);ctx.stroke();
+      ctx.textAlign='right';ctx.fillStyle='#16a35a';ctx.fillText(pct(v*maxLY,0)+'%',x0-8,yy+4);
+      ctx.textAlign='left';ctx.fillStyle='#c47f12';ctx.fillText((v*maxSh).toFixed(1),x1+8,yy+4);}
+    for(let i=0;i<=8;i++){const r=i/8*maxR,xx=X(r);ctx.fillStyle='#8a93a0';ctx.textAlign='center';ctx.fillText(pct(r,0)+'%',xx,y0+18);}
+    ctx.fillStyle='#3c434e';ctx.textAlign='center';ctx.fillText('USDC borrow rate',(x0+x1)/2,y0+38);
+    [['floor',m.rFloor],['CDI',m.rCeil]].forEach(([k,rr])=>{if(rr>maxR)return;
+      ctx.strokeStyle='#b9c0c9';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(X(rr),y1);ctx.lineTo(X(rr),y0);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#8a93a0';ctx.textAlign='center';ctx.font='10px "SF Mono",monospace';ctx.fillText(k,X(rr),y1+10);});
+    function plot(fn,Yf,color,w){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.beginPath();let st=false;
+      for(let p=0;p<=300;p++){const r=p/300*maxR;const yy=Yf(fn(r));const xx=X(r);if(!st){ctx.moveTo(xx,yy);st=true;}else ctx.lineTo(xx,yy);}ctx.stroke();}
+    plot(r=>m.lYield(r),YL,'#16a35a',3);
+    plot(r=>Math.max(0,m.sharpe(r)),YS,'#c47f12',2.5);
+  }
+
+  Object.values(S).forEach(el=>el.addEventListener('input',render));
+  render();
+})();
+</script>
+</body>
+</html>
