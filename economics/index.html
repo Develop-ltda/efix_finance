@@ -171,17 +171,17 @@
     <!-- THE RANGE -->
     <div class="range">
       <div class="lab">USDC Supplier Yield · per annum</div>
-      <div class="big"><span class="num" id="rngLo">5.5%</span><span class="to">to</span><span class="num" id="rngHi">9.8%</span></div>
-      <div class="gauge"><div class="band" id="rngBand" style="left:46%;width:36%"></div></div>
+      <div class="big"><span class="num" id="rngLo">4.5%</span><span class="to">to</span><span class="num" id="rngHi">9.8%</span></div>
+      <div class="gauge"><div class="band" id="rngBand" style="left:37.5%;width:44.2%"></div></div>
       <div class="gauge-scale"><span>0%</span><span>3%</span><span>6%</span><span>9%</span><span>12%</span></div>
-      <div class="gauge-ends"><span>floor <b id="rngLo2">5.5%</b></span><span>ceiling <b id="rngHi2">9.8%</b></span></div>
-      <div class="support" id="rngSupport">+1.5 to +5.8 pp over US Treasuries · borrow 8.1% to 14.4% · 85% utilisation, 20% fee</div>
+      <div class="gauge-ends"><span>floor <b id="rngLo2">4.5%</b></span><span>ceiling <b id="rngHi2">9.8%</b></span></div>
+      <div class="support" id="rngSupport">+1.0 to +6.3 pp over US Treasuries · borrow 6.6% to 14.4% · 85% utilisation, 20% fee</div>
     </div>
 
     <div class="stats">
       <div class="stat"><div class="k">CDI base rate</div><div class="v" id="sCdiV">~14.4<small>%</small></div></div>
       <div class="stat"><div class="k">Leverage · HF</div><div class="v" id="sLevV">2.08× <small id="sHfV">HF 1.48</small></div></div>
-      <div class="stat"><div class="k">Net carry / loop</div><div class="v" id="sCarryV">+9.4<small>pp</small></div></div>
+      <div class="stat"><div class="k">Net carry / loop</div><div class="v" id="sCarryV">+7.8<small>pp</small></div></div>
       <div class="stat"><div class="k">Liquidation</div><div class="v">D+0</div></div>
     </div>
   </div>
@@ -201,8 +201,8 @@
     <p>Suppliers will not allocate below Treasuries plus a premium. Take that required yield and divide by the pass-through to find
     the borrow rate that produces it.</p>
     <div class="formula">
-      floor yield = UST + premium = <b id="dTb">4.0%</b> + <b id="dPrem">1.5%</b> = <b id="dFloorY">5.5%</b><br>
-      borrow floor = floor yield / pass-through = <b id="dFloorY2">5.5%</b> / <b id="dPt3">0.68</b> = <b id="dRFloor">8.1%</b>
+      floor yield = UST + premium = <b id="dTb">3.5%</b> + <b id="dPrem">1.0%</b> = <b id="dFloorY">4.5%</b><br>
+      borrow floor = floor yield / pass-through = <b id="dFloorY2">4.5%</b> / <b id="dPt3">0.68</b> = <b id="dRFloor">6.6%</b>
     </div>
 
     <h3>The ceiling, highest borrow rate</h3>
@@ -213,13 +213,13 @@
     <h3>Back to the lender yield</h3>
     <p>Run the borrow band back through the pass-through to get what suppliers earn, then subtract the Treasury rate.</p>
     <div class="formula">
-      borrow <b id="dRFloor2">8.1%</b> × <b id="dPt4">0.68</b> = <b id="dLyLo">5.5%</b> lender &nbsp;→&nbsp; <b id="dPpLo">+1.5 pp</b> over UST<br>
-      borrow <b id="dRCeil2">14.4%</b> × <b id="dPt5">0.68</b> = <b id="dLyHi">9.8%</b> lender &nbsp;→&nbsp; <b id="dPpHi">+5.8 pp</b> over UST
+      borrow <b id="dRFloor2">6.6%</b> × <b id="dPt4">0.68</b> = <b id="dLyLo">4.5%</b> lender &nbsp;→&nbsp; <b id="dPpLo">+1.0 pp</b> over UST<br>
+      borrow <b id="dRCeil2">14.4%</b> × <b id="dPt5">0.68</b> = <b id="dLyHi">9.8%</b> lender &nbsp;→&nbsp; <b id="dPpHi">+6.3 pp</b> over UST
     </div>
 
     <div class="callout"><div class="ct">Consistency check</div>
-      <p>The low end, <span id="dPpLo2">+1.5 pp</span>, is just your premium coming straight back out, because the floor was
-      defined as the rate that delivers exactly Treasury plus premium. The high end, <span id="dPpHi2">+5.8 pp</span>, is what falls
+      <p>The low end, <span id="dPpLo2">+1.0 pp</span>, is just your premium coming straight back out, because the floor was
+      defined as the rate that delivers exactly Treasury plus premium. The high end, <span id="dPpHi2">+6.3 pp</span>, is what falls
       out when the borrow rate is pushed all the way to CDI. Everything between is the curator's dial: pick a borrow rate, multiply
       by the pass-through, and that is what suppliers see.</p></div>
   </section>
@@ -242,33 +242,51 @@
         <div class="ctrl"><label>Borrower loss tolerance, 1y <span class="val" id="vPL">20%</span></label>
           <input type="range" id="sPL" min="5" max="45" value="20" step="1"><div class="hint">Max acceptable probability of a negative USD year for the borrower. Sets the comfort line.</div></div>
         <div class="ctrl"><label>Entry LTV (leverage) <span class="val" id="vLtv">52%</span></label>
-          <input type="range" id="sLtv" min="20" max="72" value="52" step="1"><div class="hint">Recommended 2-loop sits near 52%, health factor 1.49. Leverage is derived.</div></div>
+          <input type="range" id="sLtv" min="20" max="72" value="52" step="1"><div class="hint">Recommended 2-loop sits near 52%, health factor 1.48. Leverage is derived.</div></div>
         <div class="ctrl"><label>Vault utilisation <span class="val" id="vUtil">85%</span></label>
           <input type="range" id="sUtil" min="50" max="98" value="85" step="1"><div class="hint">Share of supplied USDC that is borrowed. Lender yield scales with it.</div></div>
         <div class="ctrl"><label>Performance fee <span class="val" id="vFee">20%</span></label>
           <input type="range" id="sFee" min="0" max="50" value="20" step="1"><div class="hint">Charged on the vault yield, to lenders. Split 50/50 to 70/30 with the curator.</div></div>
-        <div class="ctrl"><label>Treasury benchmark <span class="val" id="vTb">4.0%</span></label>
-          <input type="range" id="sTb" min="20" max="60" value="40" step="1"><div class="hint">The risk-free alternative a USDC supplier compares against.</div></div>
-        <div class="ctrl"><label>Lender premium over UST <span class="val" id="vPrem">1.5%</span></label>
-          <input type="range" id="sPrem" min="0" max="50" value="15" step="1"><div class="hint">The extra yield a supplier needs to take vault risk. Sets the borrow-rate floor.</div></div>
+        <div class="ctrl"><label>Treasury benchmark <span class="val" id="vTb">3.5%</span></label>
+          <input type="range" id="sTb" min="20" max="60" value="35" step="1"><div class="hint">The risk-free alternative a USDC supplier compares against.</div></div>
+        <div class="ctrl"><label>Lender premium over UST <span class="val" id="vPrem">1.0%</span></label>
+          <input type="range" id="sPrem" min="0" max="50" value="10" step="1"><div class="hint">The extra yield a supplier needs to take vault risk. Sets the borrow-rate floor.</div></div>
         <div class="ctrl"><label>FX drift (annual) <span class="val" id="vMu">0.0%</span></label>
           <input type="range" id="sMu" min="-100" max="40" value="0" step="1"><div class="hint">Expected BRL/USD trend. 0 is neutral. Carry theory implies a small negative.</div></div>
       </div>
     </div>
 
     <div class="cards">
-      <div class="card hl"><div class="k">Lender yield band</div><div class="v" id="rLenderBand">5.5 to 9.8<small>%</small></div><div class="note">what USDC suppliers earn</div></div>
-      <div class="card"><div class="k">Sustainable borrow band</div><div class="v" id="rBorrowBand">8.1 to 14.4<small>%</small></div><div class="note">floor to CDI ceiling</div></div>
+      <div class="card hl"><div class="k">Lender yield band</div><div class="v" id="rLenderBand">4.5 to 9.8<small>%</small></div><div class="note">what USDC suppliers earn</div></div>
+      <div class="card"><div class="k">Sustainable borrow band</div><div class="v" id="rBorrowBand">6.6 to 14.4<small>%</small></div><div class="note">floor to CDI ceiling</div></div>
       <div class="card"><div class="k">Leverage (derived)</div><div class="v" id="rLev">2.08<small>×</small></div><div class="note">HF <span id="rHf">1.49</span></div></div>
-      <div class="card"><div class="k">Net carry per loop</div><div class="v" id="rCarry1">+9.4<small>pp</small></div><div class="note">CDI less borrow</div></div>
+      <div class="card"><div class="k">Net carry per loop</div><div class="v" id="rCarry1">+7.8<small>pp</small></div><div class="note">CDI less borrow</div></div>
     </div>
 
     <div class="callout" id="readout"><div class="ct">Reading the band</div><p id="readoutText"></p></div>
   </section>
 
+  <!-- 03 SCENARIOS -->
+  <section>
+    <div class="seclabel">03 · Scenarios</div>
+    <h2>Yields across leverage and borrow rate</h2>
+    <p class="lead">The same model, read as scenarios. The first table is the efixDI position itself: how the leveraged token APY
+    and the safety buffer move with leverage. The second is the curator's dial: how the borrow rate splits value between the USDC
+    supplier and the looped borrower. Both update with the inputs above.</p>
+
+    <h3>efixDI APY by leverage</h3>
+    <table id="scnLev"><thead><tr><th>Position</th></tr></thead><tbody></tbody></table>
+    <p class="footnote" id="scnLevNote"></p>
+
+    <h3>Yield by borrow rate, at the 2-loop position</h3>
+    <table id="scnRate"><thead><tr><th>USDC borrow</th></tr></thead><tbody></tbody></table>
+    <p class="footnote">USDC supplier APY = borrow × utilisation × (1 − fee). efixDI APY (leveraged) = L·CDI − (L−1)·borrow,
+    before the supplier-side performance fee. As the borrow rate rises the supplier earns more and the looped carry thins toward CDI.</p>
+  </section>
+
   <!-- 02 -->
   <section>
-    <div class="seclabel">03 · The tradeoff</div>
+    <div class="seclabel">04 · The tradeoff</div>
     <h2>Lender yield rises, borrower Sharpe falls</h2>
     <p class="lead">The borrow rate is the dial. Push it up and the lender earns more, but the borrower's risk-adjusted carry thins,
     and past a point borrowers unwind and utilisation drops, taking the lender yield with it. The viable window is shaded.</p>
@@ -282,7 +300,7 @@
 
   <!-- 03 -->
   <section>
-    <div class="seclabel">04 · FX-crash survival</div>
+    <div class="seclabel">05 · FX-crash survival</div>
     <h2>Liquidation probability over a week and a month</h2>
     <p class="lead">The borrow rate does not move this. Liquidation is set by the FX buffer at your leverage and by how violent the
     pair gets over the window. Probability that BRL depreciates past the liquidation buffer, by implied vol and horizon, at the
@@ -295,7 +313,7 @@
 
   <!-- 04 -->
   <section>
-    <div class="seclabel">05 · Grid</div>
+    <div class="seclabel">06 · Grid</div>
     <h2>Lender yield across borrow rate and vol</h2>
     <p class="lead">The readable surface. Each cell is the USDC-supplier yield at that borrow rate. Cells past the borrower comfort
     line at a given vol are dimmed, since those rates ask the borrower to carry more FX risk than set.</p>
@@ -305,7 +323,7 @@
 
   <!-- 05 -->
   <section>
-    <div class="seclabel">06 · Methodology</div>
+    <div class="seclabel">07 · Methodology</div>
     <h2>The model, fully derived</h2>
 
     <h3>FX as the only risk, and how leverage amplifies it</h3>
@@ -433,12 +451,12 @@
     // stat strip
     $('sCdiV').innerHTML='~'+pct(m.cdi,1)+'<small>%</small>';
     $('sLevV').innerHTML=m.L.toFixed(2)+'× <small id="sHfV">HF '+m.hf0.toFixed(2)+'</small>';
-    $('sCarryV').innerHTML='+'+pct(m.cdi-0.05,1)+'<small>pp</small>';
+    $('sCarryV').innerHTML='+'+pct(m.cdi-m.rFloor,1)+'<small>pp</small>';
 
     // cards
     $('rLenderBand').innerHTML=bandTxt+'<small>%</small>'; $('rBorrowBand').innerHTML=borrowTxt+'<small>%</small>';
     $('rLev').innerHTML=m.L.toFixed(2)+'<small>×</small>'; $('rHf').textContent=m.hf0.toFixed(2);
-    $('rCarry1').innerHTML='+'+pct(m.cdi-0.05,1)+'<small>pp</small>';
+    $('rCarry1').innerHTML='+'+pct(m.cdi-m.rFloor,1)+'<small>pp</small>';
 
     // readout
     const shFloor=m.sharpe(m.rFloor), plFloor=normCDF(-shFloor*Math.sqrt(m.Th));
@@ -451,9 +469,27 @@
     }
     $('readoutText').textContent=txt;
 
-    buildSurvival(m); buildGrid(m); drawChart(m);
+    buildSurvival(m); buildGrid(m); buildScenarios(m); drawChart(m);
   }
 
+  function buildScenarios(m){
+    const pass=m.util*(1-m.fee), rB=m.rFloor;
+    const rows=[['Unlevered',0],['1 loop',0.35],['2 loops (base)',0.52],['3 loops',0.65]];
+    document.querySelector('#scnLev thead tr').innerHTML='<th>Position</th><th>Entry LTV</th><th>Leverage</th><th>Health factor</th><th>FX drop to liq</th><th>efixDI APY (leveraged)</th>';
+    const t1=document.querySelector('#scnLev tbody'); t1.innerHTML='';
+    rows.forEach(function(r){var nm=r[0],ltv=r[1];var L=ltv>0?1/(1-ltv):1,hf=ltv>0?LLTV/ltv:null,buf=ltv>0?1-ltv/LLTV:null,apy=L*m.cdi-(L-1)*rB;
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+nm+'</td><td class="gridcell">'+pct(ltv,0)+'%</td><td class="gridcell">'+L.toFixed(2)+'\u00d7</td><td class="gridcell">'+(hf?hf.toFixed(2):'n/a')+'</td><td class="gridcell">'+(buf!=null?pct(buf,1)+'%':'n/a')+'</td><td class="gridcell" style="color:var(--green);font-weight:600">'+pct(apy,1)+'%</td>';
+      t1.appendChild(tr);});
+    $('scnLevNote').textContent='At CDI '+pct(m.cdi,1)+'% and the floor borrow rate of '+pct(rB,1)+'%. The recommended 2-loop position carries a '+pct(1-0.52/LLTV,1)+'% FX buffer to liquidation, health factor '+(LLTV/0.52).toFixed(2)+'.';
+    const L2=1/(1-0.52),lo=m.rFloor,hi=m.cdi,pts=[lo,lo+(hi-lo)*0.34,lo+(hi-lo)*0.67,hi];
+    document.querySelector('#scnRate thead tr').innerHTML='<th>USDC borrow</th><th>USDC supplier APY</th><th>efixDI APY (2-loop)</th><th>Carry per loop</th>';
+    const t2=document.querySelector('#scnRate tbody'); t2.innerHTML='';
+    pts.forEach(function(r,i){var lender=r*pass,apy=L2*m.cdi-(L2-1)*r,carry=m.cdi-r;var lab=(i===0?' (floor)':(i===pts.length-1?' (CDI ceiling)':''));
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+pct(r,1)+'%'+lab+'</td><td class="gridcell" style="color:var(--green);font-weight:600">'+pct(lender,1)+'%</td><td class="gridcell">'+pct(apy,1)+'%</td><td class="gridcell" style="color:'+(carry>0.0005?'var(--ink-2)':'var(--muted)')+'">'+(carry>0?'+':'')+pct(carry,1)+' pp</td>';
+      t2.appendChild(tr);});
+  }
   function buildSurvival(m){
     const vols=[0.12,0.15,0.20,0.30], hors=[['1 week',1/52],['1 month',1/12],['1 year',1]];
     document.querySelector('#survival thead tr').innerHTML='<th>Implied vol / horizon</th>'+hors.map(h=>'<th>'+h[0]+'</th>').join('');
