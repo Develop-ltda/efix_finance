@@ -6,15 +6,15 @@
 <title>efixDI+ Stress Matrix &amp; Bad-Debt Model</title>
 <link rel="canonical" href="https://efix.finance/economics/stress">
 <link rel="icon" type="image/jpeg" href="/logo_efix_400x400.jpg">
-<meta name="description" content="A live, parametric model of USDC-lender tail loss on the efixDI/USDC vault on Morpho. T+0 NAV redemption bounds bad-debt slippage by construction.">
+<meta name="description" content="A live, parametric model of USDC-lender tail loss on the efixDI/USDC vault on Morpho. An on-chain PSM redeems at par to clear liquidations, with NAV redemption as the backstop, so bad-debt slippage stays bounded.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://efix.finance/economics/stress">
 <meta property="og:title" content="efixDI+ Stress Matrix &amp; Bad-Debt Model">
-<meta property="og:description" content="Depositor tail loss on the efixDI/USDC market: liquidation is a pure FX problem and bad-debt slippage stays bounded by D+0 NAV redemption.">
+<meta property="og:description" content="Depositor tail loss on the efixDI/USDC market: liquidation is a pure FX problem, cleared through an on-chain PSM at par and backstopped by NAV redemption, so bad-debt slippage stays bounded.">
 <meta property="og:image" content="https://efix.finance/logo_efix_400x400.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="efixDI+ Stress Matrix &amp; Bad-Debt Model">
-<meta name="twitter:description" content="Bounded bad debt on the efixDI/USDC vault, derived from D+0 NAV redemption and a BRL/USD oracle.">
+<meta name="twitter:description" content="Bounded bad debt on the efixDI/USDC vault, derived from an on-chain PSM at par, a NAV-redemption backstop, and a BRL/USD oracle.">
 <meta name="twitter:image" content="https://efix.finance/logo_efix_400x400.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -210,7 +210,7 @@
       <div class="card"><div class="k">Bad debt to lenders</div><div class="v" id="rBdPct" style="color:var(--green)">0.0<small>%</small></div><div class="note">of outstanding borrow</div></div>
       <div class="card"><div class="k">Dollar bad debt</div><div class="v" id="rBdUsd" style="color:var(--green)">$0</div><div class="note">at this notional</div></div>
       <div class="card"><div class="k">Liquidator P&amp;L on exit</div><div class="v" id="rLiqPnl">+5.3<small>%</small></div><div class="note">bonus less window FX, less cost</div></div>
-      <div class="card"><div class="k">Net carry, borrower</div><div class="v" id="rCarry">+9.4<small>pp</small></div><div class="note">CDI less USDC borrow</div></div>
+      <div class="card"><div class="k">Net carry, borrower</div><div class="v" id="rCarry">+8.2<small>pp</small></div><div class="note">CDI less USDC borrow</div></div>
     </div>
   </section>
 
@@ -223,7 +223,7 @@
     open-ended AMM walk.</p>
     <div class="chartbox"><canvas id="chart" width="1000" height="430"></canvas>
       <div class="legend">
-        <span><span class="sw" style="background:var(--green)"></span> efixDI+ (D+0 NAV redemption, slippage bounded by the FX window plus the 7.4% bonus)</span>
+        <span><span class="sw" style="background:var(--green)"></span> efixDI+ (PSM par redemption plus NAV backstop, slippage bounded by the 7.4% bonus)</span>
         <span><span class="sw" style="background:var(--red)"></span> Volatile collateral (AMM-only exit, slippage about 1.5× the shock), illustrative</span>
       </div></div>
     <div class="callout"><div class="ct">What the chart shows</div>
@@ -258,7 +258,7 @@
     <a href="/economics">Economics</a> page. Cells show leveraged net carry on equity at the LTV set above.</p>
     <table id="carryGrid"><thead><tr><th>CDI / USDC borrow</th></tr></thead><tbody></tbody></table>
     <p class="footnote">Leveraged net carry on equity = L·CDI less (L−1)·borrow, before the vault performance fee, which is charged
-    to lenders rather than borrowers.</p>
+    to lenders rather than borrowers. Borrow spans the capped band: a 6.6% floor to the 70%-of-CDI cap, about 10.3% at CDI 14.75%.</p>
   </section>
 
   <!-- 05 -->
@@ -283,7 +283,7 @@
     <h3>Liquidation incentive (Morpho Blue)</h3>
     <div class="formula">LIF = min( 1.15 , 1 / ( 1 − 0.3 · (1 − LLTV) ) ) &nbsp;→&nbsp; at LLTV 77%, <b>LIF = 1.0741</b> (7.41% bonus)</div>
     <p>At the liquidation trigger the position holds 30% over-collateralisation against debt (1 / 0.77). A liquidator repays debt D,
-    seizes D × LIF of collateral at the oracle price, then exits through NAV redemption over the settlement window.</p>
+    seizes D × LIF of collateral at the oracle price, then clears it through the PSM at par on-chain, or a DEX, in a single transaction. NAV redemption over the settlement window is the backstop for size beyond on-chain capacity.</p>
     <h3>Liquidator participation and lender bad debt</h3>
     <div class="formula">
       Liquidator clears if: &nbsp; (FX window move w) + (op cost c) ≤ <b>LIF − 1 = 6.9%</b><br><br>
@@ -294,10 +294,12 @@
     G20 currency with circuit breakers, a 3-hour move beyond 6.9% is a 10-sigma event under normal volatility, and a sub-3-hour
     move past the bad-debt threshold implies a sovereign-grade dislocation with capital controls.</p>
     <h3>The binding operational parameter, for curator calibration</h3>
-    <p>The real constraint is not AMM depth. On-chain efixDI/USDC depth is thin today and serves only the residual fraction. The
-    live liquidation path is NAV redemption through EFIX's regulated infrastructure, whose throughput is finite. The safe supply
-    cap therefore comes out of the redemption-pipe throughput over the liquidation horizon, plus instant AMM-residual depth. This
-    is the parameter we want the curator's risk team to own and size, next to the IRM curve and the deleverage trigger.</p>
+    <p>The primary liquidation path is the PSM: efixDI redeems to USDC at par on-chain, instant, so a liquidator clears the seized
+    collateral through it in the same transaction, directly or via a DEX or RFQ router. Uniswap pools add complementary secondary
+    depth. NAV redemption through EFIX's regulated infrastructure is the backstop for size beyond on-chain capacity, settling the
+    same business day. The safe supply cap therefore comes out of PSM USDC capacity plus DEX depth over the liquidation horizon,
+    with NAV redemption bounding the tail. This is the parameter we want the curator's risk team to own and size, next to the IRM
+    curve and the deleverage trigger.</p>
     <div class="callout warn"><div class="ct">Two scope honesties</div>
       <p><strong>1. Audit scope.</strong> OpenZeppelin audited the efixDI token (15/15 resolved, including one high-severity finding
       fixed with a custody redesign). The collateral vault as a whole and the off-chain backing sat outside that scope. A dedicated
@@ -328,7 +330,7 @@
     const dDlv=Math.max(0,1-ltv0/(lltv/1.15)), dLiq=Math.max(0,1-ltv0/lltv), dBd=Math.max(0,1-ltv0);
     const participates=(w+c)<=(lif-1)+1e-9, liqPnl=(lif-1)-w-c;
     const bdPer=Math.max(0,1-(1-d)/ltv0), bdUsd=bdPer*notional;
-    const cdi=0.144, borrow=0.05, carry=cdi-borrow;
+    const cdi=0.1475, borrow=0.066, carry=cdi-borrow;
     return {lltv,ltv0,d,w,c,notional,L,lif,hf0,hfd,dDlv,dLiq,dBd,participates,liqPnl,bdPer,bdUsd,carry};
   }
   function statusFor(hf,lltv){
@@ -374,7 +376,7 @@
     });
   }
   function buildCarry(){
-    const ltv0=+S.ltv.value/100, L=1/(1-ltv0), cdis=[0.10,0.12,0.144,0.16], borrows=[0.04,0.05,0.06,0.07];
+    const ltv0=+S.ltv.value/100, L=1/(1-ltv0), cdis=[0.12,0.14,0.1475,0.16], borrows=[0.066,0.08,0.09,0.103];
     document.querySelector('#carryGrid thead tr').innerHTML='<th>CDI / USDC borrow</th>'+borrows.map(b=>'<th>'+(b*100).toFixed(0)+'%</th>').join('');
     const tb=document.querySelector('#carryGrid tbody'); tb.innerHTML='';
     cdis.forEach(cdi=>{

@@ -171,17 +171,17 @@
     <!-- THE RANGE -->
     <div class="range">
       <div class="lab">USDC Supplier Yield · per annum</div>
-      <div class="big"><span class="num" id="rngLo">4.5%</span><span class="to">to</span><span class="num" id="rngHi">9.8%</span></div>
-      <div class="gauge"><div class="band" id="rngBand" style="left:37.5%;width:44.2%"></div></div>
+      <div class="big"><span class="num" id="rngLo">4.5%</span><span class="to">to</span><span class="num" id="rngHi">7.0%</span></div>
+      <div class="gauge"><div class="band" id="rngBand" style="left:37.5%;width:20.8%"></div></div>
       <div class="gauge-scale"><span>0%</span><span>3%</span><span>6%</span><span>9%</span><span>12%</span></div>
-      <div class="gauge-ends"><span>floor <b id="rngLo2">4.5%</b></span><span>ceiling <b id="rngHi2">9.8%</b></span></div>
-      <div class="support" id="rngSupport">+1.0 to +6.3 pp over US Treasuries · borrow 6.6% to 14.4% · 85% utilisation, 20% fee</div>
+      <div class="gauge-ends"><span>floor <b id="rngLo2">4.5%</b></span><span>ceiling <b id="rngHi2">7.0%</b></span></div>
+      <div class="support" id="rngSupport">+1.0 to +3.5 pp over US Treasuries · borrow 6.6% to 10.3% · 85% utilisation, 20% fee</div>
     </div>
 
     <div class="stats">
-      <div class="stat"><div class="k">CDI base rate</div><div class="v" id="sCdiV">~14.4<small>%</small></div></div>
+      <div class="stat"><div class="k">CDI base rate</div><div class="v" id="sCdiV">~14.75<small>%</small></div></div>
       <div class="stat"><div class="k">Leverage · HF</div><div class="v" id="sLevV">2.08× <small id="sHfV">HF 1.48</small></div></div>
-      <div class="stat"><div class="k">Net carry / loop</div><div class="v" id="sCarryV">+7.8<small>pp</small></div></div>
+      <div class="stat"><div class="k">Net carry / loop</div><div class="v" id="sCarryV">+8.2<small>pp</small></div></div>
       <div class="stat"><div class="k">Liquidation</div><div class="v">D+0</div></div>
     </div>
   </div>
@@ -205,21 +205,21 @@
       borrow floor = floor yield / pass-through = <b id="dFloorY2">4.5%</b> / <b id="dPt3">0.68</b> = <b id="dRFloor">6.6%</b>
     </div>
 
-    <h3>The ceiling, highest borrow rate</h3>
-    <p>The borrower's carry per loop is CDI minus the borrow rate. Push the rate to CDI and the carry hits zero, so there is no
-    reason to loop above it.</p>
-    <div class="formula">borrow ceiling = CDI = <b id="dRCeil">14.4%</b></div>
+    <h3>The ceiling, a funding cap</h3>
+    <p>Left uncapped, the borrow rate could rise to CDI, where the loop carry hits zero. To keep the cost of funding low and the
+    carry wide, the rate is capped at a share of CDI, 70% by default.</p>
+    <div class="formula">borrow ceiling = 70% &times; CDI = <b id="dRCeil">10.3%</b></div>
 
     <h3>Back to the lender yield</h3>
     <p>Run the borrow band back through the pass-through to get what suppliers earn, then subtract the Treasury rate.</p>
     <div class="formula">
       borrow <b id="dRFloor2">6.6%</b> × <b id="dPt4">0.68</b> = <b id="dLyLo">4.5%</b> lender &nbsp;→&nbsp; <b id="dPpLo">+1.0 pp</b> over UST<br>
-      borrow <b id="dRCeil2">14.4%</b> × <b id="dPt5">0.68</b> = <b id="dLyHi">9.8%</b> lender &nbsp;→&nbsp; <b id="dPpHi">+6.3 pp</b> over UST
+      borrow <b id="dRCeil2">10.3%</b> × <b id="dPt5">0.68</b> = <b id="dLyHi">7.0%</b> lender &nbsp;→&nbsp; <b id="dPpHi">+3.5 pp</b> over UST
     </div>
 
     <div class="callout"><div class="ct">Consistency check</div>
       <p>The low end, <span id="dPpLo2">+1.0 pp</span>, is just your premium coming straight back out, because the floor was
-      defined as the rate that delivers exactly Treasury plus premium. The high end, <span id="dPpHi2">+6.3 pp</span>, is what falls
+      defined as the rate that delivers exactly Treasury plus premium. The high end, <span id="dPpHi2">+3.5 pp</span>, is what falls
       out when the borrow rate is pushed all the way to CDI. Everything between is the curator's dial: pick a borrow rate, multiply
       by the pass-through, and that is what suppliers see.</p></div>
   </section>
@@ -235,8 +235,8 @@
 
     <div class="panel">
       <div class="controls">
-        <div class="ctrl"><label>CDI (collateral base rate) <span class="val" id="vCdi">14.4%</span></label>
-          <input type="range" id="sCdi" min="80" max="180" value="144" step="1"><div class="hint">Annual BRL money-market yield. About 14.9% as of Feb 2026.</div></div>
+        <div class="ctrl"><label>CDI (collateral base rate) <span class="val" id="vCdi">14.75%</span></label>
+          <input type="range" id="sCdi" min="80" max="180" value="147.5" step="0.5"><div class="hint">Annual BRL money-market yield. About 14.9% as of Feb 2026.</div></div>
         <div class="ctrl"><label>BRL/USD implied vol (annual) <span class="val" id="vSig">15%</span></label>
           <input type="range" id="sSig" min="8" max="40" value="15" step="1"><div class="hint">At-the-money implied volatility of the pair. Normal regime 12 to 16%, stress 20 to 30% and up.</div></div>
         <div class="ctrl"><label>Borrower loss tolerance, 1y <span class="val" id="vPL">20%</span></label>
@@ -251,16 +251,18 @@
           <input type="range" id="sTb" min="20" max="60" value="35" step="1"><div class="hint">The risk-free alternative a USDC supplier compares against.</div></div>
         <div class="ctrl"><label>Lender premium over UST <span class="val" id="vPrem">1.0%</span></label>
           <input type="range" id="sPrem" min="0" max="50" value="10" step="1"><div class="hint">The extra yield a supplier needs to take vault risk. Sets the borrow-rate floor.</div></div>
+        <div class="ctrl"><label>Borrow cap, % of CDI <span class="val" id="vCap">70%</span></label>
+          <input type="range" id="sCap" min="40" max="100" value="70" step="1"><div class="hint">Caps the borrow rate at a share of CDI to keep funding cheap and preserve carry. Sets the ceiling of the band.</div></div>
         <div class="ctrl"><label>FX drift (annual) <span class="val" id="vMu">0.0%</span></label>
           <input type="range" id="sMu" min="-100" max="40" value="0" step="1"><div class="hint">Expected BRL/USD trend. 0 is neutral. Carry theory implies a small negative.</div></div>
       </div>
     </div>
 
     <div class="cards">
-      <div class="card hl"><div class="k">Lender yield band</div><div class="v" id="rLenderBand">4.5 to 9.8<small>%</small></div><div class="note">what USDC suppliers earn</div></div>
-      <div class="card"><div class="k">Sustainable borrow band</div><div class="v" id="rBorrowBand">6.6 to 14.4<small>%</small></div><div class="note">floor to CDI ceiling</div></div>
+      <div class="card hl"><div class="k">Lender yield band</div><div class="v" id="rLenderBand">4.5 to 7.0<small>%</small></div><div class="note">what USDC suppliers earn</div></div>
+      <div class="card"><div class="k">Sustainable borrow band</div><div class="v" id="rBorrowBand">6.6 to 10.3<small>%</small></div><div class="note">floor to CDI ceiling</div></div>
       <div class="card"><div class="k">Leverage (derived)</div><div class="v" id="rLev">2.08<small>×</small></div><div class="note">HF <span id="rHf">1.49</span></div></div>
-      <div class="card"><div class="k">Net carry per loop</div><div class="v" id="rCarry1">+7.8<small>pp</small></div><div class="note">CDI less borrow</div></div>
+      <div class="card"><div class="k">Net carry per loop</div><div class="v" id="rCarry1">+8.2<small>pp</small></div><div class="note">CDI less borrow</div></div>
     </div>
 
     <div class="callout" id="readout"><div class="ct">Reading the band</div><p id="readoutText"></p></div>
@@ -347,9 +349,9 @@
     <div class="formula">
       Lender yield(r) = r · U · (1 − f) &nbsp;&nbsp;[ U = utilisation, f = performance fee ]<br>
       Floor yield = UST + premium &nbsp;→&nbsp; r<sub>floor</sub> = (UST + premium) / ( U · (1 − f) )<br>
-      Carry ceiling: &nbsp; r &lt; CDI &nbsp; (positive carry per loop)
+      Funding cap: &nbsp; r &le; 0.70 · CDI &nbsp; (keeps the cost of funding low, preserves carry)
     </div>
-    <p>The viable borrow band runs from r<sub>floor</sub> to the CDI ceiling, mapped through the yield equation for the lender
+    <p>The viable borrow band runs from r<sub>floor</sub> to the 70%-of-CDI cap, mapped through the yield equation for the lender
     band. Where the comfort rate sits below the floor, the operating point accepts a borrower loss probability above the set
     tolerance, the honest cost of a vol regime this size at this leverage. Lower leverage moves the comfort line to the right.</p>
 
@@ -393,7 +395,7 @@
   const $=id=>document.getElementById(id), clamp01=x=>Math.max(0,Math.min(1,x)), pct=(x,d=1)=>(x*100).toFixed(d);
   function setTxt(ids,v){ids.forEach(i=>{const e=$(i);if(e)e.textContent=v;});}
   const LLTV=0.77;
-  const S={cdi:$('sCdi'),sig:$('sSig'),pl:$('sPL'),ltv:$('sLtv'),util:$('sUtil'),fee:$('sFee'),tb:$('sTb'),prem:$('sPrem'),mu:$('sMu')};
+  const S={cdi:$('sCdi'),sig:$('sSig'),pl:$('sPL'),ltv:$('sLtv'),util:$('sUtil'),fee:$('sFee'),tb:$('sTb'),prem:$('sPrem'),mu:$('sMu'),cap:$('sCap')};
 
   function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
     const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
@@ -410,23 +412,23 @@
 
   function compute(){
     const cdi=+S.cdi.value/1000, sig=+S.sig.value/100, pl=+S.pl.value/100, ltv0=+S.ltv.value/100,
-          util=+S.util.value/100, fee=+S.fee.value/100, tb=+S.tb.value/1000, prem=+S.prem.value/1000, mu=+S.mu.value/1000;
+          util=+S.util.value/100, fee=+S.fee.value/100, tb=+S.tb.value/1000, prem=+S.prem.value/1000, mu=+S.mu.value/1000; const capPct=+S.cap.value/100;
     const L=1/(1-ltv0), Th=1.0, z=normInv(1-pl);
     const ER=r=>L*cdi-(L-1)*r+L*mu, volR=L*sig, sharpe=r=>ER(r)/volR;
     const rFloor=(tb+prem)/(util*(1-fee));
-    const rCeil=cdi;
+    const rCeil=capPct*cdi;
     const rComfort=(L*(cdi+mu)-z*L*sig/Math.sqrt(Th))/(L-1);
     const lYield=r=>r*util*(1-fee);
     const lo=Math.max(0,rFloor), hi=Math.max(lo,rCeil);
     const dLiq=Math.max(0,1-ltv0/LLTV), hf0=LLTV/ltv0;
-    return {cdi,sig,pl,ltv0,util,fee,tb,prem,mu,L,z,Th,ER,volR,sharpe,rFloor,rCeil,rComfort,lYield,lo,hi,dLiq,hf0};
+    return {cdi,sig,pl,ltv0,util,fee,tb,prem,mu,capPct,L,z,Th,ER,volR,sharpe,rFloor,rCeil,rComfort,lYield,lo,hi,dLiq,hf0};
   }
 
   function render(){
     const m=compute();
-    $('vCdi').textContent=pct(m.cdi,1)+'%'; $('vSig').textContent=pct(m.sig,0)+'%'; $('vPL').textContent=pct(m.pl,0)+'%';
+    $('vCdi').textContent=pct(m.cdi,2)+'%'; $('vSig').textContent=pct(m.sig,0)+'%'; $('vPL').textContent=pct(m.pl,0)+'%';
     $('vLtv').textContent=pct(m.ltv0,0)+'%'; $('vUtil').textContent=pct(m.util,0)+'%'; $('vFee').textContent=pct(m.fee,0)+'%';
-    $('vTb').textContent=pct(m.tb,1)+'%'; $('vPrem').textContent=pct(m.prem,1)+'%'; $('vMu').textContent=(m.mu>=0?'+':'')+pct(m.mu,1)+'%';
+    $('vTb').textContent=pct(m.tb,1)+'%'; $('vPrem').textContent=pct(m.prem,1)+'%'; $('vMu').textContent=(m.mu>=0?'+':'')+pct(m.mu,1)+'%'; $('vCap').textContent=pct(m.capPct,0)+'%';
 
     const lyLo=m.lYield(m.lo), lyHi=m.lYield(m.hi);
     const bandTxt=pct(lyLo,1)+' to '+pct(lyHi,1);
@@ -449,7 +451,7 @@
     $('rngSupport').textContent='+'+pct(lyLo-m.tb,1)+' to +'+pct(lyHi-m.tb,1)+' pp over US Treasuries · borrow '+pct(m.lo,1)+'% to '+pct(m.hi,1)+'% · '+pct(m.util,0)+'% utilisation, '+pct(m.fee,0)+'% fee';
 
     // stat strip
-    $('sCdiV').innerHTML='~'+pct(m.cdi,1)+'<small>%</small>';
+    $('sCdiV').innerHTML='~'+pct(m.cdi,2)+'<small>%</small>';
     $('sLevV').innerHTML=m.L.toFixed(2)+'× <small id="sHfV">HF '+m.hf0.toFixed(2)+'</small>';
     $('sCarryV').innerHTML='+'+pct(m.cdi-m.rFloor,1)+'<small>pp</small>';
 
@@ -481,11 +483,11 @@
       var tr=document.createElement('tr');
       tr.innerHTML='<td>'+nm+'</td><td class="gridcell">'+pct(ltv,0)+'%</td><td class="gridcell">'+L.toFixed(2)+'\u00d7</td><td class="gridcell">'+(hf?hf.toFixed(2):'n/a')+'</td><td class="gridcell">'+(buf!=null?pct(buf,1)+'%':'n/a')+'</td><td class="gridcell" style="color:var(--green);font-weight:600">'+pct(apy,1)+'%</td>';
       t1.appendChild(tr);});
-    $('scnLevNote').textContent='At CDI '+pct(m.cdi,1)+'% and the floor borrow rate of '+pct(rB,1)+'%. The recommended 2-loop position carries a '+pct(1-0.52/LLTV,1)+'% FX buffer to liquidation, health factor '+(LLTV/0.52).toFixed(2)+'.';
-    const L2=1/(1-0.52),lo=m.rFloor,hi=m.cdi,pts=[lo,lo+(hi-lo)*0.34,lo+(hi-lo)*0.67,hi];
+    $('scnLevNote').textContent='At CDI '+pct(m.cdi,2)+'% and the floor borrow rate of '+pct(rB,1)+'%. The recommended 2-loop position carries a '+pct(1-0.52/LLTV,1)+'% FX buffer to liquidation, health factor '+(LLTV/0.52).toFixed(2)+'.';
+    const L2=1/(1-0.52),lo=m.rFloor,hi=m.rCeil,pts=[lo,lo+(hi-lo)*0.34,lo+(hi-lo)*0.67,hi];
     document.querySelector('#scnRate thead tr').innerHTML='<th>USDC borrow</th><th>USDC supplier APY</th><th>efixDI APY (2-loop)</th><th>Carry per loop</th>';
     const t2=document.querySelector('#scnRate tbody'); t2.innerHTML='';
-    pts.forEach(function(r,i){var lender=r*pass,apy=L2*m.cdi-(L2-1)*r,carry=m.cdi-r;var lab=(i===0?' (floor)':(i===pts.length-1?' (CDI ceiling)':''));
+    pts.forEach(function(r,i){var lender=r*pass,apy=L2*m.cdi-(L2-1)*r,carry=m.cdi-r;var lab=(i===0?' (floor)':(i===pts.length-1?' (cap)':''));
       var tr=document.createElement('tr');
       tr.innerHTML='<td>'+pct(r,1)+'%'+lab+'</td><td class="gridcell" style="color:var(--green);font-weight:600">'+pct(lender,1)+'%</td><td class="gridcell">'+pct(apy,1)+'%</td><td class="gridcell" style="color:'+(carry>0.0005?'var(--ink-2)':'var(--muted)')+'">'+(carry>0?'+':'')+pct(carry,1)+' pp</td>';
       t2.appendChild(tr);});
@@ -535,7 +537,7 @@
       ctx.textAlign='left';ctx.fillStyle='#c47f12';ctx.fillText((v*maxSh).toFixed(1),x1+8,yy+4);}
     for(let i=0;i<=8;i++){const r=i/8*maxR,xx=X(r);ctx.fillStyle='#8a93a0';ctx.textAlign='center';ctx.fillText(pct(r,0)+'%',xx,y0+18);}
     ctx.fillStyle='#3c434e';ctx.textAlign='center';ctx.fillText('USDC borrow rate',(x0+x1)/2,y0+38);
-    [['floor',m.rFloor],['CDI',m.rCeil]].forEach(([k,rr])=>{if(rr>maxR)return;
+    [['floor',m.rFloor],['cap',m.rCeil],['CDI',m.cdi]].forEach(([k,rr])=>{if(rr>maxR)return;
       ctx.strokeStyle='#b9c0c9';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(X(rr),y1);ctx.lineTo(X(rr),y0);ctx.stroke();ctx.setLineDash([]);
       ctx.fillStyle='#8a93a0';ctx.textAlign='center';ctx.font='10px "SF Mono",monospace';ctx.fillText(k,X(rr),y1+10);});
     function plot(fn,Yf,color,w){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.beginPath();let st=false;
