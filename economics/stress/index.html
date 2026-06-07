@@ -223,7 +223,7 @@
     open-ended AMM walk.</p>
     <div class="chartbox"><canvas id="chart" width="1000" height="430"></canvas>
       <div class="legend">
-        <span><span class="sw" style="background:var(--green)"></span> efixDI+ (PSM par redemption plus NAV backstop, slippage bounded by the 7.4% bonus)</span>
+        <span><span class="sw" style="background:var(--green)"></span> efixDI+ (PSM and NAV redemption, slippage bounded by the 7.4% bonus)</span>
         <span><span class="sw" style="background:var(--red)"></span> Volatile collateral (AMM-only exit, slippage about 1.5× the shock), illustrative</span>
       </div></div>
     <div class="callout"><div class="ct">What the chart shows</div>
@@ -283,7 +283,7 @@
     <h3>Liquidation incentive (Morpho Blue)</h3>
     <div class="formula">LIF = min( 1.15 , 1 / ( 1 − 0.3 · (1 − LLTV) ) ) &nbsp;→&nbsp; at LLTV 77%, <b>LIF = 1.0741</b> (7.41% bonus)</div>
     <p>At the liquidation trigger the position holds 30% over-collateralisation against debt (1 / 0.77). A liquidator repays debt D,
-    seizes D × LIF of collateral at the oracle price, then clears it through the PSM at par on-chain, or a DEX, in a single transaction. NAV redemption over the settlement window is the backstop for size beyond on-chain capacity.</p>
+    seizes D × LIF of collateral at the oracle price, then clears it through the PSM to USDC at the BRL/USD rate on-chain, or via a DEX, in a single transaction. Redemption to BRL at 1:1 in the EFIX portal settles the same business day for size beyond on-chain capacity.</p>
     <h3>Liquidator participation and lender bad debt</h3>
     <div class="formula">
       Liquidator clears if: &nbsp; (FX window move w) + (op cost c) ≤ <b>LIF − 1 = 6.9%</b><br><br>
@@ -294,12 +294,12 @@
     G20 currency with circuit breakers, a 3-hour move beyond 6.9% is a 10-sigma event under normal volatility, and a sub-3-hour
     move past the bad-debt threshold implies a sovereign-grade dislocation with capital controls.</p>
     <h3>The binding operational parameter, for curator calibration</h3>
-    <p>The primary liquidation path is the PSM: efixDI redeems to USDC at par on-chain, instant, so a liquidator clears the seized
+    <p>The primary on-chain path is the PSM: efixDI converts to USDC at the BRL/USD rate, instant, so a liquidator clears the seized
     collateral through it in the same transaction, directly or via a DEX or RFQ router. Uniswap pools add complementary secondary
-    depth. NAV redemption through EFIX's regulated infrastructure is the backstop for size beyond on-chain capacity, settling the
-    same business day. The safe supply cap therefore comes out of PSM USDC capacity plus DEX depth over the liquidation horizon,
-    with NAV redemption bounding the tail. This is the parameter we want the curator's risk team to own and size, next to the IRM
-    curve and the deleverage trigger.</p>
+    depth. Behind both, efixDI and BRLE redeem to BRL at 1:1 in the EFIX portal, settling the same business day, the regulated
+    anchor for size beyond on-chain capacity. The safe supply cap therefore comes out of PSM USDC capacity plus DEX depth over the
+    liquidation horizon, with the portal redemption bounding the tail. This is the parameter we want the curator's risk team to own
+    and size, next to the IRM curve and the deleverage trigger.</p>
     <div class="callout warn"><div class="ct">Two scope honesties</div>
       <p><strong>1. Audit scope.</strong> OpenZeppelin audited the efixDI token (15/15 resolved, including one high-severity finding
       fixed with a custody redesign). The collateral vault as a whole and the off-chain backing sat outside that scope. A dedicated
