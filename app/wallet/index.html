@@ -1237,8 +1237,27 @@
                     setBrleSwapMsg('Sessão renovada. Refazendo swap…');
                     // Small delay lets the iframe finalize internal state.
                     setTimeout(() => handleBrleSwap(), 400);
+                } else if (pending === 'withdraw') {
+                    // Withdraw inputs (#withdrawAmount/#pixKey) survive the display:none
+                    // toggle, and the intent UUID is module-scoped (_pendingWithdrawUuid),
+                    // so re-firing reuses the SAME idempotent intent — no double-PIX.
+                    setTimeout(() => handleWithdraw(), 400);
                 }
             }
+        };
+
+        // Late rejection of the background authenticate() promise (after
+        // sendOTP already returned "sent"). Without this the failure is
+        // console-only and the user waits on the OTP screen for an email
+        // that never comes — masked the 2026-06-11 OTP-delivery outage.
+        window._efixAuthError = (err) => {
+            const msg = (err && err.message) ? String(err.message).slice(0, 160) : 'erro desconhecido';
+            // Pre-login: leave the OTP screen, it will never complete.
+            if (!userAddress) {
+                document.getElementById('step-otp').classList.remove('active');
+                document.getElementById('step-email').classList.add('active');
+            }
+            setStatus('Não foi possível enviar o código — tente novamente. (' + msg + ')', 'error');
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -2430,6 +2449,16 @@
                     if (btn) btn.textContent = 'Modo confiança — enviando PIX...';
                     console.log('[Withdraw] TRUST MODE active — skipping burn UserOp');
                 } else {
+                    // F-009 preflight: probe the Alchemy iframe session BEFORE burning.
+                    // A degraded session throws "Signer not authenticated" mid-burn and
+                    // surfaced as a cryptic "Erro no saque". Route to a clean re-OTP
+                    // (which also re-mints the JWT), so we never half-burn. Mirrors the
+                    // proven handleBrleSwap preflight.
+                    if (btn) btn.textContent = 'Verificando sessão...';
+                    if (!(await isSignerSessionFresh())) {
+                        promptReauthForPendingAction('withdraw');
+                        return;  // finally{} resets the button; re-OTP resumes via _efixAuthCallback
+                    }
                     if (btn) btn.disabled = true, btn.textContent = 'Queimando tokens...';
                     // Step 1: burn efixDIBase on Base via Account Kit v4 UserOp (gas-sponsored)
                     // burn(uint256) selector = 0x42966c68
@@ -2481,7 +2510,12 @@
                 console.error('[Withdraw] failed', e);
                 const msg = e.message || String(e);
                 // Common failure: user rejected the burn UserOp, or backend rejected after burn already happened
-                if (msg.toLowerCase().includes('reject') || msg.toLowerCase().includes('denied')) {
+                if (isAlchemySessionDeadError(e)) {
+                    // Session died between preflight and signing — re-OTP cleanly and
+                    // resume the SAME withdraw intent (same UUID) via _efixAuthCallback.
+                    // The burn never landed (sign failed before submission), so no half-state.
+                    promptReauthForPendingAction('withdraw');
+                } else if (msg.toLowerCase().includes('reject') || msg.toLowerCase().includes('denied')) {
                     alert('Transação cancelada. Seus tokens permanecem na carteira.');
                 } else if (msg.toLowerCase().includes('burn verification failed') || msg.toLowerCase().includes('already minted')) {
                     alert('Erro de verificação: ' + msg + '\n\nContate o suporte se a queima foi confirmada on-chain.');

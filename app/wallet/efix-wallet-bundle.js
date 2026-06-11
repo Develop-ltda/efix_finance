@@ -71404,6 +71404,7 @@ ${values.join("\n")}` : `${blockName} :`;
       }
       async function sendOTP(email) {
         if (!_signer) init2();
+        let _earlyError = null, _otpReturned = false;
         _signer.authenticate({ type: "email", email }).then(async () => {
           try {
             _signerAddress = await _signer.getAddress();
@@ -71414,9 +71415,12 @@ ${values.join("\n")}` : `${blockName} :`;
           }
         }).catch((e) => {
           console.error("[EfixWallet] Auth promise rejected:", e);
+          if (!_otpReturned) { _earlyError = e; return; }
           if (window._efixAuthError) window._efixAuthError(e);
         });
         await new Promise((r) => setTimeout(r, 1500));
+        if (_earlyError) throw _earlyError;
+        _otpReturned = true;
         console.log("[EfixWallet] OTP email initiated for:", email);
         return true;
       }

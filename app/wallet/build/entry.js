@@ -105,6 +105,10 @@ async function loginWithEmail(email) {
  */
 async function sendOTP(email) {
   if (!_signer) init();
+  // Rejection before the 1.5s sleep elapses → sendOTP itself throws (caller
+  // shows the error and stays on the email step). After that window, the
+  // rejection is async → surfaced via window._efixAuthError if defined.
+  let _earlyError = null, _otpReturned = false;
   _signer.authenticate({ type: "email", email })
     .then(async () => {
       try {
@@ -117,9 +121,12 @@ async function sendOTP(email) {
     })
     .catch((e) => {
       console.error("[EfixWallet] Auth promise rejected:", e);
+      if (!_otpReturned) { _earlyError = e; return; }
       if (window._efixAuthError) window._efixAuthError(e);
     });
   await new Promise((r) => setTimeout(r, 1500));
+  if (_earlyError) throw _earlyError;
+  _otpReturned = true;
   console.log("[EfixWallet] OTP email initiated for:", email);
   return true;
 }
