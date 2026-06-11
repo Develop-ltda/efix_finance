@@ -371,12 +371,11 @@ async function transferEfixDI(toAddress, amount) {
 }
 
 /**
- * Collateralize: transfer efixDI to operator wallet
- * @param {number} amount - Amount in efixDI (human readable)
+ * Collateralize — RETIRED 2026-06-11. Card collateral is protocol/admin-managed;
+ * the legacy direct user transfer to the operator EOA is out of use.
  */
-async function collateralize(amount) {
-  const OPERATOR = "0x9eFc11e4d285b5a749faFBC2613836Dcda899e12";
-  return transferEfixDI(OPERATOR, amount);
+async function collateralize() {
+  throw new Error("collateralize is disabled — card collateral is handled by the protocol (admin only)");
 }
 
 /**

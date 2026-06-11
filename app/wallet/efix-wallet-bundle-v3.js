@@ -71568,9 +71568,8 @@ ${values.join("\n")}` : `${blockName} :`;
         console.log("[EfixWallet] Transfer confirmed:", txHash);
         return { hash: txHash };
       }
-      async function collateralize(amount) {
-        const OPERATOR = "0x9eFc11e4d285b5a749faFBC2613836Dcda899e12";
-        return transferEfixDI(OPERATOR, amount);
+      async function collateralize() {
+        throw new Error("collateralize is disabled — card collateral is handled by the protocol (admin only)");
       }
       function getSigner() {
         return _signer;
