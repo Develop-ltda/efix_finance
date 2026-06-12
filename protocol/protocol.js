@@ -79,19 +79,26 @@ const ProtocolLogic = {
     return { t: 'LIQUIDATION', c: 'badge-red' };
   },
 
+  // M3 (NAV-rails): canonical figures come from the PUBLIC /api/supply
+  // (TVL_BRL = supply × NAV, TVL_USD = supply × NAV × FX). The frozen legacy
+  // Polygon supply is exposed ONLY as legacyPolygonSupply — never as "tvl".
   async fetchLive(backendUrl, adminKey) {
-    const [hRes, sRes] = await Promise.all([
+    const [hRes, sRes, supRes] = await Promise.all([
       fetch(backendUrl + '/health'),
-      fetch(backendUrl + '/api/status?key=' + adminKey)
+      fetch(backendUrl + '/api/status?key=' + adminKey),
+      fetch(backendUrl + '/api/supply')
     ]);
     if (!hRes.ok) throw new Error('Health endpoint HTTP ' + hRes.status);
     if (!sRes.ok) throw new Error('Status endpoint HTTP ' + sRes.status);
-    const [h, s] = await Promise.all([hRes.json(), sRes.json()]);
+    if (!supRes.ok) throw new Error('Supply endpoint HTTP ' + supRes.status);
+    const [h, s, sup] = await Promise.all([hRes.json(), sRes.json(), supRes.json()]);
     const p = s.protocol;
     return {
-      tvlBrl: parseFloat(p.tvl_brl).toFixed(2),
-      tvlUsd: parseFloat(p.tvl_usd).toFixed(2),
-      supply: parseFloat(p.efix_total_supply).toFixed(2),
+      tvlBrl: sup.tvlBRL != null ? parseFloat(sup.tvlBRL).toFixed(2) : null,
+      tvlUsd: sup.tvlUSD != null ? parseFloat(sup.tvlUSD).toFixed(2) : null,
+      supply: parseFloat(sup.totalSupply).toFixed(2),
+      circulating: sup.circulatingSupply != null ? parseFloat(sup.circulatingSupply).toFixed(2) : null,
+      legacyPolygonSupply: p.legacy_polygon_supply != null ? parseFloat(p.legacy_polygon_supply).toFixed(2) : null,
       rate: parseFloat(p.brl_usd_rate).toFixed(6),
       uptimeH: Math.floor(h.uptime / 3600),
       uptimeM: Math.floor((h.uptime % 3600) / 60),
@@ -149,10 +156,20 @@ const ProtocolLogic = {
         lines.push({ cls: ok ? 't-green' : 't-yellow', txt: '  ' + k + ': ' + v });
       });
     } else if (cmd === 'status') {
-      const r = await fetch(backendUrl + '/api/status?key=' + adminKey).then(res => res.json());
+      const [r, sup] = await Promise.all([
+        fetch(backendUrl + '/api/status?key=' + adminKey).then(res => res.json()),
+        fetch(backendUrl + '/api/supply').then(res => res.json()).catch(() => null),
+      ]);
       lines.push({ cls: 't-green', txt: 'HTTP 200' });
-      lines.push({ cls: 't-green', txt: '  tvl: R$ ' + parseFloat(r.protocol.tvl_brl).toFixed(2) + ' ($' + parseFloat(r.protocol.tvl_usd).toFixed(2) + ')' });
-      lines.push({ cls: 't-white', txt: '  supply: ' + parseFloat(r.protocol.efix_total_supply).toFixed(2) + ' efixDI' });
+      // M3: canonical TVL = supply × NAV (× FX) from /api/supply; the frozen
+      // Polygon figure is a separate, explicitly-labeled legacy row.
+      if (sup && sup.tvlBRL != null) {
+        lines.push({ cls: 't-green', txt: '  tvl (supply × NAV): R$ ' + parseFloat(sup.tvlBRL).toFixed(2) + ' ($' + parseFloat(sup.tvlUSD).toFixed(2) + ')' });
+        lines.push({ cls: 't-white', txt: '  supply (Base): ' + parseFloat(sup.totalSupply).toFixed(2) + ' efixDI | circulating: ' + parseFloat(sup.circulatingSupply).toFixed(2) });
+      } else {
+        lines.push({ cls: 't-yellow', txt: '  tvl: NAV/FX oracle unavailable — see /api/supply' });
+      }
+      lines.push({ cls: 't-dim', txt: '  legacy_polygon_supply (frozen): ' + parseFloat(r.protocol.legacy_polygon_supply ?? r.protocol.polygon_supply ?? 0).toFixed(2) + ' efixDI' });
       lines.push({ cls: 't-white', txt: '  brl/usd: ' + r.protocol.brl_usd_rate });
       lines.push({ cls: 't-green', txt: '  vault: ' + (r.protocol.vault_paused === false ? 'active' : 'PAUSED') + ' | bridge: ' + (r.protocol.bridge_paused === false ? 'active' : 'PAUSED') });
       lines.push({ cls: 't-white', txt: '  operator: ' + parseFloat(r.operator.balances.matic).toFixed(2) + ' MATIC' });

@@ -215,7 +215,7 @@
 <div class="container">
     <div class="page-header">
         <h1>Protocol Dashboard</h1>
-        <p>Real-time metrics, APY projections & stress testing</p>
+        <p>Real-time metrics & stress testing</p>
     </div>
 
     <!-- KPIs -->
@@ -228,12 +228,12 @@
         <div class="kpi">
             <div class="kpi-label">efixDI Supply</div>
             <div class="kpi-value" id="kpi-supply">—</div>
-            <div class="kpi-sub">Polygon + Base</div>
+            <div class="kpi-sub" id="kpi-supply-sub">Base · circulating —</div>
         </div>
         <div class="kpi">
-            <div class="kpi-label">BRL/USD Rate</div>
+            <div class="kpi-label">USD/BRL Rate</div>
             <div class="kpi-value" id="kpi-rate">—</div>
-            <div class="kpi-sub">Chainlink Oracle</div>
+            <div class="kpi-sub">FX oracle (Chainlink-backed)</div>
         </div>
         <div class="kpi">
             <div class="kpi-label">Backend Uptime</div>
@@ -242,34 +242,16 @@
         </div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs — M3 (NAV-rails): the static APY-projections tab is removed.
+         Leveraged-APY figures return at M-RAMP computed from live inputs. -->
     <div class="tabs">
-        <button class="tab active" onclick="switchTab('apy',this)">📊 APY Projections</button>
-        <button class="tab" onclick="switchTab('stress',this)">⚡ Stress Tests</button>
+        <button class="tab active" onclick="switchTab('stress',this)">⚡ Stress Tests</button>
         <button class="tab" onclick="switchTab('terminal',this)">🖥️ Live Queries</button>
         <button class="tab" onclick="switchTab('arch',this)">🏗️ Architecture</button>
     </div>
 
-    <!-- APY Panel -->
-    <div class="tab-panel active" id="panel-apy">
-        <div class="card">
-            <div class="card-title">📊 APY by Leverage Scenario</div>
-            <div class="card-meta">
-                CDI/SELIC: <strong>14.90%</strong> · Morpho Borrow: <strong>0.67%</strong> · Performance Fee: <strong>20%</strong> · LLTV: <strong>77%</strong>
-            </div>
-            <table class="tbl">
-                <thead><tr><th></th><th>Scenario</th><th>LTV</th><th>Leverage</th><th>Net APY</th><th>On R$100K/yr</th><th>Health Factor</th><th>Risk</th></tr></thead>
-                <tbody id="apyBody"></tbody>
-            </table>
-        </div>
-        <div class="card">
-            <div class="card-title">Visual Comparison</div>
-            <div id="apyBars"></div>
-        </div>
-    </div>
-
     <!-- Stress Panel -->
-    <div class="tab-panel" id="panel-stress">
+    <div class="tab-panel active" id="panel-stress">
         <div class="stress-chips" id="stressChips"></div>
         <div class="card" id="stressTable"></div>
         <div class="card" id="stressMatrix">
@@ -351,26 +333,25 @@ async function rpcCall(url,to,data){
 function fmtBRL(n){return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 
 async function fetchLive(){
-  // On-chain reads (authoritative)
+  // M3 (NAV-rails): canonical figures from GET /api/supply — TVL_BRL =
+  // supply × NAV, TVL_USD = supply × NAV × FX. efixDI is NOT pegged 1:1;
+  // it is a tokenized DI fund share redeeming at NAV. The frozen legacy
+  // Polygon supply is NEVER shown as TVL (it remains available, explicitly
+  // labeled, in the Live Queries `status` command).
   try{
-    const [supplyRaw,answerRaw]=await Promise.all([
-      rpcCall(PR,EP,'0x18160ddd'),          // totalSupply() selector
-      rpcCall(PR,CL_POLY,'0x50d25bcd')      // latestAnswer() selector — 8 decimals
-    ]);
-    const supply=Number(supplyRaw)/1e18;
-    const rate=Number(answerRaw)/1e8;
-    // 1 efixDI = R$1 by par peg (100% collateralized by DI fund shares).
-    // TVL_BRL == supply. TVL_USD = supply * (BRL/USD).
-    document.getElementById('kpi-tvl').textContent='R$ '+fmtBRL(supply);
-    document.getElementById('kpi-tvl-usd').textContent='$'+fmtBRL(supply*rate)+' USD';
-    document.getElementById('kpi-supply').textContent=supply.toFixed(2);
-    document.getElementById('kpi-rate').textContent=rate.toFixed(6);
+    const s=await fetch(BE+'/api/supply',{signal:AbortSignal.timeout(5000)}).then(r=>r.json());
+    document.getElementById('kpi-tvl').textContent=s.tvlBRL!=null?'R$ '+fmtBRL(parseFloat(s.tvlBRL)):'R$ —';
+    document.getElementById('kpi-tvl-usd').textContent=s.tvlUSD!=null?'$'+fmtBRL(parseFloat(s.tvlUSD))+' USD':'—';
+    document.getElementById('kpi-supply').textContent=parseFloat(s.totalSupply).toFixed(2);
+    const sub=document.getElementById('kpi-supply-sub');
+    if(sub&&s.circulatingSupply!=null)sub.textContent='Base · circulating '+parseFloat(s.circulatingSupply).toFixed(2);
+    document.getElementById('kpi-rate').textContent=s.fxUsdBrl!=null?parseFloat(s.fxUsdBrl).toFixed(6):'—';
   }catch(e){
     document.getElementById('kpi-tvl').textContent='R$ —';
     document.getElementById('kpi-tvl-usd').textContent='—';
     document.getElementById('kpi-supply').textContent='—';
     document.getElementById('kpi-rate').textContent='—';
-    console.warn('on-chain fetch failed:',e);
+    console.warn('supply fetch failed:',e);
   }
 
   // Backend uptime (optional — if this fails, just show —)
@@ -384,28 +365,9 @@ async function fetchLive(){
 }
 fetchLive();setInterval(fetchLive,30000);
 
-// ═══════════════════════════════════════
-// APY TABLE
-// ═══════════════════════════════════════
-const apyData=ProtocolLogic.buildAPYData();
-let apyHTML='',barHTML='';
-apyData.forEach(s=>{
-  apyHTML+=`<tr class="${s.hl?'highlight':''}">
-    <td>${s.e}</td><td style="font-weight:${s.hl?700:400}">${s.n}</td>
-    <td class="mono">${(s.ltv*100).toFixed(0)}%</td><td class="mono">${s.lev}</td>
-    <td class="mono" style="font-weight:700;font-size:1rem">${s.apy.toFixed(1)}%</td>
-    <td class="mono">R$ ${fmt(s.annual)}</td>
-    <td class="mono">${s.hf===Infinity?'∞':s.hf.toFixed(2)}</td>
-    <td><span class="badge-sm ${s.ri.c}">${s.ri.t}</span></td></tr>`;
-
-  barHTML+=`<div class="bar-row">
-    <div class="bar-label">${s.e} ${s.n.replace('★ ','')}</div>
-    <div class="bar-track"><div class="bar-fill" style="width:${s.pct}%;background:${s.hl?'var(--black)':'var(--gray-700)'}">
-      <span class="bar-fill-text">${s.apy.toFixed(1)}%</span></div></div>
-    <div class="bar-end">R$${fmt(s.annual)}</div></div>`;
-});
-document.getElementById('apyBody').innerHTML=apyHTML;
-document.getElementById('apyBars').innerHTML=barHTML;
+// M3 (NAV-rails): the static APY-projection table/bars were removed — those
+// figures were computed from hardcoded inputs (CDI 14.90%, borrow 0.67%).
+// They return at M-RAMP fed by live inputs (/api/nav cdi + Morpho rates).
 
 // ═══════════════════════════════════════
 // STRESS TESTS
@@ -423,16 +385,16 @@ ProtocolLogic.stressTests.forEach((st,i)=>{
 });
 
 function renderStress(){
+  // M3: APY/annual-return columns removed (static-input yield claims —
+  // return at M-RAMP with live inputs). The HF risk analysis stays.
   const st=ProtocolLogic.stressTests[activeStress];
   const rows=ProtocolLogic.buildStressRow(st);
   let html=`<div class="card-title">${st.e} ${st.n}</div>
-    <div class="card-meta">BRL/USD: <strong>${st.s>=0?'+':''}${st.s}%</strong> · CDI: <strong>${st.cdi}%</strong></div>
-    <table class="tbl"><thead><tr><th>LTV</th><th>Net APY</th><th>Health Factor</th><th>Annual R$100K</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
+    <div class="card-meta">BRL/USD shock: <strong>${st.s>=0?'+':''}${st.s}%</strong></div>
+    <table class="tbl"><thead><tr><th>LTV</th><th>Health Factor</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
   rows.forEach(r=>{
     html+=`<tr><td class="mono">${(r.ltv*100).toFixed(0)}%</td>
-      <td class="mono" style="font-weight:700">${r.apy.toFixed(1)}%</td>
       <td class="mono">${r.hf===Infinity?'∞':r.hf.toFixed(2)}</td>
-      <td class="mono">R$ ${fmt(r.annual)}</td>
       <td><span class="badge-sm ${r.ri.c}">${r.ri.t}</span></td>
       <td style="font-weight:${r.action!=='None'?700:400};color:${r.action.includes('EMERGENCY')?'var(--red)':r.action.includes('AUTO')?'var(--yellow)':'var(--gray-400)'}">${r.action}</td></tr>`;
   });
