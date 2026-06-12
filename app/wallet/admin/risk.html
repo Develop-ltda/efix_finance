@@ -991,9 +991,11 @@ body::before {
           <div style="font-size:10px;color:var(--text2);margin-top:2px">HausBank · PIX custodial account</div>
         </div>
         <div class="kv"><span class="kv-key">efixDI Supply (TVL)</span><span class="kv-val" id="reserveTVL">—</span></div>
+        <div class="kv"><span class="kv-key">NAV at check</span><span class="kv-val" id="reserveNav">—</span></div>
         <div class="kv"><span class="kv-key">Coverage</span><span class="kv-val green" id="reserveRatio">—</span></div>
         <div class="kv"><span class="kv-key">Surplus BRL</span><span class="kv-val green" id="reserveSurplus">—</span></div>
-        <div class="kv"><span class="kv-key">Invariant</span><span style="font-size:9px;color:var(--text3)">iHold BRL ≥ efixDI supply (1:1)</span></div>
+        <!-- M2 (NAV-rails): invariant re-anchored from 1:1 to × NAV -->
+        <div class="kv"><span class="kv-key">Invariant</span><span style="font-size:9px;color:var(--text3)">iHold BRL ≥ efixDI supply × NAV</span></div>
         <div class="kv"><span class="kv-key">Poll frequency</span><span class="kv-val" style="color:var(--text2)">Every 5 min</span></div>
         <div style="margin-top:8px;font-size:9px;color:var(--text3)" id="reserveTs">Last checked: —</div>
       </div>
@@ -1837,7 +1839,15 @@ async function loadReserve() {
     }
 
     if (tvl !== null && tvl !== undefined) {
-      set('reserveTVL', tvl.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' efixDI');
+      // M2: show the BRL liability (supply × NAV) next to the token count —
+      // the invariant compares reserve BRL against tvl_brl, not token count.
+      const tvlBrl = d.protocol?.tvl_brl;
+      const brlSuffix = (tvlBrl !== null && tvlBrl !== undefined)
+        ? ' (R$ ' + tvlBrl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ')'
+        : '';
+      set('reserveTVL', tvl.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' efixDI' + brlSuffix);
+      const navAtCheck = d.protocol?.nav_at_check;
+      set('reserveNav', (navAtCheck !== null && navAtCheck !== undefined) ? 'R$ ' + Number(navAtCheck).toFixed(6) : '—');
     }
 
     if (ratio !== null && ratio !== undefined) {
