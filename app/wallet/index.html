@@ -2180,8 +2180,13 @@
 
                 // Try to fetch the unified totalNetWorthBRL from the portfolio
                 // lens (sums efixDI + BRLE + SALRIO + HFBPOC + LATITUDE + USDC
-                // converted to BRL). Fall back to efixDI-only if the call fails.
-                let headlineBRL = efixDIamount;
+                // converted to BRL).
+                //
+                // M-NAV-RAILS M1: the efixDI-only fallback is valued at NAV via
+                // the backend quote endpoint (services/pricing.js is the single
+                // conversion authority) — NEVER 1:1 inline. Chain: lens total →
+                // NAV quote → '—' (no silent 1:1 last resort).
+                let headlineBRL = null;
                 let portfolio = null;
                 try {
                     const r = await fetch(BACKEND_URL + '/wallet/portfolio/' + addr);
@@ -2190,9 +2195,22 @@
                         const nw = parseFloat(portfolio.totalNetWorthBRL || '0');
                         if (Number.isFinite(nw) && nw > 0) headlineBRL = nw;
                     }
-                } catch (_) { /* fall through to efixDI-only */ }
+                } catch (_) { /* fall through to NAV quote */ }
+                if (headlineBRL == null && efixDIamount > 0) {
+                    try {
+                        const qr = await fetch(BACKEND_URL + '/api/quote/redeem?amountTokens=' + encodeURIComponent(bal.formatted));
+                        if (qr.ok) {
+                            const qj = await qr.json();
+                            const v = parseFloat(qj.amountBRL);
+                            if (Number.isFinite(v)) headlineBRL = v;
+                        }
+                    } catch (_) { /* no quote — show '—' instead of guessing 1:1 */ }
+                }
+                if (headlineBRL == null && efixDIamount === 0) headlineBRL = 0;
 
-                document.getElementById('balanceDisplay').textContent = 'R$ ' + headlineBRL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+                document.getElementById('balanceDisplay').textContent = headlineBRL != null
+                    ? 'R$ ' + headlineBRL.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
+                    : 'R$ —';
                 // Update card spending power
                 if (headlineBRL > 0) updateSpendingPower(headlineBRL);
 
@@ -2419,7 +2437,26 @@
             const bal = parseFloat(document.getElementById('tokenBalance').textContent);
             if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
 
-            if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nPIX será enviado para: ' + pixKey + '\n\nVocê assinará uma transação para queimar os tokens. O PIX será enviado em seguida.')) return;
+            // M-NAV-RAILS M1: preview the BRL payout at NAV BEFORE burning —
+            // the quote comes from the backend (services/pricing.js), never
+            // computed here. If the quote is unavailable (oracle stale), abort
+            // now: the backend would refuse after the burn and refund-mint,
+            // so don't burn-then-refund.
+            let quotedBRL = null, quotedNav = null;
+            try {
+                const qr = await fetch(BACKEND_URL + '/api/quote/redeem?amountTokens=' + amount.toFixed(2));
+                if (qr.ok) {
+                    const qj = await qr.json();
+                    quotedBRL = qj.amountBRL;
+                    quotedNav = qj.navAtOp;
+                }
+            } catch (_) { /* handled below */ }
+            if (quotedBRL == null) {
+                alert('Cotação NAV indisponível no momento — saque temporariamente bloqueado. Tente novamente em alguns minutos.');
+                return;
+            }
+
+            if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nVocê receberá ≈ R$ ' + quotedBRL + ' via PIX (NAV R$ ' + parseFloat(quotedNav).toFixed(6) + ' por efixDI).\nPIX será enviado para: ' + pixKey + '\n\nVocê assinará uma transação para queimar os tokens. O PIX será enviado em seguida.')) return;
 
             // Idempotency key: same intent = same UUID. Changing any of (address,
             // amount, pixKey) starts a new intent and generates a fresh UUID.
@@ -2487,7 +2524,10 @@
                     const replayNote = data.idempotent_replay
                         ? '\n\n(Solicitação já havia sido processada anteriormente.)'
                         : '';
-                    alert('Saque concluído!\n\nR$ ' + data.amount + ' enviados via PIX para: ' + pixKey + trustNote + replayNote);
+                    // M1: backend responds with unit-explicit amountBRL (the
+                    // NAV-priced PIX payout); `?? data.amount` covers the
+                    // deploy window where the backend still answers pre-M1.
+                    alert('Saque concluído!\n\nR$ ' + (data.amountBRL ?? data.amount) + ' enviados via PIX para: ' + pixKey + trustNote + replayNote);
                     document.getElementById('withdrawAmount').value = '';
                     document.getElementById('pixKey').value = '';
                     refreshBalance(userAddress);
