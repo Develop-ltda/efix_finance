@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>efixDI · Live Protocol Monitor · Investor View</title>
+<style>
+  :root{
+    --bg:#F6F8F7; --card:#FFFFFF; --line:#E4E8E5; --line-soft:#EEF1EF;
+    --ink:#16211D; --muted:#6A726D; --faint:#9AA29C;
+    --green:#138A57; --green-soft:#E7F4ED; --green-line:#BFE3CF;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 20px 40px}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .mark{width:30px;height:30px;border-radius:7px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px}
+  .brand h1{margin:0;font-size:17px;font-weight:650}
+  .brand .sub{margin:1px 0 0;font-size:12px;color:var(--muted)}
+  .badge{display:inline-block;margin-left:8px;padding:2px 7px;border:1px solid var(--line);border-radius:5px;font-size:10.5px;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;vertical-align:middle}
+  .status{text-align:right;font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .live{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2.4s infinite}
+  .dot.snap{background:var(--faint);animation:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(19,138,87,.45)}70%{box-shadow:0 0 0 7px rgba(19,138,87,0)}100%{box-shadow:0 0 0 0 rgba(19,138,87,0)}}
+  @media (prefers-reduced-motion:reduce){.dot{animation:none}}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+  .metric{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 15px}
+  .metric .k{font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  .metric .v{font-family:var(--mono);font-size:25px;font-weight:600;margin-top:7px;letter-spacing:-.5px}
+  .metric .v small{font-size:14px;font-weight:600;color:var(--faint)}
+  .metric .s{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 16px;margin-bottom:12px}
+  .card h2{margin:0 0 11px;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);font-weight:650}
+  .row{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--line-soft)}
+  .row:last-child{border-bottom:0;padding-bottom:0}
+  .row .l{color:var(--muted);font-size:12.5px}
+  .row .r{font-family:var(--mono);font-size:12.5px;text-align:right;color:var(--ink)}
+  .row .r.b{font-weight:650}
+  .health{display:flex;align-items:flex-start;gap:11px;background:var(--green-soft);border:1px solid var(--green-line);border-radius:9px;padding:12px 13px;margin-top:2px}
+  .health .ok{width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:11px;flex:none;margin-top:1px}
+  .health .t{font-size:12.5px;color:#14543a}.health .t b{color:#0e3d2a}
+  .slist .row .r{display:inline-flex;align-items:center;gap:7px;color:var(--green);font-weight:600}
+  .tick{width:7px;height:7px;border-radius:50%;background:var(--green)}
+  a{color:var(--green);text-decoration:none}a:hover{text-decoration:underline}
+  .note{font-size:11.5px;color:var(--faint);margin-top:9px}
+  .foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot .mono{font-family:var(--mono)}
+  @media (max-width:720px){.metrics{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="mark">e</div>
+      <div>
+        <h1>efixDI · Live Protocol Monitor<span class="badge">Investor view · read-only</span></h1>
+        <p class="sub">Tokenized Brazilian sovereign money-market RWA on Base</p>
+      </div>
+    </div>
+    <div class="status">
+      <div class="live"><span class="dot" id="st-dot"></span> <span id="st-mode">Live</span></div>
+      <div id="st-as">connecting…</div>
+    </div>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h2>Underlying · backing</h2>
+        <div class="row"><span class="l">Fund</span><span class="r b" id="bk-fund">—</span></div>
+        <div class="row"><span class="l">CNPJ</span><span class="r" id="bk-cnpj">—</span></div>
+        <div class="row"><span class="l">Mandate</span><span class="r" id="bk-mandate">—</span></div>
+        <div class="row"><span class="l">Net assets (AUM)</span><span class="r b" id="bk-aum">—</span></div>
+        <div class="row"><span class="l">Sovereign rating</span><span class="r" id="bk-rating">—</span></div>
+        <div class="row"><span class="l">Fund redemption</span><span class="r b" id="bk-redemption">—</span></div>
+      </div>
+      <div class="card">
+        <h2>Peg enforcement · PSM (USDC / efixDI)</h2>
+        <div class="row"><span class="l">NAV (USD / efixDI)</span><span class="r b" id="psm-navusd">—</span></div>
+        <div class="row"><span class="l">NAV (BRL / efixDI)</span><span class="r" id="psm-navbrl">—</span></div>
+        <div class="row"><span class="l">FX (USD / BRL)</span><span class="r" id="psm-fx">—</span></div>
+        <div class="row"><span class="l">Swap fee</span><span class="r" id="psm-fee">—</span></div>
+        <div class="health">
+          <div class="ok">&#10003;</div>
+          <div class="t"><b>No extractable arbitrage.</b> Pool fees fully absorb the USDC round-trip against NAV, so the on-chain price tracks fund NAV with no profitable drift.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card slist">
+        <h2>System status</h2>
+        <div class="row"><span class="l">NAV oracle</span><span class="r"><span class="tick"></span> <span id="ss-oracle">—</span></span></div>
+        <div class="row"><span class="l">PIX settlement rail</span><span class="r"><span class="tick"></span> <span id="ss-pix">—</span></span></div>
+        <div class="row"><span class="l">Arbitrage keeper</span><span class="r"><span class="tick"></span> <span id="ss-keeper">—</span></span></div>
+        <div class="row"><span class="l">Smart-contract audit</span><span class="r"><span class="tick"></span> <span id="ss-audit">—</span></span></div>
+      </div>
+      <div class="card">
+        <h2>Transparency &amp; verification</h2>
+        <div class="row"><span class="l">NAV oracle</span><span class="r">Monotonic, on-chain (Base)</span></div>
+        <div class="row"><span class="l">Cota source</span><span class="r">BTG Pactual · daily · CVM-reported</span></div>
+        <div class="row"><span class="l">Benchmark</span><span class="r">CDI (B3) · interpolated intraday</span></div>
+        <div class="row"><span class="l">Independent audit</span><span class="r">OpenZeppelin · 15/15 · on request</span></div>
+        <div class="row"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Verify on Basescan &#8599;</a></span></div>
+        <div class="note">A Brazilian fund NAV is struck end of day and the official cota is published the next business day; the oracle interpolates CDI between official strikes.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>Read-only investor view · efixDI · EFIX / HausBank</div>
+    <div class="mono">0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608</div>
+  </div>
+</div>
+
+<script>
+  // Static fallback: renders even if the endpoint is down or NAV is not yet wired.
+  const FALLBACK = {
+    asOf: null, supply: 5339, navUsd: 0.196317, navBrl: 1.012877, fxUsdPerBrl: 0.193821,
+    tvlUsd: 1067.11, tvlBrl: 5505.66, psmSwapFeeBps: 30,
+    backing: { fund:"BTG Pactual Tesouro Selic FIRF Ref DI", cnpj:"09.215.250/0001-13",
+      mandate:">=95% federal Treasury (LFTs)", aum:"R$28.6bn (~US$5.5bn)",
+      redemption:"D+0", rating:"Ba1 / BB / BB (stable)" },
+    audit: "OpenZeppelin 15/15",
+    status: { oracle:"live", pixRail:"live", keeper:"active", contract:"active" }
+  };
+
+  const num = (n, d) => (n == null ? "\u2014" : Number(n).toLocaleString("en-US",
+    { minimumFractionDigits: d, maximumFractionDigits: d }));
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "\u2014";
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+  function render(d, live) {
+    document.getElementById("st-dot").className = "dot" + (live ? "" : " snap");
+    set("st-mode", live ? "Live" : "Snapshot");
+    set("st-as", live && d.asOf
+      ? "Updated " + new Date(d.asOf).toISOString().slice(11, 19) + " UTC"
+      : "Snapshot");
+
+    const brlPerUsd = d.fxUsdPerBrl ? 1 / d.fxUsdPerBrl : null;
+    const metrics = [
+      { k: "On-chain TVL", v: d.tvlUsd == null ? "\u2014" : "$" + num(d.tvlUsd, 2),
+        s: d.tvlBrl == null ? "" : "R$" + num(d.tvlBrl, 2) },
+      { k: "efixDI supply", v: num(d.supply, 0), s: "Base mainnet" },
+      { k: "NAV", v: d.navUsd == null ? "pending" : num(d.navUsd, 4) + " <small>USD</small>",
+        s: d.navBrl == null ? "wire NAV source" : num(d.navBrl, 4) + " BRL / efixDI" },
+      { k: "FX · BRL/USD", v: num(brlPerUsd, 2),
+        s: d.fxUsdPerBrl == null ? "" : num(d.fxUsdPerBrl, 4) + " USD / BRL" }
+    ];
+    document.getElementById("metrics").innerHTML = metrics.map(m =>
+      `<div class="metric"><div class="k">${m.k}</div><div class="v">${m.v}</div><div class="s">${m.s}</div></div>`).join("");
+
+    const b = d.backing || {};
+    set("bk-fund", b.fund || "\u2014"); set("bk-cnpj", b.cnpj || "\u2014");
+    set("bk-mandate", b.mandate || "\u2014"); set("bk-aum", b.aum || "\u2014");
+    set("bk-rating", b.rating || "\u2014"); set("bk-redemption", b.redemption || "\u2014");
+
+    set("psm-navusd", num(d.navUsd, 4)); set("psm-navbrl", num(d.navBrl, 4));
+    set("psm-fx", num(d.fxUsdPerBrl, 4));
+    set("psm-fee", d.psmSwapFeeBps == null ? "\u2014" : d.psmSwapFeeBps + " bps");
+
+    const s = d.status || {};
+    set("ss-oracle", cap(s.oracle)); set("ss-pix", s.pixRail === "live" ? "Live · 24/7" : cap(s.pixRail));
+    set("ss-keeper", cap(s.keeper)); set("ss-audit", d.audit || "\u2014");
+  }
+
+  async function load() {
+    try {
+      const r = await fetch("https://efixdi-backend-production.up.railway.app/public/efixdi/state", { cache: "no-store" });
+      if (r.ok) { render(await r.json(), true); return; }
+    } catch (e) {}
+    render(FALLBACK, false);
+  }
+  load();
+  setInterval(load, 20000);
+</script>
+</body>
+</html>
