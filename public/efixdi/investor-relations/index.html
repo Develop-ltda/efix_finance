@@ -3,220 +3,401 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>efixDI · Live Protocol Monitor · Investor View</title>
+<title>efixDI — Investment Profile</title>
 <style>
   :root{
-    --bg:#F6F8F7; --card:#FFFFFF; --line:#E4E8E5; --line-soft:#EEF1EF;
-    --ink:#16211D; --muted:#6A726D; --faint:#9AA29C;
-    --green:#138A57; --green-soft:#E7F4ED; --green-line:#BFE3CF; --green-deep:#0E3B30;
+    --canvas:#F3F4F3; --paper:#FFFFFF; --ink:#13181A; --slate:#5C646A; --faint:#969D9F;
+    --hair:#E3E6E4; --hair-soft:#EDEFED;
+    --accent:#15835A; --accent-deep:#0C5C3D;
+    --deep:#0B221C; --deep-2:#123A2E; --deep-line:#1E5443; --deep-ink:#CFE0D8;
+    --pos:#15835A; --warn:#B07A22;
     --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
-    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --sans:"Helvetica Neue",-apple-system,system-ui,"Segoe UI",Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1080px;margin:0 auto;padding:22px 20px 40px}
-  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:12px}
-  .mark{width:30px;height:30px;border-radius:7px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px}
-  .brand h1{margin:0;font-size:17px;font-weight:650}
-  .brand .sub{margin:1px 0 0;font-size:12px;color:var(--muted)}
-  .badge{display:inline-block;margin-left:8px;padding:2px 7px;border:1px solid var(--line);border-radius:5px;font-size:10.5px;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;vertical-align:middle}
-  .status{text-align:right;font-size:12px;color:var(--muted);font-family:var(--mono)}
-  .live{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-weight:600}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2.4s infinite}
-  .dot.snap{background:var(--faint);animation:none}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(19,138,87,.45)}70%{box-shadow:0 0 0 7px rgba(19,138,87,0)}100%{box-shadow:0 0 0 0 rgba(19,138,87,0)}}
-  @media (prefers-reduced-motion:reduce){.dot{animation:none}}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  .sheet{max-width:1060px;margin:0 auto;background:var(--paper);border-left:1px solid var(--hair);border-right:1px solid var(--hair);min-height:100vh}
+  .rule-top{height:3px;background:var(--accent)}
+  .pad{padding:0 30px}
+  .eyebrow{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--faint);font-weight:600}
 
-  /* tier 1 — the underlying-fund headline (prominent) */
-  .pitch{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0 12px}
-  .pcard{background:var(--green-deep);color:#EAF3EE;border-radius:11px;padding:17px 18px;position:relative;overflow:hidden}
-  .pcard::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--green)}
-  .pcard .k{font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:#9DC7B5}
-  .pcard .v{font-family:var(--mono);font-size:32px;font-weight:680;margin-top:8px;letter-spacing:-1px;line-height:1}
-  .pcard .v.sm{font-size:23px;letter-spacing:-.5px}
-  .pcard .v small{font-size:14px;font-weight:600;color:#9DC7B5}
-  .pcard .s{font-family:var(--mono);font-size:11.5px;color:#7FB39C;margin-top:6px}
+  /* masthead */
+  .masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:20px 30px 16px;border-bottom:1px solid var(--ink);flex-wrap:wrap}
+  .wordmark{font-size:25px;font-weight:700;letter-spacing:-.6px;line-height:1}
+  .wordmark .plus{color:var(--accent)}
+  .mh-tag{font-size:11.5px;color:var(--slate);margin-top:6px}
+  .mh-right{text-align:right;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+  .doc{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink);font-weight:700}
+  .mh-sub{font-size:10.5px;color:var(--faint)}
+  .mh-live{font-family:var(--mono);font-size:10.5px;color:var(--slate);display:inline-flex;align-items:center;gap:6px;margin-top:2px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .dot.snap{background:var(--faint)}
 
-  /* tier 2 — live on-chain (secondary) */
-  .seclabel{font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);margin:16px 0 8px;font-weight:650}
-  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 18px}
-  .metric{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 14px}
-  .metric .k{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
-  .metric .v{font-family:var(--mono);font-size:21px;font-weight:600;margin-top:6px;letter-spacing:-.4px}
-  .metric .v small{font-size:12px;font-weight:600;color:var(--faint)}
-  .metric .s{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px}
+  /* hero band */
+  .hero{display:grid;grid-template-columns:repeat(3,1fr);background:var(--deep);color:var(--deep-ink)}
+  .hcol{padding:20px 26px;border-left:1px solid var(--deep-line)}
+  .hcol:first-child{border-left:0}
+  .hk{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#7FA493}
+  .hv{font-family:var(--sans);font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1;margin-top:9px;color:#F2F8F5}
+  .hv small{font-size:14px;font-weight:600;color:#7FA493;letter-spacing:0}
+  .hv.mid{font-size:25px;letter-spacing:-.5px}
+  .hs{font-family:var(--mono);font-size:11px;color:#6E9684;margin-top:7px}
 
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 16px;margin-bottom:12px}
-  .card h2{margin:0 0 11px;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);font-weight:650}
-  .row{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--line-soft)}
-  .row:last-child{border-bottom:0;padding-bottom:0}
-  .row .l{color:var(--muted);font-size:12.5px}
-  .row .r{font-family:var(--mono);font-size:12.5px;text-align:right;color:var(--ink)}
-  .row .r.b{font-weight:650}
-  .health{display:flex;align-items:flex-start;gap:11px;background:var(--green-soft);border:1px solid var(--green-line);border-radius:9px;padding:12px 13px;margin-top:2px}
-  .health .ok{width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:11px;flex:none;margin-top:1px}
-  .health .t{font-size:12.5px;color:#14543a}.health .t b{color:#0e3d2a}
-  .slist .row .r{display:inline-flex;align-items:center;gap:7px;color:var(--green);font-weight:600}
-  .tick{width:7px;height:7px;border-radius:50%;background:var(--green)}
-  a{color:var(--green);text-decoration:none}a:hover{text-decoration:underline}
-  .note{font-size:11.5px;color:var(--faint);margin-top:9px}
-  .foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
-  .foot .mono{font-family:var(--mono)}
-  @media (max-width:760px){.pitch{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}
+  /* section header */
+  .sec{padding:22px 30px 0}
+  .sechead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--hair);padding-bottom:7px;margin-bottom:14px}
+  .sechead h2{margin:0;font-size:13px;font-weight:700;letter-spacing:-.1px}
+  .sechead .hint{font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+
+  /* on-chain metric row */
+  .mrow{display:grid;grid-template-columns:repeat(4,1fr)}
+  .mcell{padding:2px 18px 2px 0;border-right:1px solid var(--hair-soft)}
+  .mcell:last-child{border-right:0;padding-right:0}
+  .mk{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--slate)}
+  .mv{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:5px;letter-spacing:-.3px}
+  .mv small{font-size:11px;color:var(--faint);font-weight:600}
+  .ms{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:2px}
+
+  /* chart */
+  .chartsvg{width:100%;height:auto;display:block;margin-top:4px}
+  .legend{display:flex;gap:18px;margin:8px 0 0;font-size:11px;font-family:var(--mono);flex-wrap:wrap}
+  .lg{display:inline-flex;align-items:center;gap:7px;color:var(--slate)}
+  .lg::before{content:"";width:17px;height:2.5px;background:var(--accent)}
+  .lg.plus::before{background:none;border-top:2px dashed var(--deep);height:0}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);margin-top:14px;border-top:1px solid var(--hair);padding-top:12px}
+  .kpi{padding-right:16px;border-right:1px solid var(--hair-soft)}
+  .kpi:last-child{border-right:0}
+  .kpi b{display:block;font-family:var(--mono);font-size:14px;font-weight:680;letter-spacing:-.2px}
+  .kpi span{font-size:10px;color:var(--slate);line-height:1.35;display:block;margin-top:2px}
+  .src{font-size:10px;color:var(--faint);margin-top:11px;line-height:1.45}
+
+  /* scenario panel */
+  .scen{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--hair)}
+  .scen-in{padding:18px 22px;border-right:1px solid var(--hair)}
+  .scen-out{padding:18px 22px;background:#FAFBFA}
+  .scen-tag{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--warn);border:1px solid #E7D6B5;background:#FCF6EA;border-radius:3px;padding:2px 7px;margin-bottom:14px}
+  .inrow{display:grid;grid-template-columns:90px 1fr 48px;align-items:center;gap:10px;margin:10px 0}
+  .inrow label{font-size:11.5px;color:var(--slate)}
+  .inrow input[type=range]{width:100%;accent-color:var(--accent);height:3px}
+  .inrow input[type=number]{font-family:var(--mono);font-size:12.5px;padding:5px 8px;border:1px solid var(--hair);border-radius:4px;width:100%;color:var(--ink);background:var(--paper)}
+  .inrow .v{font-family:var(--mono);font-size:12px;text-align:right;font-weight:650}
+  .scen-out .ohead{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--hair);padding-bottom:7px;margin-bottom:2px}
+  .ores{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--hair-soft)}
+  .ores .ol{font-size:12px;color:var(--ink)}
+  .ores .ol em{font-style:normal;color:var(--faint);font-size:10.5px;display:block;margin-top:1px}
+  .ores .ov{font-family:var(--mono);font-weight:700;letter-spacing:-.3px}
+  .ores.fund .ov{font-size:21px;color:var(--ink)}
+  .ores.plus .ov{font-size:21px;color:var(--accent-deep)}
+  .ofoot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:11px;color:var(--slate);margin-top:11px}
+  .ofoot b{color:var(--ink)}
+  .disc{font-size:10px;color:var(--faint);line-height:1.5;margin-top:14px;padding-top:12px;border-top:1px solid var(--hair)}
+
+  /* data tables */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--hair)}
+  .panel{padding:16px 20px}
+  .panel + .panel{border-left:1px solid var(--hair)}
+  .panel h3{margin:0 0 10px;font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--slate);font-weight:650}
+  .drow{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--hair-soft)}
+  .drow:last-child{border-bottom:0;padding-bottom:0}
+  .drow .l{color:var(--slate);font-size:12px}
+  .drow .r{font-family:var(--mono);font-size:12px;text-align:right}
+  .drow .r.b{font-weight:650}
+  .ok{color:var(--accent);font-weight:650}
+  .ok::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:middle}
+  a{color:var(--accent-deep);text-decoration:none}a:hover{text-decoration:underline}
+  .pnote{font-size:10.5px;color:var(--faint);margin-top:9px;line-height:1.45}
+
+  .foot{padding:18px 30px 30px;border-top:1px solid var(--ink);margin-top:22px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:10.5px;color:var(--slate)}
+  .foot .mono{font-family:var(--mono);color:var(--faint)}
+  @media (max-width:800px){
+    .hero,.mrow,.scen,.grid2,.kpis{grid-template-columns:1fr}
+    .hcol{border-left:0;border-top:1px solid var(--deep-line)}.hcol:first-child{border-top:0}
+    .mcell{border-right:0;border-bottom:1px solid var(--hair-soft);padding:8px 0}
+    .scen-in{border-right:0;border-bottom:1px solid var(--hair)}
+    .panel + .panel{border-left:0;border-top:1px solid var(--hair)}
+    .kpi{border-right:0}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="brand">
-      <div class="mark">e</div>
-      <div>
-        <h1>efixDI · Live Protocol Monitor<span class="badge">Investor view · read-only</span></h1>
-        <p class="sub">Tokenized share of a Brazilian sovereign money-market fund, on Base</p>
-      </div>
+<div class="sheet">
+  <div class="rule-top"></div>
+  <div class="masthead">
+    <div>
+      <div class="wordmark">efixDI<span class="plus">+</span></div>
+      <div class="mh-tag">Tokenized share of a Brazilian sovereign money-market fund · settled on Base</div>
     </div>
-    <div class="status">
-      <div class="live"><span class="dot" id="st-dot"></span> <span id="st-mode">Live</span></div>
-      <div id="st-as">connecting…</div>
+    <div class="mh-right">
+      <div class="doc">Investment Profile</div>
+      <div class="mh-sub">For professional investors · read-only</div>
+      <div class="mh-live"><span class="dot" id="st-dot"></span><span id="st-as">connecting…</span></div>
     </div>
   </div>
 
-  <!-- tier 1: the underlying fund (prominent) -->
-  <div class="pitch" id="pitch"></div>
+  <!-- hero -->
+  <div class="hero" id="hero"></div>
 
-  <!-- tier 2: live on-chain -->
-  <div class="seclabel">Live on-chain · Base mainnet</div>
-  <div class="metrics" id="metrics"></div>
+  <!-- on-chain -->
+  <div class="sec">
+    <div class="sechead"><h2>Live on-chain</h2><span class="hint">Base mainnet · refreshed continuously</span></div>
+    <div class="mrow" id="metrics"></div>
+  </div>
 
-  <div class="cols">
-    <div>
-      <div class="card">
-        <h2>Underlying · backing</h2>
-        <div class="row"><span class="l">Fund</span><span class="r b" id="bk-fund">—</span></div>
-        <div class="row"><span class="l">CNPJ <span style="color:var(--faint)">· Brazil corp. registry</span></span><span class="r" id="bk-cnpj">—</span></div>
-        <div class="row"><span class="l">Mandate</span><span class="r" id="bk-mandate">—</span></div>
-        <div class="row"><span class="l">Net assets (AUM)</span><span class="r b" id="bk-aum">—</span></div>
-        <div class="row"><span class="l">Sovereign rating</span><span class="r" id="bk-rating">—</span></div>
-        <div class="row"><span class="l">Fund redemption</span><span class="r b" id="bk-redemption">—</span></div>
-        <div class="row"><span class="l">Fund page</span><span class="r"><a href="https://investidor10.com.br/fundos/btg-pactual-tesouro-selic-fi-rf-referenciado-di/" target="_blank" rel="noopener">View track record &#8599;</a></span></div>
+  <!-- track record -->
+  <div class="sec">
+    <div class="sechead"><h2>Underlying fund · track record</h2><span class="hint">growth of capital since inception, Feb 2008 · log scale</span></div>
+    <svg class="chartsvg" id="histchart" viewBox="0 0 1000 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fund growth of capital since 2008"></svg>
+    <div class="legend"><span class="lg fund" id="lgh-fund">Fund</span><span class="lg plus" id="lgh-plus">efixDI+ (simulated)</span></div>
+    <div class="kpis">
+      <div class="kpi"><b>+447.08%</b><span>since inception · 95.9% of CDI</span></div>
+      <div class="kpi"><b>+14.60%</b><span>trailing 12 months · 98.9% of CDI</span></div>
+      <div class="kpi"><b>218 / 2</b><span>positive / negative months</span></div>
+      <div class="kpi"><b>0.22%</b><span>annualized volatility</span></div>
+    </div>
+    <div class="src">Source: BTG Pactual fund factsheet (May 2026) and annual return history (Yahoo Finance), reconciled to the published since-inception figure. Returns net of fees, gross of Brazilian tax. Past performance is not indicative of future results.</div>
+  </div>
+
+  <!-- scenario -->
+  <div class="sec">
+    <div class="sechead"><h2>Scenario analysis</h2><span class="hint">illustrative · the curated Morpho vault is not yet live</span></div>
+    <div class="scen">
+      <div class="scen-in">
+        <div class="scen-tag">Simulated · vault not live</div>
+        <div class="inrow"><label>Investment</label><input id="inv" type="number" min="1" step="100" value="1000"><span class="v">R$</span></div>
+        <div class="inrow"><label>Period (yrs)</label><input id="period" type="range" min="1" max="30" step="1" value="24"><span class="v" id="periodval">24</span></div>
+        <div class="inrow"><label>Max LTV</label><input id="ltv" type="range" min="0" max="90" step="1" value="77"><span class="v" id="ltvval">77%</span></div>
+        <div class="inrow"><label>Borrow APR</label><input id="br" type="range" min="1" max="14" step="0.1" value="5.5"><span class="v" id="brval">5.5%</span></div>
+        <div class="inrow"><label>Leverage loops</label><input id="loops" type="range" min="1" max="10" step="1" value="4"><span class="v" id="loopsval">4</span></div>
+        <div class="inrow"><label>CDI yield</label><input id="cdi" type="range" min="8" max="18" step="0.1" value="14.4"><span class="v" id="cdival">14.4%</span></div>
+        <div class="disc" id="disc"></div>
       </div>
-      <div class="card">
-        <h2>Peg enforcement · PSM (USDC / efixDI)</h2>
-        <div class="row"><span class="l">NAV (USD / efixDI)</span><span class="r b" id="psm-navusd">—</span></div>
-        <div class="row"><span class="l">NAV (BRL / efixDI)</span><span class="r" id="psm-navbrl">—</span></div>
-        <div class="row"><span class="l">FX (USD / BRL)</span><span class="r" id="psm-fx">—</span></div>
-        <div class="row"><span class="l">Swap fee</span><span class="r" id="psm-fee">—</span></div>
-        <div class="health">
-          <div class="ok">&#10003;</div>
-          <div class="t"><b>No extractable arbitrage.</b> Pool fees fully absorb the USDC round-trip against NAV, so the on-chain price tracks fund NAV with no profitable drift.</div>
-        </div>
+      <div class="scen-out">
+        <div class="ohead">Projected value · by <span id="endyr">2050</span> &middot; current CDI held constant</div>
+        <div class="ores fund"><div class="ol">Fund<em>unleveraged · BTG Tesouro Selic DI</em></div><div class="ov">R$<span id="r-fund">44,552</span></div></div>
+        <div class="ores plus"><div class="ol">efixDI+<em>leveraged carry · idealized, see note</em></div><div class="ov">R$<span id="r-plus">2,285,227</span></div></div>
+        <div class="ofoot"><span>efixDI+ APY <b id="r-apy">33.7%</b></span><span>Leverage <b id="r-lx">3.17x</b></span></div>
+        <div class="ofoot"><span>Today (2026) &middot; Fund <b>R$<span id="r-fnow">1,671</span></b> · efixDI+ <b>R$<span id="r-pnow">2,702</span></b></span></div>
       </div>
     </div>
-    <div>
-      <div class="card slist">
-        <h2>System status</h2>
-        <div class="row"><span class="l">NAV oracle</span><span class="r"><span class="tick"></span> <span id="ss-oracle">—</span></span></div>
-        <div class="row"><span class="l">PIX settlement rail</span><span class="r"><span class="tick"></span> <span id="ss-pix">—</span></span></div>
-        <div class="row"><span class="l">Arbitrage keeper</span><span class="r"><span class="tick"></span> <span id="ss-keeper">—</span></span></div>
-        <div class="row"><span class="l">Smart-contract audit</span><span class="r"><span class="tick"></span> <span id="ss-audit">—</span></span></div>
+  </div>
+
+  <!-- simulated value over time -->
+  <div class="sec">
+    <div class="sechead"><h2>Simulated value over time</h2><span class="hint" id="proj-hint">nominal BRL · log scale</span></div>
+    <svg class="chartsvg" id="projchart" viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Simulated nominal value of fund and efixDI+ over the projection period"></svg>
+    <div class="legend"><span class="lg fund">Fund</span><span class="lg plus">efixDI+</span><span style="color:var(--faint)">&nbsp;&middot; solid = actual (2021&#8211;now), dotted = projected at current CDI</span></div>
+    <div class="src">Driven by the scenario inputs above. Labels show nominal BRL at start, today, and the end of the horizon. The efixDI+ path is an idealized upper bound (leverage held with no liquidation); see the scenario note.</div>
+  </div>
+
+  <!-- backing + status -->
+  <div class="sec">
+    <div class="sechead"><h2>Backing &amp; structure</h2><span class="hint">sovereign money-market fund · CVM-regulated</span></div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Underlying fund</h3>
+        <div class="drow"><span class="l">Fund</span><span class="r b" id="bk-fund">—</span></div>
+        <div class="drow"><span class="l">CNPJ · Brazil corp. registry</span><span class="r" id="bk-cnpj">—</span></div>
+        <div class="drow"><span class="l">Mandate</span><span class="r" id="bk-mandate">—</span></div>
+        <div class="drow"><span class="l">Net assets (AUM)</span><span class="r b" id="bk-aum">—</span></div>
+        <div class="drow"><span class="l">Sovereign rating</span><span class="r" id="bk-rating">—</span></div>
+        <div class="drow"><span class="l">Fund redemption</span><span class="r b" id="bk-redemption">—</span></div>
+        <div class="drow"><span class="l">Fund page</span><span class="r"><a href="https://investidor10.com.br/fundos/btg-pactual-tesouro-selic-fi-rf-referenciado-di/" target="_blank" rel="noopener">Track record &#8599;</a></span></div>
       </div>
-      <div class="card">
-        <h2>Transparency &amp; verification</h2>
-        <div class="row"><span class="l">Yield basis</span><span class="r">~100% CDI · gross of BR tax</span></div>
-        <div class="row"><span class="l">Track record</span><span class="r">195 / 197 positive months · 0.22% vol</span></div>
-        <div class="row"><span class="l">NAV oracle</span><span class="r">Monotonic, on-chain (Base)</span></div>
-        <div class="row"><span class="l">Cota source</span><span class="r">BTG Pactual · daily · CVM-reported</span></div>
-        <div class="row"><span class="l">Independent audit</span><span class="r">OpenZeppelin · 15/15 · on request</span></div>
-        <div class="row"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Verify on Basescan &#8599;</a></span></div>
-        <div class="note">efixDI tracks Brazilian CDI in BRL; a USD holder takes BRL/USD FX risk. Yield is gross of Brazilian withholding tax, retained at source. A fund NAV is struck end of day; the official cota is published the next business day and the oracle interpolates CDI between strikes.</div>
+      <div class="panel">
+        <h3>Peg enforcement · PSM</h3>
+        <div class="drow"><span class="l">NAV · USD / efixDI</span><span class="r b" id="psm-navusd">—</span></div>
+        <div class="drow"><span class="l">NAV · BRL / efixDI</span><span class="r" id="psm-navbrl">—</span></div>
+        <div class="drow"><span class="l">FX · USD / BRL</span><span class="r" id="psm-fx">—</span></div>
+        <div class="drow"><span class="l">Swap fee</span><span class="r" id="psm-fee">—</span></div>
+        <div class="pnote">Pool fees fully absorb the USDC round-trip against NAV: the on-chain price tracks fund NAV with no extractable arbitrage.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechead"><h2>Operations &amp; verification</h2><span class="hint">independent audit · on-chain oracle</span></div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>System status</h3>
+        <div class="drow"><span class="l">NAV oracle</span><span class="r"><span class="ok" id="ss-oracle">—</span></span></div>
+        <div class="drow"><span class="l">PIX settlement rail</span><span class="r"><span class="ok" id="ss-pix">—</span></span></div>
+        <div class="drow"><span class="l">Arbitrage keeper</span><span class="r"><span class="ok" id="ss-keeper">—</span></span></div>
+        <div class="drow"><span class="l">Smart-contract audit</span><span class="r"><span class="ok" id="ss-audit">—</span></span></div>
+      </div>
+      <div class="panel">
+        <h3>Transparency</h3>
+        <div class="drow"><span class="l">Yield basis</span><span class="r">~100% CDI · gross of BR tax</span></div>
+        <div class="drow"><span class="l">NAV oracle</span><span class="r">Monotonic, on-chain (Base)</span></div>
+        <div class="drow"><span class="l">Cota source</span><span class="r">BTG Pactual · daily · CVM</span></div>
+        <div class="drow"><span class="l">Independent audit</span><span class="r">OpenZeppelin · 15/15</span></div>
+        <div class="drow"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Basescan &#8599;</a></span></div>
+        <div class="pnote">efixDI tracks Brazilian CDI in BRL; a USD holder takes BRL/USD FX risk. Fund NAV is struck end of day; the official cota publishes the next business day and the oracle interpolates CDI between strikes.</div>
       </div>
     </div>
   </div>
 
   <div class="foot">
-    <div>Read-only investor view · efixDI · EFIX / HausBank</div>
+    <div>efixDI · EFIX &middot; HausBank — Investment Profile · read-only investor view</div>
     <div class="mono">0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608</div>
   </div>
 </div>
 
 <script>
-  // Current underlying-fund yield. Tracks ~100% CDI (Selic 14.25%, CDI ~14.4% p.a. as of Jun 2026).
-  // Update if the CDI rate moves materially.
   const FUND_YIELD = "14.4%";
-
   const FALLBACK = {
     asOf: null, supply: 5340, navUsd: 0.194915, navBrl: 1.014474, fxUsdPerBrl: 0.192134,
     tvlUsd: 1040.83, tvlBrl: 5417.21, psmSwapFeeBps: 30,
     backing: { fund:"BTG Pactual Tesouro Selic FIRF Ref DI", cnpj:"09.215.250/0001-13",
-      mandate:">=95% federal Treasury (LFTs)", aum:"R$28.6bn (~US$5.5bn)",
-      redemption:"T+0", rating:"Ba1 / BB / BB (stable)" },
+      mandate:">=95% federal Treasury (LFTs)", aum:"R$28.6bn (~US$5.5bn)", redemption:"T+0", rating:"Ba1 / BB / BB (stable)" },
     audit: "OpenZeppelin 15/15",
     status: { oracle:"live", pixRail:"live", keeper:"active", contract:"active" }
   };
-
-  const num = (n, d) => (n == null ? "\u2014" : Number(n).toLocaleString("en-US",
-    { minimumFractionDigits: d, maximumFractionDigits: d }));
+  const num = (n, d) => (n == null ? "\u2014" : Number(n).toLocaleString("en-US",{ minimumFractionDigits:d, maximumFractionDigits:d }));
   const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "\u2014";
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const $ = id => document.getElementById(id);
+  const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
 
   function render(d, live) {
-    document.getElementById("st-dot").className = "dot" + (live ? "" : " snap");
-    set("st-mode", live ? "Live" : "Snapshot");
-    set("st-as", live && d.asOf
-      ? "Updated " + new Date(d.asOf).toISOString().slice(11, 19) + " UTC"
-      : "Snapshot");
-
+    $("st-dot").className = "dot" + (live ? "" : " snap");
+    set("st-as", live && d.asOf ? "Live · " + new Date(d.asOf).toISOString().slice(11, 16) + " UTC" : "Snapshot");
     const b = d.backing || {};
-    // tier 1 — underlying fund (prominent). Redemption shown as T+0 (same business day).
-    const aum = (b.aum || "R$28.6bn").replace(/\s*\(.*\)\s*/, "");      // big number
+    const aum = (b.aum || "R$28.6bn").replace(/\s*\(.*\)\s*/, "");
     const aumSub = (b.aum && b.aum.match(/\((.*)\)/)) ? b.aum.match(/\((.*)\)/)[1] : "~US$5.5bn";
-    const pitch = [
-      { k: "Underlying yield · p.a.", v: FUND_YIELD, cls: "", s: "&#8776;100% CDI · gross · BRL" },
-      { k: "Fund net assets (AUM)", v: aum, cls: "sm", s: aumSub + " · sovereign DI fund" },
-      { k: "Sovereign rating", v: (b.rating || "Ba1 / BB / BB").replace(/\s*\(.*\)/, ""), cls: "sm", s: "Moody&#39;s · S&amp;P · Fitch · stable" }
-    ];
-    document.getElementById("pitch").innerHTML = pitch.map(p =>
-      `<div class="pcard"><div class="k">${p.k}</div><div class="v ${p.cls}">${p.v}</div><div class="s">${p.s}</div></div>`).join("");
-
-    // tier 2 — live on-chain
+    $("hero").innerHTML =
+      `<div class="hcol"><div class="hk">Underlying yield · p.a.</div><div class="hv">${FUND_YIELD}</div><div class="hs">&#8776;100% CDI · gross · BRL</div></div>`
+    + `<div class="hcol"><div class="hk">Fund net assets</div><div class="hv mid">${aum}</div><div class="hs">${aumSub} · sovereign DI fund</div></div>`
+    + `<div class="hcol"><div class="hk">Sovereign rating</div><div class="hv mid">${(b.rating||"Ba1 / BB / BB").replace(/\s*\(.*\)/,"")}</div><div class="hs">Moody&#39;s · S&amp;P · Fitch · stable</div></div>`;
     const brlPerUsd = d.fxUsdPerBrl ? 1 / d.fxUsdPerBrl : null;
-    const metrics = [
-      { k: "On-chain TVL", v: d.tvlUsd == null ? "\u2014" : "$" + num(d.tvlUsd, 2),
-        s: d.tvlBrl == null ? "bootstrap" : "R$" + num(d.tvlBrl, 2) + " · bootstrap" },
-      { k: "efixDI supply", v: num(d.supply, 0), s: "Base mainnet" },
-      { k: "NAV", v: d.navUsd == null ? "pending" : num(d.navUsd, 4) + " <small>USD</small>",
-        s: d.navBrl == null ? "wire NAV source" : num(d.navBrl, 4) + " BRL / efixDI" },
-      { k: "FX · BRL/USD", v: num(brlPerUsd, 2),
-        s: d.fxUsdPerBrl == null ? "" : num(d.fxUsdPerBrl, 4) + " USD / BRL" }
+    const M = [
+      { k:"On-chain TVL", v: d.tvlUsd==null?"\u2014":"$"+num(d.tvlUsd,2), s: d.tvlBrl==null?"bootstrap":"R$"+num(d.tvlBrl,2)+" · bootstrap" },
+      { k:"efixDI supply", v: num(d.supply,0), s:"Base mainnet" },
+      { k:"NAV", v: d.navUsd==null?"pending":num(d.navUsd,4)+" <small>USD</small>", s: d.navBrl==null?"\u2014":num(d.navBrl,4)+" BRL" },
+      { k:"FX · BRL/USD", v: num(brlPerUsd,2), s: d.fxUsdPerBrl==null?"":num(d.fxUsdPerBrl,4)+" USD/BRL" }
     ];
-    document.getElementById("metrics").innerHTML = metrics.map(m =>
-      `<div class="metric"><div class="k">${m.k}</div><div class="v">${m.v}</div><div class="s">${m.s}</div></div>`).join("");
+    $("metrics").innerHTML = M.map(m=>`<div class="mcell"><div class="mk">${m.k}</div><div class="mv">${m.v}</div><div class="ms">${m.s}</div></div>`).join("");
+    set("bk-fund", b.fund||"\u2014"); set("bk-cnpj", b.cnpj||"\u2014"); set("bk-mandate", b.mandate||"\u2014");
+    set("bk-aum", b.aum||"\u2014"); set("bk-rating", b.rating||"\u2014");
+    set("bk-redemption", (b.redemption||"T+0").replace(/^D\+0$/,"T+0"));
+    set("psm-navusd", num(d.navUsd,4)); set("psm-navbrl", num(d.navBrl,4)); set("psm-fx", num(d.fxUsdPerBrl,4));
+    set("psm-fee", d.psmSwapFeeBps==null?"\u2014":d.psmSwapFeeBps+" bps");
+    const s = d.status||{};
+    set("ss-oracle", cap(s.oracle)); set("ss-pix", s.pixRail==="live"?"Live · 24/7":cap(s.pixRail));
+    set("ss-keeper", cap(s.keeper)); set("ss-audit", d.audit||"\u2014");
+  }
+  async function load(){
+    try{ const r=await fetch("https://efixdi-backend-production.up.railway.app/public/efixdi/state",{cache:"no-store"}); if(r.ok){ render(await r.json(),true); return; } }catch(e){}
+    render(FALLBACK,false);
+  }
+  load(); setInterval(load,20000);
 
-    set("bk-fund", b.fund || "\u2014"); set("bk-cnpj", b.cnpj || "\u2014");
-    set("bk-mandate", b.mandate || "\u2014"); set("bk-aum", b.aum || "\u2014");
-    set("bk-rating", b.rating || "\u2014");
-    set("bk-redemption", (b.redemption || "T+0").replace(/^D\+0$/, "T+0"));
+  // ── model ──
+  const YEARS_A=[2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
+  const ANN_A=[10.8,9.71,9.52,11.38,8.33,7.96,10.63,13.0,13.63,9.93,6.18,5.77,1.94,4.29,12.27,12.88,10.74,14.16,5.61];
+  const HIST={2021:4.29,2022:12.27,2023:12.88,2024:10.74,2025:14.16,2026:5.61};
+  const Y0=2021, NOW=2026;
+  function levParams(){
+    const ltv=+$("ltv").value, loops=+$("loops").value, br=+$("br").value, cdi=+$("cdi").value;
+    const f=ltv/100; const L=f>=0.999?(loops+1):(1-Math.pow(f,loops+1))/(1-f);
+    return {ltv,loops,br,cdi,f,L};
+  }
+  function logTicks(minv,maxv){ const t=[]; const lo=Math.floor(Math.log10(minv)),hi=Math.ceil(Math.log10(maxv));
+    for(let k=lo;k<=hi;k++) for(const m of[1,2,5]){ const v=m*Math.pow(10,k); if(v>=minv*0.9999&&v<=maxv*1.0001)t.push(v);} return t; }
+  const fmtMult=v=>v>=10?v.toFixed(0)+"x":v.toFixed(1)+"x";
+  const cm=v=>Math.round(v).toLocaleString("en-US");
+  const cumMult=rs=>{ let m=1; const o=[1]; for(const r of rs){ m*=(1+r/100); o.push(m);} return o; };
 
-    set("psm-navusd", num(d.navUsd, 4)); set("psm-navbrl", num(d.navBrl, 4));
-    set("psm-fx", num(d.fxUsdPerBrl, 4));
-    set("psm-fee", d.psmSwapFeeBps == null ? "\u2014" : d.psmSwapFeeBps + " bps");
-
-    const s = d.status || {};
-    set("ss-oracle", cap(s.oracle)); set("ss-pix", s.pixRail === "live" ? "Live · 24/7" : cap(s.pixRail));
-    set("ss-keeper", cap(s.keeper)); set("ss-audit", d.audit || "\u2014");
+  function drawHist(){
+    const {L,br}=levParams();
+    const FUND=cumMult(ANN_A), PLUS=cumMult(ANN_A.map(r=>L*r-(L-1)*br));
+    const all=FUND.concat(PLUS); let ymin=Math.min(...all),ymax=Math.max(...all);
+    ymin=Math.max(0.7,ymin*0.9); ymax=ymax*1.14;
+    const W=1000,H=290,padL=42,padR=12,padT=10,padB=22,n=FUND.length;
+    const X=i=>padL+(W-padL-padR)*i/(n-1);
+    const lY=Math.log10(ymin),uY=Math.log10(ymax);
+    const Y=v=>padT+(H-padT-padB)*(uY-Math.log10(Math.max(v,ymin)))/(uY-lY);
+    const pts=a=>a.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+    let g="";
+    for(const t of logTicks(ymin,ymax)){ const y=Y(t).toFixed(1);
+      g+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#EDEFED"/><text x="${padL-6}" y="${(+y+3).toFixed(1)}" text-anchor="end" font-family="ui-monospace,monospace" font-size="9" fill="#969D9F">${fmtMult(t)}</text>`; }
+    let xg="";
+    [2008,2011,2014,2017,2020,2023,2026].forEach(yr=>{ const i=YEARS_A.indexOf(yr)+1; xg+=`<text x="${X(i).toFixed(1)}" y="${H-7}" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#969D9F">${yr}</text>`; });
+    $("histchart").innerHTML = g+xg
+      + `<polyline fill="none" stroke="#0B221C" stroke-width="1.7" stroke-dasharray="6 3" stroke-linejoin="round" points="${pts(PLUS)}"/>`
+      + `<polyline fill="none" stroke="#15835A" stroke-width="2.4" stroke-linejoin="round" points="${pts(FUND)}"/>`
+      + `<circle cx="${X(n-1).toFixed(1)}" cy="${Y(PLUS[n-1]).toFixed(1)}" r="3" fill="#0B221C"/>`
+      + `<circle cx="${X(n-1).toFixed(1)}" cy="${Y(FUND[n-1]).toFixed(1)}" r="3.4" fill="#15835A"/>`;
+    $("lgh-fund").textContent="Fund +"+((FUND[n-1]-1)*100).toFixed(0)+"%";
+    $("lgh-plus").textContent="efixDI+ (simulated) +"+((PLUS[n-1]-1)*100).toLocaleString("en-US",{maximumFractionDigits:0})+"%";
   }
 
-  async function load() {
-    try {
-      const r = await fetch("https://efixdi-backend-production.up.railway.app/public/efixdi/state", { cache: "no-store" });
-      if (r.ok) { render(await r.json(), true); return; }
-    } catch (e) {}
-    render(FALLBACK, false);
+  function buildSeries(){
+    const {L,br,cdi}=levParams();
+    const I=Math.max(1,+$("inv").value||1000);
+    const endYear=NOW+(+$("period").value);
+    const yrs=[],fund=[],plus=[]; let vf=I,vp=I;
+    for(let y=Y0;y<=endYear;y++){
+      yrs.push(y); fund.push(vf); plus.push(vp);
+      if(y<endYear){ const r=(y<=NOW)?HIST[y]:cdi; vf*=(1+r/100); vp*=(1+(L*r-(L-1)*br)/100); }
+    }
+    return {yrs,fund,plus,endYear,I,nowIdx:yrs.indexOf(NOW),L,net:cdi*L-(L-1)*br};
   }
-  load();
-  setInterval(load, 20000);
+  function logTicksDec(minv,maxv){ const t=[]; const lo=Math.floor(Math.log10(minv)),hi=Math.ceil(Math.log10(maxv));
+    for(let k=lo;k<=hi;k++){ const v=Math.pow(10,k); if(v>=minv*0.55&&v<=maxv*1.6)t.push(v);} return t; }
+  const moneyC = v => v>=1e6 ? "R$"+(v/1e6).toFixed(2)+"M" : "R$"+Math.round(v).toLocaleString("en-US");
+  const moneyAx = v => v>=1e6?"R$"+Math.round(v/1e6)+"M":v>=1e3?"R$"+Math.round(v/1e3)+"k":"R$"+Math.round(v);
+
+  function drawProj(){
+    const sv=buildSeries(); const yrs=sv.yrs,fund=sv.fund,plus=sv.plus,endYear=sv.endYear,nowIdx=sv.nowIdx,I=sv.I; const n=yrs.length;
+    const all=fund.concat(plus); let ymin=Math.min.apply(null,all),ymax=Math.max.apply(null,all);
+    ymin=Math.max(1,ymin*0.78); ymax=ymax*1.55;
+    const W=1000,H=300,padL=52,padR=20,padT=16,padB=22;
+    const X=i=>padL+(W-padL-padR)*i/(n-1);
+    const lY=Math.log10(ymin),uY=Math.log10(ymax);
+    const Y=v=>padT+(H-padT-padB)*(uY-Math.log10(Math.max(v,ymin)))/(uY-lY);
+    const seg=(a,b,arr)=>arr.slice(a,b+1).map((v,k)=>X(a+k).toFixed(1)+","+Y(v).toFixed(1)).join(" ");
+    let g="";
+    for(const t of logTicksDec(ymin,ymax)){ const y=Y(t).toFixed(1);
+      g+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#EDEFED"/><text x="'+(padL-6)+'" y="'+(+y+3).toFixed(1)+'" text-anchor="end" font-family="ui-monospace,monospace" font-size="9" fill="#969D9F">'+moneyAx(t)+'</text>'; }
+    const span=endYear-Y0, step=span<=12?2:5;
+    let xg=""; const seen={};
+    for(let y=Y0;y<=endYear;y+=step){ const ix=yrs.indexOf(y); if(ix<0)continue; seen[y]=1; xg+='<text x="'+X(ix).toFixed(1)+'" y="'+(H-7)+'" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#969D9F">'+y+'</text>'; }
+    if(!seen[endYear]) xg+='<text x="'+X(n-1).toFixed(1)+'" y="'+(H-7)+'" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#969D9F">'+endYear+'</text>';
+    const nx=X(nowIdx).toFixed(1);
+    const nowM='<line x1="'+nx+'" y1="'+padT+'" x2="'+nx+'" y2="'+(H-padB)+'" stroke="#C9CFCB" stroke-dasharray="2 3"/><text x="'+nx+'" y="'+(padT-4)+'" text-anchor="middle" font-family="ui-monospace,monospace" font-size="8" fill="#969D9F">now</text>';
+    const FUND="#15835A", PLUS="#0B221C";
+    const dot=(i,arr,c)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(arr[i]).toFixed(1)+'" r="3" fill="'+c+'"/>';
+    const lab=(x,y,t,anc,dy,c)=>'<text x="'+x.toFixed(1)+'" y="'+(y+dy).toFixed(1)+'" text-anchor="'+anc+'" font-family="ui-monospace,monospace" font-size="10" font-weight="700" fill="'+c+'">'+t+'</text>';
+    const nowAnc = nowIdx > n*0.62 ? "end" : "start"; const nowDx = nowAnc==="end" ? -6 : 6;
+    const labels =
+        lab(X(0)+4,Y(fund[0]),moneyC(fund[0]),"start",16,"#5C646A")
+      + dot(nowIdx,fund,FUND)+lab(X(nowIdx)+nowDx,Y(fund[nowIdx]),moneyC(fund[nowIdx]),nowAnc,14,FUND)
+      + dot(nowIdx,plus,PLUS)+lab(X(nowIdx)+nowDx,Y(plus[nowIdx]),moneyC(plus[nowIdx]),nowAnc,-7,PLUS)
+      + dot(n-1,fund,FUND)+lab(X(n-1)-5,Y(fund[n-1]),moneyC(fund[n-1]),"end",15,FUND)
+      + dot(n-1,plus,PLUS)+lab(X(n-1)-5,Y(plus[n-1]),moneyC(plus[n-1]),"end",-7,PLUS);
+    $("projchart").innerHTML = g+xg+nowM
+      + '<polyline fill="none" stroke="'+PLUS+'" stroke-width="1.6" stroke-linejoin="round" points="'+seg(0,nowIdx,plus)+'"/>'
+      + '<polyline fill="none" stroke="'+PLUS+'" stroke-width="1.6" stroke-dasharray="2 3" stroke-linejoin="round" points="'+seg(nowIdx,n-1,plus)+'"/>'
+      + '<polyline fill="none" stroke="'+FUND+'" stroke-width="2.4" stroke-linejoin="round" points="'+seg(0,nowIdx,fund)+'"/>'
+      + '<polyline fill="none" stroke="'+FUND+'" stroke-width="2.4" stroke-dasharray="2 3" stroke-linejoin="round" points="'+seg(nowIdx,n-1,fund)+'"/>'
+      + labels;
+    set("proj-hint", "R$"+Math.round(I).toLocaleString("en-US")+" over "+(+$("period").value)+" years \u00b7 2021 \u2192 "+endYear+" \u00b7 log scale");
+  }
+
+  function sim(){
+    const {ltv,loops,br,cdi,L}=levParams();
+    set("ltvval",ltv+"%"); set("brval",br.toFixed(1)+"%"); set("loopsval",loops);
+    set("cdival",cdi.toFixed(1)+"%"); set("periodval",$("period").value);
+    const sv=buildSeries(); const last=sv.yrs.length-1;
+    set("endyr",sv.endYear);
+    set("r-fund",cm(sv.fund[last])); set("r-plus",cm(sv.plus[last]));
+    set("r-fnow",cm(sv.fund[sv.nowIdx])); set("r-pnow",cm(sv.plus[sv.nowIdx]));
+    set("r-apy",sv.net.toFixed(1)+"%"); set("r-lx",sv.L.toFixed(2)+"x");
+    $("disc").innerHTML = "Illustrative only. The curated Morpho vault is not yet live; figures show the strategy it would enable. Actual returns are used 2021\u2013now; from now to "+sv.endYear+" the projection holds current CDI constant. The efixDI+ path additionally assumes leverage is maintained for the full horizon with no liquidation \u2014 real borrow rates and FX vary, leverage amplifies losses in low-rate years, and compounding leverage over decades is a stylized upper bound, not a forecast. Excludes FX hedging, swap and gas fees, slippage, and liquidation risk. Yield is BRL CDI; a USD lender carries BRL/USD FX risk, amplified by leverage. Not an offer, recommendation, or guarantee.";
+    drawHist(); drawProj();
+  }
+  ["inv","period","ltv","br","loops","cdi"].forEach(id=>$(id).addEventListener("input",sim));
+  sim();
 </script>
 </body>
 </html>
