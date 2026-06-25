@@ -8,7 +8,7 @@
   :root{
     --bg:#F6F8F7; --card:#FFFFFF; --line:#E4E8E5; --line-soft:#EEF1EF;
     --ink:#16211D; --muted:#6A726D; --faint:#9AA29C;
-    --green:#138A57; --green-soft:#E7F4ED; --green-line:#BFE3CF;
+    --green:#138A57; --green-soft:#E7F4ED; --green-line:#BFE3CF; --green-deep:#0E3B30;
     --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
@@ -27,12 +27,26 @@
   .dot.snap{background:var(--faint);animation:none}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(19,138,87,.45)}70%{box-shadow:0 0 0 7px rgba(19,138,87,0)}100%{box-shadow:0 0 0 0 rgba(19,138,87,0)}}
   @media (prefers-reduced-motion:reduce){.dot{animation:none}}
-  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
-  .metric{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 15px}
-  .metric .k{font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
-  .metric .v{font-family:var(--mono);font-size:25px;font-weight:600;margin-top:7px;letter-spacing:-.5px}
-  .metric .v small{font-size:14px;font-weight:600;color:var(--faint)}
-  .metric .s{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px}
+
+  /* tier 1 — the underlying-fund headline (prominent) */
+  .pitch{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0 12px}
+  .pcard{background:var(--green-deep);color:#EAF3EE;border-radius:11px;padding:17px 18px;position:relative;overflow:hidden}
+  .pcard::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--green)}
+  .pcard .k{font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:#9DC7B5}
+  .pcard .v{font-family:var(--mono);font-size:32px;font-weight:680;margin-top:8px;letter-spacing:-1px;line-height:1}
+  .pcard .v.sm{font-size:23px;letter-spacing:-.5px}
+  .pcard .v small{font-size:14px;font-weight:600;color:#9DC7B5}
+  .pcard .s{font-family:var(--mono);font-size:11.5px;color:#7FB39C;margin-top:6px}
+
+  /* tier 2 — live on-chain (secondary) */
+  .seclabel{font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);margin:16px 0 8px;font-weight:650}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 18px}
+  .metric{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 14px}
+  .metric .k{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .metric .v{font-family:var(--mono);font-size:21px;font-weight:600;margin-top:6px;letter-spacing:-.4px}
+  .metric .v small{font-size:12px;font-weight:600;color:var(--faint)}
+  .metric .s{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px}
+
   .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 16px;margin-bottom:12px}
   .card h2{margin:0 0 11px;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);font-weight:650}
@@ -50,7 +64,7 @@
   .note{font-size:11.5px;color:var(--faint);margin-top:9px}
   .foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .foot .mono{font-family:var(--mono)}
-  @media (max-width:720px){.metrics{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}
+  @media (max-width:760px){.pitch{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -60,7 +74,7 @@
       <div class="mark">e</div>
       <div>
         <h1>efixDI · Live Protocol Monitor<span class="badge">Investor view · read-only</span></h1>
-        <p class="sub">Tokenized Brazilian sovereign money-market RWA on Base</p>
+        <p class="sub">Tokenized share of a Brazilian sovereign money-market fund, on Base</p>
       </div>
     </div>
     <div class="status">
@@ -69,6 +83,11 @@
     </div>
   </div>
 
+  <!-- tier 1: the underlying fund (prominent) -->
+  <div class="pitch" id="pitch"></div>
+
+  <!-- tier 2: live on-chain -->
+  <div class="seclabel">Live on-chain · Base mainnet</div>
   <div class="metrics" id="metrics"></div>
 
   <div class="cols">
@@ -76,11 +95,12 @@
       <div class="card">
         <h2>Underlying · backing</h2>
         <div class="row"><span class="l">Fund</span><span class="r b" id="bk-fund">—</span></div>
-        <div class="row"><span class="l">CNPJ</span><span class="r" id="bk-cnpj">—</span></div>
+        <div class="row"><span class="l">CNPJ <span style="color:var(--faint)">· Brazil corp. registry</span></span><span class="r" id="bk-cnpj">—</span></div>
         <div class="row"><span class="l">Mandate</span><span class="r" id="bk-mandate">—</span></div>
         <div class="row"><span class="l">Net assets (AUM)</span><span class="r b" id="bk-aum">—</span></div>
         <div class="row"><span class="l">Sovereign rating</span><span class="r" id="bk-rating">—</span></div>
         <div class="row"><span class="l">Fund redemption</span><span class="r b" id="bk-redemption">—</span></div>
+        <div class="row"><span class="l">Fund page</span><span class="r"><a href="https://investidor10.com.br/fundos/btg-pactual-tesouro-selic-fi-rf-referenciado-di/" target="_blank" rel="noopener">View track record &#8599;</a></span></div>
       </div>
       <div class="card">
         <h2>Peg enforcement · PSM (USDC / efixDI)</h2>
@@ -104,12 +124,13 @@
       </div>
       <div class="card">
         <h2>Transparency &amp; verification</h2>
+        <div class="row"><span class="l">Yield basis</span><span class="r">~100% CDI · gross of BR tax</span></div>
+        <div class="row"><span class="l">Track record</span><span class="r">195 / 197 positive months · 0.22% vol</span></div>
         <div class="row"><span class="l">NAV oracle</span><span class="r">Monotonic, on-chain (Base)</span></div>
         <div class="row"><span class="l">Cota source</span><span class="r">BTG Pactual · daily · CVM-reported</span></div>
-        <div class="row"><span class="l">Benchmark</span><span class="r">CDI (B3) · interpolated intraday</span></div>
         <div class="row"><span class="l">Independent audit</span><span class="r">OpenZeppelin · 15/15 · on request</span></div>
         <div class="row"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Verify on Basescan &#8599;</a></span></div>
-        <div class="note">A Brazilian fund NAV is struck end of day and the official cota is published the next business day; the oracle interpolates CDI between official strikes.</div>
+        <div class="note">efixDI tracks Brazilian CDI in BRL; a USD holder takes BRL/USD FX risk. Yield is gross of Brazilian withholding tax, retained at source. A fund NAV is struck end of day; the official cota is published the next business day and the oracle interpolates CDI between strikes.</div>
       </div>
     </div>
   </div>
@@ -121,13 +142,16 @@
 </div>
 
 <script>
-  // Static fallback: renders even if the endpoint is down or NAV is not yet wired.
+  // Current underlying-fund yield. Tracks ~100% CDI (Selic 14.25%, CDI ~14.4% p.a. as of Jun 2026).
+  // Update if the CDI rate moves materially.
+  const FUND_YIELD = "14.4%";
+
   const FALLBACK = {
-    asOf: null, supply: 5339, navUsd: 0.196317, navBrl: 1.012877, fxUsdPerBrl: 0.193821,
-    tvlUsd: 1067.11, tvlBrl: 5505.66, psmSwapFeeBps: 30,
+    asOf: null, supply: 5340, navUsd: 0.194915, navBrl: 1.014474, fxUsdPerBrl: 0.192134,
+    tvlUsd: 1040.83, tvlBrl: 5417.21, psmSwapFeeBps: 30,
     backing: { fund:"BTG Pactual Tesouro Selic FIRF Ref DI", cnpj:"09.215.250/0001-13",
       mandate:">=95% federal Treasury (LFTs)", aum:"R$28.6bn (~US$5.5bn)",
-      redemption:"D+0", rating:"Ba1 / BB / BB (stable)" },
+      redemption:"T+0", rating:"Ba1 / BB / BB (stable)" },
     audit: "OpenZeppelin 15/15",
     status: { oracle:"live", pixRail:"live", keeper:"active", contract:"active" }
   };
@@ -144,10 +168,23 @@
       ? "Updated " + new Date(d.asOf).toISOString().slice(11, 19) + " UTC"
       : "Snapshot");
 
+    const b = d.backing || {};
+    // tier 1 — underlying fund (prominent). Redemption shown as T+0 (same business day).
+    const aum = (b.aum || "R$28.6bn").replace(/\s*\(.*\)\s*/, "");      // big number
+    const aumSub = (b.aum && b.aum.match(/\((.*)\)/)) ? b.aum.match(/\((.*)\)/)[1] : "~US$5.5bn";
+    const pitch = [
+      { k: "Underlying yield · p.a.", v: FUND_YIELD, cls: "", s: "&#8776;100% CDI · gross · BRL" },
+      { k: "Fund net assets (AUM)", v: aum, cls: "sm", s: aumSub + " · sovereign DI fund" },
+      { k: "Sovereign rating", v: (b.rating || "Ba1 / BB / BB").replace(/\s*\(.*\)/, ""), cls: "sm", s: "Moody&#39;s · S&amp;P · Fitch · stable" }
+    ];
+    document.getElementById("pitch").innerHTML = pitch.map(p =>
+      `<div class="pcard"><div class="k">${p.k}</div><div class="v ${p.cls}">${p.v}</div><div class="s">${p.s}</div></div>`).join("");
+
+    // tier 2 — live on-chain
     const brlPerUsd = d.fxUsdPerBrl ? 1 / d.fxUsdPerBrl : null;
     const metrics = [
       { k: "On-chain TVL", v: d.tvlUsd == null ? "\u2014" : "$" + num(d.tvlUsd, 2),
-        s: d.tvlBrl == null ? "" : "R$" + num(d.tvlBrl, 2) },
+        s: d.tvlBrl == null ? "bootstrap" : "R$" + num(d.tvlBrl, 2) + " · bootstrap" },
       { k: "efixDI supply", v: num(d.supply, 0), s: "Base mainnet" },
       { k: "NAV", v: d.navUsd == null ? "pending" : num(d.navUsd, 4) + " <small>USD</small>",
         s: d.navBrl == null ? "wire NAV source" : num(d.navBrl, 4) + " BRL / efixDI" },
@@ -157,10 +194,10 @@
     document.getElementById("metrics").innerHTML = metrics.map(m =>
       `<div class="metric"><div class="k">${m.k}</div><div class="v">${m.v}</div><div class="s">${m.s}</div></div>`).join("");
 
-    const b = d.backing || {};
     set("bk-fund", b.fund || "\u2014"); set("bk-cnpj", b.cnpj || "\u2014");
     set("bk-mandate", b.mandate || "\u2014"); set("bk-aum", b.aum || "\u2014");
-    set("bk-rating", b.rating || "\u2014"); set("bk-redemption", b.redemption || "\u2014");
+    set("bk-rating", b.rating || "\u2014");
+    set("bk-redemption", (b.redemption || "T+0").replace(/^D\+0$/, "T+0"));
 
     set("psm-navusd", num(d.navUsd, 4)); set("psm-navbrl", num(d.navBrl, 4));
     set("psm-fx", num(d.fxUsdPerBrl, 4));
