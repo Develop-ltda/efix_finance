@@ -126,6 +126,19 @@
   .scaletog button{font-family:var(--mono);font-size:10px;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border:0;background:var(--paper);color:var(--slate);cursor:pointer}
   .scaletog button.on{background:var(--ink);color:#fff}
   .scaletog button + button{border-left:1px solid var(--hair)}
+  .thesis{font-size:14.5px;line-height:1.52;color:var(--ink);margin:18px 30px 0;padding:2px 0 2px 14px;border-left:3px solid var(--accent)}
+  .thesis b{font-weight:700}
+  .partners{display:flex;align-items:center;gap:26px;background:#FAFBFA;border:1px solid var(--hair);border-radius:8px;padding:18px 22px;flex-wrap:wrap}
+  .ozbox{display:flex;align-items:center;gap:14px;flex:none}
+  .ozsvg{height:46px;width:auto;display:block}
+  .ozt b{font-size:15px;font-weight:700;display:block;line-height:1.15;color:var(--ink)}
+  .ozt span{font-size:11px;color:var(--slate)}
+  .pdiv{width:1px;align-self:stretch;background:var(--hair);min-height:48px}
+  .pcred{display:grid;grid-template-columns:1fr 1fr;gap:8px 28px;flex:1;min-width:320px}
+  .pcred .pr{display:flex;justify-content:space-between;gap:12px;font-size:12px}
+  .pcred .pr .l{color:var(--slate)}
+  .pcred .pr .r{font-family:var(--mono);font-weight:650}
+  @media(max-width:800px){.pcred{min-width:0}.pdiv{display:none}}
 </style>
 </head>
 <body>
@@ -148,6 +161,8 @@
 
   <!-- hero -->
   <div class="hero" id="hero"></div>
+
+  <div class="thesis">A tokenized share of a <b>R$28.6bn</b> Brazilian sovereign money-market fund &mdash; <b>daily-liquid</b>, settled on Base, earning roughly <b>100% of CDI</b>. A fund share, not private credit and not an algorithmic stablecoin.</div>
 
   <!-- on-chain -->
   <div class="sec">
@@ -250,6 +265,24 @@
     </div>
   </div>
 
+  <div class="sec">
+    <div class="sechead"><h2>Independent audit &amp; partners</h2><span class="hint">third-party security review</span></div>
+    <div class="partners">
+      <div class="ozbox"><svg class="ozsvg" width="127" height="150" viewBox="0 0 127 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 148.638C16.5023 120.086 30.5249 96.5383 48.3477 64.265C54.6433 53.3745 65.5217 46.6074 78.951 46.6074H100.052L41.1242 148.638H0Z" fill="#2E99FF"/>
+<path d="M0.186768 0H126.804L105.17 37.7215H0.186768V0Z" fill="#4F56FA"/>
+<path d="M63.6089 125.145C68.3703 116.728 76.0241 111.499 86.7442 111.499L126.827 111.389V148.641H50.0247C54.8332 140.394 59.0086 133.278 63.6089 125.145Z" fill="#09C2FF"/>
+</svg><div class="ozt"><b>OpenZeppelin</b><span>Smart-contract security audit</span></div></div>
+      <div class="pdiv"></div>
+      <div class="pcred">
+        <div class="pr"><span class="l">Audit result</span><span class="r">15 / 15 findings resolved</span></div>
+        <div class="pr"><span class="l">Scope</span><span class="r">efixDI token &middot; PSM</span></div>
+        <div class="pr"><span class="l">Public report</span><span class="r"><a href="https://www.openzeppelin.com/news/efixdi-token-audit" target="_blank" rel="noopener">openzeppelin.com &#8599;</a></span></div>
+        <div class="pr"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Basescan &#8599;</a></span></div>
+      </div>
+    </div>
+  </div>
+
   <div class="foot">
     <div>efixDI · EFIX &middot; HausBank — Investment Profile · read-only investor view</div>
     <div class="mono">0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608</div>
@@ -335,7 +368,10 @@
       g+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#EDEFED"/><text x="${padL-6}" y="${(+y+3).toFixed(1)}" text-anchor="end" font-family="ui-monospace,monospace" font-size="9" fill="#969D9F">${fmtMult(t)}</text>`; }
     let xg="";
     [2008,2011,2014,2017,2020,2023,2026].forEach(yr=>{ const i=YEARS_A.indexOf(yr)+1; xg+=`<text x="${X(i).toFixed(1)}" y="${H-7}" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#969D9F">${yr}</text>`; });
-    $("histchart").innerHTML = g+xg
+    const baseYH=Y(ymin);
+    const defsH='<defs><linearGradient id="fillH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15835A" stop-opacity="0.16"/><stop offset="1" stop-color="#15835A" stop-opacity="0"/></linearGradient></defs>';
+    const areaH='<polygon points="'+X(0).toFixed(1)+','+baseYH.toFixed(1)+' '+pts(FUND)+' '+X(n-1).toFixed(1)+','+baseYH.toFixed(1)+'" fill="url(#fillH)"/>';
+    $("histchart").innerHTML = defsH+g+xg+areaH
       + `<polyline fill="none" stroke="#0B221C" stroke-width="1.7" stroke-dasharray="6 3" stroke-linejoin="round" points="${pts(PLUS)}"/>`
       + `<polyline fill="none" stroke="#15835A" stroke-width="2.4" stroke-linejoin="round" points="${pts(FUND)}"/>`
       + `<circle cx="${X(n-1).toFixed(1)}" cy="${Y(PLUS[n-1]).toFixed(1)}" r="3" fill="#0B221C"/>`
@@ -403,7 +439,10 @@
              + dot(n-1,fund,FUND)+lab(X(n-1)-5,Y(fund[n-1]),moneyC(fund[n-1]),"end",15,FUND)
              + dot(n-1,plus,PLUS)+lab(X(n-1)-5,Y(plus[n-1]),moneyC(plus[n-1]),"end",-7,PLUS);
     }
-    $("projchart").innerHTML = g+xg+nowM
+    const baseYP=H-padB;
+    const defsP='<defs><linearGradient id="fillP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15835A" stop-opacity="0.15"/><stop offset="1" stop-color="#15835A" stop-opacity="0"/></linearGradient></defs>';
+    const areaP='<polygon points="'+X(0).toFixed(1)+','+baseYP+' '+seg(0,n-1,fund)+' '+X(n-1).toFixed(1)+','+baseYP+'" fill="url(#fillP)"/>';
+    $("projchart").innerHTML = defsP+g+xg+nowM+areaP
       + '<polyline fill="none" stroke="'+PLUS+'" stroke-width="1.6" stroke-linejoin="round" points="'+seg(0,nowIdx,plus)+'"/>'
       + '<polyline fill="none" stroke="'+PLUS+'" stroke-width="1.6" stroke-dasharray="2 3" stroke-linejoin="round" points="'+seg(nowIdx,n-1,plus)+'"/>'
       + '<polyline fill="none" stroke="'+FUND+'" stroke-width="2.4" stroke-linejoin="round" points="'+seg(0,nowIdx,fund)+'"/>'
