@@ -1368,12 +1368,16 @@
                 userAddress = await getSmartAccountAddress();
                 window.userAddress = userAddress;
 
-                // Persist to backend
+                // Persist to backend. Surface real failures to the user instead of
+                // swallowing — without a backend JWT the app can't sync balance or
+                // withdraw, so a silent failure left the user in a broken session.
                 try {
                     const session = await EfixAuth.login(userEmail, userAddress);
                     console.log(session.isNew ? 'New user registered' : 'User logged in');
                 } catch(e) {
-                    console.warn('Backend login failed (continuing):', e.message);
+                    console.error('Backend login failed:', e.message);
+                    setStatus('Erro ao conectar sua conta: ' + e.message, 'error');
+                    return; // stay on the login screen; do not enter the app without a session
                 }
 
                 setStatus('');
