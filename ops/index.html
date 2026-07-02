@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EFIX Ops</title>
+  <meta name="description" content="Hub de painéis operacionais internos EFIX. Acesso restrito." />
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" href="/logo_efix_400x400.jpg" />
+  <style>
+    :root{--bg:#0b0b0d;--card:#141418;--card2:#17171c;--line:#26262e;--txt:#e7e7ea;--mut:#8a8a95;--amber:#d97706}
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{background:var(--bg);color:var(--txt);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    .wrap{max-width:920px;margin:0 auto;padding:48px 24px 64px}
+    header.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+    h1{font-size:26px;font-weight:700;letter-spacing:.2px;margin:0}
+    h1 span{color:var(--amber)}
+    .sub{color:var(--mut);font-size:14px;margin:0 0 34px;max-width:640px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+    a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;transition:border-color .15s,transform .15s,background .15s}
+    a.card:hover{border-color:var(--amber);background:var(--card2);transform:translateY(-2px)}
+    .card .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .card h2{font-size:17px;margin:0;font-weight:650}
+    .card h2 b{color:var(--amber);font-weight:650}
+    .pill{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:3px 9px;white-space:nowrap}
+    .card p{color:var(--mut);font-size:13.5px;margin:0 0 16px}
+    .card .go{color:var(--amber);font-size:13px;font-weight:600}
+    .host{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--mut);margin-top:12px;word-break:break-all}
+    footer{color:var(--mut);font-size:12.5px;margin-top:36px;border-top:1px solid var(--line);padding-top:18px}
+    footer b{color:var(--txt);font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <h1>EFIX <span>Ops</span></h1>
+      <span class="pill">painéis operacionais internos</span>
+    </header>
+    <p class="sub">Cada projeto abre seu próprio dashboard — com o login dele. Este hub só reúne os acessos, sem interferir em nenhum painel.</p>
+    <div class="grid" id="grid"></div>
+    <footer>
+      Acesso restrito. Cada dashboard exige autenticação própria (<b>Google</b> na allowlist ou <b>admin key</b>).
+      Adicionar um projeto = um objeto no array <b>PROJECTS</b> deste arquivo.
+    </footer>
+  </div>
+  <script>
+    // Adicione novos painéis aqui — 1 objeto por projeto.
+    var PROJECTS = [
+      {
+        name: "Liquidação de Ofertas <b>BTR</b>",
+        tag: "Ofertas",
+        desc: "Fila de alocações prontas + botão Liquidar (entrega de cotas on-chain). SALRIO / LATITUDE / FIRST / HFBPOC. CVM 88.",
+        url: "https://efix-offerings-backend-production.up.railway.app/ops",
+        host: "efix-offerings-backend · /ops"
+      },
+      {
+        name: "<b>efixDI+</b> — Wallet & Rails",
+        tag: "efixDI+",
+        desc: "Carteira B2C, on/off-ramp PIX, arb keeper, NAV/cota, fees e segurança. Dashboard admin do efixDI+.",
+        url: "https://efixdi-backend-production.up.railway.app/ops",
+        host: "efixdi-backend · /ops"
+      }
+    ];
+    document.getElementById("grid").innerHTML = PROJECTS.map(function (p) {
+      return '<a class="card" href="' + p.url + '">' +
+        '<div class="row"><h2>' + p.name + '</h2><span class="pill">' + p.tag + '</span></div>' +
+        '<p>' + p.desc + '</p>' +
+        '<span class="go">Abrir dashboard →</span>' +
+        '<div class="host">' + p.host + '</div>' +
+        '</a>';
+    }).join("");
+  </script>
+</body>
+</html>
