@@ -314,6 +314,19 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
     </form>
   </div>
 
+  <!-- Step 2.5: Identity (Sumsub WebSDK) — shown only when the offering requires
+       KYC and this email isn't approved yet. Investors already verified on the
+       efix.finance wallet are auto-recognized server-side and skip this card. -->
+  <div class="alloc-card hidden" id="kyc-card">
+    <div class="alloc-step-head">
+      <span class="alloc-step-num">Step 2.5 · Identity</span>
+      <span class="alloc-step-title">Verify your identity</span>
+    </div>
+    <div class="alert alert-info">One-time verification. Your allocation is created automatically as soon as it's approved — leave this page open.</div>
+    <div id="sumsub-websdk-container"></div>
+    <div id="kyc-alert"></div>
+  </div>
+
   <!-- Step 3: Payment instructions -->
   <div class="alloc-card hidden" id="pi-card">
     <div class="alloc-step-head">
@@ -370,6 +383,10 @@ let USER_ADDRESS = null;   // ERC-4337 smart account address — deterministic a
                            // Same address the user sees in /app/wallet/ (Polygon) and on Base — one identity, one address.
 let CURRENT_ALLOC_ID = null;
 let POLL_TIMER = null;
+let OFFERING_KYC_REQUIRED = true;  // set from GET /v1/offerings/:id (kycRequired)
+let PENDING_ALLOC_BODY = null;     // allocation payload parked while KYC runs
+let KYC_POLL_TIMER = null;
+let KYC_DONE = false;              // guards double-fire (SDK event + status poll)
 
 // Get the smart-account address (not the signer EOA). Works because Alchemy LightAccount v2
 // produces the same counterfactual address across all EVM chains for the same signer.
@@ -433,6 +450,8 @@ async function bootstrap() {
 
 function renderOffering(off) {
   const chain = off.chain || {};
+  // Admin can waive KYC per offering (offerings.kyc_required). Default: required.
+  OFFERING_KYC_REQUIRED = off.kycRequired !== false;
   document.getElementById('pg-offering-name').textContent = off.symbol || off.name;
   document.getElementById('off-name').textContent = off.name || '—';
   document.getElementById('off-symbol').textContent = (off.symbol || '—') + ' · ' + (off.variant || '—').toUpperCase();
@@ -581,24 +600,23 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
   };
 
   try {
-    const r = await fetch(`${API_BASE}/v1/allocations`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const data = await r.json();
-    if (r.status === 409 && data.error === 'wallet_mismatch') {
-      const onRecord = data.on_record || '—';
-      showAlert(
-        'f-alert',
-        'err',
-        `This email is already linked to wallet ${onRecord.slice(0, 10)}…${onRecord.slice(-4)}, but you're signed in as ${(data.submitted || body.wallet_address).slice(0, 10)}…${(data.submitted || body.wallet_address).slice(-4)}. Prior settlements went to the address on record. If this is your wallet on a different login, sign in with that email. Otherwise contact support to rebind.`,
-      );
-      return;
+    // ── KYC gate (Sumsub) ──────────────────────────────────
+    // If the offering requires KYC and this email isn't approved yet, the
+    // backend hands us a WebSDK token. Investors already verified on the
+    // efix.finance wallet get `alreadyApproved` and skip straight to payment.
+    if (OFFERING_KYC_REQUIRED) {
+      label.innerHTML = '<span class="loading"></span> Checking identity…';
+      const k = await requestKycToken();
+      if (k && !k.alreadyApproved && k.token) {
+        PENDING_ALLOC_BODY = body;
+        await launchKycFlow(k.token);
+        return; // allocation is created automatically once KYC approves
+      }
+      // alreadyApproved → fall through to payment.
+      // KYC service unavailable → also fall through (allocation lands in
+      // kyc_review and the ops team handles it — never block the reserve).
     }
-    if (!r.ok) throw new Error(data.message || data.error || 'Allocation failed');
-    localStorage.setItem(LS_KEY, JSON.stringify({ id: data.allocation.id, email: body.email }));
-    await showPaymentInstructions(data.allocation.id);
+    await createAllocation(body);
   } catch (err) {
     showAlert('f-alert', 'err', err.message);
   } finally {
@@ -606,6 +624,118 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
     label.textContent = 'Create allocation →';
   }
 });
+
+async function createAllocation(body) {
+  const r = await fetch(`${API_BASE}/v1/allocations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await r.json();
+  if (r.status === 409 && data.error === 'wallet_mismatch') {
+    const onRecord = data.on_record || '—';
+    showAlert(
+      'f-alert',
+      'err',
+      `This email is already linked to wallet ${onRecord.slice(0, 10)}…${onRecord.slice(-4)}, but you're signed in as ${(data.submitted || body.wallet_address).slice(0, 10)}…${(data.submitted || body.wallet_address).slice(-4)}. Prior settlements went to the address on record. If this is your wallet on a different login, sign in with that email. Otherwise contact support to rebind.`,
+    );
+    return;
+  }
+  if (!r.ok) throw new Error(data.message || data.error || 'Allocation failed');
+  localStorage.setItem(LS_KEY, JSON.stringify({ id: data.allocation.id, email: body.email }));
+  await showPaymentInstructions(data.allocation.id);
+}
+
+// ─────────────────────────────────────────────────────────
+// KYC (Sumsub WebSDK) — token from the offerings backend;
+// externalUserId = email (same key the webhook + wallet lookup use)
+// ─────────────────────────────────────────────────────────
+async function requestKycToken() {
+  try {
+    const r = await fetch(`${API_BASE}/v1/kyc/sumsub/token`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: USER_EMAIL }),
+    });
+    return await r.json();
+  } catch (e) {
+    console.warn('KYC token request failed (fail-open):', e.message);
+    return null;
+  }
+}
+
+function loadSumsubSdk() {
+  if (window.snsWebSdk) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://static.sumsub.com/idensic/static/sns-websdk-builder.js';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Failed to load the verification module. Disable ad blockers and retry.'));
+    document.head.appendChild(s);
+  });
+}
+
+async function launchKycFlow(accessToken) {
+  KYC_DONE = false;
+  const card = document.getElementById('kyc-card');
+  card.classList.remove('hidden');
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  try {
+    await loadSumsubSdk();
+    const sdk = window.snsWebSdk
+      .init(accessToken, async () => {
+        const k = await requestKycToken();
+        if (k && k.alreadyApproved) { onKycApproved(); return accessToken; }
+        return (k && k.token) || accessToken;
+      })
+      .withConf({ lang: 'pt' })
+      .withOptions({ addViewportTag: false, adaptIframeHeight: true })
+      .on('idCheck.onApplicantStatusChanged', (payload) => {
+        const answer = payload && payload.reviewResult && payload.reviewResult.reviewAnswer;
+        if (payload && payload.reviewStatus === 'completed' && answer === 'GREEN') onKycApproved();
+        if (payload && payload.reviewStatus === 'completed' && answer === 'RED') {
+          showAlert('kyc-alert', 'err', 'Verification was not approved. Contact contato@efix.finance to review your case.');
+          stopKycPoll();
+        }
+      })
+      .build();
+    sdk.launch('#sumsub-websdk-container');
+    startKycPoll();
+  } catch (e) {
+    showAlert('kyc-alert', 'err', e.message);
+  }
+}
+
+function startKycPoll() {
+  stopKycPoll();
+  KYC_POLL_TIMER = setInterval(async () => {
+    try {
+      const r = await fetch(`${API_BASE}/v1/kyc/status?email=${encodeURIComponent(USER_EMAIL)}`);
+      const s = await r.json();
+      if (s.kycStatus === 'approved') onKycApproved();
+    } catch {}
+  }, 5000);
+}
+function stopKycPoll() {
+  if (KYC_POLL_TIMER) { clearInterval(KYC_POLL_TIMER); KYC_POLL_TIMER = null; }
+}
+
+async function onKycApproved() {
+  if (KYC_DONE) return;
+  KYC_DONE = true;
+  stopKycPoll();
+  document.getElementById('kyc-card').classList.add('hidden');
+  if (PENDING_ALLOC_BODY) {
+    const body = PENDING_ALLOC_BODY;
+    PENDING_ALLOC_BODY = null;
+    try {
+      await createAllocation(body);
+    } catch (err) {
+      showAlert('f-alert', 'err', err.message);
+      document.getElementById('form-card').classList.remove('hidden');
+    }
+  }
+}
 
 // ─────────────────────────────────────────────────────────
 // Payment instructions view
