@@ -323,7 +323,11 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
       <span class="alloc-step-title">Verify your identity</span>
     </div>
     <div class="alert alert-info">One-time verification. Your allocation is created automatically as soon as it's approved — leave this page open.</div>
-    <div id="sumsub-websdk-container"></div>
+    <div id="kyc-link-area" style="text-align:center;padding:1.25rem 0">
+      <a id="kyc-open-link" class="btn btn-primary" href="#" target="_blank" rel="noopener">Open identity verification ↗</a>
+      <p class="field-hint" style="margin-top:0.75rem">Opens Sumsub in a new tab (~3 minutes). Keep this page open — we detect approval automatically.</p>
+      <p id="kyc-waiting" class="hidden" style="margin-top:0.75rem"><span class="loading"></span> Waiting for verification to complete…</p>
+    </div>
     <div id="kyc-alert"></div>
   </div>
 
@@ -606,10 +610,10 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
     // efix.finance wallet get `alreadyApproved` and skip straight to payment.
     if (OFFERING_KYC_REQUIRED) {
       label.innerHTML = '<span class="loading"></span> Checking identity…';
-      const k = await requestKycToken();
-      if (k && !k.alreadyApproved && k.token) {
+      const k = await requestKycLink();
+      if (k && !k.alreadyApproved && k.url) {
         PENDING_ALLOC_BODY = body;
-        await launchKycFlow(k.token);
+        showKycLink(k.url);
         return; // allocation is created automatically once KYC approves
       }
       // alreadyApproved → fall through to payment.
@@ -650,60 +654,34 @@ async function createAllocation(body) {
 // KYC (Sumsub WebSDK) — token from the offerings backend;
 // externalUserId = email (same key the webhook + wallet lookup use)
 // ─────────────────────────────────────────────────────────
-async function requestKycToken() {
+async function requestKycLink() {
   try {
-    const r = await fetch(`${API_BASE}/v1/kyc/sumsub/token`, {
+    const r = await fetch(`${API_BASE}/v1/kyc/sumsub/link`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email: USER_EMAIL }),
     });
     return await r.json();
   } catch (e) {
-    console.warn('KYC token request failed (fail-open):', e.message);
+    console.warn('KYC link request failed (fail-open):', e.message);
     return null;
   }
 }
 
-function loadSumsubSdk() {
-  if (window.snsWebSdk) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://static.sumsub.com/idensic/static/sns-websdk-builder.js';
-    s.onload = resolve;
-    s.onerror = () => reject(new Error('Failed to load the verification module. Disable ad blockers and retry.'));
-    document.head.appendChild(s);
-  });
-}
-
-async function launchKycFlow(accessToken) {
+// Light pattern: the verification runs on Sumsub's own hosted page (new tab).
+// This page just waits — /v1/kyc/status polling flips to approved via webhook
+// or the wallet-base auto-heal, then the allocation is created automatically.
+function showKycLink(url) {
   KYC_DONE = false;
   const card = document.getElementById('kyc-card');
   card.classList.remove('hidden');
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  try {
-    await loadSumsubSdk();
-    const sdk = window.snsWebSdk
-      .init(accessToken, async () => {
-        const k = await requestKycToken();
-        if (k && k.alreadyApproved) { onKycApproved(); return accessToken; }
-        return (k && k.token) || accessToken;
-      })
-      .withConf({ lang: 'pt' })
-      .withOptions({ addViewportTag: false, adaptIframeHeight: true })
-      .on('idCheck.onApplicantStatusChanged', (payload) => {
-        const answer = payload && payload.reviewResult && payload.reviewResult.reviewAnswer;
-        if (payload && payload.reviewStatus === 'completed' && answer === 'GREEN') onKycApproved();
-        if (payload && payload.reviewStatus === 'completed' && answer === 'RED') {
-          showAlert('kyc-alert', 'err', 'Verification was not approved. Contact contato@efix.finance to review your case.');
-          stopKycPoll();
-        }
-      })
-      .build();
-    sdk.launch('#sumsub-websdk-container');
-    startKycPoll();
-  } catch (e) {
-    showAlert('kyc-alert', 'err', e.message);
-  }
+  const a = document.getElementById('kyc-open-link');
+  a.href = url;
+  a.onclick = () => {
+    document.getElementById('kyc-waiting').classList.remove('hidden');
+  };
+  startKycPoll();
 }
 
 function startKycPoll() {
