@@ -6,6 +6,26 @@
 
 ---
 
+## ⚡ UPDATE 2026-06-30 — deploy script PRONTO (gated na Fator)
+
+Verificado on-chain que FIRST **não está deployado** (`BTROfferingRegistry.offeringCount()=2` →
+só SALRIO+LATITUDE). O **deploy script já está escrito, testado e fail-closed**:
+`haus-btr-protocol/scripts/deploy-first.js` (clone do `deploy-latitude.js`, metadata FIRST).
+
+**Como disparar quando a Fator responder** (só 2 campos no topo do script):
+1. `lobieBuildingId: 0` → buildingId real do FIRST (Open Question #4).
+2. `units: [{ unitCode: "TODO-FATOR", … }]` → studio(s) real(is) + código/área/preço (Open Question #1).
+Depois: `EXECUTE=true npx hardhat run scripts/deploy-first.js --network base`. Enquanto os placeholders
+existirem, `EXECUTE` **aborta** (não dá pra broadcast errado); o DRY RUN roda e lista as pendências.
+
+O script deploya oracle + share, registra (offeringCount 2→3), grava `deployments/first-base.json`, e
+imprime o checklist pós-deploy. **Liquidação:** basta adicionar FIRST no
+`efix-offerings-backend/src/chain/constants.ts` (bloco já pré-escrito comentado lá, variant `hybrid`) →
+liquida igual SALRIO/LATITUDE via `POST /v1/admin/btr/first/transfer-shares`. Ver
+`efix-offerings-backend/docs/HANDOFF_LIQUIDACAO_OFERTAS_BTR.md`. **Nada de novo a construir — só dados da Fator.**
+
+---
+
 ## 0. Status em uma linha
 
 **Página marketing ✅ live (`https://efix.finance/firstrio/`, 847 linhas, editorial completo). Smart contracts da pool ❌ NÃO deployados. Backend offerings ❌ NÃO conhece FIRST. Onramp form ⚠️ captura email mas sem persistência. Próximo bloco crítico:** deploy `HausBTRShare(FIRST)` na Base + registro em `BTROfferingRegistry` + wire no `efix-offerings-backend` `/v1/offerings`.

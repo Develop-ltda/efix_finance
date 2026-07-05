@@ -210,6 +210,27 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 
 .tbd-note{margin-top:1rem;padding:0.85rem 1.25rem;background:#fafbfc;border-left:3px solid #a3a3a3;border-radius:0 8px 8px 0;font-size:0.78rem;color:#525252;line-height:1.6;max-width:720px}
 
+/* Lifecycle timeline — when each contract goes live */
+.lifecycle{margin:1.5rem 0 0;padding:1.75rem 1.5rem 1.5rem;background:#fafbfc;border:1px solid #e5e5e5;border-radius:14px;max-width:720px}
+.lifecycle-h{font-family:'Space Mono',monospace;font-size:0.62rem;color:#10b981;text-transform:uppercase;letter-spacing:0.12em;font-weight:700;margin-bottom:1.5rem}
+.lifecycle-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;position:relative}
+.lifecycle-grid::before{content:'';position:absolute;top:8px;left:8%;right:8%;height:2px;background:linear-gradient(to right,#10b981,#86efac,#10b981);z-index:0}
+.lc-step{position:relative;z-index:1;text-align:center}
+.lc-dot{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid #10b981;margin:0 auto 0.85rem;box-sizing:border-box}
+.lc-dot.featured{background:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,0.18)}
+.lc-date{font-family:'Space Mono',monospace;font-size:0.7rem;color:#047857;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;margin-bottom:0.3rem}
+.lc-title{font-weight:700;font-size:0.83rem;line-height:1.3;margin-bottom:0.3rem;color:#0a0a0a}
+.lc-desc{font-size:0.72rem;color:#737373;line-height:1.55;padding:0 0.25rem}
+@media(max-width:900px){
+  .lifecycle-grid{grid-template-columns:1fr;gap:1.25rem}
+  .lifecycle-grid::before{top:0;bottom:0;left:8px;right:auto;width:2px;height:auto;background:linear-gradient(to bottom,#10b981,#86efac,#10b981)}
+  .lc-step{display:grid;grid-template-columns:auto 1fr;column-gap:1rem;text-align:left;align-items:start}
+  .lc-dot{margin:0}
+  .lc-date{grid-column:2;margin-bottom:0.15rem}
+  .lc-title{grid-column:2}
+  .lc-desc{grid-column:2;padding:0}
+}
+
 .risk-box{border-left:3px solid #10b981;padding:1.25rem 1.5rem;background:#ecfdf5;border-radius:0 10px 10px 0;margin-top:1rem}
 .risk-box h4{font-weight:700;font-size:0.95rem;margin-bottom:0.5rem;color:#047857}
 .risk-box p{font-size:0.8rem;color:#525252;line-height:1.65;margin-bottom:0.5rem}
@@ -219,6 +240,38 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 .faq-item:hover{border-color:#86efac}
 .faq-q{font-weight:700;font-size:0.9rem;margin-bottom:0.5rem}
 .faq-a{font-size:0.82rem;color:#525252;line-height:1.65}
+
+/* Comparables — Fator Realty retail price anchor */
+.comp-wrap{margin-top:2rem}
+.comp-callout{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #86efac;border-radius:14px;padding:1.5rem 1.75rem;margin-bottom:1.25rem;display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:center}
+.comp-callout-num{font-family:'Space Mono',monospace;font-size:2.4rem;font-weight:700;color:#047857;line-height:1;letter-spacing:-0.04em}
+.comp-callout-num small{display:block;font-size:0.6rem;font-weight:400;color:#10b981;letter-spacing:0.12em;text-transform:uppercase;margin-top:0.4rem}
+.comp-callout-text{font-size:0.88rem;color:#065f46;line-height:1.65}
+.comp-callout-text strong{color:#047857;font-weight:700}
+.comp-table-wrap{border:1px solid #e5e5e5;border-radius:14px;overflow:hidden;background:#fff}
+.comp-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.comp-table thead th{background:#fafbfc;text-align:left;padding:0.85rem 1.1rem;font-family:'Space Mono',monospace;font-size:0.62rem;color:#737373;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;border-bottom:1px solid #e5e5e5}
+.comp-table thead th.num{text-align:right}
+.comp-table tbody td{padding:0.7rem 1.1rem;border-bottom:1px solid #f5f5f5;color:#525252}
+.comp-table tbody tr:last-child td{border-bottom:none}
+.comp-table tbody tr:hover{background:#ecfdf5}
+.comp-table tbody td.unit{font-family:'Space Mono',monospace;font-weight:700;color:#0a0a0a}
+.comp-table tbody td.num{text-align:right;font-family:'Space Mono',monospace;color:#0a0a0a;font-weight:700}
+.comp-table tbody td.area{font-family:'Space Mono',monospace;color:#737373}
+.comp-table tfoot td{padding:0.85rem 1.1rem;background:#ecfdf5;border-top:2px solid #10b981}
+.comp-table tfoot td.unit{font-weight:800;color:#047857;font-family:'Space Mono',monospace}
+.comp-table tfoot td.num{text-align:right;font-family:'Space Mono',monospace;font-weight:800;color:#047857}
+.comp-source{margin-top:0.85rem;font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;letter-spacing:0.05em}
+.comp-extra{margin-top:1.25rem;display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem}
+.comp-extra-card{padding:1rem 1.1rem;background:#fafbfc;border:1px dashed #e5e5e5;border-radius:10px}
+.comp-extra-h{font-family:'Space Mono',monospace;font-size:0.58rem;color:#10b981;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;margin-bottom:0.4rem}
+.comp-extra-p{font-size:0.78rem;color:#525252;line-height:1.6}
+.comp-extra-p strong{color:#0a0a0a}
+@media(max-width:900px){
+  .comp-callout{grid-template-columns:1fr}
+  .comp-extra{grid-template-columns:1fr}
+  .comp-table thead th:nth-child(3),.comp-table tbody td.area{display:none}
+}
 
 .cta-section{padding:5rem 0;text-align:center;border-top:1px solid #e5e5e5}
 .cta-desc{color:#737373;font-size:0.92rem;margin:0 auto 2rem;max-width:520px}
@@ -268,6 +321,7 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
     <div style="display:flex;align-items:center;gap:12px">
       <ul class="nav-links">
         <li><a href="#opportunity" data-i18n="nav_opp">Opportunity</a></li>
+        <li><a href="#comparables" data-i18n="nav_comp">Anchor</a></li>
         <li><a href="#neighborhood" data-i18n="nav_hood">Hood</a></li>
         <li><a href="#building" data-i18n="nav_bldg">Building</a></li>
         <li><a href="#returns" data-i18n="nav_ret">Returns</a></li>
@@ -403,6 +457,73 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
         <div class="opp-metric-label" data-i18n="opp_m1">Pool size</div>
         <div class="opp-metric-val">R$ <span class="big">680k</span></div>
         <div class="opp-metric-sub" data-i18n="opp_m1s">680,000 FIRST shares at R$ 1.00 par. The smallest pool in the BTR catalog — a clean entry point for new allocators. Continuously NAV-tracked against Chainlink BRL/USD.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARABLES — Fator Realty retail price anchor -->
+<section class="section section-border" id="comparables">
+  <div class="container">
+    <div class="section-label" data-i18n="sec_comp">The Anchor</div>
+    <div class="section-title" data-i18n="comp_title">Real Fator Realty pricing — what retail buyers pay</div>
+    <div class="section-desc" data-i18n="comp_desc">
+      Fator Realty's official April 2026 sales table prices identical studios in this exact building between R$ 729k and R$ 816k, with premium lofts and 1-bedrooms reaching R$ 1.43M. FIRST tokenizes equity in 1 of these studios at a R$ 680k pool size — par-priced at R$ 1.00 / share — well below what a retail buyer pays for the same square meterage in the same building.
+    </div>
+
+    <div class="comp-wrap">
+      <div class="comp-callout">
+        <div class="comp-callout-num">R$ 680k<small data-i18n="comp_cn_l">FIRST pool size</small></div>
+        <div class="comp-callout-text" data-i18n="comp_ct">
+          <strong>Below market par.</strong> Same building, same construction standard, same Largo dos Leões 15 address. Retail buyers of comparable studios pay <strong>R$ 729k–816k</strong> in installments — plus INCC-DI reajuste during construction and 12% a.a. interest after habite-se. FIRST holders skip both: pool funds settle at par on offering close, and dividends start in BRLE the same month.
+        </div>
+      </div>
+
+      <div class="comp-table-wrap">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th data-i18n="comp_th_u">Unit</th>
+              <th data-i18n="comp_th_t">Tipologia</th>
+              <th data-i18n="comp_th_a">Área</th>
+              <th class="num" data-i18n="comp_th_p">Retail price (R$)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="unit">1112</td><td>Studio com varanda</td><td class="area">32,87 m²</td><td class="num">729.286</td></tr>
+            <tr><td class="unit">1612</td><td>Studio com varanda</td><td class="area">32,87 m²</td><td class="num">750.161</td></tr>
+            <tr><td class="unit">1410</td><td>Studio com varanda</td><td class="area">36,58 m²</td><td class="num">788.180</td></tr>
+            <tr><td class="unit">1510</td><td>Studio com varanda</td><td class="area">36,58 m²</td><td class="num">816.516</td></tr>
+            <tr><td class="unit">402</td><td>Loft Premium · varanda</td><td class="area">47,52 m²</td><td class="num">817.294</td></tr>
+            <tr><td class="unit">802</td><td>Loft Premium · varanda</td><td class="area">51,28 m²</td><td class="num">1.074.061</td></tr>
+            <tr><td class="unit">1602</td><td>Loft Premium · varanda</td><td class="area">51,28 m²</td><td class="num">1.181.837</td></tr>
+            <tr><td class="unit">807</td><td>1 quarto suíte · varanda</td><td class="area">52,77 m²</td><td class="num">983.098</td></tr>
+            <tr><td class="unit">301</td><td>1 quarto suíte · varanda</td><td class="area">77,05 m²</td><td class="num">1.239.445</td></tr>
+            <tr><td class="unit">604</td><td>2 quartos · suíte · varandas</td><td class="area">79,85 m²</td><td class="num">1.430.496</td></tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="unit" colspan="3" data-i18n="comp_tf_l">FIRST pool · 680,000 cotas at R$ 1,00 par</td>
+              <td class="num">680.000</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="comp-source" data-i18n="comp_src">Source: Fator Realty Tabela de Venda 2026-04 (20-80) · valid through Apr 30, 2026.</div>
+
+      <div class="comp-extra">
+        <div class="comp-extra-card">
+          <div class="comp-extra-h" data-i18n="ce1_h">Retail payment plan</div>
+          <p class="comp-extra-p" data-i18n="ce1_p">Retail buyer puts <strong>~8% sinal</strong> + 8 monthly installments + <strong>6% conclusão</strong> + escritura + 1 last installment in May/29. Total 80% of price reajustado <strong>INCC-DI durante obra</strong>, then IGP-M.</p>
+        </div>
+        <div class="comp-extra-card">
+          <div class="comp-extra-h" data-i18n="ce2_h">FIRST allocation</div>
+          <p class="comp-extra-p" data-i18n="ce2_p"><strong>Single par-priced settlement</strong> on offering close. No INCC reajuste, no installment interest. Monthly BRLE dividends from day one (CDI proxy → real STR rent after habite-se).</p>
+        </div>
+        <div class="comp-extra-card">
+          <div class="comp-extra-h" data-i18n="ce3_h">Building constraint</div>
+          <p class="comp-extra-p" data-i18n="ce3_p"><strong>No parking spots.</strong> First Life Friendly is a STR-optimized building — guests rely on Uber, Botafogo metro (10 min walk) and the Cobal corridor. Lower carrying cost vs. parking-included buildings.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -566,11 +687,12 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
           <div class="bldg-addr">Rua Largo dos Leões, 15 · Humaitá · Rio de Janeiro</div>
           <ul class="bldg-features">
             <li data-i18n="bf1"><strong>19 floors · 159 units</strong> — 157 residential + 2 ground-floor shops</li>
-            <li data-i18n="bf2"><strong>Studio of ~32 m²</strong> — STR-optimized layout</li>
-            <li data-i18n="bf3"><strong>Memorial nº 5.356 — 3º RGI/RJ</strong> — registered title</li>
-            <li data-i18n="bf4"><strong>Habite-se forecast Jan/2027</strong> — ~8 months from offering close</li>
-            <li data-i18n="bf5"><strong>Cristo views from upper floors</strong> — Zona Sul premium</li>
+            <li data-i18n="bf2"><strong>Studios of 32–37 m²</strong> — STR-optimized layout, P. Açúcar &amp; Cristo facades</li>
+            <li data-i18n="bf3"><strong>Memorial nº 5.356 — 3º RGI/RJ</strong> — registered title (Largo dos Leões 15, Humaitá)</li>
+            <li data-i18n="bf4"><strong>Conclusão da obra Dez/2026 · Habite-se prev. Jan/2027</strong> — per Fator Realty, ~8 months from offering close</li>
+            <li data-i18n="bf5"><strong>Cristo views from upper floors</strong> — Zona Sul premium · facing Largo dos Leões</li>
             <li data-i18n="bf6">Common areas: pool, gym, party room, coworking, rooftop deck</li>
+            <li data-i18n="bf7"><strong>No parking by design</strong> — STR-optimized; guests use Uber + Botafogo metro (10-min walk)</li>
           </ul>
         </div>
         <div class="bldg-arch">
@@ -822,6 +944,35 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
         <a href="https://basescan.org/address/0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6#code" target="_blank" class="contract-addr">0x7D12…82F6</a>
       </div>
     </div>
+    <div class="lifecycle">
+      <div class="lifecycle-h" data-i18n="lc_h">FIRST lifecycle on-chain</div>
+      <div class="lifecycle-grid">
+        <div class="lc-step">
+          <div class="lc-dot"></div>
+          <div class="lc-date" data-i18n="lc1_date">May / 2026</div>
+          <div class="lc-title" data-i18n="lc1_title">Deploy &amp; IPO</div>
+          <div class="lc-desc" data-i18n="lc1_desc">FIRST token, FirstOracleV1 deployed. Primary allocation opens; ConstructionProxy yield begins.</div>
+        </div>
+        <div class="lc-step">
+          <div class="lc-dot"></div>
+          <div class="lc-date" data-i18n="lc2_date">Jun / 2026</div>
+          <div class="lc-title" data-i18n="lc2_title">Liquidity online</div>
+          <div class="lc-desc" data-i18n="lc2_desc">Uniswap V3 FIRST/BRLE 0.3% pool seeded at par; Morpho Blue market opens at 62.5% LLTV.</div>
+        </div>
+        <div class="lc-step">
+          <div class="lc-dot"></div>
+          <div class="lc-date" data-i18n="lc3_date">Dec / 2026</div>
+          <div class="lc-title" data-i18n="lc3_title">Construction done</div>
+          <div class="lc-desc" data-i18n="lc3_desc">Fator Realty delivers the building. Retail buyers face final installments; FIRST holders unaffected.</div>
+        </div>
+        <div class="lc-step">
+          <div class="lc-dot featured"></div>
+          <div class="lc-date" data-i18n="lc4_date">Jan / 2027 →</div>
+          <div class="lc-title" data-i18n="lc4_title">Habite-se &amp; STR ramp</div>
+          <div class="lc-desc" data-i18n="lc4_desc">Lobie installs furniture, lists studio, first guests. Phase flips to Operational in Feb/27.</div>
+        </div>
+      </div>
+    </div>
     <div class="tbd-note" data-i18n="tbd_note"><strong>Note:</strong> FIRST-specific contracts (token, oracle, AMM pool, Morpho market) will be deployed on offering open in May 2026. Shared infrastructure (BTROfferingRegistry, Lobie Unit Registry, BRLE, Lobie-Haus-Btr Safe) is already live and reused across all BTR pools.</div>
   </div>
 </section>
@@ -929,7 +1080,18 @@ function startAllocation(event) {
 <script>
 const i18n = {
   en: { flag:'🇺🇸', code:'EN',
-    nav_opp:'Opportunity', nav_hood:'Hood', nav_bldg:'Building', nav_ret:'Returns', nav_allocate:'Allocate', nav_faq:'FAQ', nav_cta:'Reserve allocation',
+    nav_opp:'Opportunity', nav_comp:'Anchor', nav_hood:'Hood', nav_bldg:'Building', nav_ret:'Returns', nav_allocate:'Allocate', nav_faq:'FAQ', nav_cta:'Reserve allocation',
+    sec_comp:'The Anchor', comp_title:'Real Fator Realty pricing — what retail buyers pay',
+    comp_desc:"Fator Realty's official April 2026 sales table prices identical studios in this exact building between R$ 729k and R$ 816k, with premium lofts and 1-bedrooms reaching R$ 1.43M. FIRST tokenizes equity in 1 of these studios at a R$ 680k pool size — par-priced at R$ 1.00 / share — well below what a retail buyer pays for the same square meterage in the same building.",
+    comp_cn_l:'FIRST pool size',
+    comp_ct:'<strong>Below market par.</strong> Same building, same construction standard, same Largo dos Leões 15 address. Retail buyers of comparable studios pay <strong>R$ 729k–816k</strong> in installments — plus INCC-DI reajuste during construction and 12% a.a. interest after habite-se. FIRST holders skip both: pool funds settle at par on offering close, and dividends start in BRLE the same month.',
+    comp_th_u:'Unit', comp_th_t:'Tipologia', comp_th_a:'Área', comp_th_p:'Retail price (R$)',
+    comp_tf_l:'FIRST pool · 680,000 cotas at R$ 1,00 par',
+    comp_src:'Source: Fator Realty Tabela de Venda 2026-04 (20-80) · valid through Apr 30, 2026.',
+    ce1_h:'Retail payment plan', ce1_p:'Retail buyer puts <strong>~8% sinal</strong> + 8 monthly installments + <strong>6% conclusão</strong> + escritura + 1 last installment in May/29. Total 80% of price reajustado <strong>INCC-DI durante obra</strong>, then IGP-M.',
+    ce2_h:'FIRST allocation', ce2_p:'<strong>Single par-priced settlement</strong> on offering close. No INCC reajuste, no installment interest. Monthly BRLE dividends from day one (CDI proxy → real STR rent after habite-se).',
+    ce3_h:'Building constraint', ce3_p:'<strong>No parking spots.</strong> First Life Friendly is a STR-optimized building — guests rely on Uber, Botafogo metro (10 min walk) and the Cobal corridor. Lower carrying cost vs. parking-included buildings.',
+    bf7:'<strong>No parking by design</strong> — STR-optimized; guests use Uber + Botafogo metro (10-min walk)',
     po_label:'Humaitá · Zona Sul · Rio de Janeiro',
     po_text:"Aos pés do Corcovado,<br>entre a Lagoa e Botafogo.<br>O Humaitá é onde o Rio respira.<span class=\"stanza\">Cobal pela manhã, samba ao entardecer,<br>Cristo iluminado quando a noite cai.<br>O bairro mais querido pelos cariocas.</span>",
     po_tag:'Humaitá — onde morar é privilégio',
@@ -1001,6 +1163,11 @@ const i18n = {
     sec_contracts:'Smart Contracts · Base mainnet', contracts_title:'Contracts to be deployed on offering open',
     contracts_desc:'Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. All contracts immutable, no proxy, no upgrade path. Same audited framework as SALRIO Pool #1, with FIRST-specific instances.',
     tbd_note:'<strong>Note:</strong> FIRST-specific contracts (token, oracle, AMM pool, Morpho market) will be deployed on offering open in May 2026. Shared infrastructure (BTROfferingRegistry, Lobie Unit Registry, BRLE, Lobie-Haus-Btr Safe) is already live and reused across all BTR pools.',
+    lc_h:'FIRST lifecycle on-chain',
+    lc1_date:'May / 2026', lc1_title:'Deploy &amp; IPO', lc1_desc:'FIRST token, FirstOracleV1 deployed. Primary allocation opens; ConstructionProxy yield begins.',
+    lc2_date:'Jun / 2026', lc2_title:'Liquidity online', lc2_desc:'Uniswap V3 FIRST/BRLE 0.3% pool seeded at par; Morpho Blue market opens at 62.5% LLTV.',
+    lc3_date:'Dec / 2026', lc3_title:'Construction done', lc3_desc:'Fator Realty delivers the building. Retail buyers face final installments; FIRST holders unaffected.',
+    lc4_date:'Jan / 2027 →', lc4_title:'Habite-se &amp; STR ramp', lc4_desc:'Lobie installs furniture, lists studio, first guests. Phase flips to Operational in Feb/27.',
     sec_risk:'Risk & Compliance', risk_title:'Read before you allocate',
     risk_desc:'FIRST is a Regulation S Category 3 offering. Primary distribution is restricted: no U.S. persons may participate in the initial offering. EFIX Plataforma de Tokenização e Crowdfunding Ltda is the issuer; Lobie is the operator; Harris & Trotter audits cashflow observations before they land on-chain. FIRST tokens will trade freely on global secondary markets after the 12-month Reg S compliance period.',
     risk_h1:'Key risks',
@@ -1026,7 +1193,18 @@ const i18n = {
     foot_legal:'EFIX Plataforma de Tokenização e Crowdfunding Ltda — CVM Act 23.635/2025 — Reg S Cat 3 — No U.S. persons in primary'
   },
   pt: { flag:'🇧🇷', code:'PT',
-    nav_opp:'Oportunidade', nav_hood:'Bairro', nav_bldg:'Edifício', nav_ret:'Rendimento', nav_allocate:'Alocar', nav_faq:'FAQ', nav_cta:'Reservar alocação',
+    nav_opp:'Oportunidade', nav_comp:'Âncora', nav_hood:'Bairro', nav_bldg:'Edifício', nav_ret:'Rendimento', nav_allocate:'Alocar', nav_faq:'FAQ', nav_cta:'Reservar alocação',
+    sec_comp:'A Âncora', comp_title:'Tabela de venda Fator Realty — preço que o comprador retail paga',
+    comp_desc:'A tabela oficial de abril de 2026 da Fator Realty precifica studios idênticos neste mesmo edifício entre R$ 729k e R$ 816k, com lofts premium e 1 quartos chegando a R$ 1,43M. FIRST tokeniza equity em 1 desses studios com tamanho de pool de R$ 680k — par a R$ 1,00 / cota — bem abaixo do que o comprador retail paga pelo mesmo m² no mesmo edifício.',
+    comp_cn_l:'Tamanho do pool FIRST',
+    comp_ct:'<strong>Abaixo do par de mercado.</strong> Mesmo edifício, mesmo padrão construtivo, mesmo endereço Largo dos Leões 15. Compradores retail de studios comparáveis pagam <strong>R$ 729k–816k</strong> parcelado — mais reajuste INCC-DI durante obra e juros de 12% a.a. após habite-se. Titulares FIRST pulam os dois: o pool é liquidado ao par no fechamento da oferta, e os dividendos começam em BRLE no mesmo mês.',
+    comp_th_u:'Unid.', comp_th_t:'Tipologia', comp_th_a:'Área', comp_th_p:'Preço retail (R$)',
+    comp_tf_l:'Pool FIRST · 680.000 cotas a R$ 1,00 par',
+    comp_src:'Fonte: Fator Realty Tabela de Venda 2026-04 (20-80) · válida até 30/04/2026.',
+    ce1_h:'Plano de pagamento retail', ce1_p:'Comprador retail dá <strong>~8% sinal</strong> + 8 mensais + <strong>6% conclusão</strong> + escritura + 1 última em Mai/29. 80% do total reajustado pelo <strong>INCC-DI durante obra</strong>, depois IGP-M.',
+    ce2_h:'Alocação FIRST', ce2_p:'<strong>Liquidação única ao par</strong> no fechamento. Sem reajuste INCC, sem juros parcelados. Dividendos mensais em BRLE desde o dia 1 (proxy CDI → aluguel STR real após habite-se).',
+    ce3_h:'Característica do edifício', ce3_p:'<strong>Sem vagas de estacionamento.</strong> O First Life Friendly é otimizado para STR — hóspedes usam Uber, metrô Botafogo (10 min a pé) e o corredor da Cobal. Menor custo de carregamento vs. edifícios com vaga.',
+    bf7:'<strong>Sem vagas de estacionamento</strong> — projeto otimizado para STR; hóspedes usam Uber + metrô Botafogo (10 min a pé)',
     po_label:'Humaitá · Zona Sul · Rio de Janeiro',
     po_text:"Aos pés do Corcovado,<br>entre a Lagoa e Botafogo.<br>O Humaitá é onde o Rio respira.<span class=\"stanza\">Cobal pela manhã, samba ao entardecer,<br>Cristo iluminado quando a noite cai.<br>O bairro mais querido pelos cariocas.</span>",
     po_tag:'Humaitá — onde morar é privilégio',
@@ -1038,10 +1216,10 @@ const i18n = {
     bldg_desc:'O First Life Friendly é um empreendimento Fator Realty de 19 andares e 159 unidades na Rua Largo dos Leões. Arquitetura FEU Arquitetura, interiores Inspira Interiores. Engenheirado para uso residencial de longa duração e operação STR. O studio tokenizado como FIRST é uma das 157 unidades residenciais do edifício.',
     bldg_img_label:'First Life Friendly — Render', bldg_tag:'Fator Realty · 70 anos construindo o Rio',
     bf1:'<strong>19 andares · 159 unidades</strong> — 157 residenciais + 2 lojas no térreo',
-    bf2:'<strong>Studio de ~32 m²</strong> — layout otimizado para STR',
-    bf3:'<strong>Memorial nº 5.356 — 3º RGI/RJ</strong> — matrícula registrada',
-    bf4:'<strong>Habite-se previsto Jan/2027</strong> — ~8 meses do fechamento da oferta',
-    bf5:'<strong>Vista do Cristo nos andares altos</strong> — premium Zona Sul',
+    bf2:'<strong>Studios de 32–37 m²</strong> — layout otimizado para STR, fachadas P. Açúcar &amp; Cristo',
+    bf3:'<strong>Memorial nº 5.356 — 3º RGI/RJ</strong> — matrícula registrada (Largo dos Leões 15, Humaitá)',
+    bf4:'<strong>Conclusão da obra Dez/2026 · Habite-se previsto Jan/2027</strong> — pela Fator Realty, ~8 meses do fechamento da oferta',
+    bf5:'<strong>Vista do Cristo nos andares altos</strong> — premium Zona Sul · de frente para o Largo dos Leões',
     bf6:'Áreas comuns: piscina, academia, salão de festas, coworking, deck rooftop',
     bldg_arch:'Arquitetura <strong>FEU Arquitetura</strong> · interiores <strong>Inspira Interiores</strong> — escritórios cariocas especializados em projetos residenciais e de hospitalidade.',
     sec_part:'A Parceria', part_title:'Tradição + tokenização, lado a lado',
@@ -1098,6 +1276,11 @@ const i18n = {
     sec_contracts:'Smart Contracts · Base mainnet', contracts_title:'Contratos a serem implantados na abertura',
     contracts_desc:'Solidity 0.8.22, OpenZeppelin v5.4, optimizer 200 runs, viaIR. Todos imutáveis, sem proxy, sem caminho de upgrade. Mesmo framework auditado do SALRIO Pool #1, com instâncias específicas do FIRST.',
     tbd_note:'<strong>Nota:</strong> os contratos específicos do FIRST (token, oracle, pool AMM, mercado Morpho) serão implantados na abertura da oferta em maio de 2026. A infraestrutura compartilhada (BTROfferingRegistry, Lobie Unit Registry, BRLE, Lobie-Haus-Btr Safe) já está ao vivo e é reutilizada por todos os pools BTR.',
+    lc_h:'Ciclo de vida on-chain do FIRST',
+    lc1_date:'Mai / 2026', lc1_title:'Deploy &amp; IPO', lc1_desc:'Token FIRST e FirstOracleV1 deployados. Alocação primária abre; rendimento ConstructionProxy começa.',
+    lc2_date:'Jun / 2026', lc2_title:'Liquidez online', lc2_desc:'Pool Uniswap V3 FIRST/BRLE 0.3% seedado ao par; mercado Morpho Blue abre com LLTV 62,5%.',
+    lc3_date:'Dez / 2026', lc3_title:'Conclusão da obra', lc3_desc:'Fator Realty entrega a obra. Compradores retail enfrentam parcelas finais; titulares FIRST não.',
+    lc4_date:'Jan / 2027 →', lc4_title:'Habite-se &amp; ramp STR', lc4_desc:'Lobie instala mobília, lista o studio, primeiros hóspedes. Fase vira Operational em Fev/27.',
     sec_risk:'Riscos e Compliance', risk_title:'Leia antes de alocar',
     risk_desc:'FIRST é uma oferta Regulation S Categoria 3. A distribuição primária é restrita: nenhum americano pode participar na oferta inicial. EFIX Plataforma de Tokenização e Crowdfunding Ltda é a emissora; Lobie é a operadora; Harris & Trotter audita as observações de cashflow antes de entrarem on-chain. Os tokens FIRST serão livremente negociados em mercados secundários globais após o período de 12 meses Reg S.',
     risk_h1:'Riscos principais',

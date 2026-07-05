@@ -554,6 +554,7 @@ tr:hover td { background: var(--bg); }
     <button class="tab-btn" onclick="switchTab('collateral',this)">Colateral</button>
     
     <button class="tab-btn" onclick="switchTab('bridge',this)">Bridge</button>
+    <button class="tab-btn" onclick="switchTab('borrow',this);loadBorrowTab()">Empréstimo</button>
     <button class="tab-btn" onclick="switchTab('holders',this)">Holders</button>
     <button class="tab-btn" onclick="switchTab('protocol-dash',this)">Protocol</button>
     
@@ -629,6 +630,54 @@ tr:hover td { background: var(--bg); }
           <a href="https://layerzeroscan.com/address/0x603265754fDdd7FdE459CC6e6722bd526C1258Fc" target="_blank" style="text-decoration:none;"><button class="sm secondary" type="button">LayerZero Scan ↗</button></a>
         </div>
       </div>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-borrow">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h2 style="margin:0">Posição Morpho (Base)</h2>
+          <button class="sm secondary" onclick="loadBorrowTab()">Refresh</button>
+        </div>
+        <p style="font-size:11px;color:var(--gray-500);margin-bottom:12px;">Mode A — admin-managed leverage. Operator wallet supplies collateral and borrows; user vault positions are independent.</p>
+        <div id="borrowPositionSummary"><div class="empty">Loading...</div></div>
+      </div>
+      <div class="card">
+        <h2>Borrow USDC (Morpho Market A)</h2>
+        <p style="font-size:11px;color:var(--gray-500);margin-bottom:12px;">Borrows USDC against operator's existing efixDI collateral on Base. LLTV 77% — keep target LTV ≤ 65% for safety margin.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Amount (USDC)</label>
+            <input type="number" id="borrowAmount" placeholder="100" min="0.01" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Recipient (optional — defaults to operator)</label>
+            <input type="text" id="borrowRecipient" placeholder="0x... (leave empty for operator)">
+          </div>
+        </div>
+        <button onclick="doBorrow()">Borrow USDC</button>
+        <div id="borrowResult" style="margin-top:12px;min-height:20px;font-size:12px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Cashout BRLE (USDC → BRLE via BRLESwap)</h2>
+      <p style="font-size:11px;color:var(--gray-500);margin-bottom:12px;">
+        Swaps USDC borrowed from Morpho into BRLE on Base via <a href="https://basescan.org/address/0xDac75EC3f9d0294d4a48BcE5d0d7A2b0693D7AD1" target="_blank" style="color:var(--green)">BRLESwap 0xDac75E…7AD1</a>.
+        BRLE is then redeemable to PIX BRL via the BRLE PSM operator flow. Includes balance-delta verification to defend against silent-failure swaps (OZ L-01 class).
+      </p>
+      <div id="brleSwapInfo" style="margin-bottom:12px;font-size:11px;color:var(--gray-400);"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount (USDC)</label>
+          <input type="number" id="cashoutAmount" placeholder="100" min="0.01" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Slippage (bps, default 100 = 1%)</label>
+          <input type="number" id="cashoutSlippage" placeholder="100" min="1" max="1000" step="1">
+        </div>
+      </div>
+      <button onclick="doCashoutBrle()">Swap USDC → BRLE</button>
+      <div id="cashoutResult" style="margin-top:12px;min-height:20px;font-size:12px;"></div>
     </div>
   </div>
   <div class="tab-content" id="tab-holders">
@@ -940,6 +989,61 @@ const userAddress=(document.getElementById('bridgeUser')||{}).value?.trim()||nul
 if(!confirm('Bridge '+amount+' efixDI from '+(userAddress?'vault ('+sa(userAddress)+')':'operator pool')+' to Base?'))return;
 const el=document.getElementById('bridgeResult');el.innerHTML='<span style="color:var(--yellow)">'+(userAddress?'Releasing from vault → ':'')+'Bridging...</span>';
 try{const body={amount};if(userAddress)body.userAddress=userAddress;const r=await fetch(B+'/api/admin/bridge',{method:'POST',headers:hdr(),body:JSON.stringify(body)});const d=await r.json();if(d.success){el.innerHTML='<span style="color:var(--green)">✓ '+d.amount+' efixDI bridging to Base'+(d.vaultBridgeTx?'<br>Vault TX: <a href="https://polygonscan.com/tx/'+d.vaultBridgeTx+'" target="_blank" style="color:var(--green)">'+d.vaultBridgeTx.slice(0,14)+'...</a>':'')+'<br>Bridge TX: <a href="https://polygonscan.com/tx/'+d.bridgeTx+'" target="_blank" style="color:var(--green)">'+d.bridgeTx.slice(0,14)+'...</a><br>Fee: '+d.fee+'</span>';toast('Bridge sent!');setTimeout(()=>{loadBridgeBalances();loadCollateral()},10000)}else{el.innerHTML='<span style="color:var(--red)">'+d.error+'</span>'}}catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}}
+
+// ── Empréstimo tab (Mode A admin borrow + BRLE cashout) ──
+async function loadBorrowTab(){
+  const posEl=document.getElementById('borrowPositionSummary');
+  if(posEl){
+    posEl.innerHTML='<div class="empty">Loading...</div>';
+    try{const r=await fetch(B+'/api/admin/morpho',{headers:hdr()});const d=await r.json();
+      if(d.error){posEl.innerHTML='<div style="color:var(--red);font-size:12px">'+d.error+'</div>'}
+      else{const m=d.morpho,b=d.base;
+        posEl.innerHTML='<table class="tbl">'+
+          '<tr><td style="color:var(--gray-500)">Collateral</td><td>'+m.collateral+'</td></tr>'+
+          '<tr><td style="color:var(--gray-500)">Collateral USD</td><td>'+m.collateralUSD+'</td></tr>'+
+          '<tr><td style="color:var(--gray-500)">Borrowed</td><td style="color:var(--red)">'+m.borrowed+'</td></tr>'+
+          '<tr><td style="color:var(--gray-500)">LTV / LLTV</td><td>'+m.ltv+' / '+m.lltv+'</td></tr>'+
+          '<tr><td style="color:var(--gray-500)">Health Factor</td><td style="color:var(--green);font-weight:700">'+m.healthFactor+'</td></tr>'+
+          '<tr><td style="color:var(--gray-500)">Oracle Price</td><td>'+m.oraclePrice+'</td></tr>'+
+          '<tr><td colspan="2" style="border-top:1px solid var(--border);padding-top:8px;color:var(--gray-500);font-size:10px">OPERATOR BALANCES (BASE)</td></tr>'+
+          '<tr><td style="color:var(--gray-500)">efixDI</td><td>'+b.efixDI+'</td></tr>'+
+          '<tr><td style="color:var(--gray-500)">USDC</td><td style="color:var(--green)">'+b.usdc+'</td></tr>'+
+          '</table>'}
+    }catch(e){posEl.innerHTML='<div style="color:var(--red);font-size:12px">'+e.message+'</div>'}
+  }
+  const swapEl=document.getElementById('brleSwapInfo');
+  if(swapEl){
+    swapEl.innerHTML='Loading rate...';
+    try{const r=await fetch(B+'/api/admin/brle-swap-info',{headers:hdr()});const d=await r.json();
+      if(d.error){swapEl.innerHTML='<span style="color:var(--gray-500)">Swap info: '+d.error+'</span>'}
+      else{swapEl.innerHTML='Rate: <b style="color:var(--green)">'+d.rate+' BRL/USD</b> · Fee: '+d.feePct+' · Daily cap remaining: '+d.dailyRemaining+' USDC'}
+    }catch(e){swapEl.innerHTML='<span style="color:var(--gray-500)">Swap info unavailable</span>'}
+  }
+}
+async function doBorrow(){
+  const amount=document.getElementById('borrowAmount').value.trim();
+  if(!amount||Number(amount)<=0){alert('Enter USDC amount');return}
+  const recipient=document.getElementById('borrowRecipient').value.trim()||null;
+  if(!confirm('Borrow '+amount+' USDC from Morpho'+(recipient?' → recipient '+sa(recipient):' (recipient: operator)')+'?'))return;
+  const el=document.getElementById('borrowResult');el.innerHTML='<span style="color:var(--yellow)">Borrowing...</span>';
+  try{const body={amount};if(recipient)body.recipient=recipient;
+    const r=await fetch(B+'/api/admin/borrow',{method:'POST',headers:hdr(),body:JSON.stringify(body)});const d=await r.json();
+    if(d.success){el.innerHTML='<span style="color:var(--green)">✓ Borrowed '+d.amount+' USDC<br>Recipient: '+sa(d.recipient)+'<br>TX: <a href="https://basescan.org/tx/'+d.tx+'" target="_blank" style="color:var(--green)">'+d.tx.slice(0,14)+'...</a></span>';toast('USDC borrowed!');setTimeout(()=>loadBorrowTab(),3000)}
+    else{el.innerHTML='<span style="color:var(--red)">'+(d.error||'Borrow failed')+'</span>'}
+  }catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}
+}
+async function doCashoutBrle(){
+  const amount=document.getElementById('cashoutAmount').value.trim();
+  if(!amount||Number(amount)<=0){alert('Enter USDC amount');return}
+  const slippage=document.getElementById('cashoutSlippage').value.trim()||'100';
+  if(!confirm('Swap '+amount+' USDC → BRLE via BRLESwap (slippage '+slippage+' bps)?'))return;
+  const el=document.getElementById('cashoutResult');el.innerHTML='<span style="color:var(--yellow)">Swapping...</span>';
+  try{const body={amount,slippageBps:Number(slippage)};
+    const r=await fetch(B+'/api/admin/cashout-brle',{method:'POST',headers:hdr(),body:JSON.stringify(body)});const d=await r.json();
+    if(d.success){el.innerHTML='<span style="color:var(--green)">✓ Swapped '+d.usdcIn+' USDC → '+Number(d.brleOut).toFixed(2)+' BRLE<br>Rate: '+d.rate+'<br>TX: <a href="https://basescan.org/tx/'+d.tx+'" target="_blank" style="color:var(--green)">'+d.tx.slice(0,14)+'...</a></span>';toast('Swap complete!');setTimeout(()=>loadBorrowTab(),3000)}
+    else{el.innerHTML='<span style="color:var(--red)">'+(d.error||'Swap failed')+'</span>'}
+  }catch(e){el.innerHTML='<span style="color:var(--red)">'+e.message+'</span>'}
+}
 function switchTab(n,b){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');b.classList.add('active');document.querySelector('.container').style.maxWidth=(n==='risk'||n==='protocol-dash')?'100%':'1100px'}
 </script>
 

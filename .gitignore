@@ -2,3 +2,14 @@ node_modules/
 .DS_Store
 .claude/
 *.log
+
+# ─── internos / não-site (2026-07-04) — repo é PÚBLICO; docs internos e código de protocolo ficam fora ───
+firstrio/MEETING_FATOR_2026-06-18.pdf
+app/wallet/admin/BORROW_STAGING_TESTS.md
+app/wallet/admin/SESSION_2026-05-14.md
+patch-contracts.ps1
+patch-financials.js
+contracts/
+scripts/deploy-collateral-vault.js
+app/wallet/build/package-lock.json
+brle/build/package-lock.json
