@@ -556,6 +556,33 @@ function showAuthenticated() {
   document.getElementById('form-card').classList.remove('hidden');
   document.getElementById('form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
   clearAlert('auth-alert');
+  precheckWallet();
+}
+
+// Early warning at Step 1 (instead of a late 409 at submit): tells the investor
+// right after login if this email is registered with a DIFFERENT wallet, or
+// that KYC is already done. Non-blocking — informational only.
+async function precheckWallet() {
+  if (!USER_EMAIL || !USER_ADDRESS) return;
+  try {
+    const r = await fetch(`${API_BASE}/v1/investors/precheck`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: USER_EMAIL, wallet_address: USER_ADDRESS }),
+    });
+    const p = await r.json();
+    if (p.registered && p.hasWalletOnRecord && p.walletMatches === false) {
+      showAlert(
+        'auth-alert',
+        'err',
+        `Heads-up: this email is registered with wallet ${p.walletOnRecordMasked}, but this session resolves ${USER_ADDRESS.slice(0, 6)}…${USER_ADDRESS.slice(-4)}. Allocations will be blocked until the wallet is rebound — contact contato@efix.finance before proceeding.`,
+      );
+    } else if (p.registered && p.kycApproved) {
+      showAlert('auth-alert', 'info', '✓ Identity already verified — you will skip KYC and go straight to payment.');
+    }
+  } catch (e) {
+    console.warn('precheck skipped:', e.message);
+  }
 }
 
 async function logoutWallet() {
