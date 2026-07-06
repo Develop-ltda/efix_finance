@@ -391,6 +391,7 @@ let OFFERING_KYC_REQUIRED = true;  // set from GET /v1/offerings/:id (kycRequire
 let PENDING_ALLOC_BODY = null;     // allocation payload parked while KYC runs
 let KYC_POLL_TIMER = null;
 let KYC_DONE = false;              // guards double-fire (SDK event + status poll)
+let LAST_RENDERED_STATUS = null;   // triggers a full re-render when status advances
 
 // Get the smart-account address (not the signer EOA). Works because Alchemy LightAccount v2
 // produces the same counterfactual address across all EVM chains for the same signer.
@@ -784,6 +785,14 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
     </div>
   `;
 
+  // ── Investor's part is DONE once the deposit is matched ──
+  // Show a conclusive "Subscription executed" screen instead of leaving the
+  // QR + "send exactly" hints hanging. Delivery becomes informational.
+  if (['deposit_received', 'ready_to_settle', 'settled'].includes(alloc.status)) {
+    renderConcluded(allocRes);
+    return;
+  }
+
   if (piStatus === 202 && pi.error === 'kyc_required') {
     body.innerHTML = `
       <div class="pi-wrap">
@@ -819,8 +828,8 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
       <div class="steps" id="pi-steps">
         <div class="step" id="pi-step-1"><div class="step-icon">1</div><div class="step-label">PIX QR generated</div></div>
         <div class="step" id="pi-step-2"><div class="step-icon">2</div><div class="step-label">Deposit matched</div></div>
-        <div class="step" id="pi-step-3"><div class="step-icon">3</div><div class="step-label">Operator approves</div></div>
-        <div class="step" id="pi-step-4"><div class="step-icon">4</div><div class="step-label">SALRIO delivered</div></div>
+        <div class="step" id="pi-step-3"><div class="step-icon">3</div><div class="step-label">Subscription executed</div></div>
+        <div class="step" id="pi-step-4"><div class="step-icon">4</div><div class="step-label">Tokens delivered</div></div>
       </div>
 
       <div class="paid-cta">
@@ -832,6 +841,7 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
         Send <strong>exactly ${amountStr}</strong>. The HausBank poll worker matches by amount (±R$ 0.01) within 15 minutes. Click <em>Já paguei</em> to check now.
       </div>`;
     updateStepsFromStatus(alloc.status);
+    LAST_RENDERED_STATUS = alloc.status;
     return;
   }
 
@@ -858,6 +868,51 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
   }
 
   body.innerHTML = `<pre style="font-family:monospace;font-size:0.8rem;background:#f5f5f5;padding:1rem;border-radius:8px;overflow:auto">${escape(JSON.stringify(pi, null, 2))}</pre>${statusCol}`;
+}
+
+// Conclusive screen: the investor's part ends when the deposit is matched.
+// deposit_received / ready_to_settle → "Subscription executed" (done, can close);
+// settled → "Tokens delivered" with the Basescan link.
+function renderConcluded(allocRes) {
+  const alloc = allocRes.allocation;
+  const investor = allocRes.investor || {};
+  const settled = alloc.status === 'settled';
+  const body = document.getElementById('pi-body');
+  const sym = OFFERING_ID.toUpperCase();
+  const amountStr = 'R$ ' + Number(alloc.amountBrl).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const wallet = investor.walletAddress || '';
+  const wShort = wallet ? wallet.slice(0, 6) + '…' + wallet.slice(-4) : '—';
+  const deadline = alloc.coolingOffUntil ? new Date(alloc.coolingOffUntil).toLocaleDateString('pt-BR') : null;
+  const txLink = settled && alloc.onChainTx
+    ? `<a href="https://basescan.org/tx/${escape(alloc.onChainTx)}" target="_blank" rel="noopener" style="font-weight:600">View delivery transaction ↗</a>`
+    : '';
+
+  const title = document.getElementById('pi-title');
+  if (title) title.textContent = settled ? 'Order complete' : 'Subscription executed';
+
+  body.innerHTML = `
+    <div id="pi-concluded">
+      <div style="text-align:center;padding:1.25rem 1rem 0.25rem">
+        <div style="width:64px;height:64px;margin:0 auto 1rem;border-radius:50%;background:#f0fdf4;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#16a34a">✓</div>
+        <h3 style="margin:0 0 0.4rem;font-size:1.35rem">${settled ? sym + ' delivered!' : 'Subscription executed!'}</h3>
+        <p style="color:#737373;max-width:560px;margin:0 auto 1.25rem">${settled
+          ? `Your ${sym} is in wallet <strong>${escape(wShort)}</strong> on Base. ${txLink}`
+          : `Your payment of <strong>${amountStr}</strong> is confirmed and your subscription is locked in — <strong>your part is done</strong>. You can safely close this page.`}</p>
+      </div>
+      ${settled ? '' : `
+      <div class="alert alert-info" style="max-width:660px;margin:0 auto 1.25rem">
+        <strong>What happens next:</strong> the treasury delivers your ${sym} to wallet <strong>${escape(wShort)}</strong> after the CVM 88 settlement window${deadline ? ` (by <strong>${deadline}</strong>)` : ''}. The tokens appear in your wallet automatically — no further action needed. If you keep this page open, it updates by itself when they arrive.
+      </div>`}
+      <div class="steps" id="pi-steps">
+        <div class="step" id="pi-step-1"><div class="step-icon">1</div><div class="step-label">PIX QR generated</div></div>
+        <div class="step" id="pi-step-2"><div class="step-icon">2</div><div class="step-label">Deposit matched</div></div>
+        <div class="step" id="pi-step-3"><div class="step-icon">3</div><div class="step-label">Subscription executed</div></div>
+        <div class="step" id="pi-step-4"><div class="step-icon">4</div><div class="step-label">Tokens delivered</div></div>
+      </div>
+      <p class="muted" style="text-align:center;font-size:0.75rem;margin-top:1rem;color:#a3a3a3">Reference ${escape(alloc.id.slice(0, 8))}… · ${amountStr} · ${escape(String(alloc.rail).toUpperCase())}</p>
+    </div>`;
+  updateStepsFromStatus(alloc.status);
+  LAST_RENDERED_STATUS = alloc.status;
 }
 
 function piResOk(s) { return s >= 200 && s < 300; }
@@ -905,11 +960,9 @@ function updateStepsFromStatus(status) {
       mark('pi-step-2', 'active');
       break;
     case 'deposit_received':
-      mark('pi-step-1', 'done');
-      mark('pi-step-2', 'done');
-      mark('pi-step-3', 'active');
-      break;
     case 'ready_to_settle':
+      // Deposit matched = the SUBSCRIPTION IS EXECUTED from the investor's
+      // point of view — step 3 completes; delivery (4) is the treasury's job.
       mark('pi-step-1', 'done');
       mark('pi-step-2', 'done');
       mark('pi-step-3', 'done');
@@ -954,11 +1007,16 @@ async function handleIPaid() {
 
 function startPolling() { startPollingFast(); }
 
-// Polls /v1/allocations/:id every 5 s, updates steps, stops on terminal state.
+// Polls /v1/allocations/:id and re-renders on any status change.
+// Pre-deposit: 5 s (waiting on the PIX match). Concluded (subscription
+// executed, waiting delivery): gentle 60 s. Stops on terminal states.
 function startPollingFast() {
   if (POLL_TIMER) clearInterval(POLL_TIMER);
+  if (['settled', 'rejected', 'expired'].includes(LAST_RENDERED_STATUS)) return; // terminal — nothing to poll
   let attempts = 0;
-  const MAX_ATTEMPTS = 60; // ~5 minutes at 5s
+  const MAX_ATTEMPTS = 60; // ~5 minutes at 5s (pre-deposit only)
+  const concluded = ['deposit_received', 'ready_to_settle'].includes(LAST_RENDERED_STATUS);
+  const interval = concluded ? 60000 : 5000;
   POLL_TIMER = setInterval(async () => {
     if (!CURRENT_ALLOC_ID) return;
     attempts++;
@@ -967,23 +1025,19 @@ function startPollingFast() {
       if (!r.ok) return;
       const data = await r.json();
       const st = data.allocation.status;
-      updateStepsFromStatus(st);
 
-      if (st === 'deposit_received') {
-        setPaidMsg('✓ HausBank matched your deposit — operator will settle shortly', 'done');
-      } else if (st === 'ready_to_settle') {
-        setPaidMsg('✓ Queued for Safe settlement', 'done');
-      } else if (st === 'settled') {
-        setPaidMsg('✓ SALRIO delivered to your wallet on Base', 'done');
-        const btn = document.getElementById('btn-paid');
-        if (btn) btn.style.display = 'none';
+      if (['settled', 'rejected', 'expired'].includes(st)) {
         clearInterval(POLL_TIMER);
         POLL_TIMER = null;
-      } else if (['rejected', 'expired'].includes(st)) {
-        setPaidMsg('Status: ' + st, 'active');
-        clearInterval(POLL_TIMER);
-        POLL_TIMER = null;
-      } else if (attempts >= MAX_ATTEMPTS) {
+      }
+      // Status advanced → full re-render (QR screen → concluded screen →
+      // delivered screen), which also restarts polling at the right pace.
+      if (st !== LAST_RENDERED_STATUS) {
+        await showPaymentInstructions(CURRENT_ALLOC_ID);
+        return;
+      }
+      updateStepsFromStatus(st);
+      if (!concluded && attempts >= MAX_ATTEMPTS) {
         // Stop pounding the backend but keep button ready
         clearInterval(POLL_TIMER);
         POLL_TIMER = null;
@@ -992,7 +1046,7 @@ function startPollingFast() {
         setPaidMsg('Still waiting on HausBank — try again in a minute or refresh.');
       }
     } catch {}
-  }, 5000);
+  }, interval);
 }
 
 function copyEmv(btn) {
