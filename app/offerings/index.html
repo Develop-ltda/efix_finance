@@ -377,6 +377,10 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
      Manual "Reset login state" button remains for users with stuck state. -->
 <!-- Reuse the existing Alchemy Account Kit bundle from /app/wallet/ — same apiKey = unified user database -->
 <script src="/app/wallet/efix-wallet-bundle-v3.js"></script>
+<!-- EfixAuth = wallet canônica da tabela users do efixdi-backend (a MESMA que
+     o app /app/wallet/ mostra). Sem ela, requestAccount() deriva um endereço
+     novo que pode divergir da wallet registrada de usuários antigos. -->
+<script src="/app/wallet/efix-auth.js"></script>
 <script>
 const API_BASE = (new URLSearchParams(location.search).get('api')) || 'https://efix-offerings-backend-production.up.railway.app';
 const OFFERING_ID = (new URLSearchParams(location.search).get('intent')) || 'salrio';
@@ -392,6 +396,29 @@ let PENDING_ALLOC_BODY = null;     // allocation payload parked while KYC runs
 let KYC_POLL_TIMER = null;
 let KYC_DONE = false;              // guards double-fire (SDK event + status poll)
 let LAST_RENDERED_STATUS = null;   // triggers a full re-render when status advances
+
+// Canonical wallet resolution — THE address the user sees in /app/wallet/.
+// Priority: (1) efixdi session (EfixAuth.restore), (2) EfixAuth.login — which is
+// link-on-first-use server-side: an EXISTING user gets their ORIGINAL wallet back
+// no matter what today's bundle derives — (3) fallback to the fresh derivation.
+// Fixes: legacy users (pre-v2 factory) got a DIFFERENT derived address here,
+// so allocations bound to a wallet the wallet app never shows.
+async function resolveCanonicalAddress(email, derived) {
+  if (!email || !email.includes('@')) return derived;
+  try {
+    const s = await EfixAuth.restore();
+    if (s?.user?.address && (s.user.email || '').toLowerCase() === email.toLowerCase()) {
+      return s.user.address;
+    }
+  } catch {}
+  try {
+    const sess = await EfixAuth.login(email, derived);
+    if (sess?.user?.address) return sess.user.address;
+  } catch (e) {
+    console.warn('EfixAuth canonical lookup failed — using derived address:', e.message);
+  }
+  return derived;
+}
 
 // Get the smart-account address (not the signer EOA). Works because Alchemy LightAccount v2
 // produces the same counterfactual address across all EVM chains for the same signer.
@@ -438,6 +465,7 @@ async function bootstrap() {
         const det = await window.EfixWallet.getSigner().getAuthDetails();
         USER_EMAIL = det?.email ?? email ?? 'your email';
       } catch { USER_EMAIL = email ?? 'your email'; }
+      USER_ADDRESS = await resolveCanonicalAddress(USER_EMAIL, USER_ADDRESS);
       showAuthenticated();
     }
   } catch (e) {
@@ -531,6 +559,7 @@ async function verifyOtp() {
   try {
     await window.EfixWallet.verifyOTP(code);
     USER_ADDRESS = await getSmartAccountAddress();
+    USER_ADDRESS = await resolveCanonicalAddress(USER_EMAIL, USER_ADDRESS);
     showAuthenticated();
   } catch (err) {
     showAlert('auth-alert', 'err', err.message || 'Verification failed');
