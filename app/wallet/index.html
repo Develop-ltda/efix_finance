@@ -2019,7 +2019,24 @@
                 try {
                     local = JSON.parse(localStorage.getItem(`efix_swap_history_${(address || '').toLowerCase()}`) || '[]');
                 } catch {}
-                const history = [...(Array.isArray(backend) ? backend : []), ...local]
+                // + subscrições BTR (offerings-backend, autenticado com o JWT da wallet):
+                // a compra de cotas SALRIO/LATITUDE aparece no extrato como as demais txs.
+                let btr = [];
+                try {
+                    const r = await fetch('https://efix-offerings-backend-production.up.railway.app/v1/my/allocations', { headers: EfixAuth.headers() });
+                    if (r.ok) {
+                        const j = await r.json();
+                        btr = (j.items || []).map(a => ({
+                            type: 'btr',
+                            symbol: a.symbol,
+                            date: a.settledAt || a.createdAt,
+                            amount: a.amountBrl,
+                            status: a.status,
+                            txHash: a.onChainTx || null,
+                        }));
+                    }
+                } catch {}
+                const history = [...(Array.isArray(backend) ? backend : []), ...local, ...btr]
                     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 if (!history.length) {
@@ -2028,14 +2045,16 @@
                 }
 
                 container.innerHTML = history.map(tx => {
-                    const icons  = { deposit: '↓', collateral: '🔒', withdrawal: '↑', swap: '⇄' };
-                    const colors = { deposit: 'var(--green)', collateral: '#eab308', withdrawal: 'var(--red)', swap: '#3b82f6' };
+                    const icons  = { deposit: '↓', collateral: '🔒', withdrawal: '↑', swap: '⇄', btr: '◆' };
+                    const colors = { deposit: 'var(--green)', collateral: '#eab308', withdrawal: 'var(--red)', swap: '#3b82f6', btr: '#a855f7' };
                     const labels = { deposit: 'Depósito', collateral: 'Colateral', withdrawal: 'Saque', swap: 'Swap' };
-                    const statusColors = { confirmed: 'var(--green)', minted: 'var(--green)', pending: '#eab308', failed: 'var(--red)', completed: 'var(--green)' };
+                    const statusColors = { confirmed: 'var(--green)', minted: 'var(--green)', pending: '#eab308', failed: 'var(--red)', completed: 'var(--green)', 'liquidada ✓': 'var(--green)', 'aguardando entrega': '#eab308', 'aguardando PIX': '#eab308', 'em KYC': '#eab308', 'rejeitada': 'var(--red)', 'expirada': 'var(--red)' };
+                    const btrStatusLabel = { settled: 'liquidada ✓', ready_to_settle: 'aguardando entrega', deposit_received: 'aguardando entrega', awaiting_deposit: 'aguardando PIX', kyc_review: 'em KYC', rejected: 'rejeitada', expired: 'expirada' };
 
                     let amountStr = tx.amount + ' efixDI';
                     if (tx.type === 'collateral') amountStr = tx.amount + ' efixDI → $' + tx.usdcCredit;
                     if (tx.type === 'deposit')    amountStr = 'R$ ' + tx.amount;
+                    if (tx.type === 'btr')        amountStr = Number(tx.amount).toFixed(2) + ' ' + (tx.symbol || 'BTR');
                     if (tx.type === 'swap') {
                         const inAmt  = Number(tx.amountIn  || 0).toFixed(2);
                         const outAmt = Number(tx.amountOut || 0).toFixed(4);
@@ -2043,6 +2062,10 @@
                     }
 
                     const type = tx.type || 'unknown';
+                    if (type === 'btr') {
+                        labels.btr = 'Subscrição ' + (tx.symbol || 'BTR');
+                        tx = { ...tx, status: btrStatusLabel[tx.status] || tx.status };
+                    }
                     const txHashLink = tx.txHash
                         ? `<a href="https://basescan.org/tx/${tx.txHash}" target="_blank" rel="noopener" style="color:var(--gray-500);text-decoration:none;font-family:var(--font-mono);font-size:10px;">${tx.txHash.slice(0,8)}…</a>`
                         : '';
