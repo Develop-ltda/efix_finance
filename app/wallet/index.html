@@ -950,6 +950,25 @@
       </div>
     </div>
 
+    <!-- Ghost-wallet recovery: funds detected on the SESSION-DERIVED smart account
+         (the one this login can actually sign for) that differ from the canonical
+         registered wallet. Lets the user sweep them out — consolidation tool. -->
+    <div id="ghostRecovery" style="display:none;position:fixed;bottom:16px;left:16px;right:16px;max-width:720px;margin:0 auto;background:#1c1917;color:#fff;border:1px solid #a855f7;border-radius:12px;padding:14px 16px;z-index:901;font-family:var(--font-mono);font-size:12px;line-height:1.6;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
+      <div style="display:flex;align-items:start;gap:12px">
+        <div style="flex:1">
+          <b style="color:#d8b4fe">Fundos encontrados numa carteira antiga sua</b>
+          <span id="ghostAddr" style="color:#a8a29e"></span>
+          <div id="ghostRows" style="margin-top:8px"></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+            <label style="color:#a8a29e">Destino:</label>
+            <input id="ghostDest" style="flex:1;min-width:280px;background:#292524;border:1px solid #57534e;color:#fff;border-radius:6px;padding:6px 8px;font-family:var(--font-mono);font-size:12px">
+          </div>
+          <div id="ghostStatus" style="margin-top:8px;color:#a8a29e"></div>
+        </div>
+        <button onclick="document.getElementById('ghostRecovery').style.display='none'" style="background:none;border:none;color:#d8b4fe;cursor:pointer;font-size:16px">×</button>
+      </div>
+    </div>
+
     <!-- Auto-prune removed: it was clearing alchemy-signer-session:temporary
          mid-flow, which holds the in-flight OTP id between send and verify.
          Users with truly broken state click the "Reset login" button instead. -->
@@ -1158,6 +1177,7 @@
         // Prior allocations pay dividends + settle to that on-record wallet, so a
         // mismatch means the signed-in wallet is a different identity — warn.
         async function checkWalletBinding(email, smartAddr) {
+            detectGhostFunds(smartAddr); // fire-and-forget: varre a carteira derivada por fundos-fantasma
             try {
                 const res = await fetch(`${OFFERINGS_API}/v1/investor-lookup?email=${encodeURIComponent(email)}`);
                 if (!res.ok) return;
@@ -1175,6 +1195,75 @@
                 el.style.display = 'block';
             } catch {}
         }
+
+        // ═══ GHOST-WALLET RECOVERY ═══
+        // The session's DERIVED smart account (the only one this login can sign
+        // for) may differ from the canonical registered wallet for legacy users
+        // (bundle/factory drift). If the derived account holds tokens, offer a
+        // sweep. Signs with the same client used by claimAllBTR.
+        const GHOST_TOKENS = [
+            { sym: 'BRLE',     addr: '0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6', dec: 18 },
+            { sym: 'SALRIO',   addr: '0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c', dec: 18 },
+            { sym: 'LATITUDE', addr: '0xf7663CAFa4df1ee8d5AD3e8fE8D7C4767D3F3046', dec: 18 },
+        ];
+        async function detectGhostFunds(derivedAddr) {
+            try {
+                const canonical = (EfixAuth.getUser && EfixAuth.getUser()?.address) || userAddress || '';
+                if (!derivedAddr) return;
+                if (canonical && canonical.toLowerCase() === derivedAddr.toLowerCase()) return; // sem fantasma
+                const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
+                const found = [];
+                for (const t of GHOST_TOKENS) {
+                    try {
+                        const c = new ethers.Contract(t.addr, ['function balanceOf(address) view returns (uint256)'], provider);
+                        const b = await c.balanceOf(derivedAddr);
+                        if (b > 0n) found.push({ ...t, bal: b });
+                    } catch {}
+                }
+                if (!found.length) return;
+                document.getElementById('ghostAddr').textContent = ' · ' + derivedAddr.slice(0, 10) + '…' + derivedAddr.slice(-6);
+                document.getElementById('ghostDest').value = canonical || '';
+                document.getElementById('ghostRows').innerHTML = found.map((t, i) =>
+                    `<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+                        <span style="min-width:70px"><b>${t.sym}</b></span>
+                        <span style="color:#a8a29e">${ethers.formatUnits(t.bal, t.dec)}</span>
+                        <input id="ghostAmt${i}" value="${ethers.formatUnits(t.bal, t.dec)}" style="width:120px;background:#292524;border:1px solid #57534e;color:#fff;border-radius:6px;padding:4px 8px;font-family:var(--font-mono);font-size:12px">
+                        <button onclick="sendGhostToken(${i}, '${t.addr}', ${t.dec}, '${t.sym}')" style="background:#a855f7;border:none;color:#fff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:600">Transferir</button>
+                    </div>`).join('');
+                document.getElementById('ghostRecovery').style.display = 'block';
+                console.log('[ghost] derived', derivedAddr, 'holds', found.map(f => f.sym + '=' + ethers.formatUnits(f.bal, f.dec)).join(', '));
+            } catch (e) { console.warn('[ghost] detection skipped:', e.message); }
+        }
+        async function sendGhostToken(i, tokenAddr, dec, sym) {
+            const st = document.getElementById('ghostStatus');
+            try {
+                const dest = (document.getElementById('ghostDest').value || '').trim();
+                const amtStr = (document.getElementById('ghostAmt' + i).value || '').trim();
+                if (!ethers.isAddress(dest)) { st.textContent = '✗ destino inválido'; return; }
+                const amount = ethers.parseUnits(amtStr, dec);
+                if (amount <= 0n) { st.textContent = '✗ valor inválido'; return; }
+                if (!confirm(`Transferir ${amtStr} ${sym} da carteira antiga para ${dest.slice(0, 10)}…${dest.slice(-6)}?`)) return;
+                st.textContent = `Assinando transferência de ${sym}…`;
+                const data = new ethers.Interface(['function transfer(address,uint256)']).encodeFunctionData('transfer', [dest, amount]);
+                const client = await window.EfixWallet.getBaseClient();
+                let txHash = null;
+                if (typeof client.sendUserOperation === 'function') {
+                    const sent = await client.sendUserOperation({ uo: { target: tokenAddr, data, value: 0n } });
+                    txHash = await client.waitForUserOperationTransaction({ hash: sent.hash }) || sent.hash;
+                } else if (typeof client.sendCalls === 'function') {
+                    const r = await client.sendCalls({ calls: [{ target: tokenAddr, data, value: 0n }] });
+                    txHash = r?.transactionHashes?.[0] || r?.id;
+                } else {
+                    throw new Error('cliente sem sendUserOperation/sendCalls');
+                }
+                st.innerHTML = `✓ ${sym} transferido · <a href="https://basescan.org/tx/${txHash}" target="_blank" style="color:#d8b4fe">${String(txHash).slice(0, 14)}…</a>`;
+                console.log('[ghost] sent', sym, txHash);
+            } catch (e) {
+                console.error('[ghost] send failed', e);
+                st.textContent = '✗ ' + (e.shortMessage || e.message || e);
+            }
+        }
+        window.sendGhostToken = sendGhostToken;
 
         // Resolve smart account address (this is where tokens must live + where UserOps execute from)
         // @account-kit/wallet-client exposes requestAccount(); there is no client.account on the decorator.
