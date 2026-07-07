@@ -1230,6 +1230,10 @@
                     } catch {}
                 }
                 if (!found.length) return;
+                const isSelf = canonical && canonical.toLowerCase() === derivedAddr.toLowerCase();
+                document.querySelector('#ghostRecovery b').textContent = isSelf
+                    ? 'Enviar tokens desta carteira'
+                    : 'Fundos encontrados numa carteira antiga sua';
                 document.getElementById('ghostAddr').textContent = ' · ' + derivedAddr.slice(0, 10) + '…' + derivedAddr.slice(-6);
                 document.getElementById('ghostDest').value = canonical || '';
                 document.getElementById('ghostRows').innerHTML = found.map((t, i) =>
@@ -1269,7 +1273,10 @@
                 console.log('[ghost] sent', sym, txHash);
             } catch (e) {
                 console.error('[ghost] send failed', e);
-                st.textContent = '✗ ' + (e.shortMessage || e.message || e);
+                const msg = String(e.shortMessage || e.message || e);
+                st.textContent = /not authenticated|authenticate/i.test(msg)
+                    ? '✗ Sessão de assinatura expirada — clique Disconnect e entre de novo com o e-mail (OTP fresco), aí o envio assina.'
+                    : '✗ ' + msg;
             }
         }
         window.sendGhostToken = sendGhostToken;
