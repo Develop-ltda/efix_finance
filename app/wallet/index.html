@@ -1340,6 +1340,13 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // Defesa contra iframe órfão do Turnkey (colisão "already exists"):
+                // se um iframe do signer sobrou de uma sessão anterior no mesmo
+                // documento, limpa o container antes de init() recriar.
+                try {
+                    const cont = document.getElementById('alchemy-signer-iframe-container');
+                    if (cont && cont.querySelector('#turnkey-iframe')) cont.innerHTML = '';
+                } catch {}
                 EfixWallet.init();
 
                 // Try restore session from JWT first (fast)
@@ -3030,18 +3037,25 @@
         }
 
         async function handleDisconnect() {
-            // Drop any queued action — we're logging out, anything pending
-            // is no longer valid (different user might log in next).
+            // FULL teardown so a DIFFERENT email can log in cleanly right after.
+            // Bug antes (2026-07-07): só limpava o JWT — o SIGNER Alchemy e o
+            // iframe do Turnkey ficavam vivos, então (a) o próximo login colidia
+            // ("Iframe element with ID turnkey-iframe already exists") exigindo
+            // Ctrl+Shift+R, e (b) digitar outro e-mail seguia com o signer ANTIGO
+            // → alocação nascia na carteira do e-mail anterior (drift fantasma).
             delete window._pendingAction;
-            await EfixAuth.logout();
-            userAddress = null;
-            userEmail = '';
-            window.userAddress = userAddress;
-            window.userEmail = userEmail;
-            document.getElementById('app-screen').style.display = 'none';
-            document.getElementById('auth-screen').style.display = '';
-            document.getElementById('userPill').classList.remove('active');
-            resetAuth();
+            try { await EfixAuth.logout(); } catch {}
+            try { await window.EfixWallet?.disconnect?.(); } catch {}
+            // Limpa a sessão do signer + o e-mail lembrado (usuário pode trocar).
+            try {
+                Object.keys(localStorage)
+                    .filter(k => k.startsWith('alchemy-signer-session'))
+                    .forEach(k => localStorage.removeItem(k));
+                localStorage.removeItem('efix_last_email');
+            } catch {}
+            // Reload = garante iframe/signer 100% limpos (mesma estratégia do
+            // "Reset login state", que é o único caminho que hoje funciona).
+            location.reload();
         }
     </script>
 </body>
