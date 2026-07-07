@@ -1215,7 +1215,11 @@
                 // vem do próprio requestAccount().
                 const derivedAddr = await getSmartAccountAddress();
                 if (!derivedAddr) return;
-                if (canonical && canonical.toLowerCase() === derivedAddr.toLowerCase()) return; // sem fantasma
+                // ?enviar=1 força o card mesmo sem divergência — vira uma
+                // ferramenta manual de envio de tokens da conta ATUAL (útil
+                // p/ BRLE, que não tem UI própria de transferência).
+                const force = new URLSearchParams(location.search).has('enviar');
+                if (!force && canonical && canonical.toLowerCase() === derivedAddr.toLowerCase()) return; // sem fantasma
                 const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
                 const found = [];
                 for (const t of GHOST_TOKENS) {
