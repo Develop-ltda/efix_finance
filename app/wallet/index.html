@@ -1177,7 +1177,7 @@
         // Prior allocations pay dividends + settle to that on-record wallet, so a
         // mismatch means the signed-in wallet is a different identity — warn.
         async function checkWalletBinding(email, smartAddr) {
-            detectGhostFunds(smartAddr); // fire-and-forget: varre a carteira derivada por fundos-fantasma
+            detectGhostFunds(); // fire-and-forget: varre a carteira DERIVADA por fundos-fantasma (resolve sozinha)
             try {
                 const res = await fetch(`${OFFERINGS_API}/v1/investor-lookup?email=${encodeURIComponent(email)}`);
                 if (!res.ok) return;
@@ -1206,9 +1206,14 @@
             { sym: 'SALRIO',   addr: '0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c', dec: 18 },
             { sym: 'LATITUDE', addr: '0xf7663CAFa4df1ee8d5AD3e8fE8D7C4767D3F3046', dec: 18 },
         ];
-        async function detectGhostFunds(derivedAddr) {
+        async function detectGhostFunds() {
             try {
                 const canonical = (EfixAuth.getUser && EfixAuth.getUser()?.address) || userAddress || '';
+                // BUG FIX: os call-sites passavam a CANÔNICA (endereço da sessão),
+                // então a comparação era canônica×canônica e nunca detectava.
+                // A derivada — a única conta que esta sessão realmente assina —
+                // vem do próprio requestAccount().
+                const derivedAddr = await getSmartAccountAddress();
                 if (!derivedAddr) return;
                 if (canonical && canonical.toLowerCase() === derivedAddr.toLowerCase()) return; // sem fantasma
                 const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
