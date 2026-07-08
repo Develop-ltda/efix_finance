@@ -1076,6 +1076,14 @@
   async function claimAllBTRDividends() {
     const status = document.getElementById("claimAllStatus");
     const btn    = document.getElementById("claimAllBtn");
+    // Carteira registrada externa (MetaMask): esta sessão não assina por ela.
+    if (window.IS_EXTERNAL_WALLET) {
+      if (status) {
+        status.className = "ownership-claim-status error";
+        status.textContent = "Conta externa (MetaMask) — claim indisponível neste login; use a MetaMask ou entre com o e-mail dono da carteira.";
+      }
+      return;
+    }
     const router = window.__ownershipBTRRouter;
     const addr   = window.__ownershipAddress;
     const setStatus = (msg, cls = "") => {

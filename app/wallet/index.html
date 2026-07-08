@@ -1094,6 +1094,7 @@
         }
         async function sendModalSubmit() {
             if (!_sendCtx) return;
+            if (!guardOperable()) return;
             const recipient = document.getElementById('sendModalRecipient').value.trim();
             const amountStr = document.getElementById('sendModalAmount').value.trim();
             const msg = document.getElementById('sendModalMsg');
@@ -1215,11 +1216,17 @@
                 // vem do próprio requestAccount().
                 const derivedAddr = await getSmartAccountAddress();
                 if (!derivedAddr) return;
+                // Modo "carteira externa": a registrada não é a conta que esta
+                // sessão assina → desabilita operações on-chain (guardOperable)
+                // e explica, em vez do AA14 críptico.
+                const external = !!(canonical && canonical.toLowerCase() !== derivedAddr.toLowerCase());
+                window.IS_EXTERNAL_WALLET = external;
+                if (external) showExternalWalletBanner(canonical, derivedAddr);
                 // ?enviar=1 força o card mesmo sem divergência — vira uma
                 // ferramenta manual de envio de tokens da conta ATUAL (útil
                 // p/ BRLE, que não tem UI própria de transferência).
                 const force = new URLSearchParams(location.search).has('enviar');
-                if (!force && canonical && canonical.toLowerCase() === derivedAddr.toLowerCase()) return; // sem fantasma
+                if (!force && !external) return; // sem fantasma
                 const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
                 const found = [];
                 for (const t of GHOST_TOKENS) {
@@ -1280,6 +1287,30 @@
             }
         }
         window.sendGhostToken = sendGhostToken;
+
+        // ═══ MODO CARTEIRA EXTERNA ═══
+        // A carteira registrada (canônica) é uma EOA externa (ex.: MetaMask):
+        // o app não tem como assinar por ela. Depositar/ler funciona; sacar,
+        // enviar, swap e claim ficam bloqueados com explicação.
+        function showExternalWalletBanner(canonical, derived) {
+            try {
+                const el = document.getElementById('bindingWarn');
+                const txt = document.getElementById('bindingWarnText');
+                const line =
+                    `<b>⛔ Operações on-chain desabilitadas neste login.</b><br>` +
+                    `A carteira registrada <code>${canonical.slice(0,10)}…${canonical.slice(-4)}</code> é EXTERNA (ex.: MetaMask) — o app só assina por contas criadas aqui (esta sessão controla <code>${derived.slice(0,10)}…${derived.slice(-4)}</code>).<br>` +
+                    `Depósitos funcionam normalmente; para <b>sacar / enviar / swap / claim</b>, use a MetaMask ou entre com um e-mail cuja carteira nasceu no app.`;
+                if (el.style.display === 'block') { txt.innerHTML += '<br><br>' + line; }
+                else { txt.innerHTML = line; el.style.display = 'block'; }
+            } catch {}
+        }
+        function guardOperable(msgFn) {
+            if (!window.IS_EXTERNAL_WALLET) return true;
+            const msg = 'Conta registrada é uma carteira externa (MetaMask) — o app não pode assinar por ela. Movimente pela MetaMask, ou entre com um e-mail cuja carteira foi criada aqui.';
+            if (typeof msgFn === 'function') msgFn(msg); else alert(msg);
+            return false;
+        }
+        window.guardOperable = guardOperable; // owner-tabs.js (claim) também usa
 
         // Resolve smart account address (this is where tokens must live + where UserOps execute from)
         // @account-kit/wallet-client exposes requestAccount(); there is no client.account on the decorator.
@@ -1543,6 +1574,16 @@
             if (_ensureDeployPromise) return _ensureDeployPromise;
             _ensureDeployPromise = (async () => {
             try {
+                // Só deployamos a conta DERIVADA desta sessão. Se a registrada
+                // (canônica) é carteira EXTERNA (ex.: MetaMask EOA), a factory
+                // desta sessão não gera esse endereço → AA14. Pula em silêncio.
+                try {
+                    const derived = await getSmartAccountAddress();
+                    if (derived && derived.toLowerCase() !== String(address).toLowerCase()) {
+                        console.log('[EfixWallet] ensureAccountDeployed: pulado — ' + address + ' não é a conta derivada desta sessão (' + derived + ')');
+                        return false;
+                    }
+                } catch {}
                 const res = await fetch('https://base-mainnet.g.alchemy.com/v2/' + EfixWallet.config.apiKey, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1899,6 +1940,7 @@
         }
 
         async function handleBrleSwap() {
+            if (!guardOperable(function(m){ setBrleSwapMsg(m); })) return;
             const amt = Number(document.getElementById('brleSwapAmount').value);
             if (!amt || amt <= 0) { setBrleSwapMsg('Enter an amount'); return; }
             if (!_brleLastQuote) { setBrleSwapMsg('Waiting on quote…'); return; }
@@ -2619,6 +2661,7 @@
         //   2. Frontend gets burnTxHash, POSTs to backend with JWT
         //   3. Backend verifies burn on-chain, sends PIX, or refund-mints on failure
         async function handleWithdraw() {
+            if (!guardOperable()) return;
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const pixKey = document.getElementById('pixKey').value.trim();
             if (!amount || amount < 10) { alert('Mínimo 10 efixDI'); return; }
