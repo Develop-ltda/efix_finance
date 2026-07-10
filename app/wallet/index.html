@@ -2539,7 +2539,14 @@
                 await ensureNav();
                 const bal = await WalletLogic.getBalance(EfixWallet, addr);
                 const efixDIamount = parseFloat(bal.formatted);
-                document.getElementById('tokenBalance').textContent = bal.formatted + ' efixDI';
+                // Sub-line = token quantity WITH its ≈ R$ value, so a token count
+                // is never read as a reais amount (danisantos incident: "recebi
+                // apenas R$ 9,81" was 9,8057 efixDI ≈ R$ 10,00). NAV loaded above.
+                const navForSub = (__nav && Number.isFinite(__nav.navBRL)) ? __nav.navBRL : null;
+                const subEq = (navForSub != null && efixDIamount > 0)
+                    ? ' ≈ R$ ' + (efixDIamount * navForSub).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : '';
+                document.getElementById('tokenBalance').textContent = bal.formatted + ' efixDI' + subEq;
 
                 // Try to fetch the unified totalNetWorthBRL from the portfolio
                 // lens (sums efixDI + BRLE + SALRIO + HFBPOC + LATITUDE + USDC
