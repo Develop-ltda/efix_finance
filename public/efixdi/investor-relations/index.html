@@ -186,12 +186,12 @@
 
   <!-- scenario -->
   <div class="sec">
-    <div class="sechead"><h2>Scenario analysis</h2><span class="hint">illustrative · the curated Morpho vault is not yet live</span></div>
+    <div class="sechead"><h2>Scenario analysis</h2><span class="hint">illustrative · self-deployed efixDI/USDC market live on Morpho Blue · curated vault in onboarding</span></div>
     <div class="scen">
       <div class="scen-in">
-        <div class="scen-tag">Simulated · vault not live</div>
+        <div class="scen-tag">Simulated · curated vault in onboarding</div>
         <div class="inrow"><label>Investment</label><input id="inv" type="number" min="1" step="100" value="1000"><span class="v">R$</span></div>
-        <div class="inrow"><label>Period (yrs)</label><input id="period" type="range" min="1" max="30" step="1" value="24"><span class="v" id="periodval">24</span></div>
+        <div class="inrow"><label>Period (yrs)</label><input id="period" type="range" min="1" max="30" step="1" value="15"><span class="v" id="periodval">15</span></div>
         <div class="inrow"><label>Max LTV</label><input id="ltv" type="range" min="0" max="90" step="1" value="77"><span class="v" id="ltvval">77%</span></div>
         <div class="inrow"><label>Borrow APR</label><input id="br" type="range" min="1" max="14" step="0.1" value="5.5"><span class="v" id="brval">5.5%</span></div>
         <div class="inrow"><label>Leverage loops</label><input id="loops" type="range" min="1" max="10" step="1" value="4"><span class="v" id="loopsval">4</span></div>
@@ -199,9 +199,9 @@
         <div class="disc" id="disc"></div>
       </div>
       <div class="scen-out">
-        <div class="ohead">Projected value · by <span id="endyr">2050</span> &middot; current CDI held constant</div>
-        <div class="ores fund"><div class="ol">Fund<em>unleveraged · BTG Tesouro Selic DI</em></div><div class="ov">R$<span id="r-fund">44,552</span></div></div>
-        <div class="ores plus"><div class="ol">efixDI+<em>leveraged carry · idealized, see note</em></div><div class="ov">R$<span id="r-plus">2,285,227</span></div></div>
+        <div class="ohead">Projected value · by <span id="endyr">2041</span> &middot; current CDI held constant</div>
+        <div class="ores fund"><div class="ol">Fund<em>unleveraged · BTG Tesouro Selic DI</em></div><div class="ov">R$<span id="r-fund">11,604</span></div></div>
+        <div class="ores plus"><div class="ol">efixDI+<em>leveraged carry · idealized, see note</em></div><div class="ov">R$<span id="r-plus">167,154</span></div></div>
         <div class="ofoot"><span>efixDI+ APY <b id="r-apy">33.7%</b></span><span>Leverage <b id="r-lx">3.17x</b></span></div>
         <div class="ofoot"><span>Today (2026) &middot; Fund <b>R$<span id="r-fnow">1,671</span></b> · efixDI+ <b>R$<span id="r-pnow">2,702</span></b></span></div>
       </div>
@@ -211,7 +211,7 @@
   <!-- simulated value over time -->
   <div class="sec">
     <div class="sechead"><h2>Simulated value over time</h2>
-      <div class="sh-right"><span class="hint" id="proj-hint">nominal BRL · log scale</span><span class="scaletog" id="scaletog"><button type="button" data-scale="log" class="on">Log</button><button type="button" data-scale="lin">Linear</button></span></div>
+      <div class="sh-right"><span class="hint" id="proj-hint">nominal BRL · linear scale</span><span class="scaletog" id="scaletog"><button type="button" data-scale="log">Log</button><button type="button" data-scale="lin" class="on">Linear</button></span></div>
     </div>
     <svg class="chartsvg" id="projchart" viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Simulated nominal value of fund and efixDI+ over the projection period"></svg>
     <div class="legend"><span class="lg fund">Fund</span><span class="lg plus">efixDI+</span><span style="color:var(--faint)">&nbsp;&middot; solid = actual (2021&#8211;now), dotted = projected at current CDI</span></div>
@@ -276,7 +276,7 @@
       <div class="pdiv"></div>
       <div class="pcred">
         <div class="pr"><span class="l">Audit result</span><span class="r">15 / 15 findings resolved</span></div>
-        <div class="pr"><span class="l">Scope</span><span class="r">efixDI token &middot; PSM</span></div>
+        <div class="pr"><span class="l">Scope</span><span class="r">EfixDIToken (ERC-20)</span></div>
         <div class="pr"><span class="l">Public report</span><span class="r"><a href="https://www.openzeppelin.com/news/efixdi-token-audit" target="_blank" rel="noopener">openzeppelin.com &#8599;</a></span></div>
         <div class="pr"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Basescan &#8599;</a></span></div>
       </div>
@@ -395,7 +395,7 @@
     for(let k=lo;k<=hi;k++){ const v=Math.pow(10,k); if(v>=minv*0.55&&v<=maxv*1.6)t.push(v);} return t; }
   const moneyC = v => v>=1e9 ? "R$"+(v/1e9).toFixed(2)+"bn" : v>=1e6 ? "R$"+(v/1e6).toFixed(2)+"M" : "R$"+Math.round(v).toLocaleString("en-US");
   const moneyAx = v => v>=1e9?"R$"+(Math.round(v/1e8)/10)+"bn":v>=1e6?"R$"+Math.round(v/1e6)+"M":v>=1e3?"R$"+Math.round(v/1e3)+"k":"R$"+Math.round(v);
-  let scaleMode="log";
+  let scaleMode="lin";
 
   function drawProj(){
     const sv=buildSeries(); const yrs=sv.yrs,fund=sv.fund,plus=sv.plus,endYear=sv.endYear,nowIdx=sv.nowIdx,I=sv.I; const n=yrs.length;
@@ -460,7 +460,7 @@
     set("r-fund",cm(sv.fund[last])); set("r-plus",cm(sv.plus[last]));
     set("r-fnow",cm(sv.fund[sv.nowIdx])); set("r-pnow",cm(sv.plus[sv.nowIdx]));
     set("r-apy",sv.net.toFixed(1)+"%"); set("r-lx",sv.L.toFixed(2)+"x");
-    $("disc").innerHTML = "Illustrative only. The curated Morpho vault is not yet live; figures show the strategy it would enable. Actual returns are used 2021\u2013now; from now to "+sv.endYear+" the projection holds current CDI constant. The efixDI+ path additionally assumes leverage is maintained for the full horizon with no liquidation \u2014 real borrow rates and FX vary, leverage amplifies losses in low-rate years, and compounding leverage over decades is a stylized upper bound, not a forecast. Excludes FX hedging, swap and gas fees, slippage, and liquidation risk. Yield is BRL CDI; a USD lender carries BRL/USD FX risk, amplified by leverage. Not an offer, recommendation, or guarantee.";
+    $("disc").innerHTML = "Illustrative only. A self-deployed efixDI/USDC market is live on Morpho Blue; the curated vault is in onboarding. Figures show the strategy at the stated inputs. Actual returns are used 2021\u2013now; from now to "+sv.endYear+" the projection holds current CDI constant. The efixDI+ path additionally assumes leverage is maintained for the full horizon with no liquidation \u2014 real borrow rates and FX vary, leverage amplifies losses in low-rate years, and compounding leverage over decades is a stylized upper bound, not a forecast. Excludes FX hedging, swap and gas fees, slippage, and liquidation risk. Yield is BRL CDI; a USD lender carries BRL/USD FX risk, amplified by leverage. Not an offer, recommendation, or guarantee.";
     drawHist(); drawProj();
   }
   ["inv","period","ltv","br","loops","cdi"].forEach(id=>$(id).addEventListener("input",sim));
