@@ -450,6 +450,7 @@
                 <button class="tab" onclick="switchTab('brle', this); initBrle();">BRLE</button>
                 <button class="tab" onclick="switchTab('send', this); initSendTab();">Deposit USD/EUR</button>
                 <button class="tab" onclick="switchTab('invest', this); loadInvestPosition();">Invest</button>
+                <button class="tab" id="tabRemessas" style="display:none" onclick="switchTab('remessas', this); initRemessas();">Remessas</button>
                 <button class="tab" id="tabImoveis" style="display:none" onclick="switchTab('imoveis', this); loadOwnerProperties();">Lobie Units</button>
                 <button class="tab" id="tabAntecipacao" style="display:none" onclick="switchTab('antecipacao', this); loadOwnerReceivables();">Antecipação</button>
                 <button class="tab" id="tabCotas"   style="display:none" onclick="switchTab('cotas',   this); loadOwnerBTR();">Cotas BTR</button>
@@ -649,6 +650,53 @@
                             Bridge will auto-convert to USDC and send to your wallet on Base.<br>
                             <span id="instrTimeline">ACH: ~1 business day &nbsp;|&nbsp; Wire: ~2 hours</span>
                         </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remessas Panel (efix-dvp: USDC → PIX com gate DvP) -->
+            <div class="tab-panel" id="panel-remessas">
+                <div class="action-card">
+                    <h3>Remessas → PIX</h3>
+                    <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;line-height:1.5;">
+                        USDC → BRL pela melhor rota, com trilha DvP.<br>O pagamento ao favorecido é liberado pela mesa após a liquidação.
+                    </p>
+
+                    <div id="rem-form">
+                        <label style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);">Favorecido (allowlist)</label>
+                        <select id="remFav" style="width:100%;margin:6px 0 14px;padding:10px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--white);font-size:13px;">
+                            <option value="">Carregando…</option>
+                        </select>
+                        <label style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);">Valor (USDC)</label>
+                        <input id="remAmount" type="number" min="1" step="0.01" placeholder="0.00" style="width:100%;box-sizing:border-box;margin:6px 0 14px;padding:10px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--white);font-size:15px;font-family:var(--font-mono);">
+                        <button class="btn btn-primary" id="remBtnQuote" onclick="remQuote()">Cotar</button>
+
+                        <div id="remQuoteBox" style="display:none;background:var(--gray-800);border-radius:12px;padding:16px;margin-top:14px;">
+                            <div id="remQuoteDetails" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-300);line-height:2;"></div>
+                            <button class="btn btn-primary" style="background:var(--green);color:var(--black);margin-top:10px;" id="remBtnCreate" onclick="remCriarEFundar()">Criar remessa &amp; gerar depósito</button>
+                        </div>
+                    </div>
+
+                    <div id="rem-instructions" style="display:none;">
+                        <div style="background:var(--gray-800);border-radius:12px;padding:20px;margin-bottom:12px;">
+                            <p style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--white);">Deposite USDC (rede Base) em:</p>
+                            <div id="remInstrDetails" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-300);line-height:2;word-break:break-all;"></div>
+                            <button class="btn btn-secondary" style="margin-top:10px;" onclick="remCopyAddr()" id="remBtnCopy">Copiar endereço</button>
+                        </div>
+                        <p style="font-size:12px;color:var(--gray-500);text-align:center;line-height:1.6;">
+                            Envie o valor exato em USDC na rede Base.<br>O BRL liquida na conta EFIX e o payout ao favorecido segue o gate DvP (mesa).
+                        </p>
+                        <button class="btn btn-secondary" style="margin-top:8px;" onclick="remNova()">Nova remessa</button>
+                    </div>
+
+                    <div id="remMsg" style="margin-top:10px;font-size:12px;font-family:var(--font-mono);color:var(--gray-500);min-height:16px;"></div>
+
+                    <div style="margin-top:18px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <span style="font-size:12px;color:var(--gray-400);font-weight:600;">Minhas remessas</span>
+                            <button class="btn btn-secondary" style="width:auto;padding:4px 12px;font-size:11px;" onclick="remRefresh()">Atualizar</button>
+                        </div>
+                        <div id="remDeals" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-300);"></div>
                     </div>
                 </div>
             </div>
@@ -3124,6 +3172,139 @@
                 if (data.status === 'approved') showSendForm();
             } catch {}
         }
+
+        // ═══ REMESSAS TAB (efix-dvp via /remessas/* do backend) ═══
+        // O browser NUNCA fala com o efix-dvp direto: tudo passa pelo backend,
+        // que injeta o token bounded e a identidade do JWT (x-wallet-user).
+        let _remQuote = null, _remAddr = '';
+
+        async function remFetch(path, opts = {}) {
+            const r = await fetch(BACKEND_URL + path, {
+                ...opts,
+                headers: { 'Content-Type': 'application/json', ...EfixAuth.headers(), ...(opts.headers || {}) },
+            });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+            return d;
+        }
+
+        async function initRemessas() {
+            const msg = document.getElementById('remMsg');
+            if (!EfixAuth.isLoggedIn()) { msg.textContent = 'Faça login para usar remessas.'; return; }
+            try {
+                const favs = await remFetch('/remessas/allowlist');
+                const sel = document.getElementById('remFav');
+                sel.innerHTML = '<option value="">— selecionar —</option>' +
+                    favs.map(f => `<option value="${f.id}" data-name="${f.name}">${f.name} (${f.doc_root})</option>`).join('');
+                remRefresh();
+            } catch (e) { msg.textContent = e.message; }
+        }
+
+        async function remQuote() {
+            const msg = document.getElementById('remMsg');
+            const amount = parseFloat(document.getElementById('remAmount').value);
+            if (!amount || amount <= 0) { msg.textContent = 'Informe o valor em USDC.'; return; }
+            const btn = document.getElementById('remBtnQuote');
+            btn.disabled = true; btn.textContent = 'Cotando…'; msg.textContent = '';
+            try {
+                _remQuote = await remFetch('/remessas/quote', { method: 'POST', body: JSON.stringify({ amount_usdc: amount }) });
+                const b = _remQuote.best;
+                document.getElementById('remQuoteDetails').innerHTML = b
+                    ? `<div>Rota: <strong>${b.adapter}</strong></div>` +
+                      `<div>Taxa: <strong>R$ ${Number(b.rate).toFixed(4)}/USDC</strong></div>` +
+                      `<div>Liquida (conta EFIX): <strong style="color:var(--green)">R$ ${Number(b.brl_net).toFixed(2)}</strong></div>`
+                    : '<div style="color:var(--red)">Nenhuma rota disponível agora.</div>';
+                document.getElementById('remQuoteBox').style.display = 'block';
+                document.getElementById('remBtnCreate').style.display = b ? 'block' : 'none';
+            } catch (e) { msg.textContent = e.message; }
+            finally { btn.disabled = false; btn.textContent = 'Cotar'; }
+        }
+
+        async function remCriarEFundar() {
+            const msg = document.getElementById('remMsg');
+            const amount = parseFloat(document.getElementById('remAmount').value);
+            const sel = document.getElementById('remFav');
+            const favName = sel.selectedOptions[0] ? (sel.selectedOptions[0].dataset.name || '') : '';
+            if (!amount || !_remQuote) { msg.textContent = 'Cote antes de criar.'; return; }
+            const btn = document.getElementById('remBtnCreate');
+            btn.disabled = true; btn.textContent = 'Criando…';
+            try {
+                const deal = await remFetch('/remessas/deals', { method: 'POST', body: JSON.stringify({
+                    expected_amount: amount,
+                    notes: favName ? ('favorecido pretendido: ' + favName) : undefined,
+                }) });
+                const fund = await remFetch('/remessas/deals/' + deal.id + '/fund', { method: 'POST', body: JSON.stringify({
+                    amount_usdc: amount, quote_set_id: _remQuote.quote_set_id,
+                }) });
+                const instr = fund.deposit_instructions || {};
+                _remAddr = instr.to_address || '';
+                document.getElementById('remInstrDetails').innerHTML =
+                    `<div>Remessa: <strong>#${deal.id}</strong></div>` +
+                    `<div>Rede: <strong>${(instr.payment_rail || 'base').toUpperCase()}</strong> · Moeda: <strong>${(instr.currency || 'usdc').toUpperCase()}</strong></div>` +
+                    `<div>Valor: <strong>${instr.amount || amount} USDC</strong></div>` +
+                    `<div>Endereço: <strong>${_remAddr || '(indisponível — ver detalhes da remessa)'}</strong></div>` +
+                    (fund.status === 'failed' ? `<div style="color:var(--red)">Falha ao armar a rota: ${fund.reason || ''}</div>` : '');
+                document.getElementById('rem-form').style.display = 'none';
+                document.getElementById('rem-instructions').style.display = 'block';
+                remRefresh();
+            } catch (e) { msg.textContent = e.message; }
+            finally { btn.disabled = false; btn.textContent = 'Criar remessa & gerar depósito'; }
+        }
+
+        function remCopyAddr() {
+            if (!_remAddr) return;
+            navigator.clipboard.writeText(_remAddr).then(() => {
+                const b = document.getElementById('remBtnCopy');
+                b.textContent = 'Copiado ✓'; setTimeout(() => { b.textContent = 'Copiar endereço'; }, 2000);
+            });
+        }
+
+        function remNova() {
+            _remQuote = null; _remAddr = '';
+            document.getElementById('remAmount').value = '';
+            document.getElementById('remQuoteBox').style.display = 'none';
+            document.getElementById('rem-instructions').style.display = 'none';
+            document.getElementById('rem-form').style.display = 'block';
+        }
+
+        async function remRefresh() {
+            const box = document.getElementById('remDeals');
+            try {
+                const deals = await remFetch('/remessas/deals');
+                if (!deals.length) { box.innerHTML = '<div style="color:var(--gray-600)">Nenhuma remessa ainda.</div>'; return; }
+                box.innerHTML = deals.map(d =>
+                    `<div style="border:1px solid var(--gray-800);border-radius:10px;padding:10px;margin-bottom:6px;cursor:pointer;" onclick="remDetalhe(${d.id}, this)">` +
+                        `<div style="display:flex;justify-content:space-between;">` +
+                            `<span>#${d.id} · ${d.expected_amount ? Number(d.expected_amount).toFixed(2) + ' USDC' : '—'}</span>` +
+                            `<span style="color:var(--gray-500)">${d.status}</span>` +
+                        `</div>` +
+                        `<div class="rem-det" style="display:none;margin-top:8px;color:var(--gray-400);line-height:1.8;"></div>` +
+                    `</div>`).join('');
+            } catch (e) { box.innerHTML = `<div style="color:var(--red)">${e.message}</div>`; }
+        }
+
+        async function remDetalhe(id, el) {
+            const det = el.querySelector('.rem-det');
+            if (det.style.display === 'block') { det.style.display = 'none'; return; }
+            det.style.display = 'block'; det.textContent = 'Carregando…';
+            try {
+                const d = await remFetch('/remessas/deals/' + id);
+                const dep = (d.deposits || []).map(x => `depósito ${x.bridge_transfer_id ? x.bridge_transfer_id.slice(0, 8) + '…' : x.id}: <strong>${x.state}</strong>`).join('<br>') || 'sem depósitos';
+                const off = (d.offramps || []).map(x => `rota ${x.adapter}: <strong>${x.status}</strong>${x.brl_net_expected ? ' · ~R$ ' + Number(x.brl_net_expected).toFixed(2) : ''}`).join('<br>') || 'sem offramp';
+                const pay = (d.payouts || []).map(x => `payout R$ ${Number(x.amount_brl).toFixed(2)} → ${x.beneficiary_name || '?'}: <strong>${x.status}</strong>${x.receipt_ref ? ' · ' + x.receipt_ref : ''}`).join('<br>') || 'payout ainda não criado (mesa)';
+                det.innerHTML = dep + '<br>' + off + '<br>' + pay;
+            } catch (e) { det.textContent = e.message; }
+        }
+
+        // a aba só aparece se o backend disser que remessas estão habilitadas
+        // (kill switch: REMITTANCE_ENABLED + toggle admin no efixdi-backend)
+        (async () => {
+            try {
+                const r = await fetch(BACKEND_URL + '/remessas/status');
+                const d = await r.json();
+                if (d.enabled) document.getElementById('tabRemessas').style.display = '';
+            } catch (_e) {}
+        })();
 
         // ═══ INVEST TAB ═══
         async function handleInvestRequest() {
