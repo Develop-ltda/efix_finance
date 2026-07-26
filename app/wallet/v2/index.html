@@ -50,13 +50,13 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 /* ── sidebar ── */
 .sb{position:sticky;top:0;height:100dvh;background:var(--bg-panel);border-right:1px solid var(--line);
   display:flex;flex-direction:column;padding:22px 14px;z-index:40}
-.brand{display:flex;align-items:center;gap:9px;padding:0 10px 24px;font-weight:600;font-size:16px;letter-spacing:-.01em}
+.brand{display:flex;align-items:center;gap:9px;padding:0 10px 24px;font-weight:400;font-size:16px;letter-spacing:-.01em}
 .brand img{width:28px;height:28px;border-radius:8px;display:block}
-.brand b{color:var(--green);font-weight:600}
+.brand b{color:var(--green);font-weight:400}
 .brand .tag{font-family:var(--font-m);font-size:9px;letter-spacing:.18em;color:var(--ink-3);margin-left:4px;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--ink-2);
-  font-weight:600;font-size:13.5px;border-left:2px solid transparent;transition:all .15s}
+  font-weight:400;font-size:13.5px;border-left:2px solid transparent;transition:all .15s}
 .nav a svg{width:17px;height:17px;stroke-width:1.6;flex-shrink:0;opacity:.85}
 .nav a:hover{background:var(--bg-hover);color:var(--ink)}
 .nav a.on{background:var(--bg-raise);color:var(--ink);border-left-color:var(--green)}
@@ -68,12 +68,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 /* ── topbar ── */
 .top{display:flex;align-items:center;gap:14px;padding:16px 28px;border-bottom:1px solid var(--line);
   background:color-mix(in srgb, var(--bg) 82%, transparent);backdrop-filter:blur(12px);position:sticky;top:0;z-index:30}
-.top h1{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.top h1{font-size:15px;font-weight:400;letter-spacing:-.01em}
 .top .sp{flex:1}
 .chip{display:flex;align-items:center;gap:9px;background:var(--bg-panel);border:1px solid var(--line);
   border-radius:99px;padding:5px 12px 5px 5px}
 .chip .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--green),#0d5c2e);
-  display:grid;place-items:center;font-family:var(--font-m);font-size:10px;font-weight:700;color:#04130a}
+  display:grid;place-items:center;font-family:var(--font-m);font-size:10px;font-weight:400;color:#04130a}
 .chip .who{font-family:var(--font-m);font-size:11px;color:var(--ink-2)}
 .icobtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--bg-panel);
   color:var(--ink-2);display:grid;place-items:center;transition:all .15s}
@@ -91,7 +91,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
   background:linear-gradient(90deg,transparent,rgba(34,197,94,.5),transparent)}
 .hero{text-align:center}
 .hero .row1{display:flex;align-items:center;justify-content:center;gap:10px}
-.hero .num{font-family:var(--font-m);font-weight:700;font-size:clamp(30px,4.6vw,46px);letter-spacing:-.02em;margin:8px 0 2px}
+.hero .num{font-family:var(--font-m);font-weight:400;font-size:clamp(30px,4.6vw,46px);letter-spacing:-.02em;margin:8px 0 2px}
 .hero .num .cents{font-size:.55em;color:var(--ink-2)}
 .hero .sub{font-family:var(--font-m);font-size:12px;color:var(--ink-2)}
 .hero .meta{display:flex;gap:34px;flex-wrap:wrap;justify-content:center;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
@@ -103,7 +103,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 /* ações rápidas */
 .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
 .quick button{display:flex;align-items:center;justify-content:center;gap:9px;padding:15px;border-radius:12px;
-  border:1px solid var(--line);background:var(--bg-panel);color:var(--ink);font-weight:700;font-size:13.5px;transition:all .15s}
+  border:1px solid var(--line);background:var(--bg-panel);color:var(--ink);font-weight:400;font-size:13.5px;transition:all .15s}
 .quick button:hover{border-color:rgba(34,197,94,.45);transform:translateY(-1px)}
 .quick button svg{width:16px;height:16px;stroke-width:1.7;color:var(--green)}
 .quick button.primary{background:var(--green);border-color:var(--green);color:#04130a}
@@ -112,7 +112,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 
 /* cards / tabelas */
 .card{background:var(--bg-panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-top:18px}
-.card h2{font-size:13px;font-weight:700;letter-spacing:.01em;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.card h2{font-size:13px;font-weight:400;letter-spacing:.01em;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .card h2 .up{font-size:9.5px}
 table{width:100%;border-collapse:collapse}
 th{text-align:right;font-family:var(--font-m);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
@@ -123,15 +123,15 @@ tr:last-child td{border-bottom:none}
 td:first-child{text-align:left}
 .asset{display:flex;align-items:center;gap:11px}
 .asset .dot{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
-  font-family:var(--font-m);font-size:9px;font-weight:700;border:1px solid var(--line-2)}
-.asset .nm{font-family:var(--font-d);font-weight:700;font-size:13.5px}
+  font-family:var(--font-m);font-size:9px;font-weight:400;border:1px solid var(--line-2)}
+.asset .nm{font-family:var(--font-d);font-weight:400;font-size:14px}
 .asset .ty{font-family:var(--font-m);font-size:10px;color:var(--ink-3);letter-spacing:.06em}
 .alloc{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .alloc .bar{width:52px;height:3px;border-radius:2px;background:var(--line-2);overflow:hidden}
 .alloc .bar i{display:block;height:100%;background:var(--green)}
 tr.grp td{padding:18px 0 7px;border-bottom:1px solid var(--line-2);font-family:var(--font-m);
   font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
-tr.grp td b{color:var(--ink-2);font-weight:700}
+tr.grp td b{color:var(--ink-2);font-weight:400}
 tr.grp:first-child td{padding-top:6px}
 .muted{color:var(--ink-3)} .small{font-size:11px}
 
@@ -142,7 +142,7 @@ tr.grp:first-child td{padding-top:6px}
 .mov .dir svg{width:13px;height:13px;stroke-width:1.8}
 .mov .in svg{color:var(--green)} .mov .out svg{color:var(--ink-2)}
 .mov .what{flex:1;min-width:0}
-.mov .what .t{font-weight:700;font-size:13px}
+.mov .what .t{font-weight:400;font-size:13px}
 .mov .what .s{font-family:var(--font-m);font-size:10.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mov .amt{font-family:var(--font-m);font-size:13px;text-align:right}
 .mov .amt .d{font-size:10px;color:var(--ink-3)}
@@ -155,10 +155,10 @@ tr.grp:first-child td{padding-top:6px}
 
 /* stub de seção */
 .stub{padding:60px 20px;text-align:center}
-.stub .big{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.stub .big{font-size:22px;font-weight:400;letter-spacing:-.02em;margin-bottom:8px}
 .stub p{color:var(--ink-2);max-width:420px;margin:0 auto 22px}
 .stub a{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:10px;
-  background:var(--green);color:#04130a;font-weight:700;font-size:13.5px}
+  background:var(--green);color:#04130a;font-weight:500;font-size:13.5px}
 
 /* login */
 .gate{min-height:100dvh;display:grid;place-items:center;background:var(--bg);background-image:var(--hero-grad);padding:20px}
@@ -170,11 +170,11 @@ tr.grp:first-child td{padding-top:6px}
 .gate input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg-raise);
   color:var(--ink);font-family:var(--font-m);font-size:14px;margin-bottom:14px;outline:none;transition:border .15s}
 .gate input:focus{border-color:rgba(34,197,94,.55)}
-.gate .go{width:100%;padding:14px;border-radius:10px;border:none;background:var(--green);color:#04130a;font-weight:800;font-size:14px}
+.gate .go{width:100%;padding:14px;border-radius:10px;border:none;background:var(--green);color:#04130a;font-weight:500;font-size:14px}
 .gate .go:disabled{opacity:.55}
 .gate .msg{font-family:var(--font-m);font-size:11.5px;color:var(--ink-2);margin-top:12px;min-height:16px;text-align:center}
 .gate .alt{text-align:center;margin-top:18px;font-size:12px;color:var(--ink-3)}
-.gate .alt a{color:var(--green);font-weight:600}
+.gate .alt a{color:var(--green);font-weight:400}
 
 /* reveal orquestrado */
 [data-reveal]{opacity:0;transform:translateY(10px);animation:rv .55s cubic-bezier(.2,.7,.3,1) forwards}
@@ -215,9 +215,11 @@ tr.grp:first-child td{padding-top:6px}
       <input id="g-email" type="email" placeholder="voce@email.com" autocomplete="email">
       <button class="go" id="g-send" onclick="gateSend()">Continuar</button>
     </div>
-    <div id="g-wait-step" style="display:none">
-      <p class="lead" style="margin-bottom:6px">Enviamos um link de acesso para <b id="g-sent-to"></b>.</p>
-      <p class="lead" style="font-size:12px">Abra o e-mail neste dispositivo — você volta logado.</p>
+    <div id="g-code-step" style="display:none">
+      <p class="lead" style="margin-bottom:14px">Enviamos um código de 6 dígitos para <span id="g-sent-to" style="color:var(--ink)"></span>.</p>
+      <label>Código</label>
+      <input id="g-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" style="text-align:center;letter-spacing:.4em;font-size:18px">
+      <button class="go" id="g-verify" onclick="gateVerify()">Entrar</button>
     </div>
     <div class="msg" id="g-msg"></div>
     <div class="alt">Prefere a versão atual? <a href="/app/wallet/">Abrir wallet clássica</a></div>
@@ -419,14 +421,26 @@ async function balanceOf(token, addr){
 async function gateSend(){
   const email = $('g-email').value.trim();
   if(!/.+@.+\..+/.test(email)){ $('g-msg').textContent='informe um e-mail válido'; return; }
-  $('g-send').disabled = true; $('g-msg').textContent='enviando…';
+  $('g-send').disabled = true; $('g-msg').textContent='enviando código…';
   try{
-    await EfixWallet.loginWithEmail(email);
+    await EfixAuth.sendOTP(email);
     $('g-email-step').style.display='none';
     $('g-sent-to').textContent = email;
-    $('g-wait-step').style.display='block';
+    $('g-code-step').style.display='block';
     $('g-msg').textContent='';
+    $('g-code').focus();
   }catch(e){ $('g-msg').textContent = e.message; $('g-send').disabled=false; }
+}
+
+async function gateVerify(){
+  const email = $('g-email').value.trim();
+  const code = $('g-code').value.trim();
+  if(!/^\d{6}$/.test(code)){ $('g-msg').textContent='código de 6 dígitos'; return; }
+  $('g-verify').disabled = true; $('g-msg').textContent='verificando…';
+  try{
+    await EfixAuth.verifyOTP(email, code);
+    location.reload();
+  }catch(e){ $('g-msg').textContent = e.message; $('g-verify').disabled=false; }
 }
 
 async function sair(){ try{ await EfixAuth.logout(); }catch(e){} try{ await EfixWallet.disconnect(); }catch(e){} location.reload(); }
@@ -485,14 +499,14 @@ async function carregarCore(email, wallets){
       if(!grs.length) continue;
       const sub = grs.reduce((s,r)=>s+r.val,0);
       const gpct = total>0 ? (sub/total*100) : 0;
-      html += '<tr class="grp"><td colspan="3">'+g+'</td><td class="money"><b>'+brl(sub)+'</b></td><td>'+gpct.toFixed(1)+'%</td></tr>';
+      html += '<tr class="grp"><td colspan="3">'+g+'</td><td class="money">'+brl(sub)+'</td><td>'+gpct.toFixed(1)+'%</td></tr>';
       html += grs.map(r=>{
         const pct = total>0 ? (r.val/total*100) : 0;
         return '<tr>'+
           '<td><div class="asset"><div class="dot">'+r.sym.slice(0,3)+'</div><div><div class="nm">'+r.sym+'</div><div class="ty">'+r.nome+' · '+r.tipo+'</div></div></div></td>'+
           '<td class="money">'+r.bal.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</td>'+
           '<td class="muted">'+(r.preco==='par'?'R$ 1,00':'R$ '+r.px.toFixed(r.preco==='nav'?6:4))+'</td>'+
-          '<td class="money"><b>'+brl(r.val)+'</b></td>'+
+          '<td class="money">'+brl(r.val)+'</td>'+
           '<td><div class="alloc"><span class="muted small">'+pct.toFixed(1)+'%</span><div class="bar"><i style="width:'+Math.min(100,pct)+'%"></i></div></div></td>'+
         '</tr>';
       }).join('');
