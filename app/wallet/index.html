@@ -667,8 +667,8 @@
                         <select id="remFav" style="width:100%;margin:6px 0 14px;padding:10px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--white);font-size:13px;">
                             <option value="">Carregando…</option>
                         </select>
-                        <label style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);">Valor (USDC)</label>
-                        <input id="remAmount" type="number" min="1" step="0.01" placeholder="0.00" style="width:100%;box-sizing:border-box;margin:6px 0 14px;padding:10px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--white);font-size:15px;font-family:var(--font-mono);">
+                        <label style="font-size:11px;color:var(--gray-500);font-family:var(--font-mono);">Valor a quitar (R$)</label>
+                        <input id="remAmount" type="number" min="1" step="0.01" placeholder="0,00" style="width:100%;box-sizing:border-box;margin:6px 0 14px;padding:10px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--white);font-size:15px;font-family:var(--font-mono);">
                         <button class="btn btn-primary" id="remBtnQuote" onclick="remQuote()">Cotar</button>
 
                         <div id="remQuoteBox" style="display:none;background:var(--gray-800);border-radius:12px;padding:16px;margin-top:14px;">
@@ -3203,19 +3203,19 @@
         async function remQuote() {
             const msg = document.getElementById('remMsg');
             const amount = parseFloat(document.getElementById('remAmount').value);
-            if (!amount || amount <= 0) { msg.textContent = 'Informe o valor em USDC.'; return; }
+            if (!amount || amount <= 0) { msg.textContent = 'Informe o valor em R$.'; return; }
             const btn = document.getElementById('remBtnQuote');
             btn.disabled = true; btn.textContent = 'Cotando…'; msg.textContent = '';
             try {
-                _remQuote = await remFetch('/remessas/quote', { method: 'POST', body: JSON.stringify({ amount_usdc: amount }) });
-                const b = _remQuote.best;
-                document.getElementById('remQuoteDetails').innerHTML = b
-                    ? `<div>Rota: <strong>${b.adapter}</strong></div>` +
-                      `<div>Taxa: <strong>R$ ${Number(b.rate).toFixed(4)}/USDC</strong></div>` +
-                      `<div>Liquida (conta EFIX): <strong style="color:var(--green)">R$ ${Number(b.brl_net).toFixed(2)}</strong></div>`
+                _remQuote = await remFetch('/remessas/quote', { method: 'POST', body: JSON.stringify({ amount_brl: amount }) });
+                const ok = _remQuote.usdc_needed != null;
+                document.getElementById('remQuoteDetails').innerHTML = ok
+                    ? `<div>Valor a quitar: <strong>R$ ${Number(_remQuote.amount_brl).toFixed(2)}</strong></div>` +
+                      `<div>Você envia: <strong style="color:var(--green)">${Number(_remQuote.usdc_needed).toFixed(2)} USDC</strong></div>` +
+                      `<div>Câmbio efetivo: <strong>R$ ${Number(_remQuote.rate_efetiva).toFixed(4)}/USDC</strong> <span style="color:var(--gray-500)">(taxas inclusas)</span></div>`
                     : '<div style="color:var(--red)">Nenhuma rota disponível agora.</div>';
                 document.getElementById('remQuoteBox').style.display = 'block';
-                document.getElementById('remBtnCreate').style.display = b ? 'block' : 'none';
+                document.getElementById('remBtnCreate').style.display = ok ? 'block' : 'none';
             } catch (e) { msg.textContent = e.message; }
             finally { btn.disabled = false; btn.textContent = 'Cotar'; }
         }
@@ -3225,23 +3225,25 @@
             const amount = parseFloat(document.getElementById('remAmount').value);
             const sel = document.getElementById('remFav');
             const favName = sel.selectedOptions[0] ? (sel.selectedOptions[0].dataset.name || '') : '';
-            if (!amount || !_remQuote) { msg.textContent = 'Cote antes de criar.'; return; }
+            if (!amount || !_remQuote || _remQuote.usdc_needed == null) { msg.textContent = 'Cote antes de criar.'; return; }
+            const usdc = _remQuote.usdc_needed;
             const btn = document.getElementById('remBtnCreate');
             btn.disabled = true; btn.textContent = 'Criando…';
             try {
                 const deal = await remFetch('/remessas/deals', { method: 'POST', body: JSON.stringify({
                     expected_amount: amount,
-                    notes: favName ? ('favorecido pretendido: ' + favName) : undefined,
+                    expected_currency: 'BRL',
+                    notes: (favName ? ('favorecido pretendido: ' + favName + ' · ') : '') + 'alvo R$ ' + amount.toFixed(2) + ' · envia ' + usdc.toFixed(2) + ' USDC @ ' + Number(_remQuote.rate_efetiva).toFixed(4),
                 }) });
                 const fund = await remFetch('/remessas/deals/' + deal.id + '/fund', { method: 'POST', body: JSON.stringify({
-                    amount_usdc: amount, quote_set_id: _remQuote.quote_set_id,
+                    amount_usdc: usdc, quote_set_id: _remQuote.quote_set_id,
                 }) });
                 const instr = fund.deposit_instructions || {};
                 _remAddr = instr.to_address || '';
                 document.getElementById('remInstrDetails').innerHTML =
-                    `<div>Remessa: <strong>#${deal.id}</strong></div>` +
+                    `<div>Remessa: <strong>#${deal.id}</strong> · quita <strong>R$ ${amount.toFixed(2)}</strong></div>` +
                     `<div>Rede: <strong>${(instr.payment_rail || 'base').toUpperCase()}</strong> · Moeda: <strong>${(instr.currency || 'usdc').toUpperCase()}</strong></div>` +
-                    `<div>Valor: <strong>${instr.amount || amount} USDC</strong></div>` +
+                    `<div>Valor a enviar: <strong>${instr.amount || usdc} USDC</strong></div>` +
                     `<div>Endereço: <strong>${_remAddr || '(indisponível — ver detalhes da remessa)'}</strong></div>` +
                     (fund.status === 'failed' ? `<div style="color:var(--red)">Falha ao armar a rota: ${fund.reason || ''}</div>` : '');
                 document.getElementById('rem-form').style.display = 'none';
