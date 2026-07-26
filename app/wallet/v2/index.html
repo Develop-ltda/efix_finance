@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -45,14 +45,15 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
 
 /* ═══ layout ═══ */
-.shell{display:grid;grid-template-columns:var(--sb-w) 1fr;min-height:100dvh}
+.shell{display:grid;grid-template-columns:var(--sb-w) 1fr;min-height:100dvh;max-width:1480px;margin:0 auto}
 
 /* ── sidebar ── */
 .sb{position:sticky;top:0;height:100dvh;background:var(--bg-panel);border-right:1px solid var(--line);
   display:flex;flex-direction:column;padding:22px 14px;z-index:40}
-.brand{display:flex;align-items:baseline;gap:2px;padding:0 10px 24px;font-weight:800;font-size:19px;letter-spacing:-.02em}
-.brand b{color:var(--green);font-weight:800}
-.brand .tag{font-family:var(--font-m);font-size:9px;letter-spacing:.18em;color:var(--ink-3);margin-left:8px;text-transform:uppercase}
+.brand{display:flex;align-items:center;gap:9px;padding:0 10px 24px;font-weight:600;font-size:16px;letter-spacing:-.01em}
+.brand img{width:28px;height:28px;border-radius:8px;display:block}
+.brand b{color:var(--green);font-weight:600}
+.brand .tag{font-family:var(--font-m);font-size:9px;letter-spacing:.18em;color:var(--ink-3);margin-left:4px;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--ink-2);
   font-weight:600;font-size:13.5px;border-left:2px solid transparent;transition:all .15s}
@@ -88,11 +89,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
   border-radius:16px;padding:28px 30px 26px;box-shadow:var(--shadow);position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;top:0;left:30px;right:30px;height:1px;
   background:linear-gradient(90deg,transparent,rgba(34,197,94,.5),transparent)}
-.hero .row1{display:flex;align-items:center;gap:10px}
+.hero{text-align:center}
+.hero .row1{display:flex;align-items:center;justify-content:center;gap:10px}
 .hero .num{font-family:var(--font-m);font-weight:700;font-size:clamp(30px,4.6vw,46px);letter-spacing:-.02em;margin:8px 0 2px}
 .hero .num .cents{font-size:.55em;color:var(--ink-2)}
 .hero .sub{font-family:var(--font-m);font-size:12px;color:var(--ink-2)}
-.hero .meta{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.hero .meta{display:flex;gap:34px;flex-wrap:wrap;justify-content:center;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
 .hero .meta .it .v{font-family:var(--font-m);font-size:14px;margin-top:3px}
 .eye{background:none;border:none;color:var(--ink-3);display:grid;place-items:center}
 .eye svg{width:16px;height:16px;stroke-width:1.6}
@@ -127,6 +129,10 @@ td:first-child{text-align:left}
 .alloc{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .alloc .bar{width:52px;height:3px;border-radius:2px;background:var(--line-2);overflow:hidden}
 .alloc .bar i{display:block;height:100%;background:var(--green)}
+tr.grp td{padding:18px 0 7px;border-bottom:1px solid var(--line-2);font-family:var(--font-m);
+  font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+tr.grp td b{color:var(--ink-2);font-weight:700}
+tr.grp:first-child td{padding-top:6px}
 .muted{color:var(--ink-3)} .small{font-size:11px}
 
 /* extrato */
@@ -202,7 +208,7 @@ td:first-child{text-align:left}
 <!-- ═══ LOGIN ═══ -->
 <div class="gate" id="gate" style="display:none">
   <div class="box" data-reveal>
-    <div class="brand">efixDI<b>+</b><span class="tag">carteira</span></div>
+    <div class="brand"><img src="/logo_efix_400x400.jpg" alt="EFIX"><span>efixDI<b>+</b></span><span class="tag">carteira</span></div>
     <p class="lead">Renda fixa tokenizada, imóveis BTR e remessas — numa conta só.</p>
     <div id="g-email-step">
       <label>E-mail</label>
@@ -221,7 +227,7 @@ td:first-child{text-align:left}
 <!-- ═══ APP ═══ -->
 <div class="shell" id="app" style="display:none">
   <aside class="sb">
-    <div class="brand">efixDI<b>+</b><span class="tag">beta v2</span></div>
+    <div class="brand"><img src="/logo_efix_400x400.jpg" alt="EFIX"><span>efixDI<b>+</b></span><span class="tag">beta v2</span></div>
     <nav class="nav" id="nav">
       <a href="#inicio" class="on" data-view="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>Início</a>
       <a href="#investir" data-view="investir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 20h18"/><path d="M6 20V9m6 11V4m6 16v-8"/></svg>Investir</a>
@@ -332,12 +338,13 @@ td:first-child{text-align:left}
 const BACKEND = EFIX_CONFIG.backend;
 const OFFERINGS = 'https://efix-offerings-backend-production.up.railway.app';
 const RPC = EFIX_CONFIG.rpc.base;
+const GRUPOS = ['RENDA FIXA', 'IMOBILIÁRIO · BTR', 'CAIXA'];
 const TOKENS = [
-  { sym:'SALRIO',   nome:'Sal Rio Residences', tipo:'IMOBILIÁRIO · BTR', addr:'0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c', dec:18, preco:'par' },
-  { sym:'LATITUDE', nome:'Latitude Pio X',     tipo:'IMOBILIÁRIO · BTR', addr:'0xf7663CAFa4df1ee8d5AD3e8fE8D7C4767D3F3046', dec:18, preco:'par' },
-  { sym:'efixDI',   nome:'efixDI+',            tipo:'RENDA FIXA · CDI',  addr:EFIX_CONFIG.contracts.efixBase, dec:18, preco:'nav' },
-  { sym:'BRLE',     nome:'BRLE',               tipo:'STABLECOIN · BRL',  addr:EFIX_CONFIG.brle.token, dec:18, preco:'par' },
-  { sym:'USDC',     nome:'USD Coin',           tipo:'STABLECOIN · USD',  addr:EFIX_CONFIG.contracts.usdcBase, dec:6, preco:'usd' },
+  { sym:'efixDI',   nome:'efixDI+',            tipo:'CDI',   grupo:'RENDA FIXA',        addr:EFIX_CONFIG.contracts.efixBase, dec:18, preco:'nav' },
+  { sym:'SALRIO',   nome:'Sal Rio Residences', tipo:'BTR',   grupo:'IMOBILIÁRIO · BTR', addr:'0x40229B95668773D10d71cBFcF29a6d74Bc5f0D7c', dec:18, preco:'par' },
+  { sym:'LATITUDE', nome:'Latitude Pio X',     tipo:'BTR',   grupo:'IMOBILIÁRIO · BTR', addr:'0xf7663CAFa4df1ee8d5AD3e8fE8D7C4767D3F3046', dec:18, preco:'par' },
+  { sym:'BRLE',     nome:'BRLE',               tipo:'BRL',   grupo:'CAIXA',             addr:EFIX_CONFIG.brle.token, dec:18, preco:'par' },
+  { sym:'USDC',     nome:'USD Coin',           tipo:'USD',   grupo:'CAIXA',             addr:EFIX_CONFIG.contracts.usdcBase, dec:6, preco:'usd' },
 ];
 let NAV = { navBRL:1, fxUsdBrl:0.1965, cdi:null };
 let WALLETS = [];         // [registrada, sessão] dedupe
@@ -464,24 +471,34 @@ async function carregarCore(email, wallets){
     total += val;
     if(bal > 0.000001) rows.push({...t, bal, px, val});
   }
-  rows.sort((a,b)=>b.val-a.val);
-
   $('hero-total').innerHTML = heroNum(total);
   $('hero-total').classList.add('money'); if(HIDDEN) $('hero-total').classList.add('blur');
   $('hero-usd').textContent = '≈ US$ ' + (total*NAV.fxUsdBrl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 
+  // organizado por classe: cabeçalho do grupo com subtotal, ativos por valor
   const tb = $('assets-tb');
   if(!rows.length){ tb.innerHTML = '<tr><td colspan="5"><div class="empty">Nenhum ativo ainda — faça seu primeiro depósito.</div></td></tr>'; }
-  else tb.innerHTML = rows.map(r=>{
-    const pct = total>0 ? (r.val/total*100) : 0;
-    return '<tr>'+
-      '<td><div class="asset"><div class="dot">'+r.sym.slice(0,3)+'</div><div><div class="nm">'+r.sym+'</div><div class="ty">'+r.tipo+'</div></div></div></td>'+
-      '<td class="money">'+r.bal.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</td>'+
-      '<td class="muted">'+(r.preco==='par'?'R$ 1,00':'R$ '+r.px.toFixed(r.preco==='nav'?6:4))+'</td>'+
-      '<td class="money"><b>'+brl(r.val)+'</b></td>'+
-      '<td><div class="alloc"><span class="muted small">'+pct.toFixed(1)+'%</span><div class="bar"><i style="width:'+Math.min(100,pct)+'%"></i></div></div></td>'+
-    '</tr>';
-  }).join('');
+  else {
+    let html = '';
+    for(const g of GRUPOS){
+      const grs = rows.filter(r=>r.grupo===g).sort((a,b)=>b.val-a.val);
+      if(!grs.length) continue;
+      const sub = grs.reduce((s,r)=>s+r.val,0);
+      const gpct = total>0 ? (sub/total*100) : 0;
+      html += '<tr class="grp"><td colspan="3">'+g+'</td><td class="money"><b>'+brl(sub)+'</b></td><td>'+gpct.toFixed(1)+'%</td></tr>';
+      html += grs.map(r=>{
+        const pct = total>0 ? (r.val/total*100) : 0;
+        return '<tr>'+
+          '<td><div class="asset"><div class="dot">'+r.sym.slice(0,3)+'</div><div><div class="nm">'+r.sym+'</div><div class="ty">'+r.nome+' · '+r.tipo+'</div></div></div></td>'+
+          '<td class="money">'+r.bal.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</td>'+
+          '<td class="muted">'+(r.preco==='par'?'R$ 1,00':'R$ '+r.px.toFixed(r.preco==='nav'?6:4))+'</td>'+
+          '<td class="money"><b>'+brl(r.val)+'</b></td>'+
+          '<td><div class="alloc"><span class="muted small">'+pct.toFixed(1)+'%</span><div class="bar"><i style="width:'+Math.min(100,pct)+'%"></i></div></div></td>'+
+        '</tr>';
+      }).join('');
+    }
+    tb.innerHTML = html;
+  }
   if(HIDDEN) document.querySelectorAll('.money').forEach(el=>el.classList.add('blur'));
 
   renderExtrato('movs', 8);
