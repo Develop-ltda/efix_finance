@@ -52,22 +52,22 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .shell{display:grid;grid-template-columns:var(--sb-w) 1fr;min-height:100dvh;max-width:1480px;margin:0 auto}
 
 /* ── sidebar ── */
-.sb{position:sticky;top:0;height:100dvh;background:var(--sbg);border-right:1px solid var(--sbd);
+.sb{position:sticky;top:0;height:100dvh;background:var(--bg-panel);border-right:1px solid var(--line);
   display:flex;flex-direction:column;padding:22px 14px;z-index:40}
 .brand{display:flex;align-items:center;gap:9px;padding:0 10px 24px;font-weight:400;font-size:16px;letter-spacing:-.01em}
 .brand img{width:28px;height:28px;border-radius:8px;display:block}
 .brand b{color:var(--green);font-weight:400}
 .brand .tag{font-family:var(--font-m);font-size:9px;letter-spacing:.18em;color:var(--ink-3);margin-left:4px;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px}
-.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--si2);
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--ink-2);
   font-weight:400;font-size:13.5px;border-left:2px solid transparent;transition:all .15s}
 .nav a svg{width:17px;height:17px;stroke-width:1.6;flex-shrink:0;opacity:.85}
-.nav a:hover{background:var(--sbg2);color:var(--si)}
-.nav a.on{background:var(--sbg2);color:var(--si);border-left-color:var(--green)}
+.nav a:hover{background:var(--bg-hover);color:var(--ink)}
+.nav a.on{background:var(--bg-raise);color:var(--ink);border-left-color:var(--green)}
 .nav a.on svg{color:var(--green);opacity:1}
-.sb .foot{margin-top:auto;padding:12px 10px 2px;border-top:1px solid var(--sbd)}
-.sb .foot .up{display:block;margin-bottom:6px;color:var(--si3)}
-.sb .foot .mono{font-size:11px;color:var(--si2);word-break:break-all}
+.sb .foot{margin-top:auto;padding:12px 10px 2px;border-top:1px solid var(--line)}
+.sb .foot .up{display:block;margin-bottom:6px}
+.sb .foot .mono{font-size:11px;color:var(--ink-2);word-break:break-all}
 
 /* ── topbar ── */
 .top{display:flex;align-items:center;gap:14px;padding:16px 28px;border-bottom:1px solid var(--line);
@@ -232,6 +232,19 @@ tr.grp:first-child td{padding-top:6px}
 .deal .hd .stt{color:var(--ink-3)}
 .deal .det{display:none;margin-top:9px;font-family:var(--font-m);font-size:11px;color:var(--ink-2);line-height:1.9;border-top:1px solid var(--line);padding-top:8px}
 
+/* extrato consolidado (web2 + web3) */
+.crow{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.crow:last-child{border-bottom:none}
+.crow .ct{flex:1;min-width:0}
+.crow .ct .t{font-size:13px}
+.crow .ct .sdet{font-family:var(--font-m);font-size:10px;color:var(--ink-3);margin-top:2px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.crow .cv{font-family:var(--font-m);font-size:12.5px;text-align:right;white-space:nowrap}
+.crow .cv .stt{display:block;font-size:9.5px;margin-top:2px}
+.stt.ok{color:var(--green)} .stt.wait{color:#d99e17} .stt.bad{color:var(--red)}
+.hmini{font-family:var(--font-m);font-size:8.5px;letter-spacing:.05em;padding:1px 7px;border-radius:99px;
+  border:1px solid var(--line-2);background:transparent;color:var(--ink-2);cursor:pointer}
+.hmini:hover{border-color:var(--mag);color:var(--mag)}
+
 /* estados */
 .empty{padding:34px 10px;text-align:center;color:var(--ink-3);font-family:var(--font-m);font-size:12px}
 .skel{height:14px;border-radius:4px;background:linear-gradient(90deg,var(--line),var(--line-2),var(--line));
@@ -277,7 +290,7 @@ tr.grp:first-child td{padding-top:6px}
   .quick button{padding:12px 6px;font-size:11.5px;flex-direction:column;gap:6px}
   .chip .who{display:none}
   th:nth-child(3),td:nth-child(3){display:none}
-  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb, var(--sbg) 94%, transparent);
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb, var(--bg-panel) 92%, transparent);
     backdrop-filter:blur(14px);border-top:1px solid var(--line);z-index:50;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
   .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;
     color:var(--ink-3);font-family:var(--font-m);font-size:9px;letter-spacing:.04em;border-radius:8px}
@@ -384,6 +397,10 @@ tr.grp:first-child td{padding-top:6px}
           <button onclick="go('extrato')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v17l-2.5-1.7L14 21l-2-1.4L10 21l-2.5-1.7L5 21z"/><path d="M9 9h6m-6 4h6"/></svg>Extrato</button>
         </div>
 
+        <div class="card" data-reveal style="animation-delay:.2s">
+          <h2>Extrato consolidado <span class="up">web2 · web3</span></h2>
+          <div id="cons-list"><div class="empty">carregando…</div></div>
+        </div>
         </div>
 
         <aside class="act" data-reveal style="animation-delay:.24s">
@@ -443,9 +460,8 @@ tr.grp:first-child td{padding-top:6px}
       <!-- ═══ EXTRATO ═══ -->
       <section class="view" id="view-extrato">
         <div class="card" data-reveal>
-          <h2>Extrato conciliado <span class="up">web2 · web3</span></h2>
-          <p class="rem-lead" style="margin-bottom:12px">Movimentações on-chain (web3) e da conta fiat Haus (web2) num só extrato. <span id="ext-w2note">Conecte sua conta Haus para conciliar os lançamentos em reais.</span></p>
-          <div class="chips" id="ext-chips"></div>
+          <h2>Extrato consolidado <span class="up">web2 · web3</span></h2>
+          <p class="rem-lead" style="margin-bottom:12px">Subscrições e liquidações (web2) conciliadas com as movimentações on-chain (web3). A conta fiat Haus entra aqui quando conectada.</p>
           <div id="extrato-full"><div class="empty">carregando…</div></div>
         </div>
       </section>
@@ -501,7 +517,7 @@ function go(v){
   tgt.classList.add('on');
   document.querySelectorAll('#nav a, #bnav a').forEach(a=>a.classList.toggle('on', a.dataset.view===v));
   $('top-title').textContent = {inicio:'Início',investir:'Investir',remessas:'Remessas',brle:'BRLE',cartao:'Cartão',extrato:'Extrato'}[v]||'';
-  if(v==='extrato') renderActivity('extrato-full', 30, 'ext-chips');
+  if(v==='extrato') renderConsolidado('extrato-full', 40);
   if(v==='remessas') initRemessas2();
   if(history.replaceState) history.replaceState(null,'','#'+v);
 }
@@ -651,6 +667,7 @@ async function carregarCore(email, wallets){
   if(HIDDEN) document.querySelectorAll('.money').forEach(el=>el.classList.add('blur'));
 
   renderActivity('act-list', 8, 'act-chips');
+  renderConsolidado('cons-list', 8);
 }
 
 function heroNum(v){
@@ -701,6 +718,7 @@ document.addEventListener('click', (ev)=>{
   const grp=c.dataset.fg, val=c.dataset.fv;
   FILT[grp] = (FILT[grp]===val && val!=='all') ? 'all' : val;
   renderActivity('act-list', 8, 'act-chips');
+  renderConsolidado('cons-list', 8);
   const ext = document.getElementById('view-extrato');
   if(ext && ext.classList.contains('on')) renderActivity('extrato-full', 30, 'ext-chips');
 });
@@ -845,6 +863,60 @@ document.addEventListener('click', async (ev)=>{
     det.innerHTML = dep+'<br>'+off+'<br>'+pay;
   }catch(e){ det.textContent=e.message; }
 });
+
+let _web2 = null;
+async function fetchWeb2(){
+  if(!EfixAuth.isLoggedIn()) return [];
+  try{
+    const r = await fetch(OFFERINGS + '/v1/my/allocations', { headers: EfixAuth.headers() });
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.items||[]).map(a=>({
+      kind:'w2', sym:a.symbol||'', amountBrl:parseFloat(a.amountBrl||0),
+      status:a.status||'', ts:a.settledAt||a.createdAt||null, tx:a.onChainTx||null,
+    }));
+  }catch(e){ return []; }
+}
+const W2_ST = {settled:['liquidada','ok'],armed:['armada','wait'],pending:['pendente','wait'],
+  payment_confirmed:['pagamento confirmado','wait'],kyc_review:['KYC em análise','wait'],
+  kyc_approved:['KYC aprovado','wait'],rejected:['rejeitada','bad'],cancelled:['cancelada','bad']};
+async function renderConsolidado(elId, n){
+  const el = $(elId); if(!el) return;
+  try{
+    if(!_transfers) _transfers = await fetchTransfers();
+    if(_web2===null) _web2 = await fetchWeb2();
+    const w3 = _transfers.map(x=>({ kind:'w3', x, ts: x.metadata&&x.metadata.blockTimestamp||null }));
+    const all = [..._web2, ...w3].sort((a,b)=>new Date(b.ts||0)-new Date(a.ts||0)).slice(0,n);
+    if(!all.length){ el.innerHTML='<div class="empty">Sem lançamentos ainda.</div>'; return; }
+    el.innerHTML = all.map(it=>{
+      const dt = it.ts?new Date(it.ts):null;
+      const when = dt?dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' · '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+      if(it.kind==='w2'){
+        const st = W2_ST[it.status]||[it.status,'wait'];
+        return '<div class="crow">'+
+          '<div class="ct"><div class="t">Subscrição '+it.sym+'</div>'+
+          '<div class="sdet"><span class="src src-w2">web2</span><span>'+when+'</span>'+
+          (it.tx?('<span>'+String(it.tx).slice(0,10)+'…</span><button class="hmini" data-copy="'+it.tx+'">copiar</button><a class="hmini" href="https://basescan.org/tx/'+it.tx+'" target="_blank">abrir ↗</a>'):'')+
+          '</div></div>'+
+          '<div class="cv money">R$ '+it.amountBrl.toLocaleString('pt-BR',{minimumFractionDigits:2})+
+          '<span class="stt '+st[1]+'">'+st[0]+(it.tx?' · conciliada':'')+'</span></div>'+
+        '</div>';
+      }
+      const x = it.x;
+      const t = TOK_BY_ADDR[(x.rawContract&&x.rawContract.address||'').toLowerCase()];
+      const sym = t?t.sym:(x.asset||'?');
+      return '<div class="crow">'+
+        '<div class="ct"><div class="t">'+(x._dir==='in'?'Recebido':'Enviado')+' · '+sym+'</div>'+
+        '<div class="sdet"><span class="src src-w3">web3</span><span>'+when+'</span>'+
+        '<span>'+x.hash.slice(0,10)+'…</span><button class="hmini" data-copy="'+x.hash+'">copiar</button>'+
+        '<a class="hmini" href="https://basescan.org/tx/'+x.hash+'" target="_blank">abrir ↗</a></div></div>'+
+        '<div class="cv money">'+(x._dir==='in'?'+':'−')+Number(x.value||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+' '+sym+
+        '<span class="stt ok">Concluída</span></div>'+
+      '</div>';
+    }).join('');
+    if(HIDDEN) document.querySelectorAll('.money').forEach(e2=>e2.classList.add('blur'));
+  }catch(e){ el.innerHTML='<div class="empty">extrato indisponível: '+e.message+'</div>'; }
+}
 
 function conectarWeb2(){
   const done = 'Conexão da conta Haus (web2) em preparação — o trilho bancário (Bankly/Genial + Open Finance) entra numa próxima fase. Assim que ativo, seu saldo em reais e o extrato conciliam aqui automaticamente.';
