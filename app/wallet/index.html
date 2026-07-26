@@ -14,6 +14,8 @@
    que não trabalhe. Tema claro/escuro por [data-theme].                        */
 :root{
   --green:#22c55e; --green-dim:#16a34a; --red:#f87171;
+  --nv:#12163a; --nv-2:#1a1f4d; --nv-3:#262c63; --mag:#ff4dc4;
+  --nv-ink:#e7e9f6; --nv-ink2:#9aa3d0; --nv-ink3:#6670ad;
   --font-d:'Syne',sans-serif; --font-m:'Space Mono',monospace;
   --sb-w:232px;
 }
@@ -48,22 +50,22 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .shell{display:grid;grid-template-columns:var(--sb-w) 1fr;min-height:100dvh;max-width:1480px;margin:0 auto}
 
 /* ── sidebar ── */
-.sb{position:sticky;top:0;height:100dvh;background:var(--bg-panel);border-right:1px solid var(--line);
+.sb{position:sticky;top:0;height:100dvh;background:var(--nv);border-right:1px solid var(--nv-3);
   display:flex;flex-direction:column;padding:22px 14px;z-index:40}
 .brand{display:flex;align-items:center;gap:9px;padding:0 10px 24px;font-weight:400;font-size:16px;letter-spacing:-.01em}
 .brand img{width:28px;height:28px;border-radius:8px;display:block}
 .brand b{color:var(--green);font-weight:400}
 .brand .tag{font-family:var(--font-m);font-size:9px;letter-spacing:.18em;color:var(--ink-3);margin-left:4px;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px}
-.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--ink-2);
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--nv-ink2);
   font-weight:400;font-size:13.5px;border-left:2px solid transparent;transition:all .15s}
 .nav a svg{width:17px;height:17px;stroke-width:1.6;flex-shrink:0;opacity:.85}
-.nav a:hover{background:var(--bg-hover);color:var(--ink)}
-.nav a.on{background:var(--bg-raise);color:var(--ink);border-left-color:var(--green)}
+.nav a:hover{background:var(--nv-2);color:var(--nv-ink)}
+.nav a.on{background:var(--nv-2);color:var(--nv-ink);border-left-color:var(--green)}
 .nav a.on svg{color:var(--green);opacity:1}
-.sb .foot{margin-top:auto;padding:12px 10px 2px;border-top:1px solid var(--line)}
+.sb .foot{margin-top:auto;padding:12px 10px 2px;border-top:1px solid var(--nv-3)}
 .sb .foot .up{display:block;margin-bottom:6px}
-.sb .foot .mono{font-size:11px;color:var(--ink-2);word-break:break-all}
+.sb .foot .mono{font-size:11px;color:var(--nv-ink2);word-break:break-all}
 
 /* ── topbar ── */
 .top{display:flex;align-items:center;gap:14px;padding:16px 28px;border-bottom:1px solid var(--line);
@@ -157,32 +159,57 @@ tr.grp:first-child td{padding-top:6px}
 
 /* painel recent activity (estilo fireblocks) */
 .duo{display:grid;grid-template-columns:1fr 350px;gap:18px;align-items:start}
-.act{position:sticky;top:76px;background:var(--bg-panel);border:1px solid var(--line);border-radius:16px;padding:18px 16px}
-.act h2{font-size:13px;font-weight:400;display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.act h2 .cnt{font-family:var(--font-m);font-size:10px;background:var(--green);color:#04130a;border-radius:99px;padding:1px 8px}
+.act{position:sticky;top:76px;background:var(--nv);border:1px solid var(--nv-3);border-radius:16px;padding:18px 16px}
+.act h2{font-size:13px;font-weight:400;display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--nv-ink)}
+.act h2 .cnt{font-family:var(--font-m);font-size:10px;background:var(--mag);color:#fff;border-radius:99px;padding:1px 8px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .chips button{font-family:var(--font-m);font-size:10px;letter-spacing:.06em;padding:4px 10px;border-radius:99px;
   border:1px solid var(--line-2);background:transparent;color:var(--ink-2)}
-.chips button.on{border-color:var(--green);color:var(--green)}
-.actcard{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:9px;background:var(--bg-raise)}
+.chips button.on{border-color:var(--mag);color:var(--mag)}
+.act .chips button{border-color:var(--nv-3);color:var(--nv-ink2)}
+.act .chips button.on{border-color:var(--mag);color:var(--mag)}
+.actcard{border:1px solid var(--nv-3);border-radius:12px;padding:11px 12px;margin-bottom:9px;background:var(--nv-2)}
 .actcard .route{display:flex;align-items:center;gap:7px;margin-bottom:9px}
-.actcard .route .ep{flex:1;min-width:0;background:var(--bg-panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
-.actcard .route .ep .k{font-family:var(--font-m);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
-.actcard .route .ep .a{font-family:var(--font-m);font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.actcard .route svg{width:13px;height:13px;stroke-width:1.8;color:var(--ink-3);flex-shrink:0}
+.actcard .route .ep{flex:1;min-width:0;background:var(--nv);border:1px solid var(--nv-3);border-radius:8px;padding:5px 8px}
+.actcard .route .ep .k{font-family:var(--font-m);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--nv-ink3)}
+.actcard .route .ep .a{font-family:var(--font-m);font-size:10.5px;color:var(--nv-ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actcard .route svg{width:13px;height:13px;stroke-width:1.8;color:var(--mag);flex-shrink:0}
 .actcard .body{display:flex;align-items:center;gap:10px}
-.actcard .body .dot{width:28px;height:28px;border-radius:8px;border:1px solid var(--line-2);display:grid;place-items:center;
+.actcard .body .dot{width:28px;height:28px;border-radius:8px;border:1px solid var(--nv-3);display:grid;place-items:center;
   font-family:var(--font-m);font-size:8px;flex-shrink:0}
 .actcard .body .tk{flex:1;min-width:0}
-.actcard .body .tk .t1{font-size:12.5px}
-.actcard .body .tk .t2{font-family:var(--font-m);font-size:9.5px;color:var(--ink-3)}
-.actcard .body .amt{font-family:var(--font-m);font-size:12.5px;text-align:right;white-space:nowrap}
+.actcard .body .tk .t1{font-size:12.5px;color:var(--nv-ink)}
+.actcard .body .tk .t2{font-family:var(--font-m);font-size:9.5px;color:var(--nv-ink3)}
+.actcard .body .amt{font-family:var(--font-m);font-size:12.5px;text-align:right;white-space:nowrap;color:var(--nv-ink)}
 .actcard .body .amt a{color:var(--ink-3)}
 .actcard .st{display:flex;align-items:center;justify-content:space-between;margin-top:9px;
   font-family:var(--font-m);font-size:10px;color:var(--green)}
-.actcard .st .when{color:var(--ink-3)}
+.actcard .st .when{color:var(--nv-ink3)}
 .actcard .stbar{height:2px;border-radius:2px;background:var(--green);opacity:.75;margin-top:5px}
+.hashrow{display:flex;align-items:center;gap:8px;margin-top:8px;font-family:var(--font-m);font-size:9.5px;color:var(--nv-ink3)}
+.hashrow .h{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hashrow button,.hashrow a{font-family:var(--font-m);font-size:9px;letter-spacing:.06em;padding:2px 8px;border-radius:99px;
+  border:1px solid var(--nv-3);background:transparent;color:var(--nv-ink2);cursor:pointer}
+.hashrow button:hover,.hashrow a:hover{border-color:var(--mag);color:var(--mag)}
 @media (max-width:1199px){.duo{grid-template-columns:1fr}.act{position:static}}
+
+/* remessas nativa */
+.rem2col{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:1000px){.rem2col{grid-template-columns:1fr}}
+.rem-lead{font-size:12.5px;color:var(--ink-2);margin:4px 0 10px;line-height:1.55}
+.fldl{display:block;font-family:var(--font-m);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:12px 0 6px}
+.fld{width:100%;padding:12px 13px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg-raise);color:var(--ink);font-size:14px;outline:none;font-family:inherit}
+.fld:focus{border-color:rgba(34,197,94,.55)}
+.cta{width:100%;margin-top:14px;padding:13px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg-panel);color:var(--ink);font-size:13.5px}
+.cta.pri{background:var(--green);border-color:var(--green);color:#04130a;font-weight:500}
+.cta:disabled{opacity:.55}
+.mini{font-family:var(--font-m);font-size:10px;padding:3px 10px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2)}
+.qd{background:var(--bg-raise);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;font-family:var(--font-m);font-size:12px;line-height:2;word-break:break-all}
+.rem-msg{margin-top:10px;font-family:var(--font-m);font-size:11.5px;color:var(--ink-2);min-height:16px}
+.deal{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:9px;cursor:pointer;background:var(--bg-raise)}
+.deal .hd{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-m);font-size:12px}
+.deal .hd .stt{color:var(--ink-3)}
+.deal .det{display:none;margin-top:9px;font-family:var(--font-m);font-size:11px;color:var(--ink-2);line-height:1.9;border-top:1px solid var(--line);padding-top:8px}
 
 /* estados */
 .empty{padding:34px 10px;text-align:center;color:var(--ink-3);font-family:var(--font-m);font-size:12px}
@@ -229,7 +256,7 @@ tr.grp:first-child td{padding-top:6px}
   .quick button{padding:12px 6px;font-size:11.5px;flex-direction:column;gap:6px}
   .chip .who{display:none}
   th:nth-child(3),td:nth-child(3){display:none}
-  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb, var(--bg-panel) 92%, transparent);
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb, var(--nv) 94%, transparent);
     backdrop-filter:blur(14px);border-top:1px solid var(--line);z-index:50;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
   .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;
     color:var(--ink-3);font-family:var(--font-m);font-size:9px;letter-spacing:.04em;border-radius:8px}
@@ -338,11 +365,35 @@ tr.grp:first-child td{padding-top:6px}
         <p>Depósito PIX, efixDI e ofertas BTR chegam ao novo painel em breve. Durante a beta, as operações seguem na wallet clássica.</p>
         <a href="/app/wallet/classic.html">Abrir na wallet clássica →</a>
       </div></section>
-      <section class="view" id="view-remessas"><div class="card stub" data-reveal>
-        <div class="big">Remessas → PIX</div>
-        <p>Cote em reais, envie USDC e acompanhe cada etapa com trilha DvP. Durante a beta, a operação roda na wallet clássica.</p>
-        <a href="/app/wallet/classic.html">Abrir Remessas →</a>
-      </div></section>
+      <section class="view" id="view-remessas">
+        <div class="rem2col">
+          <div class="card" data-reveal>
+            <h2>Nova remessa <span class="up">USDC → PIX · trilha DvP</span></h2>
+            <p class="rem-lead">Cote em reais, envie USDC na rede Base e acompanhe cada etapa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
+            <div id="rem-form">
+              <label class="fldl">Favorecido (allowlist)</label>
+              <select id="remFav" class="fld"><option value="">carregando…</option></select>
+              <label class="fldl">Valor a quitar (R$)</label>
+              <input id="remAmount" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
+              <button class="cta" id="remBtnQuote">Cotar</button>
+              <div id="remQuoteBox" style="display:none">
+                <div id="remQuoteDetails" class="qd"></div>
+                <button class="cta pri" id="remBtnCreate">Criar remessa &amp; gerar depósito</button>
+              </div>
+            </div>
+            <div id="rem-instr" style="display:none">
+              <div class="qd" id="remInstrDetails"></div>
+              <button class="cta" id="remBtnCopy">Copiar endereço</button>
+              <button class="cta" id="remBtnNova">Nova remessa</button>
+            </div>
+            <div id="remMsg" class="rem-msg"></div>
+          </div>
+          <div class="card" data-reveal style="animation-delay:.08s">
+            <h2>Minhas remessas <button class="mini" id="remBtnRef">atualizar</button></h2>
+            <div id="remDeals"><div class="empty">—</div></div>
+          </div>
+        </div>
+      </section>
       <section class="view" id="view-brle"><div class="card stub" data-reveal>
         <div class="big">BRLE</div>
         <p>O real tokenizado da EFIX. Emissão e resgate PIX seguem na wallet clássica durante a beta.</p>
@@ -415,6 +466,7 @@ function go(v){
   document.querySelectorAll('#nav a, #bnav a').forEach(a=>a.classList.toggle('on', a.dataset.view===v));
   $('top-title').textContent = {inicio:'Início',investir:'Investir',remessas:'Remessas',brle:'BRLE',cartao:'Cartão',extrato:'Extrato'}[v]||'';
   if(v==='extrato') renderActivity('extrato-full', 30, 'ext-chips');
+  if(v==='remessas') initRemessas2();
   if(history.replaceState) history.replaceState(null,'','#'+v);
 }
 document.querySelectorAll('#nav a, #bnav a').forEach(a=>a.addEventListener('click',(e)=>{e.preventDefault();go(a.dataset.view)}));
@@ -605,6 +657,9 @@ function chipsHtml(){
     toks.map(t=>chip('tok',t,t)).join('');
 }
 document.addEventListener('click', (ev)=>{
+  const cp = ev.target.closest('[data-copy]');
+  if(cp){ navigator.clipboard.writeText(cp.dataset.copy).then(()=>{ const t=cp.textContent; cp.textContent='copiado ✓';
+    setTimeout(()=>{ cp.textContent='copiar'; }, 1800); }); return; }
   const c = ev.target.closest('[data-fg]'); if(!c) return;
   const grp=c.dataset.fg, val=c.dataset.fv;
   FILT[grp] = (FILT[grp]===val && val!=='all') ? 'all' : val;
@@ -639,9 +694,11 @@ async function renderActivity(elId, n, chipsId){
         '<div class="body">'+
           '<div class="dot">'+tokIcon(t, sym)+'</div>'+
           '<div class="tk"><div class="t1">'+nome+'</div><div class="t2">'+sym+' · Base</div></div>'+
-          '<div class="amt money">'+(x._dir==='in'?'+':'−')+Number(x.value||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+' '+sym+
-          ' <a href="https://basescan.org/tx/'+x.hash+'" target="_blank" title="ver no Basescan">↗</a></div>'+
+          '<div class="amt money">'+(x._dir==='in'?'+':'−')+Number(x.value||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+' '+sym+'</div>'+
         '</div>'+
+        '<div class="hashrow"><span class="h">'+x.hash.slice(0,12)+'…'+x.hash.slice(-8)+'</span>'+
+        '<button data-copy="'+x.hash+'">copiar</button>'+
+        '<a href="https://basescan.org/tx/'+x.hash+'" target="_blank">abrir ↗</a></div>'+
         '<div class="st"><span>Concluída</span><span class="when">'+when+'</span></div>'+
         '<div class="stbar"></div>'+
       '</div>';
@@ -649,6 +706,108 @@ async function renderActivity(elId, n, chipsId){
     if(HIDDEN) document.querySelectorAll('.money').forEach(e2=>e2.classList.add('blur'));
   }catch(e){ el.innerHTML = '<div class="empty">atividade indisponível: '+e.message+'</div>'; }
 }
+
+/* ═══ REMESSAS NATIVA (BRL-first via /remessas/* do backend; browser nunca fala com o DVP) ═══ */
+let _rem2Init=false, _rem2Quote=null, _rem2Addr='';
+async function rf(path, opts={}){
+  const r = await fetch(BACKEND+path,{...opts,headers:{'Content-Type':'application/json',...EfixAuth.headers(),...(opts.headers||{})}});
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error||('HTTP '+r.status));
+  return d;
+}
+async function initRemessas2(){
+  if(_rem2Init){ return; }
+  _rem2Init=true;
+  $('remBtnQuote').onclick=rem2Quote;
+  $('remBtnCreate').onclick=rem2Criar;
+  $('remBtnRef').onclick=rem2Refresh;
+  $('remBtnCopy').onclick=()=>{ if(!_rem2Addr) return;
+    navigator.clipboard.writeText(_rem2Addr).then(()=>{ $('remBtnCopy').textContent='copiado ✓';
+      setTimeout(()=>{ $('remBtnCopy').textContent='Copiar endereço'; },2000); }); };
+  $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Addr='';
+    $('remAmount').value=''; $('remQuoteBox').style.display='none';
+    $('rem-instr').style.display='none'; $('rem-form').style.display='block'; $('remMsg').textContent=''; };
+  if(!EfixAuth.isLoggedIn()){ $('remMsg').textContent='Entre com sua conta para usar remessas.'; return; }
+  try{
+    const favs = await rf('/remessas/allowlist');
+    $('remFav').innerHTML = '<option value="">— selecionar —</option>'+
+      favs.map(f=>'<option value="'+f.id+'" data-name="'+f.name+'">'+f.name+' ('+f.doc_root+')</option>').join('');
+    rem2Refresh();
+  }catch(e){ $('remMsg').textContent = e.message; }
+}
+async function rem2Quote(){
+  const amount = parseFloat($('remAmount').value);
+  if(!amount || amount<=0){ $('remMsg').textContent='Informe o valor em R$.'; return; }
+  const b=$('remBtnQuote'); b.disabled=true; b.textContent='Cotando…'; $('remMsg').textContent='';
+  try{
+    _rem2Quote = await rf('/remessas/quote',{method:'POST',body:JSON.stringify({amount_brl:amount})});
+    const ok = _rem2Quote.usdc_needed!=null;
+    $('remQuoteDetails').innerHTML = ok
+      ? 'Valor a quitar: R$ '+Number(_rem2Quote.amount_brl).toFixed(2)+'<br>'+
+        'Você envia: <span class="pos">'+Number(_rem2Quote.usdc_needed).toFixed(2)+' USDC</span><br>'+
+        'Câmbio efetivo: R$ '+Number(_rem2Quote.rate_efetiva).toFixed(4)+'/USDC <span style="color:var(--ink-3)">(taxas inclusas)</span>'
+      : '<span class="neg">Nenhuma rota disponível agora.</span>';
+    $('remQuoteBox').style.display='block';
+    $('remBtnCreate').style.display = ok?'block':'none';
+  }catch(e){ $('remMsg').textContent=e.message; }
+  finally{ b.disabled=false; b.textContent='Cotar'; }
+}
+async function rem2Criar(){
+  const amount = parseFloat($('remAmount').value);
+  const sel = $('remFav');
+  const favName = sel.selectedOptions[0] ? (sel.selectedOptions[0].dataset.name||'') : '';
+  if(!amount || !_rem2Quote || _rem2Quote.usdc_needed==null){ $('remMsg').textContent='Cote antes de criar.'; return; }
+  const usdc = _rem2Quote.usdc_needed;
+  const b=$('remBtnCreate'); b.disabled=true; b.textContent='Criando…';
+  try{
+    const deal = await rf('/remessas/deals',{method:'POST',body:JSON.stringify({
+      expected_amount:amount, expected_currency:'BRL',
+      notes:(favName?('favorecido pretendido: '+favName+' · '):'')+'alvo R$ '+amount.toFixed(2)+' · envia '+usdc.toFixed(2)+' USDC @ '+Number(_rem2Quote.rate_efetiva).toFixed(4),
+    })});
+    const fund = await rf('/remessas/deals/'+deal.id+'/fund',{method:'POST',body:JSON.stringify({
+      amount_usdc:usdc, quote_set_id:_rem2Quote.quote_set_id,
+    })});
+    const instr = fund.deposit_instructions||{};
+    _rem2Addr = instr.to_address||'';
+    $('remInstrDetails').innerHTML =
+      'Remessa <span class="pos">#'+deal.id+'</span> · quita R$ '+amount.toFixed(2)+'<br>'+
+      'Rede: '+String(instr.payment_rail||'base').toUpperCase()+' · Moeda: '+String(instr.currency||'usdc').toUpperCase()+'<br>'+
+      'Valor a enviar: '+(instr.amount||usdc)+' USDC<br>'+
+      'Endereço: '+(_rem2Addr||'(indisponível — ver detalhes da remessa)')+
+      (fund.status==='failed' ? '<br><span class="neg">Falha ao armar a rota: '+(fund.reason||'')+'</span>' : '');
+    $('rem-form').style.display='none';
+    $('rem-instr').style.display='block';
+    rem2Refresh();
+  }catch(e){ $('remMsg').textContent=e.message; }
+  finally{ b.disabled=false; b.textContent='Criar remessa & gerar depósito'; }
+}
+const REM_ST = {open:'aberta',funded:'financiada',settled:'liquidada',closed:'encerrada'};
+async function rem2Refresh(){
+  const box = $('remDeals');
+  try{
+    const deals = await rf('/remessas/deals');
+    if(!deals.length){ box.innerHTML='<div class="empty">Nenhuma remessa ainda.</div>'; return; }
+    box.innerHTML = deals.map(d=>
+      '<div class="deal" data-deal="'+d.id+'">'+
+        '<div class="hd"><span>#'+d.id+' · '+(d.expected_currency==='BRL'?'R$ ':'')+(d.expected_amount?Number(d.expected_amount).toFixed(2):'—')+
+        (d.expected_currency==='USDC'?' USDC':'')+'</span><span class="stt">'+(REM_ST[d.status]||d.status)+'</span></div>'+
+        '<div class="det"></div>'+
+      '</div>').join('');
+  }catch(e){ box.innerHTML='<div class="empty">'+e.message+'</div>'; }
+}
+document.addEventListener('click', async (ev)=>{
+  const card = ev.target.closest('[data-deal]'); if(!card) return;
+  const det = card.querySelector('.det');
+  if(det.style.display==='block'){ det.style.display='none'; return; }
+  det.style.display='block'; det.textContent='carregando…';
+  try{
+    const d = await rf('/remessas/deals/'+card.dataset.deal);
+    const dep = (d.deposits||[]).map(x=>'depósito '+(x.bridge_transfer_id?x.bridge_transfer_id.slice(0,8)+'…':x.id)+': '+x.state).join('<br>')||'sem depósitos';
+    const off = (d.offramps||[]).map(x=>'rota '+x.adapter+': '+x.status+(x.brl_net_expected?' · ~R$ '+Number(x.brl_net_expected).toFixed(2):'')).join('<br>')||'sem offramp';
+    const pay = (d.payouts||[]).map(x=>'payout R$ '+Number(x.amount_brl).toFixed(2)+' → '+(x.beneficiary_name||'?')+': '+x.status+(x.receipt_ref?' · '+x.receipt_ref:'')).join('<br>')||'payout ainda não criado (mesa)';
+    det.innerHTML = dep+'<br>'+off+'<br>'+pay;
+  }catch(e){ det.textContent=e.message; }
+});
 </script>
 </body>
 </html>
