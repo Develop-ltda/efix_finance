@@ -22,6 +22,7 @@
 [data-theme="dark"]{
   --bg:#0a0b0d; --bg-panel:#101216; --bg-raise:#15181d; --bg-hover:#1a1e24;
   --ink:#e8eaed; --ink-2:#9aa1ab; --ink-3:#5c636e;
+  --sbg:#eceded; --sbg2:#dfe1e3; --sbd:rgba(16,18,22,.14); --si:#14171b; --si2:#4a525d; --si3:#8b939e;
   --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.12);
   --hero-grad:radial-gradient(1200px 400px at 20% -10%, rgba(34,197,94,.07), transparent 60%);
   --shadow:0 12px 40px rgba(0,0,0,.45);
@@ -29,6 +30,7 @@
 [data-theme="light"]{
   --bg:#f4f4f1; --bg-panel:#ffffff; --bg-raise:#fafaf8; --bg-hover:#f0f0ec;
   --ink:#14171b; --ink-2:#5b6470; --ink-3:#98a0aa;
+  --sbg:var(--nv); --sbg2:var(--nv-2); --sbd:var(--nv-3); --si:var(--nv-ink); --si2:var(--nv-ink2); --si3:var(--nv-ink3);
   --line:rgba(16,18,22,.09); --line-2:rgba(16,18,22,.16);
   --hero-grad:radial-gradient(1200px 400px at 20% -10%, rgba(34,197,94,.08), transparent 60%);
   --shadow:0 12px 32px rgba(16,18,22,.08);
@@ -50,22 +52,22 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .shell{display:grid;grid-template-columns:var(--sb-w) 1fr;min-height:100dvh;max-width:1480px;margin:0 auto}
 
 /* ── sidebar ── */
-.sb{position:sticky;top:0;height:100dvh;background:var(--nv);border-right:1px solid var(--nv-3);
+.sb{position:sticky;top:0;height:100dvh;background:var(--sbg);border-right:1px solid var(--sbd);
   display:flex;flex-direction:column;padding:22px 14px;z-index:40}
 .brand{display:flex;align-items:center;gap:9px;padding:0 10px 24px;font-weight:400;font-size:16px;letter-spacing:-.01em}
 .brand img{width:28px;height:28px;border-radius:8px;display:block}
 .brand b{color:var(--green);font-weight:400}
 .brand .tag{font-family:var(--font-m);font-size:9px;letter-spacing:.18em;color:var(--ink-3);margin-left:4px;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px}
-.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--nv-ink2);
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--si2);
   font-weight:400;font-size:13.5px;border-left:2px solid transparent;transition:all .15s}
 .nav a svg{width:17px;height:17px;stroke-width:1.6;flex-shrink:0;opacity:.85}
-.nav a:hover{background:var(--nv-2);color:var(--nv-ink)}
-.nav a.on{background:var(--nv-2);color:var(--nv-ink);border-left-color:var(--green)}
+.nav a:hover{background:var(--sbg2);color:var(--si)}
+.nav a.on{background:var(--sbg2);color:var(--si);border-left-color:var(--green)}
 .nav a.on svg{color:var(--green);opacity:1}
-.sb .foot{margin-top:auto;padding:12px 10px 2px;border-top:1px solid var(--nv-3)}
-.sb .foot .up{display:block;margin-bottom:6px}
-.sb .foot .mono{font-size:11px;color:var(--nv-ink2);word-break:break-all}
+.sb .foot{margin-top:auto;padding:12px 10px 2px;border-top:1px solid var(--sbd)}
+.sb .foot .up{display:block;margin-bottom:6px;color:var(--si3)}
+.sb .foot .mono{font-size:11px;color:var(--si2);word-break:break-all}
 
 /* ── topbar ── */
 .top{display:flex;align-items:center;gap:14px;padding:16px 28px;border-bottom:1px solid var(--line);
@@ -86,17 +88,33 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .main{padding:30px 28px 90px;max-width:1180px;width:100%;margin:0 auto}
 .view{display:none}.view.on{display:block}
 
+/* régua de contas (custódia) — estilo fireblocks: on-chain · fiat · open finance */
+.cstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.cs{display:flex;gap:11px;align-items:center;padding:12px 14px;border-radius:14px;text-align:left;
+  border:1px solid var(--line);background:var(--bg-panel);cursor:default}
+.cs .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;
+  border:1px solid var(--line-2);color:var(--ink-2)}
+.cs .ic svg{width:16px;height:16px;stroke-width:1.6}
+.cs .k{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.cs .v{font-family:var(--font-m);font-size:13.5px;margin-top:2px}
+.cs.on{background:var(--nv);border-color:var(--nv-3)}
+.cs.on .k{color:var(--nv-ink3)} .cs.on .v{color:var(--nv-ink)}
+.cs.on .ic{background:var(--nv-2);border-color:var(--nv-3);color:var(--mag)}
+.cs .soon{font-family:var(--font-m);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);border:1px solid var(--line-2);border-radius:99px;padding:1px 7px;margin-left:6px}
+.cs.off{opacity:.8}
+
 /* hero patrimônio */
 .hero{background:var(--bg-panel);background-image:var(--hero-grad);border:1px solid var(--line);
   border-radius:16px;padding:22px 24px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;top:0;left:30px;right:30px;height:1px;
   background:linear-gradient(90deg,transparent,rgba(34,197,94,.5),transparent)}
-.hero{text-align:center}
-.hero .row1{display:flex;align-items:center;justify-content:center;gap:10px}
-.hero .num{font-family:var(--font-m);font-weight:400;font-size:clamp(26px,3.4vw,38px);letter-spacing:-.02em;margin:6px 0 2px}
+.hero{text-align:left}
+.hero .row1{display:flex;align-items:center;justify-content:flex-start;gap:10px}
+.hero .num{font-family:var(--font-m);font-weight:400;font-size:clamp(21px,2.4vw,28px);letter-spacing:-.01em;margin:6px 0 1px}
 .hero .num .cents{font-size:.55em;color:var(--ink-2)}
 .hero .sub{font-family:var(--font-m);font-size:12px;color:var(--ink-2)}
-.hero .meta{display:flex;gap:30px;flex-wrap:wrap;justify-content:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.hero .meta{display:flex;gap:30px;flex-wrap:wrap;justify-content:flex-start;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .hero .meta .it .v{font-family:var(--font-m);font-size:14px;margin-top:3px}
 .eye{background:none;border:none;color:var(--ink-3);display:grid;place-items:center}
 .eye svg{width:16px;height:16px;stroke-width:1.6}
@@ -185,6 +203,9 @@ tr.grp:first-child td{padding-top:6px}
 .actcard .st{display:flex;align-items:center;justify-content:space-between;margin-top:9px;
   font-family:var(--font-m);font-size:10px;color:var(--green)}
 .actcard .st .when{color:var(--nv-ink3)}
+.src{font-family:var(--font-m);font-size:8px;letter-spacing:.1em;text-transform:uppercase;border-radius:99px;padding:1px 6px;margin-right:6px}
+.src-w3{color:var(--mag);border:1px solid var(--mag)}
+.src-w2{color:var(--green);border:1px solid var(--green)}
 .actcard .stbar{height:2px;border-radius:2px;background:var(--green);opacity:.75;margin-top:5px}
 .hashrow{display:flex;align-items:center;gap:8px;margin-top:8px;font-family:var(--font-m);font-size:9.5px;color:var(--nv-ink3)}
 .hashrow .h{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -256,7 +277,7 @@ tr.grp:first-child td{padding-top:6px}
   .quick button{padding:12px 6px;font-size:11.5px;flex-direction:column;gap:6px}
   .chip .who{display:none}
   th:nth-child(3),td:nth-child(3){display:none}
-  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb, var(--nv) 94%, transparent);
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb, var(--sbg) 94%, transparent);
     backdrop-filter:blur(14px);border-top:1px solid var(--line);z-index:50;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
   .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;
     color:var(--ink-3);font-family:var(--font-m);font-size:9px;letter-spacing:.04em;border-radius:8px}
@@ -322,6 +343,20 @@ tr.grp:first-child td{padding-top:6px}
       <section class="view on" id="view-inicio">
         <div class="duo">
         <div>
+        <div class="cstrip" data-reveal>
+          <div class="cs on">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="7" width="18" height="12" rx="2.5"/><path d="M16 13h2.5M3 10h18"/><path d="M7 7V5.5A1.5 1.5 0 0 1 8.5 4h7A1.5 1.5 0 0 1 17 5.5V7"/></svg></div>
+            <div><div class="k">Carteira on-chain</div><div class="v money" id="cs-onchain">—</div></div>
+          </div>
+          <div class="cs off" id="cs-fiat" style="cursor:pointer" onclick="conectarWeb2()">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10 12 4l9 6"/><path d="M5 10v8m4.5-8v8m5-8v8M19 10v8M3 20h18"/></svg></div>
+            <div><div class="k">Conta fiat · Haus</div><div class="v">—<span class="soon" style="border-color:var(--green);color:var(--green)">conectar</span></div></div>
+          </div>
+          <div class="cs off">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12a3.5 3.5 0 0 1 7 0 3.5 3.5 0 0 1-7 0z"/><path d="M12 3.5v2m0 13v2M3.5 12h2m13 0h2"/></svg></div>
+            <div><div class="k">Open Finance</div><div class="v">—<span class="soon">conectar</span></div></div>
+          </div>
+        </div>
         <div class="hero" data-reveal>
           <div class="row1">
             <span class="up">Patrimônio total</span>
@@ -408,7 +443,8 @@ tr.grp:first-child td{padding-top:6px}
       <!-- ═══ EXTRATO ═══ -->
       <section class="view" id="view-extrato">
         <div class="card" data-reveal>
-          <h2>Extrato on-chain <span class="up">últimas movimentações · Base</span></h2>
+          <h2>Extrato conciliado <span class="up">web2 · web3</span></h2>
+          <p class="rem-lead" style="margin-bottom:12px">Movimentações on-chain (web3) e da conta fiat Haus (web2) num só extrato. <span id="ext-w2note">Conecte sua conta Haus para conciliar os lançamentos em reais.</span></p>
           <div class="chips" id="ext-chips"></div>
           <div id="extrato-full"><div class="empty">carregando…</div></div>
         </div>
@@ -584,6 +620,7 @@ async function carregarCore(email, wallets){
     if(bal > 0.000001) rows.push({...t, bal, px, val});
   }
   $('hero-total').innerHTML = heroNum(total);
+  const cs = $('cs-onchain'); if(cs) cs.textContent = brl(total);
   $('hero-total').classList.add('money'); if(HIDDEN) $('hero-total').classList.add('blur');
   $('hero-usd').textContent = '≈ US$ ' + (total*NAV.fxUsdBrl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 
@@ -699,7 +736,7 @@ async function renderActivity(elId, n, chipsId){
         '<div class="hashrow"><span class="h">'+x.hash.slice(0,12)+'…'+x.hash.slice(-8)+'</span>'+
         '<button data-copy="'+x.hash+'">copiar</button>'+
         '<a href="https://basescan.org/tx/'+x.hash+'" target="_blank">abrir ↗</a></div>'+
-        '<div class="st"><span>Concluída</span><span class="when">'+when+'</span></div>'+
+        '<div class="st"><span><span class="src src-w3">web3</span> Concluída</span><span class="when">'+when+'</span></div>'+
         '<div class="stbar"></div>'+
       '</div>';
     }).join('');
@@ -808,6 +845,11 @@ document.addEventListener('click', async (ev)=>{
     det.innerHTML = dep+'<br>'+off+'<br>'+pay;
   }catch(e){ det.textContent=e.message; }
 });
+
+function conectarWeb2(){
+  const done = 'Conexão da conta Haus (web2) em preparação — o trilho bancário (Bankly/Genial + Open Finance) entra numa próxima fase. Assim que ativo, seu saldo em reais e o extrato conciliam aqui automaticamente.';
+  if(typeof toast==='function') toast(done); else alert(done);
+}
 </script>
 </body>
 </html>
