@@ -24,7 +24,7 @@
   --ink:#e8eaed; --ink-2:#9aa1ab; --ink-3:#5c636e;
   --sbg:#eceded; --sbg2:#dfe1e3; --sbd:rgba(16,18,22,.14); --si:#14171b; --si2:#4a525d; --si3:#8b939e;
   --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.12);
-  --hero-grad:radial-gradient(1200px 400px at 20% -10%, rgba(34,197,94,.07), transparent 60%);
+  --hero-grad:radial-gradient(1200px 400px at 20% -10%, rgba(154,161,171,.05), transparent 60%);
   --shadow:0 12px 40px rgba(0,0,0,.45);
 }
 [data-theme="light"]{
@@ -32,7 +32,7 @@
   --ink:#14171b; --ink-2:#5b6470; --ink-3:#98a0aa;
   --sbg:var(--nv); --sbg2:var(--nv-2); --sbd:var(--nv-3); --si:var(--nv-ink); --si2:var(--nv-ink2); --si3:var(--nv-ink3);
   --line:rgba(16,18,22,.09); --line-2:rgba(16,18,22,.16);
-  --hero-grad:radial-gradient(1200px 400px at 20% -10%, rgba(34,197,94,.08), transparent 60%);
+  --hero-grad:radial-gradient(1200px 400px at 20% -10%, rgba(91,100,112,.06), transparent 60%);
   --shadow:0 12px 32px rgba(16,18,22,.08);
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -54,7 +54,16 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 /* ── sidebar ── */
 .sb{position:sticky;top:0;height:100dvh;background:var(--bg-panel);border-right:1px solid var(--line);
   display:flex;flex-direction:column;padding:22px 14px;z-index:40}
-.brand{display:flex;align-items:center;gap:9px;padding:0 10px 24px;font-weight:400;font-size:16px;letter-spacing:-.01em}
+.brand{display:flex;align-items:center;gap:9px;padding:0 10px 18px;font-weight:400;font-size:16px;letter-spacing:-.01em}
+.sbtgl{margin:0 10px 14px;width:calc(100% - 20px);padding:7px;border-radius:8px;border:1px solid var(--line);
+  background:transparent;color:var(--ink-3);font-family:var(--font-m);font-size:10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.sbtgl:hover{color:var(--ink);border-color:var(--line-2)}
+.shell.sbmin{grid-template-columns:66px 1fr}
+.sbmin .sb{padding:22px 9px}
+.sbmin .nav a{justify-content:center;padding:11px 0}
+.sbmin .nav a .lbl,.sbmin .sb .foot,.sbmin .brand .tag{display:none}
+.sbmin .brand{justify-content:center;padding:0 0 18px}
+.sbmin .sbtgl{margin:0 4px 14px;width:calc(100% - 8px)}
 .brand img{width:28px;height:28px;border-radius:8px;display:block}
 .brand b{color:var(--green);font-weight:400}
 .brand .tag{font-family:var(--font-m);font-size:9px;letter-spacing:.18em;color:var(--ink-3);margin-left:4px;text-transform:uppercase}
@@ -63,8 +72,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
   font-weight:400;font-size:13.5px;border-left:2px solid transparent;transition:all .15s}
 .nav a svg{width:17px;height:17px;stroke-width:1.6;flex-shrink:0;opacity:.85}
 .nav a:hover{background:var(--bg-hover);color:var(--ink)}
-.nav a.on{background:var(--bg-raise);color:var(--ink);border-left-color:var(--green)}
-.nav a.on svg{color:var(--green);opacity:1}
+.nav a.on{background:var(--bg-raise);color:var(--ink);border-left-color:var(--ink)}
+.nav a.on svg{color:var(--ink);opacity:1}
 .sb .foot{margin-top:auto;padding:12px 10px 2px;border-top:1px solid var(--line)}
 .sb .foot .up{display:block;margin-bottom:6px}
 .sb .foot .mono{font-size:11px;color:var(--ink-2);word-break:break-all}
@@ -76,8 +85,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .top .sp{flex:1}
 .chip{display:flex;align-items:center;gap:9px;background:var(--bg-panel);border:1px solid var(--line);
   border-radius:99px;padding:5px 12px 5px 5px}
-.chip .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--green),#0d5c2e);
-  display:grid;place-items:center;font-family:var(--font-m);font-size:10px;font-weight:400;color:#04130a}
+.chip .av{width:26px;height:26px;border-radius:50%;background:var(--ink);
+  display:grid;place-items:center;font-family:var(--font-m);font-size:10px;font-weight:400;color:var(--bg-panel)}
 .chip .who{font-family:var(--font-m);font-size:11px;color:var(--ink-2)}
 .icobtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--bg-panel);
   color:var(--ink-2);display:grid;place-items:center;transition:all .15s}
@@ -96,7 +105,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
   border:1px solid var(--line-2);color:var(--ink-2)}
 .cs .ic svg{width:16px;height:16px;stroke-width:1.6}
 .cs .k{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
-.cs .v{font-family:var(--font-m);font-size:13.5px;margin-top:2px}
+.cs .v{font-family:var(--font-m);font-size:12.5px;margin-top:2px}
 .cs.on{border-left:3px solid var(--mag)}
 .cs.on .k{color:var(--ink-3)} .cs.on .v{color:var(--ink)}
 .cs.on .ic{color:var(--mag)}
@@ -108,14 +117,14 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .hero{background:var(--bg-panel);background-image:var(--hero-grad);border:1px solid var(--line);
   border-radius:16px;padding:22px 24px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;top:0;left:30px;right:30px;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(34,197,94,.5),transparent)}
+  background:linear-gradient(90deg,transparent,var(--line-2),transparent)}
 .hero{text-align:left}
 .hero .row1{display:flex;align-items:center;justify-content:flex-start;gap:10px}
-.hero .num{font-family:var(--font-m);font-weight:400;font-size:clamp(21px,2.4vw,28px);letter-spacing:-.01em;margin:6px 0 1px}
+.hero .num{font-family:var(--font-m);font-weight:400;font-size:clamp(20px,2.2vw,26px);letter-spacing:-.01em;margin:6px 0 1px}
 .hero .num .cents{font-size:.55em;color:var(--ink-2)}
 .hero .sub{font-family:var(--font-m);font-size:12px;color:var(--ink-2)}
 .hero .meta{display:flex;gap:30px;flex-wrap:wrap;justify-content:flex-start;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.hero .meta .it .v{font-family:var(--font-m);font-size:14px;margin-top:3px}
+.hero .meta .it .v{font-family:var(--font-m);font-size:12.5px;margin-top:3px}
 .eye{background:none;border:none;color:var(--ink-3);display:grid;place-items:center}
 .eye svg{width:16px;height:16px;stroke-width:1.6}
 .blur{filter:blur(9px);user-select:none}
@@ -129,10 +138,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .quick button{display:flex;align-items:center;justify-content:center;gap:9px;padding:15px;border-radius:12px;
   border:1px solid var(--line);background:var(--bg-panel);color:var(--ink);font-weight:400;font-size:13.5px;transition:all .15s}
 .quick button:hover{border-color:rgba(34,197,94,.45);transform:translateY(-1px)}
-.quick button svg{width:16px;height:16px;stroke-width:1.7;color:var(--green)}
-.quick button.primary{background:var(--green);border-color:var(--green);color:#04130a}
-.quick button.primary svg{color:#04130a}
-.quick button.primary:hover{background:var(--green-dim)}
+.quick button svg{width:16px;height:16px;stroke-width:1.7;color:var(--ink-2)}
+.quick button.primary{background:var(--ink);border-color:var(--ink);color:var(--bg-panel)}
+.quick button.primary svg{color:var(--bg-panel)}
+.quick button.primary:hover{opacity:.85}
 .quick .oc{position:relative}
 .quick .oc .badge{position:absolute;top:6px;right:8px;font-family:var(--font-m);font-size:7.5px;
   letter-spacing:.12em;text-transform:uppercase;color:var(--green);border:1px solid rgba(34,197,94,.4);
@@ -146,7 +155,7 @@ table{width:100%;border-collapse:collapse}
 th{text-align:right;font-family:var(--font-m);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--ink-3);font-weight:400;padding:12px 0 9px;border-bottom:1px solid var(--line)}
 th:first-child{text-align:left}
-td{padding:13px 0;border-bottom:1px solid var(--line);text-align:right;font-family:var(--font-m);font-size:13px}
+td{padding:13px 0;border-bottom:1px solid var(--line);text-align:right;font-family:var(--font-m);font-size:12.5px}
 tr:last-child td{border-bottom:none}
 td:first-child{text-align:left}
 .asset{display:flex;align-items:center;gap:11px}
@@ -156,7 +165,7 @@ td:first-child{text-align:left}
 .asset .ty{font-family:var(--font-m);font-size:10px;color:var(--ink-3);letter-spacing:.06em}
 .alloc{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .alloc .bar{width:52px;height:3px;border-radius:2px;background:var(--line-2);overflow:hidden}
-.alloc .bar i{display:block;height:100%;background:var(--green)}
+.alloc .bar i{display:block;height:100%;background:var(--ink-2)}
 tr.grp td{padding:18px 0 7px;border-bottom:1px solid var(--line-2);font-family:var(--font-m);
   font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 tr.grp td b{color:var(--ink-2);font-weight:400}
@@ -198,7 +207,7 @@ tr.grp:first-child td{padding-top:6px}
 .actcard .body .tk{flex:1;min-width:0}
 .actcard .body .tk .t1{font-size:12.5px;color:var(--nv-ink)}
 .actcard .body .tk .t2{font-family:var(--font-m);font-size:9.5px;color:var(--nv-ink3)}
-.actcard .body .amt{font-family:var(--font-m);font-size:12.5px;text-align:right;white-space:nowrap;color:var(--nv-ink)}
+.actcard .body .amt{font-family:var(--font-m);font-size:12px;text-align:right;white-space:nowrap;color:var(--nv-ink)}
 .actcard .body .amt a{color:var(--ink-3)}
 .actcard .st{display:flex;align-items:center;justify-content:space-between;margin-top:9px;
   font-family:var(--font-m);font-size:10px;color:var(--green)}
@@ -222,7 +231,7 @@ tr.grp:first-child td{padding-top:6px}
 .fld{width:100%;padding:12px 13px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg-raise);color:var(--ink);font-size:14px;outline:none;font-family:inherit}
 .fld:focus{border-color:rgba(34,197,94,.55)}
 .cta{width:100%;margin-top:14px;padding:13px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg-panel);color:var(--ink);font-size:13.5px}
-.cta.pri{background:var(--green);border-color:var(--green);color:#04130a;font-weight:500}
+.cta.pri{background:var(--ink);border-color:var(--ink);color:var(--bg-panel);font-weight:500}
 .cta:disabled{opacity:.55}
 .mini{font-family:var(--font-m);font-size:10px;padding:3px 10px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2)}
 .qd{background:var(--bg-raise);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;font-family:var(--font-m);font-size:12px;line-height:2;word-break:break-all}
@@ -238,7 +247,7 @@ tr.grp:first-child td{padding-top:6px}
 .crow .ct{flex:1;min-width:0}
 .crow .ct .t{font-size:13px}
 .crow .ct .sdet{font-family:var(--font-m);font-size:10px;color:var(--ink-3);margin-top:2px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.crow .cv{font-family:var(--font-m);font-size:12.5px;text-align:right;white-space:nowrap}
+.crow .cv{font-family:var(--font-m);font-size:12px;text-align:right;white-space:nowrap}
 .crow .cv .stt{display:block;font-size:9.5px;margin-top:2px}
 .stt.ok{color:var(--green)} .stt.wait{color:#d99e17} .stt.bad{color:var(--red)}
 .hmini{font-family:var(--font-m);font-size:8.5px;letter-spacing:.05em;padding:1px 7px;border-radius:99px;
@@ -260,6 +269,19 @@ tr.grp:first-child td{padding-top:6px}
 .mmsg{margin-top:12px;font-family:var(--font-m);font-size:11.5px;min-height:16px;color:var(--ink-2);word-break:break-all}
 .mmsg.ok{color:var(--green)} .mmsg.err{color:var(--red)}
 
+/* deposito pix */
+.qrbox{background:#0b0d12;border-radius:14px;padding:18px;text-align:center;margin-top:14px}
+.qrbox img{width:200px;height:200px;border-radius:8px;background:#fff;padding:8px}
+.qrbox .emv{font-family:var(--font-m);font-size:9px;color:#9aa1ab;word-break:break-all;margin:10px 0 8px;max-height:44px;overflow:hidden}
+.refbox{border:1px solid var(--line-2);border-left:3px solid var(--mag);border-radius:12px;padding:12px;margin-top:12px;text-align:center}
+.refbox .code{font-family:var(--font-m);font-size:20px;letter-spacing:.35em;margin:6px 0}
+.refbox .hint{font-size:11px;color:var(--ink-3)}
+.steps{margin-top:14px}
+.steps .stp{display:flex;align-items:center;gap:9px;font-family:var(--font-m);font-size:11px;color:var(--ink-3);padding:4px 0}
+.steps .stp .b{width:16px;height:16px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:9px}
+.steps .stp.done{color:var(--ink)} .steps .stp.done .b{background:var(--green);border-color:var(--green);color:#04130a}
+.steps .stp.run{color:var(--ink-2)} .steps .stp.run .b{border-color:var(--green);color:var(--green)}
+
 /* estados */
 .empty{padding:34px 10px;text-align:center;color:var(--ink-3);font-family:var(--font-m);font-size:12px}
 .skel{height:14px;border-radius:4px;background:linear-gradient(90deg,var(--line),var(--line-2),var(--line));
@@ -271,7 +293,7 @@ tr.grp:first-child td{padding-top:6px}
 .stub .big{font-size:22px;font-weight:400;letter-spacing:-.02em;margin-bottom:8px}
 .stub p{color:var(--ink-2);max-width:420px;margin:0 auto 22px}
 .stub a{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:10px;
-  background:var(--green);color:#04130a;font-weight:500;font-size:13.5px}
+  background:var(--ink);color:var(--bg-panel);font-weight:500;font-size:13.5px}
 
 /* login */
 .gate{min-height:100dvh;display:grid;place-items:center;background:var(--bg);background-image:var(--hero-grad);padding:20px}
@@ -283,7 +305,7 @@ tr.grp:first-child td{padding-top:6px}
 .gate input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid var(--line-2);background:var(--bg-raise);
   color:var(--ink);font-family:var(--font-m);font-size:14px;margin-bottom:14px;outline:none;transition:border .15s}
 .gate input:focus{border-color:rgba(34,197,94,.55)}
-.gate .go{width:100%;padding:14px;border-radius:10px;border:none;background:var(--green);color:#04130a;font-weight:500;font-size:14px}
+.gate .go{width:100%;padding:14px;border-radius:10px;border:none;background:var(--ink);color:var(--bg-panel);font-weight:500;font-size:14px}
 .gate .go:disabled{opacity:.55}
 .gate .msg{font-family:var(--font-m);font-size:11.5px;color:var(--ink-2);margin-top:12px;min-height:16px;text-align:center}
 .gate .alt{text-align:center;margin-top:18px;font-size:12px;color:var(--ink-3)}
@@ -310,7 +332,7 @@ tr.grp:first-child td{padding-top:6px}
   .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;
     color:var(--ink-3);font-family:var(--font-m);font-size:9px;letter-spacing:.04em;border-radius:8px}
   .bnav a svg{width:18px;height:18px;stroke-width:1.6}
-  .bnav a.on{color:var(--green)}
+  .bnav a.on{color:var(--ink)}
 }
 </style>
 </head>
@@ -343,13 +365,14 @@ tr.grp:first-child td{padding-top:6px}
 <div class="shell" id="app" style="display:none">
   <aside class="sb">
     <div class="brand"><img src="/logo_efix_400x400.jpg" alt="EFIX" style="width:34px;height:34px"></div>
+    <button class="sbtgl" id="sbTgl" onclick="toggleSb()" title="recolher menu"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg><span class="lbl">recolher</span></button>
     <nav class="nav" id="nav">
-      <a href="#inicio" class="on" data-view="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>Início</a>
-      <a href="#investir" data-view="investir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 20h18"/><path d="M6 20V9m6 11V4m6 16v-8"/></svg>Investir</a>
-      <a href="#remessas" data-view="remessas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg>Remessas</a>
-      <a href="#brle" data-view="brle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5c0-1.2 1.1-2 2.5-2s2.5.8 2.5 2-1 1.7-2.5 2-2.5.8-2.5 2 1.1 2 2.5 2 2.5-.8 2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg>BRLE</a>
-      <a href="#cartao" data-view="cartao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18"/></svg>Cartão</a>
-      <a href="#extrato" data-view="extrato"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v17l-2.5-1.7L14 21l-2-1.4L10 21l-2.5-1.7L5 21z"/><path d="M9 9h6m-6 4h6"/></svg>Extrato</a>
+      <a href="#inicio" class="on" data-view="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span class="lbl">Início</span></a>
+      <a href="#investir" data-view="investir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 20h18"/><path d="M6 20V9m6 11V4m6 16v-8"/></svg><span class="lbl">Investir</span></a>
+      <a href="#remessas" data-view="remessas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg><span class="lbl">Remessas</span></a>
+      <a href="#brle" data-view="brle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5c0-1.2 1.1-2 2.5-2s2.5.8 2.5 2-1 1.7-2.5 2-2.5.8-2.5 2 1.1 2 2.5 2 2.5-.8 2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg><span class="lbl">BRLE</span></a>
+      <a href="#cartao" data-view="cartao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18"/></svg><span class="lbl">Cartão</span></a>
+      <a href="#extrato" data-view="extrato"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v17l-2.5-1.7L14 21l-2-1.4L10 21l-2.5-1.7L5 21z"/><path d="M9 9h6m-6 4h6"/></svg><span class="lbl">Extrato</span></a>
     </nav>
     <div class="foot">
       <span class="up">Carteira registrada</span>
@@ -378,7 +401,7 @@ tr.grp:first-child td{padding-top:6px}
           </div>
           <div class="cs off" id="cs-fiat" style="cursor:pointer" onclick="conectarWeb2()">
             <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10 12 4l9 6"/><path d="M5 10v8m4.5-8v8m5-8v8M19 10v8M3 20h18"/></svg></div>
-            <div><div class="k">Conta fiat · Haus</div><div class="v">—<span class="soon" style="border-color:var(--green);color:var(--green)">conectar</span></div></div>
+            <div><div class="k">Conta fiat · Haus</div><div class="v">—<span class="soon">conectar</span></div></div>
           </div>
           <div class="cs off">
             <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12a3.5 3.5 0 0 1 7 0 3.5 3.5 0 0 1-7 0z"/><path d="M12 3.5v2m0 13v2M3.5 12h2m13 0h2"/></svg></div>
@@ -405,7 +428,7 @@ tr.grp:first-child td{padding-top:6px}
         </div>
 
         <div class="quick" data-reveal style="animation-delay:.08s">
-          <button class="primary" onclick="go('investir')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14m-7-7h14"/></svg>Depositar</button>
+          <button class="primary" onclick="abrirDepositar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14m-7-7h14"/></svg>Depositar</button>
           <button onclick="go('remessas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg>Nova remessa</button>
           <button class="oc" onclick="abrirEnviar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 19V6m0 0-5 5m5-5 5 5"/></svg>Enviar</button>
           <button class="oc" onclick="abrirTrocar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 8h11m0 0-3-3m3 3-3 3"/><path d="M17 16H6m0 0 3 3m-3-3 3-3"/></svg>Trocar</button>
@@ -485,6 +508,38 @@ tr.grp:first-child td{padding-top:6px}
 </div>
 
 <!-- modais on-chain (v2 nativo) -->
+<div class="modal" id="mDep"><div class="mbox" style="position:relative">
+  <button class="x" onclick="fecharModal('mDep')">&times;</button>
+  <h3>Depositar via PIX</h3>
+  <p class="lead">Pague o PIX e seus tokens são emitidos automaticamente.</p>
+  <div id="dep-form">
+    <label class="fldl">Valor (R$) — mínimo 10,00</label>
+    <input id="depAmt" class="fld mono" type="number" min="10" step="0.01" placeholder="0,00">
+    <button class="cta pri" id="depBtn" onclick="depGerar()">Gerar QR Code PIX</button>
+  </div>
+  <div id="dep-qr" style="display:none">
+    <div class="qrbox">
+      <img id="depQrImg" alt="QR PIX">
+      <div class="emv" id="depEmv"></div>
+      <button class="hmini" id="depCopyEmv" onclick="depCopiar('depEmv','depCopyEmv','copiar código PIX')">copiar código PIX</button>
+    </div>
+    <div class="refbox" id="depRefBox" style="display:none">
+      <div class="up">cole este código na descrição do PIX</div>
+      <div class="code" id="depRef"></div>
+      <button class="hmini" id="depCopyRef" onclick="depCopiar('depRef','depCopyRef','copiar')">copiar</button>
+      <div class="hint" id="depRefHint"></div>
+    </div>
+    <div class="steps" id="depSteps">
+      <div class="stp done" data-s="1"><span class="b">✓</span>QR Code gerado</div>
+      <div class="stp" data-s="2"><span class="b">2</span>PIX confirmado</div>
+      <div class="stp" data-s="3"><span class="b">3</span>Emitindo tokens</div>
+      <div class="stp" data-s="4"><span class="b">4</span>Creditado na carteira</div>
+    </div>
+    <button class="cta pri" id="depPaid" onclick="depJaPaguei()">Já paguei o PIX</button>
+    <div class="mmsg" id="depMsg"></div>
+  </div>
+</div></div>
+
 <div class="modal" id="mEnviar"><div class="mbox" style="position:relative">
   <button class="x" onclick="fecharModal('mEnviar')">&times;</button>
   <h3>Enviar <span class="badge">on-chain</span></h3>
@@ -553,6 +608,11 @@ const tokIcon = (t, sym) => (t && t.logo)
 function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); try{localStorage.setItem('efix_v2_theme',t)}catch(e){} }
 function toggleTheme(){ applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); }
 try{ const t = localStorage.getItem('efix_v2_theme'); if(t) applyTheme(t); }catch(e){}
+function toggleSb(){
+  const min = document.querySelector('.shell').classList.toggle('sbmin');
+  try{ localStorage.setItem('efix_v2_sbmin', min?'1':''); }catch(e){}
+}
+try{ if(localStorage.getItem('efix_v2_sbmin')==='1') document.querySelector('.shell').classList.add('sbmin'); }catch(e){}
 
 /* ── navegação ── */
 function go(v){
@@ -1027,6 +1087,95 @@ function trocarOnchain(){
   m.className='mmsg';
   if(psm){ m.innerHTML='Rota '+f+'→'+t+' via BRLE-PSM. Execução de swap on-chain entra na próxima fase (assinatura da sua conta). Por ora, use Remessas (USDC→PIX) ou Depositar.'; }
   else { m.textContent='Par '+f+'→'+t+': roteador de swap em preparo. Enquanto isso, Enviar e Remessas já operam on-chain.'; }
+}
+
+/* ── depósito PIX nativo (endpoints da clássica: /deposit/qr + /deposit/confirm-paid) ── */
+let _depRef = null, _depTimer = null, _depTries = 0;
+function depStep(n, estado){ // estado: done|run|off
+  const el = document.querySelector('#depSteps .stp[data-s="'+n+'"]'); if(!el) return;
+  el.classList.remove('done','run');
+  if(estado==='done'){ el.classList.add('done'); el.querySelector('.b').textContent='✓'; }
+  else if(estado==='run'){ el.classList.add('run'); }
+}
+function depCopiar(srcId, btnId, rotulo){
+  const v = $(srcId).dataset.code || $(srcId).textContent;
+  navigator.clipboard.writeText(v).then(()=>{ $(btnId).textContent='copiado ✓';
+    setTimeout(()=>{ $(btnId).textContent=rotulo; },1800); });
+}
+function abrirDepositar(){
+  if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para depositar.'); return; }
+  _depRef=null; _depTries=0; if(_depTimer){clearTimeout(_depTimer);_depTimer=null;}
+  $('dep-form').style.display='block'; $('dep-qr').style.display='none';
+  $('depAmt').value=''; $('depMsg').textContent=''; $('depMsg').className='mmsg';
+  $('mDep').classList.add('on');
+}
+async function depGerar(){
+  const amount = parseFloat($('depAmt').value);
+  if(!amount || amount<10){ $('depMsg').className='mmsg err'; $('depMsg').textContent='mínimo R$ 10,00'; return; }
+  const b=$('depBtn'); b.disabled=true; b.textContent='Gerando…';
+  try{
+    const user = EfixAuth.getUser()||{};
+    const r = await fetch(BACKEND+'/deposit/qr',{method:'POST',
+      headers:{'Content-Type':'application/json',...EfixAuth.headers()},
+      body:JSON.stringify({amount, address:user.address})});
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.error||'falha ao gerar QR');
+    _depRef = data.reference;
+    if(data.qrCode) $('depQrImg').src = data.qrCode;
+    if(data.pixCode){ $('depEmv').textContent = data.pixCode; $('depEmv').dataset.code = data.pixCode; }
+    if(data.customerRef){
+      $('depRefBox').style.display='block';
+      $('depRef').textContent = data.customerRef; $('depRef').dataset.code = data.customerRef;
+      $('depRefHint').textContent = data.userEmail
+        ? ('Você também pode usar seu e-mail ('+data.userEmail+') no lugar do código.')
+        : 'Sem esse código, seu crédito pode demorar mais.';
+    } else { $('depRefBox').style.display='none'; }
+    $('dep-form').style.display='none'; $('dep-qr').style.display='block';
+    $('depMsg').className='mmsg'; $('depMsg').textContent='pague o PIX e clique em "Já paguei o PIX"';
+  }catch(e){ $('depMsg').className='mmsg err'; $('depMsg').textContent=e.message; }
+  finally{ b.disabled=false; b.textContent='Gerar QR Code PIX'; }
+}
+// auto-retry: 1 clique só — reconsulta a cada 10s até o banco conciliar
+const DEP_MAX_TRIES = 18;
+async function depJaPaguei(){
+  if(!_depRef) return;
+  const b=$('depPaid'); b.disabled=true;
+  _depTries++;
+  b.textContent='Verificando pagamento… ('+_depTries+'/'+DEP_MAX_TRIES+')';
+  try{
+    const user = EfixAuth.getUser()||{};
+    const r = await fetch(BACKEND+'/deposit/confirm-paid',{method:'POST',
+      headers:{'Content-Type':'application/json',...EfixAuth.headers()},
+      body:JSON.stringify({reference:_depRef, address:user.address})});
+    const data = await r.json();
+    const st = data.status||'';
+    if(st==='confirmed'||st==='minted'){
+      depStep(2,'done'); depStep(3,'done'); depStep(4,'done');
+      b.style.display='none';
+      $('depMsg').className='mmsg ok'; $('depMsg').textContent='depósito confirmado ✓';
+      _transfers=null; _web2=null;
+      const u=EfixAuth.getUser()||{}; carregar(u.email,u.address);
+      return;
+    }
+    if(st==='minting'){
+      depStep(2,'done'); depStep(3,'run');
+      $('depMsg').className='mmsg'; $('depMsg').textContent='emitindo tokens… ~15s';
+      _depTimer=setTimeout(depJaPaguei, 10000); return;
+    }
+    // not_found e afins: NAO devolve o clique pro usuário — re-tenta sozinho
+    if(_depTries < DEP_MAX_TRIES){
+      depStep(2,'run');
+      $('depMsg').className='mmsg';
+      $('depMsg').textContent='aguardando o banco conciliar… reconsulto automaticamente';
+      _depTimer=setTimeout(depJaPaguei, 10000); return;
+    }
+    $('depMsg').className='mmsg err';
+    $('depMsg').textContent='pagamento ainda não localizado — verifique o código na descrição e tente de novo';
+    b.disabled=false; b.textContent='Já paguei o PIX'; _depTries=0;
+  }catch(e){
+    $('depMsg').className='mmsg err'; $('depMsg').textContent=e.message;
+    b.disabled=false; b.textContent='Já paguei o PIX';
+  }
 }
 
 function conectarWeb2(){
