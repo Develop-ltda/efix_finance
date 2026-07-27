@@ -526,7 +526,7 @@
   }
 
   function sim(){
-    const {ltv,loops,br,cdi,fx,L,parity}=levParams();
+    const {ltv,loops,br,cdi,fx,L,parity,spread,k}=levParams();
     set("ltvval",ltv+"%"); set("brval",br.toFixed(1)+"%"); set("loopsval",loops);
     set("cdival",cdi.toFixed(1)+"%"); set("periodval",$("period").value);
     set("fxval",fx.toFixed(1)+"%"); set("parityval","parity "+parity.toFixed(1)+"%");
