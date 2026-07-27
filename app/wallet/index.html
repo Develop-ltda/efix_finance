@@ -245,6 +245,21 @@ tr.grp:first-child td{padding-top:6px}
   border:1px solid var(--line-2);background:transparent;color:var(--ink-2);cursor:pointer}
 .hmini:hover{border-color:var(--mag);color:var(--mag)}
 
+/* modal (enviar/trocar) */
+.modal{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:20px;
+  background:rgba(6,8,20,.62);backdrop-filter:blur(6px)}
+.modal.on{display:flex}
+.mbox{width:100%;max-width:440px;background:var(--bg-panel);border:1px solid var(--line);border-radius:18px;
+  padding:24px;box-shadow:var(--shadow);animation:rv .35s cubic-bezier(.2,.7,.3,1)}
+.mbox h3{font-size:16px;font-weight:400;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.mbox h3 .badge{font-family:var(--font-m);font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mag);border:1px solid var(--mag);border-radius:99px;padding:1px 7px}
+.mbox .x{position:absolute;top:18px;right:20px;background:none;border:none;color:var(--ink-3);font-size:20px}
+.mbox .lead{font-size:12.5px;color:var(--ink-2);margin-bottom:16px;line-height:1.5}
+.mrow{position:relative}
+.mmsg{margin-top:12px;font-family:var(--font-m);font-size:11.5px;min-height:16px;color:var(--ink-2);word-break:break-all}
+.mmsg.ok{color:var(--green)} .mmsg.err{color:var(--red)}
+
 /* estados */
 .empty{padding:34px 10px;text-align:center;color:var(--ink-3);font-family:var(--font-m);font-size:12px}
 .skel{height:14px;border-radius:4px;background:linear-gradient(90deg,var(--line),var(--line-2),var(--line));
@@ -392,8 +407,8 @@ tr.grp:first-child td{padding-top:6px}
         <div class="quick" data-reveal style="animation-delay:.08s">
           <button class="primary" onclick="go('investir')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14m-7-7h14"/></svg>Depositar</button>
           <button onclick="go('remessas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg>Nova remessa</button>
-          <button class="oc" onclick="location.href='/app/wallet/classic.html?enviar=1'"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 19V6m0 0-5 5m5-5 5 5"/></svg>Enviar</button>
-          <button class="oc" onclick="location.href='/app/wallet/classic.html'"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 8h11m0 0-3-3m3 3-3 3"/><path d="M17 16H6m0 0 3 3m-3-3 3-3"/></svg>Trocar</button>
+          <button class="oc" onclick="abrirEnviar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 19V6m0 0-5 5m5-5 5 5"/></svg>Enviar</button>
+          <button class="oc" onclick="abrirTrocar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 8h11m0 0-3-3m3 3-3 3"/><path d="M17 16H6m0 0 3 3m-3-3 3-3"/></svg>Trocar</button>
           <button onclick="go('extrato')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v17l-2.5-1.7L14 21l-2-1.4L10 21l-2.5-1.7L5 21z"/><path d="M9 9h6m-6 4h6"/></svg>Extrato</button>
         </div>
 
@@ -468,6 +483,35 @@ tr.grp:first-child td{padding-top:6px}
     </main>
   </div>
 </div>
+
+<!-- modais on-chain (v2 nativo) -->
+<div class="modal" id="mEnviar"><div class="mbox" style="position:relative">
+  <button class="x" onclick="fecharModal('mEnviar')">&times;</button>
+  <h3>Enviar <span class="badge">on-chain</span></h3>
+  <p class="lead">Transferência ERC-20 assinada pela sua conta, na rede Base.</p>
+  <label class="fldl">Ativo</label>
+  <select id="envToken" class="fld"></select>
+  <label class="fldl">Destino (0x…)</label>
+  <input id="envTo" class="fld mono" placeholder="0x…" autocomplete="off">
+  <label class="fldl">Quantidade</label>
+  <input id="envAmt" class="fld mono" type="number" min="0" step="any" placeholder="0.00">
+  <button class="cta pri" id="envBtn" onclick="enviarOnchain()">Assinar &amp; enviar</button>
+  <div class="mmsg" id="envMsg"></div>
+</div></div>
+
+<div class="modal" id="mTrocar"><div class="mbox" style="position:relative">
+  <button class="x" onclick="fecharModal('mTrocar')">&times;</button>
+  <h3>Trocar <span class="badge">on-chain</span></h3>
+  <p class="lead">Converta entre seus ativos na rede Base.</p>
+  <label class="fldl">De</label>
+  <select id="swFrom" class="fld"></select>
+  <label class="fldl">Para</label>
+  <select id="swTo" class="fld"></select>
+  <label class="fldl">Quantidade</label>
+  <input id="swAmt" class="fld mono" type="number" min="0" step="any" placeholder="0.00">
+  <button class="cta pri" id="swBtn" onclick="trocarOnchain()">Continuar</button>
+  <div class="mmsg" id="swMsg"></div>
+</div></div>
 
 <!-- bottom-nav mobile -->
 <nav class="bnav" id="bnav">
@@ -916,6 +960,73 @@ async function renderConsolidado(elId, n){
     }).join('');
     if(HIDDEN) document.querySelectorAll('.money').forEach(e2=>e2.classList.add('blur'));
   }catch(e){ el.innerHTML='<div class="empty">extrato indisponível: '+e.message+'</div>'; }
+}
+
+// saldos correntes p/ preencher selects (recomputa on-chain)
+let _saldos = {};
+async function saldosAtuais(){
+  const out = {};
+  const w = (WALLETS[0]||'').length ? WALLETS[0] : null;
+  if(!w) return out;
+  for(const t of TOKENS){ try{ const b=await balanceOf(t,w); if(b>0.000001) out[t.sym]={t,b}; }catch(e){} }
+  return out;
+}
+function opsToken(saldos){
+  return Object.values(saldos).map(({t,b})=>'<option value="'+t.sym+'">'+t.sym+' — '+b.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</option>').join('');
+}
+function fecharModal(id){ $(id).classList.remove('on'); }
+document.addEventListener('click',(e)=>{ if(e.target.classList&&e.target.classList.contains('modal')) e.target.classList.remove('on'); });
+
+function walletPodeAssinar(){
+  // só a conta criada no app assina; carteira externa registrada não
+  if(window.IS_EXTERNAL_WALLET){ return false; }
+  return EfixAuth.isLoggedIn();
+}
+
+async function abrirEnviar(){
+  if(!walletPodeAssinar()){ alert('Envio disponível para contas criadas no app. Carteira externa (MetaMask) assina pela própria carteira.'); return; }
+  _saldos = await saldosAtuais();
+  const opts = opsToken(_saldos);
+  if(!opts){ alert('Sem ativos para enviar.'); return; }
+  $('envToken').innerHTML = opts; $('envTo').value=''; $('envAmt').value=''; $('envMsg').textContent='';
+  $('envMsg').className='mmsg'; $('mEnviar').classList.add('on');
+}
+async function enviarOnchain(){
+  const sym = $('envToken').value, to = $('envTo').value.trim(), amt = parseFloat($('envAmt').value);
+  const m = $('envMsg'); m.className='mmsg';
+  if(!/^0x[0-9a-fA-F]{40}$/.test(to)){ m.className='mmsg err'; m.textContent='endereço inválido (0x + 40 hex)'; return; }
+  const rec = _saldos[sym]; if(!rec){ m.className='mmsg err'; m.textContent='ativo indisponível'; return; }
+  if(!amt || amt<=0 || amt>rec.b){ m.className='mmsg err'; m.textContent='quantidade inválida (máx '+rec.b.toFixed(2)+')'; return; }
+  const b=$('envBtn'); b.disabled=true; b.textContent='Assinando…'; m.textContent='confirme na sua conta…';
+  try{
+    const client = await EfixWallet.getClient();
+    const wei = BigInt(Math.round(amt * 10**rec.t.dec));
+    const data = '0xa9059cbb' + to.toLowerCase().replace('0x','').padStart(64,'0') + wei.toString(16).padStart(64,'0');
+    const h = await client.sendUserOperation({ uo:{ target: rec.t.addr, data, value:0n } });
+    const tx = await client.waitForUserOperationTransaction(h);
+    m.className='mmsg ok'; m.innerHTML='enviado ✓ <a href="https://basescan.org/tx/'+tx+'" target="_blank" style="color:var(--mag)">'+tx.slice(0,12)+'…</a>';
+    _transfers=null; carregar((EfixAuth.getUser()||{}).email,(EfixAuth.getUser()||{}).address);
+  }catch(e){ m.className='mmsg err'; m.textContent=e.message||'falha ao enviar'; }
+  finally{ b.disabled=false; b.textContent='Assinar & enviar'; }
+}
+
+async function abrirTrocar(){
+  _saldos = await saldosAtuais();
+  const held = opsToken(_saldos);
+  const todos = TOKENS.map(t=>'<option value="'+t.sym+'">'+t.sym+' · '+t.nome+'</option>').join('');
+  $('swFrom').innerHTML = held || todos;
+  $('swTo').innerHTML = todos;
+  $('swAmt').value=''; $('swMsg').textContent=''; $('swMsg').className='mmsg';
+  $('mTrocar').classList.add('on');
+}
+function trocarOnchain(){
+  const f=$('swFrom').value, t=$('swTo').value, m=$('swMsg');
+  if(f===t){ m.className='mmsg err'; m.textContent='escolha ativos diferentes'; return; }
+  // rotas com liquidez real hoje: BRLE<->USDC (PSM). demais pares: roteador em preparo.
+  const psm = (f==='BRLE'&&t==='USDC')||(f==='USDC'&&t==='BRLE');
+  m.className='mmsg';
+  if(psm){ m.innerHTML='Rota '+f+'→'+t+' via BRLE-PSM. Execução de swap on-chain entra na próxima fase (assinatura da sua conta). Por ora, use Remessas (USDC→PIX) ou Depositar.'; }
+  else { m.textContent='Par '+f+'→'+t+': roteador de swap em preparo. Enquanto isso, Enviar e Remessas já operam on-chain.'; }
 }
 
 function conectarWeb2(){
