@@ -278,7 +278,7 @@
         <div class="drow"><span class="l">Yield basis</span><span class="r">~100% CDI · gross of BR tax</span></div>
         <div class="drow"><span class="l">NAV oracle</span><span class="r">Monotonic, on-chain (Base)</span></div>
         <div class="drow"><span class="l">Cota source</span><span class="r">BTG Pactual · daily · CVM</span></div>
-        <div class="drow"><span class="l">Independent audit</span><span class="r">OpenZeppelin · 15/15</span></div>
+        <div class="drow"><span class="l">Independent audit</span><span class="r">OpenZeppelin · 15/15 · Polygon token only</span></div>
         <div class="drow"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Basescan &#8599;</a></span></div>
         <div class="pnote">efixDI tracks Brazilian CDI in BRL; a USD holder takes BRL/USD FX risk. Fund NAV is struck end of day; the official cota publishes the next business day and the oracle interpolates CDI between strikes.</div>
       </div>
@@ -296,11 +296,13 @@
       <div class="pdiv"></div>
       <div class="pcred">
         <div class="pr"><span class="l">Audit result</span><span class="r">15 / 15 findings resolved</span></div>
-        <div class="pr"><span class="l">Scope</span><span class="r">EfixDIToken (ERC-20)</span></div>
+        <div class="pr"><span class="l">Scope</span><span class="r">EfixDIToken.sol &middot; Polygon <a href="https://polygonscan.com/address/0x04082b283818D9d0dd9Ee8742892eEe5CC396441" target="_blank" rel="noopener">0x0408&#8230;6441 &#8599;</a></span></div>
+        <div class="pr"><span class="l">Not in scope</span><span class="r">EfixDITokenBase (Base) &middot; collateral vault &middot; all integrations</span></div>
         <div class="pr"><span class="l">Public report</span><span class="r"><a href="https://www.openzeppelin.com/news/efixdi-token-audit" target="_blank" rel="noopener">openzeppelin.com &#8599;</a></span></div>
-        <div class="pr"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Basescan &#8599;</a></span></div>
+        <div class="pr"><span class="l">Base collateral token</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Basescan &#8599;</a></span></div>
       </div>
     </div>
+    <div class="src"><b>Scope note.</b> The OpenZeppelin engagement covered a single file, <code>EfixDIToken.sol</code>, at one commit, deployed on Polygon. <b>The Base collateral token, EfixDITokenBase, is a different contract and was not audited.</b> It has a smaller privileged surface than the audited contract (no <code>emergencyWithdraw</code>, no adjustable max supply, no treasury address, no global transfer pause) and adds bridge mint and burn functions. The LayerZero bridge was permanently discontinued in May 2026; the exposed operator EOA, the compromised deployer and the MinterBurner contract hold no roles on the Base token, which anyone can verify with <code>hasRole</code> on Basescan. The audit report also states that integrations, including the collateral vault, were not reviewed.</div>
   </div>
 
   <!-- track record -->
