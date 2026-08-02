@@ -369,6 +369,7 @@ tr.grp:first-child td{padding-top:6px}
     <nav class="nav" id="nav">
       <a href="#inicio" class="on" data-view="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span class="lbl">Início</span></a>
       <a href="#investir" data-view="investir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 20h18"/><path d="M6 20V9m6 11V4m6 16v-8"/></svg><span class="lbl">Investir</span></a>
+      <a href="#posicao" data-view="posicao" id="nav-posicao" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="13" r="8"/><path d="M12 13l4.5-4.5"/></svg><span class="lbl">Posição</span></a>
       <a href="#remessas" data-view="remessas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg><span class="lbl">Remessas</span></a>
       <a href="#brle" data-view="brle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5c0-1.2 1.1-2 2.5-2s2.5.8 2.5 2-1 1.7-2.5 2-2.5.8-2.5 2 1.1 2 2.5 2 2.5-.8 2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg><span class="lbl">BRLE</span></a>
       <a href="#cartao" data-view="cartao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18"/></svg><span class="lbl">Cartão</span></a>
@@ -495,6 +496,32 @@ tr.grp:first-child td{padding-top:6px}
         <a href="/app/wallet/classic.html">Abrir Cartão →</a>
       </div></section>
 
+      <!-- ═══ POSIÇÃO (gated às carteiras da casa — pedido Ernesto 02/08) ═══ -->
+      <section class="view" id="view-posicao">
+        <div class="card" data-reveal>
+          <h2>Posição alavancada · Euler <span class="up">read-only · on-chain</span></h2>
+          <p class="rem-lead">Carteira da operação <a id="pos-addr" class="mono" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline"></a> — leitura direta dos contratos na Base, sem backend. Recorte ON-CHAIN: as cotas BTG do fundo não aparecem aqui; perímetros completos, memória de cálculo e risco vivem no Il Maestro.</p>
+          <div class="cstrip">
+            <div class="cs on"><div><div class="k">Patrimônio on-chain</div><div class="v money" id="pos-pat">—</div></div></div>
+            <div class="cs"><div><div class="k">LTV</div><div class="v" id="pos-ltv">—</div></div></div>
+            <div class="cs"><div><div class="k">Dívida</div><div class="v money" id="pos-debt">—</div></div></div>
+            <div class="cs"><div><div class="k">Utilização do pool</div><div class="v" id="pos-util">—</div></div></div>
+          </div>
+          <div style="margin:4px 0 14px">
+            <div style="height:8px;border-radius:5px;background:var(--line);position:relative;overflow:hidden">
+              <i id="pos-ltv-bar" style="display:block;height:100%;width:0;background:var(--green);transition:width .4s"></i>
+            </div>
+            <div class="up" style="margin-top:5px;color:var(--ink-3)">borrow-limit 70% · liquidação 77%</div>
+          </div>
+          <div id="pos-rows"><div class="empty">carregando…</div></div>
+          <p class="rem-lead" style="margin-top:12px">
+            <a href="https://cofre-api-824621499270.southamerica-east1.run.app/#efixdi" target="_blank" rel="noopener">Il Maestro · EFIXDI+ →</a> &nbsp;·&nbsp;
+            <a id="pos-euler-link" target="_blank" rel="noopener">Euler Ops (operar, MetaMask) →</a>
+          </p>
+          <div class="up" id="pos-asof" style="color:var(--ink-3)"></div>
+        </div>
+      </section>
+
       <!-- ═══ EXTRATO ═══ -->
       <section class="view" id="view-extrato">
         <div class="card" data-reveal>
@@ -572,6 +599,7 @@ tr.grp:first-child td{padding-top:6px}
 <nav class="bnav" id="bnav">
   <a href="#inicio" class="on" data-view="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>Início</a>
   <a href="#investir" data-view="investir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 20h18"/><path d="M6 20V9m6 11V4m6 16v-8"/></svg>Investir</a>
+  <a href="#posicao" data-view="posicao" id="bnav-posicao" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="13" r="8"/><path d="M12 13l4.5-4.5"/></svg>Posição</a>
   <a href="#remessas" data-view="remessas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg>Remessas</a>
   <a href="#cartao" data-view="cartao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18"/></svg>Cartão</a>
   <a href="#extrato" data-view="extrato"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v17l-2.5-1.7L14 21l-2-1.4L10 21l-2.5-1.7L5 21z"/><path d="M9 9h6m-6 4h6"/></svg>Extrato</a>
@@ -596,6 +624,19 @@ const TOKENS = [
 let NAV = { navBRL:1, fxUsdBrl:0.1965, cdi:null };
 let WALLETS = [];         // [registrada, sessão] dedupe
 let HIDDEN = false;
+/* POSIÇÃO · Euler — consts NO TOPO: maybeShowPosicao() roda no boot
+   (carregarCore), antes do resto do script; declarar embaixo = TDZ que
+   aborta o boot inteiro. Endereços do ADDRESSES.md, EIP-55 por extenso. */
+const POS_ALLOW = [
+  '0xa867E7a4C390B665873aa973e55fE6c490216B38',   // carteira registrada (Ernesto)
+  '0x7C78422126b15866781163fFc84BF6B41C095eB9',   // EULER OPS (dona da posição)
+].map(a=>a.toLowerCase());
+const EULER = {
+  ops:   '0x7C78422126b15866781163fFc84BF6B41C095eB9',
+  escrow:'0x008a506c6b6138F47B82f6a0b8Fc7FE375C102e9',   // colateral efixDI
+  vault: '0xe276BB91E0C63C0BC6ABdd3Dc37DF324f90e3956',   // USDC borrowable
+  router:'0x5F655525A46B968CF388865CeBC0c0B79A8F8a2b',   // oracle getQuote
+};
 
 const $ = (id) => document.getElementById(id);
 const brl = (v) => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -620,9 +661,10 @@ function go(v){
   const tgt = $('view-'+v); if(!tgt) return;
   tgt.classList.add('on');
   document.querySelectorAll('#nav a, #bnav a').forEach(a=>a.classList.toggle('on', a.dataset.view===v));
-  $('top-title').textContent = {inicio:'Início',investir:'Investir',remessas:'Remessas',brle:'BRLE',cartao:'Cartão',extrato:'Extrato'}[v]||'';
+  $('top-title').textContent = {inicio:'Início',investir:'Investir',posicao:'Posição',remessas:'Remessas',brle:'BRLE',cartao:'Cartão',extrato:'Extrato'}[v]||'';
   if(v==='extrato') renderConsolidado('extrato-full', 40);
   if(v==='remessas') initRemessas2();
+  if(v==='posicao') renderPosicao();
   if(history.replaceState) history.replaceState(null,'','#'+v);
 }
 document.querySelectorAll('#nav a, #bnav a').forEach(a=>a.addEventListener('click',(e)=>{e.preventDefault();go(a.dataset.view)}));
@@ -717,6 +759,7 @@ async function carregar(email, sessAddr){
 
 async function carregarCore(email, wallets){
   WALLETS = wallets;
+  maybeShowPosicao();
   // NAV + FX + CDI (fonte: efixdi-backend, público)
   try{
     const n = await fetch(BACKEND + '/api/nav').then(r=>r.json());
@@ -778,6 +821,65 @@ function heroNum(v){
   const s = Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const i = s.lastIndexOf(',');
   return 'R$ ' + s.slice(0,i) + '<span class="cents">'+s.slice(i)+'</span>';
+}
+
+/* ── POSIÇÃO · Euler (pedido 02/08): janela read-only da posição da OPS.
+   Gate é só de UI (o dado é público on-chain). Consts POS_ALLOW/EULER
+   vivem no topo do script (TDZ no boot). ── */
+function maybeShowPosicao(){
+  const ok = WALLETS.some(w=>POS_ALLOW.includes(w));
+  ['nav-posicao','bnav-posicao'].forEach(id=>{ const el=$(id); if(el) el.style.display = ok?'':'none'; });
+}
+const padHex = a => a.toLowerCase().replace('0x','').padStart(64,'0');
+const ecall = async (to,data) => BigInt(await rpc('eth_call',[{to,data},'latest'])||'0x0');
+const usdf = v => 'US$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+async function renderPosicao(){
+  const a=$('pos-addr'); a.textContent=short(EULER.ops); a.href='https://basescan.org/address/'+EULER.ops;
+  $('pos-euler-link').href = BACKEND + '/euler';
+  const g = async fn => { try{ return await fn(); }catch(e){ return null; } };
+  const EFIX = EFIX_CONFIG.contracts.efixBase, USDC = EFIX_CONFIG.contracts.usdcBase;
+  const [colR,debtR,pxR,sharesR,freeUR,freeER,taR,borR] = await Promise.all([
+    g(()=>ecall(EULER.escrow,'0x70a08231'+padHex(EULER.ops))),           // colateral penhorado
+    g(()=>ecall(EULER.vault, '0xd283e75f'+padHex(EULER.ops))),           // debtOf
+    g(()=>ecall(EULER.router,'0xae68676c'+(10n**18n).toString(16).padStart(64,'0')+padHex(EFIX)+padHex(USDC))), // preço oracle
+    g(()=>ecall(EULER.vault, '0x70a08231'+padHex(EULER.ops))),           // shares eUSDC
+    g(()=>ecall(USDC,        '0x70a08231'+padHex(EULER.ops))),           // USDC livre
+    g(()=>ecall(EFIX,        '0x70a08231'+padHex(EULER.ops))),           // efixDI solto
+    g(()=>ecall(EULER.vault, '0x01e1d114')),                             // totalAssets
+    g(()=>ecall(EULER.vault, '0x47bd3718')),                             // totalBorrows
+  ]);
+  let eusdc = null;
+  if(sharesR!=null) eusdc = sharesR===0n ? 0 :
+    Number((await g(()=>ecall(EULER.vault,'0x07a2d13a'+sharesR.toString(16).padStart(64,'0'))))||0n)/1e6;
+  const col   = colR ==null?null:Number(colR)/1e18;
+  const debt  = debtR==null?null:Number(debtR)/1e6;
+  const px    = pxR  ==null?null:Number(pxR)/1e6;
+  const freeU = freeUR==null?null:Number(freeUR)/1e6;
+  const freeE = freeER==null?null:Number(freeER)/1e18;
+  const util  = (taR!=null&&Number(taR)>0)?Number(borR||0n)/Number(taR):null;
+  const colUsd = (col!=null&&px!=null)?col*px:null;
+  const ltvPct = (colUsd&&debt!=null)?debt/colUsd*100:null;
+  const patUsd = (colUsd!=null&&debt!=null)?colUsd+(eusdc||0)+(freeU||0)+((freeE||0)*(px||0))-debt:null;
+  const brlPerUsd = 1/NAV.fxUsdBrl;
+  $('pos-pat').textContent  = patUsd==null?'—':(usdf(patUsd)+' · '+brl(patUsd*brlPerUsd));
+  $('pos-debt').textContent = debt==null?'—':'−'+usdf(debt);
+  $('pos-util').textContent = util==null?'—':(util*100).toFixed(1)+'%';
+  $('pos-ltv').textContent  = ltvPct==null?'—':ltvPct.toFixed(1)+'%';
+  const bar=$('pos-ltv-bar');
+  if(bar&&ltvPct!=null){
+    bar.style.width = Math.min(100,ltvPct/77*100)+'%';
+    bar.style.background = ltvPct>=70?'var(--red)':(ltvPct>=65?'#f59e0b':'var(--green)');
+  }
+  const row=(k,v)=>'<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink-2);font-size:12.5px">'+k+'</span><span class="mono money" style="font-size:12.5px">'+v+'</span></div>';
+  $('pos-rows').innerHTML =
+    row('Colateral penhorado (escrow)', col==null?'—':col.toLocaleString('pt-BR',{maximumFractionDigits:2})+' efixDI'+(colUsd!=null?' · '+usdf(colUsd):''))+
+    row('Preço do efixDI no oráculo do mercado', px==null?'—':'US$ '+px.toFixed(6))+
+    row('Dívida (USDC)', debt==null?'—':'−'+usdf(debt))+
+    row('eUSDC (LP no vault)', eusdc==null?'—':usdf(eusdc))+
+    row('USDC livre na carteira', freeU==null?'—':usdf(freeU))+
+    row('efixDI solto na carteira', freeE==null?'—':freeE.toLocaleString('pt-BR',{maximumFractionDigits:2})+' efixDI');
+  $('pos-asof').textContent = 'as of '+new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' BRT · FX '+brlPerUsd.toFixed(4)+' · fonte: contratos na Base via RPC';
+  if(HIDDEN) document.querySelectorAll('#view-posicao .money').forEach(el=>el.classList.add('blur'));
 }
 
 /* ── atividade on-chain: alchemy_getAssetTransfers (real, sem invenção) ── */
