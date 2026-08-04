@@ -4,211 +4,249 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Haus Pay · Guia de teste da equipe</title>
+<title>Haus Pay · Como testar</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0d0d0d;--card:#161616;--line:#2a2a2a;--tx:#e8e8e8;--dim:#9a9a9a;
     --acc:#fb9b1e;--ok:#3ddc84;--err:#ff5c5c;--warn:#ffd166}
   *{box-sizing:border-box;margin:0}
   body{background:var(--bg);color:var(--tx);font-family:'Space Mono',ui-monospace,monospace;
-    font-size:15px;line-height:1.65}
-  header{border-bottom:1px solid var(--line);padding:20px 18px}
-  header .wrap,main{max-width:820px;margin:0 auto}
-  h1{font-family:Syne,sans-serif;font-size:22px}
+    font-size:15px;line-height:1.6}
+  header{border-bottom:1px solid var(--line);padding:18px}
+  header .wrap,main{max-width:760px;margin:0 auto}
+  h1{font-family:Syne,sans-serif;font-size:21px}
   h1 small{color:var(--dim);font-size:12px;font-family:'Space Mono',monospace;
-    font-weight:400;display:block;margin-top:5px}
-  main{padding:22px 18px 70px}
-  h2{font-family:Syne,sans-serif;font-size:17px;color:var(--acc);margin:30px 0 10px;
-    padding-top:14px;border-top:1px solid var(--line)}
+    font-weight:400;display:block;margin-top:4px}
+  main{padding:20px 18px 70px}
+  h2{font-family:Syne,sans-serif;font-size:16px;color:var(--acc);margin:28px 0 8px;
+    padding-top:12px;border-top:1px solid var(--line)}
   h2:first-of-type{border-top:0;padding-top:0}
-  h3{font-family:Syne,sans-serif;font-size:14px;margin:16px 0 6px}
-  p{margin:10px 0}ul,ol{margin:10px 0 10px 20px}li{margin:6px 0}
+  p{margin:8px 0}
   code{background:#000;border:1px solid var(--line);border-radius:4px;padding:1px 6px;
     font-size:13px;color:var(--warn);word-break:break-all}
-  pre{background:#000;border:1px solid var(--line);border-radius:8px;padding:13px;
-    overflow-x:auto;margin:12px 0}pre code{border:0;padding:0;color:var(--tx)}
+  pre{background:#000;border:1px solid var(--line);border-radius:8px;padding:12px;
+    overflow-x:auto;margin:10px 0}pre code{border:0;padding:0;color:var(--tx)}
   .box{background:var(--card);border:1px solid var(--line);border-radius:8px;
-    padding:15px 17px;margin:16px 0}
-  .box.warn{border-color:var(--warn)}.box.ok{border-color:var(--ok)}
-  .box h3{margin-top:0}
+    padding:14px 16px;margin:14px 0}
+  .box.stop{border-color:var(--err);background:#1a0e0e}
+  .box.ok{border-color:var(--ok)}
+  .box h3{font-family:Syne,sans-serif;font-size:14px;margin:0 0 6px}
   .link{display:block;background:#000;border:1px solid var(--acc);border-radius:8px;
-    padding:13px 15px;margin:10px 0;text-decoration:none;color:var(--tx)}
-  .link:hover{background:#1a1200}
-  .link b{color:var(--acc);font-family:Syne,sans-serif;display:block;font-size:15px}
-  .link span{color:var(--dim);font-size:12px;word-break:break-all}
-  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
-  th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+    padding:12px 14px;margin:8px 0;text-decoration:none;color:var(--tx)}
+  .link b{color:var(--acc);font-family:Syne,sans-serif;display:block}
+  .link span{color:var(--dim);font-size:12px}
+  .tw{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
   th{color:var(--dim);font-weight:400;font-size:11px;text-transform:uppercase}
   .muted{color:var(--dim);font-size:13px}
-  footer{border-top:1px solid var(--line);margin-top:36px;padding-top:14px;
-    color:var(--dim);font-size:12px}
-  ol.passos{counter-reset:p;list-style:none;margin-left:0}
-  ol.passos>li{counter-increment:p;position:relative;padding-left:38px;margin:16px 0}
-  ol.passos>li::before{content:counter(p);position:absolute;left:0;top:0;
-    width:26px;height:26px;border-radius:50%;background:var(--acc);color:#111;
+  ol.p{counter-reset:s;list-style:none;margin:12px 0 0 0;padding:0}
+  ol.p>li{counter-increment:s;position:relative;padding-left:40px;margin:18px 0}
+  ol.p>li::before{content:counter(s);position:absolute;left:0;top:-2px;
+    width:28px;height:28px;border-radius:50%;background:var(--acc);color:#111;
     font-family:Syne,sans-serif;font-weight:700;display:flex;align-items:center;
-    justify-content:center;font-size:13px}
+    justify-content:center;font-size:14px}
+  ol.p>li b.t{display:block;font-family:Syne,sans-serif;font-size:15px;margin-bottom:2px}
+  footer{border-top:1px solid var(--line);margin-top:34px;padding-top:14px;
+    color:var(--dim);font-size:12px}
 </style>
 </head>
 <body>
 <header><div class="wrap">
-  <h1>HAUS PAY <small>Guia de teste da equipe · Fase 1 · 04/08/2026</small></h1>
+  <h1>HAUS PAY <small>Como testar · atualizado 04/08/2026</small></h1>
 </div></header>
 <main>
 
-<p>O <strong>Haus Pay</strong> é a plataforma onde o <strong>corretor cadastra a
-proposta de compra e venda</strong> e o <strong>incorporador aprova</strong> depois
-de conferir os documentos. Estamos na <strong>Fase 1</strong>: o fluxo de propostas
-está no ar para testes.</p>
+<p>O <strong>Haus Pay</strong> é onde o corretor registra a proposta de compra e
+venda e o incorporador aprova depois de conferir os documentos.
+<strong>Nesta fase nenhum dinheiro se move</strong> — não existe cobrança, PIX
+ou comissão. Leva ~10 minutos.</p>
 
-<div class="box warn">
-  <h3>⚠ Três regras antes de começar</h3>
-  <ol>
-    <li><strong>Nenhum dinheiro se move.</strong> Não existe cobrança, PIX,
-    comissão ou repasse nesta fase — é impossível pagar ou receber algo aqui.</li>
-    <li><strong>Não use dados reais de cliente.</strong> Nem CPF, nem contrato,
-    nem comprovante de verdade. Invente o comprador e use um PDF sem informação
-    real.</li>
-    <li><strong>É produção, não sandbox.</strong> O que você cadastrar fica
-    registrado e a equipe vê. Use nomes óbvios de teste, tipo
-    <code>TESTE — Torre do João</code>.</li>
+<div class="box stop">
+  <h3>⛔ Três coisas que você NÃO deve fazer</h3>
+  <ol style="margin-left:18px">
+    <li><b>Não use o e-mail de um incorporador, sócio ou cliente de verdade.</b>
+    Ele recebe <em>na hora</em> um convite real de acesso. Use um e-mail seu —
+    dica: no Gmail funciona <code>seunome+inc@gmail.com</code>, chega na sua
+    caixa normal.</li>
+    <li><b>Não use dados reais de cliente</b> (CPF, contrato, comprovante).
+    Invente o comprador e anexe um PDF sem nada real dentro.</li>
+    <li><b>Não conte com apagar depois</b> — não existe excluir. Comece todo
+    nome com <code>TESTE —</code>.</li>
   </ol>
 </div>
 
-<h2>Links</h2>
+<h2>Antes de começar</h2>
+<p>Você vai receber um <strong>link de convite</strong> da EFIX (e-mail ou
+WhatsApp). Abra, crie uma senha, e você entra direto.</p>
+<p class="muted"><b>O link só funciona uma vez.</b> Depois de criar a senha ele
+para de valer — isso é proteção, não erro. Da segunda vez em diante você entra
+pelos endereços abaixo, com e-mail e senha. Esqueceu a senha? Clique
+<strong>Entrar por código</strong>: o botão vira <strong>Enviar código</strong>,
+clique, chega um código de 6 dígitos no e-mail (vale 10 min), digite e clique
+<strong>Validar código</strong>.</p>
+
 <a class="link" href="https://efix-flow-824621499270.southamerica-east1.run.app/app">
-  <b>Corretor / gestor de imobiliária →</b>
-  <span>cadastrar e enviar propostas, anexar documentos, ver o funil</span></a>
+  <b>/app — corretor e gestor de imobiliária →</b>
+  <span>registrar propostas, anexar documentos, ver o funil</span></a>
 <a class="link" href="https://efix-flow-824621499270.southamerica-east1.run.app/aprovacao">
-  <b>Incorporador →</b>
+  <b>/aprovacao — incorporador →</b>
   <span>aprovar, recusar ou devolver com exigência</span></a>
-<a class="link" href="https://efix-flow-824621499270.southamerica-east1.run.app/ops">
-  <b>Equipe EFIX (admin) →</b>
-  <span>convidar pessoas, ver convites e usuários</span></a>
+<a class="link" href="https://efix-flow-824621499270.southamerica-east1.run.app/cadastro">
+  <b>/cadastro — seus dados →</b>
+  <span>cadastro da empresa e documentos (habilita receber no futuro)</span></a>
 
-<h2>Como você recebe acesso</h2>
-<p>O acesso é <strong>por convite</strong> — não existe "criar conta" aberto.</p>
-<ol class="passos">
-  <li>Alguém da EFIX gera seu convite e te manda um <strong>link</strong> (e-mail
-  ou WhatsApp).</li>
-  <li>Você abre o link, define uma <strong>senha</strong> e já entra no painel.</li>
-  <li><strong>O link é de uso único.</strong> Depois de criar a senha ele para de
-  funcionar — é proteção, não bug. Da segunda vez em diante você entra pelos links
-  acima, com e-mail e senha.</li>
-  <li>Esqueceu a senha? Na tela de entrar, clique <strong>"Entrar por código"</strong>
-  — chega um código de 6 dígitos no seu e-mail, válido por 10 minutos.</li>
-</ol>
-<p class="muted">Para quem vai gerar convites: no <code>/ops</code>, aba
-<strong>Convidar pessoa</strong> — escolha o papel, o alvo no dropdown e clique
-<strong>Gerar convite</strong>. O link aparece na tela com botão <strong>Copiar</strong>.
-O e-mail sai automaticamente também.</p>
-
-<h2>Roteiro de teste — 10 minutos</h2>
-
-<h3>1. Como gestor da imobiliária (/app)</h3>
-<ul>
-  <li>Card <strong>"Novo empreendimento"</strong>: nome <code>TESTE — seu nome</code>,
-  praça, e o <strong>e-mail do incorporador</strong> (use um segundo e-mail seu se
-  for testar os dois lados). Unidades, uma por linha:</li>
-</ul>
-<pre><code>101;450000
-102;480000</code></pre>
-<ul>
-  <li>Clique no empreendimento → <strong>formulário de proposta</strong>: comprador
-  fictício, valor → <strong>Salvar rascunho</strong>.</li>
-  <li>No detalhe, <strong>anexe um PDF ou JPG</strong> (tipo: <code>comprovante</code>)
-  → <strong>Anexar</strong>.</li>
-  <li><strong>Enviar ao incorporador</strong>.</li>
-  <li>Faça uma <strong>segunda proposta na mesma unidade</strong> — proposital:
-  queremos ver o que acontece quando duas pessoas disputam a mesma unidade.</li>
-</ul>
-
-<h3>2. Como incorporador (/aprovacao)</h3>
-<ul>
-  <li>O convite chega no e-mail informado → cria acesso → o empreendimento aparece
-  com <strong>"Revisar e assumir"</strong> → clique.</li>
-  <li>Abra a proposta (vira "em análise" automaticamente), veja o documento
-  (botão <strong>ver</strong>) e <strong>devolva com exigência</strong> escrevendo
-  o que falta.</li>
-</ul>
-
-<h3>3. Volta ao gestor (/app)</h3>
-<ul>
-  <li>Clique <strong>Atualizar</strong> no funil → a proposta está em
-  <code>exigencia</code> → abra, anexe outro arquivo →
-  <strong>Reenviar corrigida</strong>.</li>
-</ul>
-
-<h3>4. Aprovar (/aprovacao)</h3>
-<ul>
-  <li>A fila atualiza sozinha (20s) ou clique <strong>Atualizar</strong> → abra a
-  proposta → <strong>Aprovar</strong>.</li>
-</ul>
-
-<h3>5. Confira o resultado (/app → Atualizar)</h3>
-<div class="box ok">
-  <ul>
-    <li>A proposta aprovada está <code>aprovada</code>; a <strong>outra</strong>
-    virou <code>preterida</code> automaticamente</li>
-    <li>Em Empreendimentos, <strong>"Disponíveis" caiu de 2 para 1</strong></li>
-    <li>No <strong>Histórico</strong> de cada proposta aparece <strong>quem</strong>
-    fez cada passo e quando. O evento <code>preterida</code> aparece como
-    <strong>sistema</strong> — não tem autor humano porque foi automático.</li>
-  </ul>
+<div class="box">
+  <h3>Vai testar os dois lados sozinho?</h3>
+  <p class="muted">Use <strong>dois navegadores</strong> (ou uma janela anônima
+  para o segundo papel). O sistema guarda um login por navegador — para trocar
+  de papel, clique <strong>Sair</strong> no canto superior direito.</p>
 </div>
 
-<h2>O que queremos que você tente quebrar</h2>
-<p>Testar o caminho certo é fácil; o valor está aqui:</p>
-<ul>
-  <li>Renomeie um <strong>.txt para .pdf</strong> e tente anexar (deve
-  <strong>recusar</strong> — a validação é pelo conteúdo, não pela extensão)</li>
+<h2>O passo a passo</h2>
+<ol class="p">
+
+<li><b class="t">Aceite os termos</b>
+No primeiro acesso aparece o <strong>Termos de Uso</strong> na tela. Leia e
+clique <strong>Li e aceito</strong>. Sem isso o sistema não deixa enviar
+proposta — de propósito.</li>
+
+<li><b class="t">Confira seu papel</b>
+No canto superior direito aparece <code>seu@email · papel</code>.
+Se for <strong>gestor_imob</strong>, siga para o passo 3.
+Se for <strong>corretor</strong>, você não cria empreendimento: pule para o
+passo 4 (alguém da sua imobiliária precisa ter criado um antes).</li>
+
+<li><b class="t">Crie o empreendimento (só gestor)</b>
+No <code>/app</code>, no primeiro card. Os quatro campos são obrigatórios:
+<div class="tw"><table>
+  <tr><td>Nome</td><td><code>TESTE — Torre do (seu nome)</code></td></tr>
+  <tr><td>Praça</td><td><code>Rio de Janeiro</code></td></tr>
+  <tr><td>Incorporador — nome</td><td><code>TESTE Incorporadora</code></td></tr>
+  <tr><td>Incorporador — e-mail</td><td><b>um e-mail SEU</b> (ver aviso acima)</td></tr>
+</table></div>
+Unidades, uma por linha, <code>identificação;preço</code> — só números no preço:
+<pre><code>101;450000
+102;480000</code></pre>
+Clique <strong>Criar</strong>. Deve aparecer <em>"empreendimento criado — 2
+unidade(s)"</em> e a linha na tabela com <strong>2 disponíveis</strong>.</li>
+
+<li><b class="t">Registre DUAS propostas na mesma unidade</b>
+Clique no empreendimento → abre o formulário.
+<br><b>Proposta A:</b> comprador <code>Maria Teste</code>, contato
+<code>maria@teste.com</code>, valor <code>445000</code> →
+<strong>Salvar rascunho</strong> → no detalhe que abre, escolha o arquivo e
+clique <strong>Anexar</strong> → <strong>Enviar ao incorporador</strong>.
+<br><b>Proposta B:</b> mesma unidade 101, comprador <code>João Teste</code>,
+valor <code>450000</code> → salvar → <strong>Enviar ao incorporador</strong>
+também.
+<br><span class="muted">As duas precisam ser <em>enviadas</em>. Rascunho não
+disputa a unidade.</span></li>
+
+<li><b class="t">Entre como incorporador</b>
+Chegou um e-mail no endereço que você informou: <em>"Há uma proposta aguardando
+sua aprovação"</em>. Abra o link, crie a senha, aceite os termos.
+<br>O empreendimento aparece com <strong>Revisar e assumir</strong> → clique.
+<br><span class="muted">Antes de assumir, aprovar é bloqueado — se quiser ver,
+tente aprovar primeiro.</span></li>
+
+<li><b class="t">Devolva com exigência</b>
+Clique na proposta (ela vira "em análise" sozinha). Clique <strong>ver</strong>
+para baixar o documento. No campo de exigência escreva
+<code>falta comprovante de renda</code> → <strong>Devolver com exigência</strong>.
+<br><span class="muted">Sem escrever nada, o sistema recusa — o corretor precisa
+saber o que corrigir.</span></li>
+
+<li><b class="t">Volte ao gestor e corrija</b>
+No <code>/app</code>, clique <strong>Atualizar</strong> no funil. A proposta está
+em <code>exigencia</code> → abra → anexe outro arquivo →
+<strong>Reenviar corrigida</strong>.</li>
+
+<li><b class="t">Aprove</b>
+No <code>/aprovacao</code> (a fila se atualiza sozinha a cada 20s, ou clique
+<strong>Atualizar</strong>): abra a proposta → <strong>Aprovar</strong>.</li>
+
+<li><b class="t">Confira o resultado</b>
+Volte ao <code>/app</code> e clique <strong>Atualizar</strong>.
+<div class="box ok" style="margin-top:8px">
+  <ul style="margin-left:18px">
+    <li>Proposta A = <code>aprovada</code></li>
+    <li>Proposta B = <code>preterida</code> automaticamente (o corretor dela
+    recebeu e-mail)</li>
+    <li>Em Empreendimentos, <strong>"Disponíveis" caiu de 2 para 1</strong> — a
+    unidade 101 saiu do seletor de nova proposta</li>
+    <li>Abra cada proposta: no <strong>Histórico</strong> aparece
+    <strong>quem</strong> fez cada passo. Na B, o evento <code>preterida</code>
+    aparece como <strong>sistema</strong> — foi automático, não teve autor.</li>
+  </ul>
+</div></li>
+
+<li><b class="t">(Opcional) Preencha seu cadastro</b>
+Em <code>/cadastro</code>: dados da empresa, representante legal, endereço,
+CRECI e documentos. Clique <strong>Enviar para análise</strong> — a EFIX revisa e
+aprova ou devolve com pendência.
+<br><span class="muted">Isso é o cadastro que, no futuro, habilita receber
+valores. Aprovado ≠ pode receber: falta a conta na instituição de pagamento,
+que é a próxima fase.</span></li>
+
+</ol>
+
+<h2>Tente quebrar (é aqui que você ajuda mais)</h2>
+<ul style="margin-left:18px">
+  <li>Renomeie um <code>.txt</code> para <code>.pdf</code> e tente anexar — deve
+  <strong>recusar</strong> (a checagem é do conteúdo, não da extensão)</li>
   <li>Tente <strong>aprovar antes de assumir</strong> o empreendimento</li>
   <li>Tente <strong>devolver com exigência sem escrever nada</strong></li>
-  <li>Tente enviar proposta para uma unidade <strong>já reservada</strong></li>
-  <li>Como corretor, tente abrir a proposta <strong>de outra imobiliária</strong></li>
-  <li>Use o <strong>celular</strong>: é responsivo, mas queremos saber onde ficou ruim</li>
-  <li>Feche e reabra o navegador: você deve continuar logado</li>
+  <li>Depois da aprovação, confira que a unidade vendida <strong>não aparece
+  mais</strong> no seletor de nova proposta</li>
+  <li>Use no <strong>celular</strong>: as tabelas rolam para o lado (normal); o
+  que queremos saber é se algum <strong>botão fica inacessível</strong> ou texto
+  ilegível</li>
 </ul>
 
 <h2>Como reportar</h2>
-<p>Manda para o Ernesto (WhatsApp ou e-mail) com:</p>
-<ol>
-  <li><strong>Qual painel</strong> e <strong>qual papel</strong> você usava</li>
-  <li><strong>O que você fez</strong> (o clique exato) e <strong>o que esperava</strong></li>
-  <li><strong>O que aconteceu</strong> — printe a tela, incluindo a mensagem que
-  aparece no canto inferior direito</li>
-  <li><strong>Hora aproximada</strong> (ajuda a achar no log do servidor)</li>
-</ol>
+<p>Mande para o Ernesto: <strong>qual tela</strong>, <strong>qual papel</strong>,
+<strong>o que você clicou</strong>, <strong>o que esperava</strong>,
+<strong>o que aconteceu</strong> e a <strong>hora aproximada</strong>.
+A mensagem de erro aparece no canto inferior direito com borda vermelha e fica
+20 segundos — dá tempo de printar (ou clique nela para fechar).</p>
 
-<h3>Não são bugs — já conhecidos e propositais</h3>
-<table>
-  <tr><th>Mensagem</th><th>Por quê</th></tr>
+<h2>Não são bugs (já sabemos)</h2>
+<div class="tw"><table>
+  <tr><th>O que aparece</th><th>Por quê</th></tr>
   <tr><td>"Convite inválido ou expirado" ao reabrir o link</td>
-      <td>convite é de <strong>uso único</strong>; entre com e-mail e senha</td></tr>
+      <td>o convite vale <b>uma vez</b>; entre com e-mail e senha</td></tr>
+  <tr><td>Pede senha de novo depois de um tempo</td>
+      <td>a sessão dura 12 horas</td></tr>
   <tr><td>"estado mudou durante a operação; recarregue"</td>
-      <td>duas pessoas mexeram na mesma proposta ao mesmo tempo — proteção contra conflito</td></tr>
+      <td>duas pessoas mexeram na mesma proposta ao mesmo tempo</td></tr>
   <tr><td>"unidade reservada/vendida não recebe nova proposta"</td>
       <td>a unidade já foi vendida em outra proposta</td></tr>
   <tr><td>"aprovação exige empreendimento assumido"</td>
-      <td>o incorporador precisa assumir antes de aprovar</td></tr>
-  <tr><td>arquivo recusado / "mime não permitido"</td>
-      <td>só PDF, JPG e PNG, até 15 MB, validados pelo conteúdo</td></tr>
-</table>
+      <td>o incorporador precisa assumir antes</td></tr>
+  <tr><td>"aceite_pendente" / o termo aparece de novo</td>
+      <td>publicamos uma versão nova do documento; é preciso aceitar outra vez</td></tr>
+  <tr><td>"rate limit"</td>
+      <td>muita gente entrando do mesmo Wi-Fi no mesmo minuto; espere 1 minuto</td></tr>
+  <tr><td>O botão <b>ver</b> baixa o arquivo em vez de abrir</td>
+      <td>é de propósito (segurança); libere pop-ups e procure em Downloads</td></tr>
+  <tr><td>Tabela cortada no celular</td>
+      <td>role a tabela para o lado com o dedo</td></tr>
+</table></div>
 
 <h2>Onde estamos</h2>
-<table>
+<div class="tw"><table>
   <tr><th>Fase</th><th>O que é</th><th>Dinheiro?</th></tr>
-  <tr><td><strong>1 — agora</strong></td>
-      <td>propostas, documentos, aprovação, histórico auditado</td><td>não</td></tr>
-  <tr><td>2</td><td>adesão formal (termos + contrato) e cadastro de quem vai receber</td>
+  <tr><td><b>1 e 2 — agora</b></td>
+      <td>propostas com documentos e aprovação auditada; adesão e cadastro</td>
       <td>não</td></tr>
-  <tr><td>3</td><td>a pagadoria: cobrança com divisão automática entre incorporadora,
-      imobiliária e corretor</td><td><strong>sim</strong></td></tr>
-</table>
+  <tr><td>3</td><td>a pagadoria: cobrança com divisão automática entre
+      incorporadora, imobiliária e corretor</td><td><b>sim</b></td></tr>
+</table></div>
 
 <footer>
   Haus Pay · EFIX Plataforma de Tokenização e Crowdfunding Ltda ·
-  CNPJ 60.756.859/0001-57 · documento interno de teste, sem indexação
+  CNPJ 60.756.859/0001-57 · uso interno, sem indexação
 </footer>
 </main>
 </body>
