@@ -500,7 +500,7 @@ tr.grp:first-child td{padding-top:6px}
       <section class="view" id="view-posicao">
         <div class="card" data-reveal>
           <h2>Posição alavancada · Euler <span class="up">read-only · on-chain</span></h2>
-          <p class="rem-lead">Carteira da operação <a id="pos-addr" class="mono" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline"></a> — leitura direta dos contratos na Base, sem backend. Recorte ON-CHAIN: as cotas BTG do fundo não aparecem aqui; perímetros completos, memória de cálculo e risco vivem no Il Maestro.</p>
+          <p class="rem-lead">Cofre da estratégia <a id="pos-addr" class="mono" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline"></a> <span class="up" style="color:var(--green)">Fireblocks · MPC</span> — leitura direta dos contratos na Base, sem backend. Recorte ON-CHAIN: as cotas BTG do fundo não aparecem aqui; perímetros completos, memória de cálculo e risco vivem no Il Maestro.</p>
           <div class="cstrip">
             <div class="cs on"><div><div class="k">Patrimônio on-chain</div><div class="v money" id="pos-pat">—</div></div></div>
             <div class="cs"><div><div class="k">LTV</div><div class="v" id="pos-ltv">—</div></div></div>
@@ -629,10 +629,13 @@ let HIDDEN = false;
    aborta o boot inteiro. Endereços do ADDRESSES.md, EIP-55 por extenso. */
 const POS_ALLOW = [
   '0xa867E7a4C390B665873aa973e55fE6c490216B38',   // carteira registrada (Ernesto)
-  '0x7C78422126b15866781163fFc84BF6B41C095eB9',   // EULER OPS (dona da posição)
+  '0x7C78422126b15866781163fFc84BF6B41C095eB9',   // EULER OPS (operação do protocolo)
+  '0xaf643B94BbC5e060a49F8Acb2428411eE6505535',   // PRIVATE HOLDINGS (Fireblocks)
 ].map(a=>a.toLowerCase());
 const EULER = {
-  ops:   '0x7C78422126b15866781163fFc84BF6B41C095eB9',
+  // M-CUSTODIA F4 (04/08): a POSIÇÃO da estratégia migrou pro vault Fireblocks
+  // (MPC + aprovação TAP). A OPS segue só com o LP/bootstrap da casa.
+  ops:   '0xaf643B94BbC5e060a49F8Acb2428411eE6505535',
   escrow:'0x008a506c6b6138F47B82f6a0b8Fc7FE375C102e9',   // colateral efixDI
   vault: '0xe276BB91E0C63C0BC6ABdd3Dc37DF324f90e3956',   // USDC borrowable
   router:'0x5F655525A46B968CF388865CeBC0c0B79A8F8a2b',   // oracle getQuote
