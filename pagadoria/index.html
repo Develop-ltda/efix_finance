@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Haus Pay · Roteiro de aceite F1</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d0d0d;--card:#161616;--line:#2a2a2a;--tx:#e8e8e8;--dim:#9a9a9a;
+    --acc:#fb9b1e;--ok:#3ddc84;--err:#ff5c5c;--warn:#ffd166}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--tx);font-family:'Space Mono',ui-monospace,monospace;
+    font-size:14px;line-height:1.65}
+  header{border-bottom:1px solid var(--line);padding:22px 20px}
+  header .wrap{max-width:860px;margin:0 auto}
+  h1{font-family:Syne,sans-serif;font-size:24px;letter-spacing:.5px}
+  h1 small{color:var(--dim);font-size:13px;font-family:'Space Mono',monospace;
+    font-weight:400;display:block;margin-top:6px;letter-spacing:0}
+  main{max-width:860px;margin:0 auto;padding:24px 20px 80px}
+  h2{font-family:Syne,sans-serif;font-size:17px;color:var(--acc);margin:32px 0 10px;
+    padding-top:14px;border-top:1px solid var(--line)}
+  h2:first-of-type{border-top:0;padding-top:0}
+  h3{font-family:Syne,sans-serif;font-size:14px;margin:18px 0 6px}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0 10px 22px}li{margin:5px 0}
+  code{background:#000;border:1px solid var(--line);border-radius:4px;padding:1px 6px;
+    font-size:13px;color:var(--warn);word-break:break-all}
+  pre{background:#000;border:1px solid var(--line);border-radius:8px;padding:14px;
+    overflow-x:auto;margin:12px 0}
+  pre code{border:0;padding:0;color:var(--tx)}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:16px 18px;margin:16px 0}
+  .box.ok{border-color:var(--ok)}.box.warn{border-color:var(--warn)}
+  .box.dim{border-style:dashed}
+  .box h3{margin-top:0;color:inherit}
+  .aceite{background:#101a12;border:1px solid var(--ok);border-radius:8px;
+    padding:14px 18px;margin:14px 0}
+  .aceite strong{color:var(--ok)}
+  .badge{display:inline-block;border:1px solid var(--line);border-radius:10px;
+    padding:1px 9px;font-size:11px;color:var(--dim)}
+  .grid{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+  .grid>div{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);
+    border-radius:8px;padding:12px 14px}
+  .grid .n{font-family:Syne,sans-serif;font-size:20px;color:var(--acc)}
+  .grid .l{color:var(--dim);font-size:11px;text-transform:uppercase}
+  a{color:var(--acc)}
+  .muted{color:var(--dim);font-size:12px}
+  footer{border-top:1px solid var(--line);margin-top:40px;padding-top:16px;
+    color:var(--dim);font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);
+    vertical-align:top}
+  th{color:var(--dim);font-weight:400;font-size:11px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>HAUS PAY
+    <small>Propostas de compra e venda + pagadoria de adesão · Roteiro de aceite da Fase 1 · 04/08/2026</small>
+  </h1>
+</div></header>
+
+<main>
+
+<div class="box ok">
+  <h3>🧪 O ensaio já foi rodado — 31/31 critérios verdes</h3>
+  <p>A jornada inteira foi executada automaticamente <strong>no ambiente real</strong>
+  (mesmo container, mesmo banco), com dados de teste isolados e apagados no fim.
+  Você não vai descobrir um caminho quebrado aqui: o objetivo deste roteiro é
+  você <em>ver</em> o produto funcionando e dar o aceite.</p>
+  <p class="muted">Duas rodadas de auditoria adversarial precederam o ensaio: 27 defeitos
+  na primeira, 18 na segunda — incluindo um que dava 403 ao corretor operando a
+  própria proposta (BIGINT do Postgres voltando como texto). Todos corrigidos.</p>
+</div>
+
+<h2>0. O que o F1 é — e o que ele deliberadamente não é</h2>
+<p><strong>É</strong>: o corretor cadastra a proposta de compra e venda com documentos;
+o incorporador entra por convite, assume o empreendimento e aprova, recusa ou
+devolve com exigência. Tudo auditado: cada ato registra <em>quem</em> fez e
+<em>quando</em>.</p>
+<p><strong>Não é</strong>: nenhum real se move. As tabelas de dinheiro
+(cobranças, rateios, extrato) existem no banco <em>congeladas</em> — um teste
+automático quebra o build se qualquer código fora do schema tocá-las. A
+pagadoria com split é a Fase 3, e ela tem gates próprios.</p>
+
+<div class="box warn">
+  <h3>⚠ Duas pendências que não bloqueiam o aceite</h3>
+  <ul>
+    <li><strong>CI automático</strong>: falta adicionar o repositório ao app
+    "Google Cloud Build" da organização no GitHub. Enquanto isso, o deploy é
+    disparado por comando (o gate de testes roda igual).</li>
+    <li><strong>Login Google do painel administrativo</strong>: falta cadastrar a
+    origem no cliente OAuth. Os mesmos números saem por API — é o que aparece no
+    passo final.</li>
+  </ul>
+</div>
+
+<h2>1. Seu acesso</h2>
+<p>Você recebeu por e-mail (de <code>contato@efix.finance</code>) um convite de
+<strong>gestor da Somma Rio</strong>. O link abre a página de criar acesso: você
+define uma senha e cai direto no painel, sem passar por tela de login.</p>
+<div class="box dim">
+  <p class="muted"><strong>Por que o link não está publicado aqui:</strong> ele
+  contém um token que cria a conta. Esta página é pública — o token fica só no
+  e-mail e no chat. Se o link tiver expirado (vale 7 dias), é só pedir um novo.</p>
+</div>
+
+<h2>2. Cadastrar o empreendimento antes do incorporador existir</h2>
+<p>No painel, o primeiro card é <strong>"Novo empreendimento (bootstrap em nome do
+incorporador)"</strong>. Preencha:</p>
+<ul>
+  <li><strong>Nome</strong>: <code>Torre Aceite F1</code></li>
+  <li><strong>Praça</strong>: <code>Rio de Janeiro</code></li>
+  <li><strong>Incorporador — nome</strong>: <code>Construtora Teste</code></li>
+  <li><strong>Incorporador — e-mail</strong>: <em>um segundo e-mail seu</em>
+  (é por ele que chega o convite do incorporador)</li>
+  <li><strong>Unidades</strong> (uma por linha, <code>identificação;preço</code>):</li>
+</ul>
+<pre><code>101;450000
+102;480000</code></pre>
+<div class="aceite">
+  <strong>Aceite 2:</strong> o empreendimento aparece na tabela com
+  <strong>2 disponíveis</strong>. Esta é a "organização v0" — o cadastro está de
+  pé e o incorporador ainda não existe como usuário. É o ovo-e-galinha resolvido:
+  a imobiliária (ou a EFIX) cadastra em nome dele, e ele valida depois.
+</div>
+
+<h2>3. Duas propostas na mesma unidade</h2>
+<p>Clique no empreendimento para abrir o formulário de proposta.</p>
+<h3>Proposta A — unidade 101</h3>
+<p>Comprador <code>Maria Compradora</code>, contato <code>maria@teste.com</code>,
+valor <code>445000</code> → <strong>Salvar rascunho</strong>. No detalhe que abre,
+anexe um PDF ou JPG (tipo: <code>comprovante</code>) → <strong>Anexar</strong> →
+<strong>Enviar ao incorporador</strong>.</p>
+<h3>Proposta B — unidade 101 de novo</h3>
+<p>Comprador <code>João Segundo</code>, contato <code>joao@teste.com</code>, valor
+<code>450000</code> → salvar → <strong>Enviar ao incorporador</strong>.</p>
+<div class="aceite">
+  <strong>Aceite 3:</strong> ambas no funil como <span class="badge">enviada</span>,
+  com prazo de ~7 dias. O documento foi aceito <strong>pelo conteúdo do arquivo</strong>,
+  não pela extensão — renomeie um <code>.txt</code> para <code>.pdf</code> e ele
+  recusa. E o segundo e-mail recebeu <em>"Há uma proposta aguardando sua
+  aprovação"</em>: <strong>o convite nasceu da proposta</strong>, ninguém convidou o
+  incorporador manualmente. Esse é o gancho da adesão.
+</div>
+
+<h2>4. Entrar como incorporador e assumir</h2>
+<ol>
+  <li>No convite recebido → <strong>Criar acesso e revisar proposta</strong> →
+  define senha → cai no painel de aprovação</li>
+  <li>O empreendimento aparece com <strong>"Revisar e assumir"</strong> → clique</li>
+</ol>
+<div class="aceite">
+  <strong>Aceite 4:</strong> o empreendimento vira <span class="badge">assumido</span>,
+  com evento registrado. Antes disso, aprovar era <strong>bloqueado</strong> — só o
+  dono real aprova. Se quiser ver o bloqueio, tente aprovar antes de assumir.
+</div>
+
+<h2>5. Exigência → correção → aprovação</h2>
+<p><strong>Como incorporador:</strong></p>
+<ol>
+  <li>Clique na Proposta A → ela vira <span class="badge">em_analise</span>
+  automaticamente (registro de que você abriu)</li>
+  <li>Veja os documentos — o botão <strong>ver</strong> abre por link assinado de
+  15 minutos, como download</li>
+  <li>No campo de exigência escreva <code>falta comprovante de renda</code> →
+  <strong>Devolver com exigência</strong></li>
+</ol>
+<p><strong>Como gestor</strong> (outra aba):</p>
+<ol start="4">
+  <li>Clique em <strong>Atualizar</strong> no funil → a Proposta A aparece como
+  <span class="badge">exigencia</span> → abra → anexe outro arquivo →
+  <strong>Reenviar corrigida</strong></li>
+</ol>
+<p><strong>Como incorporador</strong> de novo:</p>
+<ol start="5">
+  <li>A fila se atualiza sozinha (a cada 20s) ou clique <strong>Atualizar</strong> →
+  a Proposta A volta como <span class="badge">enviada</span> → abra →
+  <strong>Aprovar</strong></li>
+  <li>Volte na aba do gestor e clique <strong>Atualizar</strong> — é aqui que o
+  resultado aparece</li>
+</ol>
+<div class="aceite">
+  <strong>Aceite 5 (o mais importante):</strong>
+  <ul>
+    <li>Proposta A = <span class="badge">aprovada</span>; o Histórico mostra a linha
+    do tempo com <strong>quem</strong> fez cada ato: criou, anexou documento,
+    enviou, abriu análise, exigiu, corrigiu, aprovou</li>
+    <li>Proposta B = <span class="badge">preterida</span> automaticamente; o evento
+    aparece com ator <strong>"sistema"</strong> — é regra: transição automática não
+    tem autor humano. O corretor dela recebeu e-mail avisando.</li>
+    <li><strong>Unidade reservada</strong>: "Disponíveis" cai de 2 → 1 e a 101 sai
+    do seletor de nova proposta</li>
+  </ul>
+</div>
+
+<h2>6. Verificação final</h2>
+<p>Os números que fecham a jornada, lidos direto da API de saúde (a mesma que o
+painel Il Maestro vai consumir no card do funil):</p>
+<div class="grid">
+  <div><div class="n">2</div><div class="l">usuários</div></div>
+  <div><div class="n">1</div><div class="l">incorporador</div></div>
+  <div><div class="n">2</div><div class="l">unidades</div></div>
+  <div><div class="n">1</div><div class="l">reservada</div></div>
+</div>
+<div class="grid">
+  <div><div class="n">2</div><div class="l">propostas</div></div>
+  <div><div class="n">1</div><div class="l">aprovada</div></div>
+  <div><div class="n">1</div><div class="l">preterida</div></div>
+  <div><div class="n">2</div><div class="l">documentos</div></div>
+</div>
+
+<h2>7. O que este aceite libera</h2>
+<table>
+  <tr><th>Fase</th><th>Entrega</th><th>Dinheiro?</th><th>Gate</th></tr>
+  <tr><td><strong>F1</strong></td><td>Propostas online + organização (este aceite)</td>
+    <td>não</td><td>—</td></tr>
+  <tr><td>F2</td><td>Adesão formal: termos, contrato, KYC/KYB</td><td>não</td>
+    <td>documentos jurídicos + verificação de identidade configurada</td></tr>
+  <tr><td>F3</td><td>Pagadoria: cobrança com split, taxa de 0,99%</td>
+    <td><strong>sim</strong></td>
+    <td>respostas técnicas do provedor bancário + teste com valor real</td></tr>
+  <tr><td>F4</td><td>Agregação: templates de lançamento, nota fiscal por fração</td>
+    <td>sim</td><td>F3 estável</td></tr>
+</table>
+
+<div class="box">
+  <h3>Sobre o nome e o endereço</h3>
+  <p>O produto se chama <strong>Haus Pay</strong> e vai morar em
+  <strong>www.hauspay.com.br</strong>. Esta página está em
+  <code>efix.finance/pagadoria</code> como endereço provisório; o painel está num
+  endereço técnico até o domínio ser apontado. Nada disso muda o produto — é
+  configuração de DNS e um mapeamento de domínio.</p>
+</div>
+
+<footer>
+  Haus Pay · Fase 1 · documento interno, sem indexação.<br>
+  EFIX Plataforma de Tokenização e Crowdfunding Ltda · CNPJ 60.756.859/0001-57
+</footer>
+
+</main>
+</body>
+</html>
