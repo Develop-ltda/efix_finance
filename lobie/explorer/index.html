@@ -143,7 +143,7 @@
 const RPC = 'https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf';
 const REGISTRY = '0xd8C32a417B5317D34f783CE4e959850465AD4638';
 const DEPLOY_BLOCK = 44687648; // 2026-04-04 deployment of LobieUnitRegistry on Base
-const LOG_CHUNK = 9500;        // Alchemy free tier hard-caps eth_getLogs at 10,000 blocks
+const LOG_CHUNK = 9500;        // fallback chunk size, used only if the full-range getLogs is rejected
 const ABI = [
   'function totalUnits() view returns (uint256)',
   'function unitDisplayName(uint256) view returns (string)',
@@ -175,38 +175,55 @@ async function loadUnits() {
     defaultG = Number(ethers.formatEther(g));
   } catch {}
 
-  // Scan UnitMinted events from deployment block to head, in <=10k chunks (Alchemy hard limit).
-  // tokenIds are keccak256(buildingId, unitCode) >> 96 — non-sequential, so we MUST learn them
-  // from logs (the contract is not ERC721Enumerable).
+  // Learn tokenIds from UnitMinted events. tokenIds are keccak256(buildingId, unitCode) >> 96 —
+  // non-sequential, so we MUST learn them from logs (the contract is not ERC721Enumerable).
+  //
+  // Fast path: ONE eth_getLogs over the whole range. Alchemy limits by response size, not block
+  // range, and the result set here is tiny (1 event per unit — 491 events verified 2026-08-06).
+  // The old serial 9.5k-block chunk scan grew to 500+ requests (~minutes) as the chain aged.
   const head = await provider.getBlockNumber();
-  const totalBlocks = head - DEPLOY_BLOCK;
-  const totalChunks = Math.ceil(totalBlocks / LOG_CHUNK);
-  document.getElementById('loadStatus').textContent = `Scanning events from block ${DEPLOY_BLOCK} (${totalChunks} chunks)...`;
+  document.getElementById('loadStatus').textContent = `Scanning UnitMinted events from block ${DEPLOY_BLOCK}...`;
 
-  let events = [];
-  let chunksDone = 0;
-  for (let from = DEPLOY_BLOCK; from <= head; from += LOG_CHUNK) {
-    const to = Math.min(from + LOG_CHUNK - 1, head);
-    try {
-      const chunk = await registry.queryFilter(registry.filters.UnitMinted(), from, to);
-      events = events.concat(chunk);
-    } catch (err) {
-      // Surface the failure instead of hanging silently
-      throw new Error(`eth_getLogs failed at blocks [${from}, ${to}]: ${err.message || err}`);
+  let events;
+  try {
+    events = await registry.queryFilter(registry.filters.UnitMinted(), DEPLOY_BLOCK, head);
+  } catch (err) {
+    // Fallback: chunked scan, 8 chunks in flight per round (in case the provider
+    // ever starts rejecting full-range queries again).
+    console.warn('Full-range getLogs failed, falling back to chunked scan:', err);
+    events = [];
+    const ranges = [];
+    for (let from = DEPLOY_BLOCK; from <= head; from += LOG_CHUNK) {
+      ranges.push([from, Math.min(from + LOG_CHUNK - 1, head)]);
     }
-    chunksDone++;
-    const pct = Math.floor((chunksDone / totalChunks) * 20); // first 20% of bar = scan phase
-    document.getElementById('loadBar').style.width = pct + '%';
-    document.getElementById('loadStatus').textContent =
-      `Scanning events... ${chunksDone}/${totalChunks} chunks · ${events.length} units found`;
+    const PAR = 8;
+    for (let i = 0; i < ranges.length; i += PAR) {
+      const round = await Promise.all(ranges.slice(i, i + PAR).map(([from, to]) =>
+        registry.queryFilter(registry.filters.UnitMinted(), from, to).catch((e) => {
+          throw new Error(`eth_getLogs failed at blocks [${from}, ${to}]: ${e.message || e}`);
+        })
+      ));
+      events = events.concat(...round);
+      const pct = Math.floor(((i + PAR) / ranges.length) * 20); // first 20% of bar = scan phase
+      document.getElementById('loadBar').style.width = Math.min(pct, 20) + '%';
+      document.getElementById('loadStatus').textContent =
+        `Scanning events... ${Math.min(i + PAR, ranges.length)}/${ranges.length} chunks · ${events.length} units found`;
+    }
   }
+
+  // Sanity check: every unit must have exactly one UnitMinted event.
+  try {
+    const total = Number(await registry.totalUnits());
+    if (events.length !== total) console.warn(`Event count ${events.length} != totalUnits ${total}`);
+  } catch {}
 
   document.getElementById('loadStatus').textContent = `Found ${events.length} units. Loading data...`;
   document.getElementById('loadBar').style.width = '20%';
 
-  // Batch load unit data (10 at a time for speed)
+  // Batch load unit data (25 at a time — ethers v6 coalesces each Promise.all
+  // round into a single batched JSON-RPC HTTP request)
   const buildings = new Set();
-  const BATCH = 10;
+  const BATCH = 25;
 
   for (let i = 0; i < events.length; i += BATCH) {
     const batch = events.slice(i, i + BATCH);
