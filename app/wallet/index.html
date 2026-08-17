@@ -478,6 +478,22 @@ tr.grp:first-child td{padding-top:6px}
               <button class="cta" id="remBtnNova">Nova remessa</button>
             </div>
             <div id="remMsg" class="rem-msg"></div>
+            <div style="margin-top:14px;border-top:1px solid var(--ln,#e5e5e0);padding-top:10px">
+              <button class="mini" id="remBtnFiat">Dados para depósito fiat (IBAN) →</button>
+              <div id="remFiatBox" class="qd" style="display:none;margin-top:8px"></div>
+              <button class="mini" id="remBtnFavNew" style="margin-top:8px">Cadastrar favorecido →</button>
+              <div id="remFavForm" style="display:none;margin-top:8px">
+                <label class="fldl">Nome / razão social <span class="up">(como consta no banco)</span></label>
+                <input id="favNome" class="fld" placeholder="nome completo do favorecido">
+                <label class="fldl">CPF ou CNPJ</label>
+                <input id="favDoc" class="fld mono" placeholder="somente números">
+                <label class="fldl">Chave PIX</label>
+                <input id="favPix" class="fld mono" placeholder="e-mail, telefone, CPF/CNPJ ou chave aleatória">
+                <button class="cta" id="favBtnSend">Enviar para aprovação</button>
+                <div id="favMsg" class="rem-msg"></div>
+              </div>
+              <div id="favPend" style="margin-top:6px"></div>
+            </div>
           </div>
           <div class="card" data-reveal style="animation-delay:.08s">
             <h2>Minhas remessas <button class="mini" id="remBtnRef">atualizar</button></h2>
@@ -991,13 +1007,60 @@ async function initRemessas2(){
   $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Addr='';
     $('remAmount').value=''; $('remQuoteBox').style.display='none';
     $('rem-instr').style.display='none'; $('rem-form').style.display='block'; $('remMsg').textContent=''; };
+  // M-DVP-SELF: dados fiat da PROPRIA conta virtual + favorecido self-service
+  $('remBtnFiat').onclick=rem2Fiat;
+  $('remBtnFavNew').onclick=()=>{ const f=$('remFavForm');
+    f.style.display=f.style.display==='none'?'block':'none'; };
+  $('favBtnSend').onclick=rem2FavRequest;
   if(!EfixAuth.isLoggedIn()){ $('remMsg').textContent='Entre com sua conta para usar remessas.'; return; }
   try{
     const favs = await rf('/remessas/allowlist');
     $('remFav').innerHTML = '<option value="">— selecionar —</option>'+
       favs.map(f=>'<option value="'+f.id+'" data-name="'+f.name+'">'+f.name+' ('+f.doc_root+')</option>').join('');
-    rem2Refresh();
+    rem2Refresh(); rem2FavPend();
   }catch(e){ $('remMsg').textContent = e.message; }
+}
+const _esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function rem2Fiat(){
+  const box=$('remFiatBox');
+  if(box.style.display==='block'){ box.style.display='none'; return; }
+  box.style.display='block'; box.textContent='carregando…';
+  try{
+    const d = await rf('/remessas/deposit-instructions');
+    if(!d.tem_conta){
+      box.innerHTML = _esc(d.motivo||'Conta fiat ainda não disponível.')+
+        (d.kyc_ok===false?'<br><span class="up">verificação (KYC) pendente — complete pelo link enviado por e-mail</span>':'');
+      return;
+    }
+    box.innerHTML = d.contas.map(c=>
+      '<b>'+_esc(c.currency)+'</b><br>'+
+      (c.iban?'IBAN: <span class="mono">'+_esc(c.iban)+'</span><br>':'')+
+      (c.account_number?'Conta: <span class="mono">'+_esc(c.account_number)+'</span><br>':'')+
+      (c.routing_number?'Routing: <span class="mono">'+_esc(c.routing_number)+'</span><br>':'')+
+      (c.bic?'BIC: <span class="mono">'+_esc(c.bic)+'</span><br>':'')+
+      (c.bank_name?'Banco: '+_esc(c.bank_name)+'<br>':'')+
+      (c.beneficiary?'Beneficiário: '+_esc(c.beneficiary)+'<br>':'')
+    ).join('<hr>')+'<div class="up" style="margin-top:6px">'+_esc(d.aviso||'')+'</div>';
+  }catch(e){ box.textContent=e.message; }
+}
+async function rem2FavRequest(){
+  const b=$('favBtnSend'); b.disabled=true;
+  try{
+    const r = await rf('/remessas/allowlist-request',{method:'POST',body:JSON.stringify({
+      name:$('favNome').value, doc:$('favDoc').value, pix_key:$('favPix').value })});
+    $('favMsg').textContent = r.status==='ja_ativo' ? 'Este favorecido já está ativo na lista.'
+      : 'Enviado! O favorecido entra na lista assim que a mesa aprovar.';
+    $('favNome').value=''; $('favDoc').value=''; $('favPix').value='';
+    rem2FavPend();
+  }catch(e){ $('favMsg').textContent=e.message; }
+  finally{ b.disabled=false; }
+}
+async function rem2FavPend(){
+  try{
+    const p = await rf('/remessas/allowlist-pending');
+    $('favPend').innerHTML = (p&&p.length)
+      ? '<div class="mut">Aguardando aprovação da mesa: '+p.map(x=>_esc(x.name)).join(' · ')+'</div>' : '';
+  }catch(_e){ /* silencioso: pendências são informativas */ }
 }
 async function rem2Quote(){
   const amount = parseFloat($('remAmount').value);
