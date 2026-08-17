@@ -6,12 +6,13 @@
 
 ## Status em uma linha
 
-Fluxo do cliente mapeado e verificado ✅ · templates de email prontos (PT/EN) ✅ · email do cliente confirmado ✅ (`Soniaaj31@gmail.com`, já é customer Bridge) · demais dados do Samie ⚠️ PREENCHER (§1) · smoke test de cadastro ❌ pendente (§2-A, **bloqueante**) · favorecido na allowlist ❌ pendente (§2-B, **bloqueante**).
+Fluxo do cliente mapeado e verificado ✅ · **email Passo 1 JÁ ENVIADO à cliente em 17/08** ✅ (Gmail id `1a01020c29e1d1ec`, de ernesto.otero@hausbank.com.br — cadastro + pedido dos dados do beneficiário; NÃO reenviar) · auto-cadastro confirmado aberto no código do backend ✅ (§2-A) · gates de remessa no Railway/DVP ❌ pendentes (§2-A2, **bloqueante**) · favorecido na allowlist do DVP ❌ pendente (§2-B, **bloqueante**, aguarda resposta da cliente com os dados).
 
 ---
 
 ## 0. Contexto — o que já aconteceu (não repetir)
 
+- **17/08: o email do Passo 1 JÁ FOI ENVIADO à cliente** (`Soniaaj31@gmail.com`, Gmail id `1a01020c29e1d1ec`, remetente ernesto.otero@hausbank.com.br). Conteúdo: instruções de cadastro na V2 (email + código de 6 dígitos) e pedido de resposta com **nome/CPF-CNPJ/chave PIX do beneficiário + finalidade**. O Passo 3 foi anunciado como "avisaremos quando estiver liberada" — ou seja, a enterprise deve armar os gates (§2-A2/B) e então responder na MESMA thread confirmando a liberação. Não reenviar o convite.
 - **Rui Rodrigues (`rui.mfr@gmail.com`) NÃO é o cliente deste teste.** O caso dele já foi tratado: emails enviados por `ernesto.otero@hausbank.com.br` em **13/08** (link de verificação Bridge + justificação bancária) e **17/08** (convite à wallet), thread Gmail "EFIX — Verificação para ativar SEPA + justificação da remessa junto do seu banco", com Ulysses e Marser em cópia. Não enviar nada novo ao Rui por este handoff.
 - **Referência de compliance:** o pagamento de €46.000 do Rui (abr/2026) disparou RFI "risky payment" da Bridge — perguntas padrão: finalidade, source of funds, source of wealth, com documentos. Foi aprovado em 16/04 após envio de contrato do imóvel + comprovativos de rendimento (thread no Slack `#c-bridge-hausbank`, ts `1776088303.898389`). **Esperar o mesmo para o Samie em valores altos** — preparar o pacote de documentos ANTES (§2-F).
 - **Bridge / lado EUR (fatos de ago/2026):**
@@ -42,8 +43,13 @@ Fluxo do cliente mapeado e verificado ✅ · templates de email prontos (PT/EN) 
 
 ## 2. Pré-voo (fazer ANTES de enviar o email)
 
-- [ ] **A. Smoke test de auto-cadastro (BLOQUEANTE).** Abrir `https://efix.finance/app/wallet` numa aba anônima com um **email nunca usado**: campo E-mail → "Continuar" → código de 6 dígitos → "Entrar". O gate V2 usa OTP do backend (`POST /auth/send-otp` / `POST /auth/verify-otp` — `app/wallet/efix-auth.js:170-201`). *Por quê:* o frontend é 100% self-service, mas há um comentário "safe-mode **existing-users-only** path" (`app/wallet/classic.html:1500-1502`) e uma waitlist de early access (`classic.html:400-407`) — **o backend pode rejeitar email novo**. Se rejeitar, liberar auto-registro no `efixdi-backend` (ou pré-criar o usuário do Samie) antes de enviar o email.
-- [ ] **B. Favorecido na allowlist (BLOQUEANTE).** O select "Favorecido (allowlist)" vem de `GET /remessas/allowlist` (`app/wallet/index.html:996-998`) e **não existe UI para adicionar** — é operação de backend/mesa no `efixdi-backend`/`efix-dvp`. Registrar o beneficiário do Samie (dados da tabela §1) e confirmar que aparece no select logado com o usuário do smoke test.
+- [x] **A. Auto-cadastro — RESOLVIDO por leitura do código do backend (17/08).** `POST /auth/send-otp` envia código a **qualquer email válido** (só blocklist + rate limits: 5/email/10min, 8/IP/min) e `POST /auth/verify-otp` faz **upsert** do usuário (`INSERT ... ON CONFLICT (email) DO UPDATE`) e emite JWT — email novo é registrado na hora, `wallet_address` nasce NULL e é vinculado depois ("link-on-first-use") (`efixdi-backend/efixdi-backend-v3.js:6331-6482`). O "safe-mode existing-users-only" vale só para `/users/login` (fluxo Alchemy da wallet clássica), que devolve 410 para usuário novo — **não afeta a V2**. A cliente consegue se cadastrar sozinha.
+- [ ] **A2. Gates de remessa no Railway/DVP (BLOQUEANTE — verificado no código, `efixdi-backend-v3.js:7078-7135`).** Sem isso a aba Remessas responde 503/403 para ela:
+  - `REMITTANCE_ENABLED=true` na env do Railway (ou ligar em runtime via `POST /api/admin/remessas/toggle` com token admin) — senão 503 "Remessas desabilitadas";
+  - `DVP_WALLET_TOKEN` presente na env — senão 503 "Remessas não configuradas";
+  - **`REMESSAS_USER_ALLOWLIST`**: se a env estiver preenchida (beta fechado), **incluir `soniaaj31@gmail.com`** — senão 403 "Remessas em beta fechado";
+  - conta da cliente sem lock (`lockGate` em quote/deals/fund).
+- [ ] **B. Favorecido na allowlist do DVP (BLOQUEANTE).** O select "Favorecido (allowlist)" vem de `GET /remessas/allowlist` → repassado ao serviço **efix-dvp** (`GET /wallet/allowlist`, identidade via header `x-wallet-user`; `efixdi-backend-v3.js:1255-1290, 7135`) e **não existe UI para adicionar** — o cadastro do favorecido (e todo payout/approve/paid) é exclusivo do **token ops do DVP**, que o backend não possui. Registrar o beneficiário com os dados que a cliente responder ao email do Passo 2 e confirmar que aparece no select.
 - [ ] **C. Rota de cotação viva.** No mesmo login de teste: aba Remessas → digitar o valor alvo em R$ → "Cotar". Se aparecer "Nenhuma rota disponível agora." (`usdc_needed` nulo — `index.html:1008-1015`), a rota do DVP está parada; acionar a mesa antes de qualquer email.
 - [ ] **D. Bridge do Samie pronto.** Customer criado (Individual), **endorsement SEPA ativo** (sem tasks pendentes; se houver "Add additional customer details", enviar o link personalizado — é o mesmo modelo usado com o Rui). Sem SEPA ativo o cliente não tem IBAN/virtual account EUR para financiar a remessa.
 - [ ] **E. Decidir a ponta EUR → USDC (decisão de ops, documentar a escolha):**
@@ -184,7 +190,7 @@ Brazilian tax ID (CNPJ) 60.756.859/0001-57 | https://efix.finance
 
 ## Apêndice B — Pegadinhas conhecidas
 
-1. **Backend pode rejeitar email novo** ("safe-mode existing-users-only", `classic.html:1500-1502`) — por isso o smoke test §2-A é bloqueante.
+1. **Cadastro aberto SÓ pelo fluxo OTP da V2** — `/auth/verify-otp` cria usuário novo (upsert), mas `/users/login` (wallet clássica/Alchemy) devolve **410 para usuário novo** ("safe-mode existing-users-only"). Instruir a cliente sempre pela **V2** (`efix.finance/app/wallet`); se ela cair na clássica antes de existir no banco, o login falha.
 2. **Favorecido = texto livre em `notes`** — vínculo e payout são manuais na mesa; conferir antes de liberar.
 3. **Endereço de depósito é por deal** — se a VA Bridge converter direto para on-chain, o destino precisa acompanhar o deal.
 4. **Receiver/sender name mismatch devolve SEPA** (caso Rodrigo Velasco) — só conta em nome do próprio cliente.
