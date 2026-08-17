@@ -1089,6 +1089,7 @@ async function rem2Criar(){
   try{
     const deal = await rf('/remessas/deals',{method:'POST',body:JSON.stringify({
       expected_amount:amount, expected_currency:'BRL',
+      favorecido_id: sel.value||undefined,
       notes:(favName?('favorecido pretendido: '+favName+' · '):'')+'alvo R$ '+amount.toFixed(2)+' · envia '+usdc.toFixed(2)+' USDC @ '+Number(_rem2Quote.rate_efetiva).toFixed(4),
     })});
     const fund = await rf('/remessas/deals/'+deal.id+'/fund',{method:'POST',body:JSON.stringify({
