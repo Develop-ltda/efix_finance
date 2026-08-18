@@ -1032,8 +1032,9 @@ async function rem2Fiat(){
         (d.kyc_ok===false?'<br><span class="up">verificação (KYC) pendente — complete pelo link enviado por e-mail</span>':'');
       return;
     }
-    box.innerHTML = d.contas.map(c=>
-      '<b>'+_esc(c.currency)+'</b><br>'+
+    box.innerHTML = (d.titular?'<div style="margin-bottom:8px'+(d.conta_da_casa?';color:var(--warn,#b45309)':'')+'">Titular: <b>'+_esc(d.titular)+'</b>'+(d.conta_da_casa?' — estas são as contas operacionais da EFIX, não uma conta pessoal':'')+'</div>':'')+
+      d.contas.map(c=>
+      '<b>'+_esc(c.currency)+'</b>'+(c.rails?' <span style="color:var(--ink-3)">· via '+_esc(c.rails)+'</span>':'')+'<br>'+
       (c.iban?'IBAN: <span class="mono">'+_esc(c.iban)+'</span><br>':'')+
       (c.account_number?'Conta: <span class="mono">'+_esc(c.account_number)+'</span><br>':'')+
       (c.routing_number?'Routing: <span class="mono">'+_esc(c.routing_number)+'</span><br>':'')+
