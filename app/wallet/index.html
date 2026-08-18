@@ -1028,11 +1028,16 @@ async function rem2Fiat(){
   try{
     const d = await rf('/remessas/deposit-instructions');
     if(!d.tem_conta){
+      // M-DVP-SELF v2: sem cadastro → ativação self-service (nome + KYC hospedado)
       box.innerHTML = _esc(d.motivo||'Conta fiat ainda não disponível.')+
-        (d.kyc_ok===false?'<br><span class="up">verificação (KYC) pendente — complete pelo link enviado por e-mail</span>':'');
+        (d.sem_cadastro?'<div style="margin-top:8px"><input id="fiatNome" placeholder="Nome completo (como no documento)" style="width:60%;max-width:260px"> '+
+          '<button class="mini" id="fiatBtnKyc">Ativar conta fiat →</button><div id="fiatKycMsg" class="mut" style="margin-top:4px"></div></div>'
+        :(d.kyc_ok===false?'<br><span class="up">verificação (KYC) em análise — a conta nasce sozinha quando aprovar</span>':''));
+      if(d.sem_cadastro) $('fiatBtnKyc').onclick=rem2FiatKyc;
       return;
     }
-    box.innerHTML = (d.titular?'<div style="margin-bottom:8px'+(d.conta_da_casa?';color:var(--warn,#b45309)':'')+'">Titular: <b>'+_esc(d.titular)+'</b>'+(d.conta_da_casa?' — estas são as contas operacionais da EFIX, não uma conta pessoal':'')+'</div>':'')+
+    box.innerHTML = (d.criada_agora?'<div class="pos" style="margin-bottom:6px">✓ Sua conta fiat acabou de ser criada.</div>':'')+
+      (d.titular?'<div style="margin-bottom:8px'+(d.conta_da_casa?';color:var(--warn,#b45309)':'')+'">Titular: <b>'+_esc(d.titular)+'</b>'+(d.conta_da_casa?' — estas são as contas operacionais da EFIX, não uma conta pessoal':'')+'</div>':'')+
       d.contas.map(c=>
       '<b>'+_esc(c.currency)+'</b>'+(c.rails?' <span style="color:var(--ink-3)">· via '+_esc(c.rails)+'</span>':'')+'<br>'+
       (c.iban?'IBAN: <span class="mono">'+_esc(c.iban)+'</span><br>':'')+
@@ -1043,6 +1048,19 @@ async function rem2Fiat(){
       (c.beneficiary?'Beneficiário: '+_esc(c.beneficiary)+'<br>':'')
     ).join('<hr>')+'<div class="up" style="margin-top:6px">'+_esc(d.aviso||'')+'</div>';
   }catch(e){ box.textContent=e.message; }
+}
+// M-DVP-SELF v2: cria o cadastro Bridge do próprio usuário e abre o KYC hospedado
+async function rem2FiatKyc(){
+  const b=$('fiatBtnKyc'); b.disabled=true; $('fiatKycMsg').textContent='criando sua verificação…';
+  try{
+    const r = await rf('/remessas/kyc-link',{method:'POST',body:JSON.stringify({full_name:$('fiatNome').value})});
+    if(r.ja_verificado){ $('fiatKycMsg').textContent='Sua verificação já está aprovada — feche e abra este painel de novo.'; return; }
+    const url = r.kyc_link || r.tos_link;
+    if(url){ window.open(url,'_blank');
+      $('fiatKycMsg').textContent='Complete a verificação na aba que abriu. Quando aprovar, volte aqui: sua conta fiat nasce sozinha.'; }
+    else $('fiatKycMsg').textContent='Verificação criada ('+_esc(r.status||'em análise')+'). Aguarde alguns minutos e abra o painel de novo.';
+  }catch(e){ $('fiatKycMsg').textContent=e.message; }
+  finally{ b.disabled=false; }
 }
 async function rem2FavRequest(){
   const b=$('favBtnSend'); b.disabled=true;
