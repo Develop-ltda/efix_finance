@@ -338,7 +338,9 @@ tr.grp:first-child td{padding-top:6px}
 </head>
 <body>
 
-<div id="alchemy-signer-iframe-container" style="display:none"></div>
+<!-- container do stamper Turnkey: NUNCA display:none (degrada o iframe do
+     signer) — padrão 0x0 do classic.html, que é o fluxo comprovado -->
+<div id="alchemy-signer-iframe-container" style="position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden"></div>
 
 <!-- ═══ LOGIN ═══ -->
 <div class="gate" id="gate" style="display:none">
@@ -378,6 +380,7 @@ tr.grp:first-child td{padding-top:6px}
     <div class="foot">
       <span class="up">Carteira registrada</span>
       <span class="mono" id="sb-wallet">—</span>
+      <button class="hmini" id="sb-ativar" style="display:none" onclick="abrirAtivar()">ativar carteira →</button>
     </div>
   </aside>
 
@@ -611,6 +614,22 @@ tr.grp:first-child td{padding-top:6px}
   <div class="mmsg" id="swMsg"></div>
 </div></div>
 
+<div class="modal" id="mAtivar"><div class="mbox" style="position:relative">
+  <button class="x" onclick="fecharModal('mAtivar')">&times;</button>
+  <h3>Ativar carteira <span class="badge">on-chain</span></h3>
+  <p class="lead">Criamos uma conta inteligente na rede Base controlada pelo seu e-mail — sem senha, sem extensão. É nela que seus tokens vivem.</p>
+  <div id="atv-step1">
+    <p class="lead" style="margin-bottom:14px">Vamos enviar um código de 6 dígitos para <b id="atv-email"></b> — verificação da chave da carteira, separada do login.</p>
+    <button class="cta pri" id="atvSend" onclick="ativarEnviarCodigo()">Enviar código</button>
+  </div>
+  <div id="atv-step2" style="display:none">
+    <label class="fldl">Código de 6 dígitos</label>
+    <input id="atvCode" class="fld mono" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" style="text-align:center;letter-spacing:.4em">
+    <button class="cta pri" id="atvVerify" onclick="ativarVerificar()">Ativar carteira</button>
+  </div>
+  <div class="mmsg" id="atvMsg"></div>
+</div></div>
+
 <!-- bottom-nav mobile -->
 <nav class="bnav" id="bnav">
   <a href="#inicio" class="on" data-view="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>Início</a>
@@ -707,7 +726,15 @@ async function balanceOf(token, addr){
 (async function boot(){
   // completa magic-link se voltamos com bundle na URL
   const bundle = new URLSearchParams(location.search).get('bundle');
+  // iframe órfão do Turnkey de sessão anterior colide no init ("already exists")
+  try{ const c=document.getElementById('alchemy-signer-iframe-container');
+    if(c && c.querySelector('#turnkey-iframe')) c.innerHTML=''; }catch(e){}
   EfixWallet.init();
+  // Só completamos a sessão do signer a partir do magic-link. NÃO vinculamos
+  // endereço aqui: o `bundle` vem da URL (controlável) e sua SCA pode ser de
+  // outra pessoa — casá-la com o e-mail da sessão seria roubo de depósito
+  // (confused deputy). O vínculo acontece SOMENTE no fluxo do modal
+  // (ativarConcluir), onde e-mail e SCA vêm ambos da mesma sessão.
   if(bundle){ try{ await EfixWallet.completeAuth(bundle); history.replaceState(null,'',location.pathname); }catch(e){} }
   // modo visualização: ?view=0x… monta o painel read-only de qualquer endereço
   // (dado público on-chain; nenhuma ação exige isso — só leitura)
@@ -760,6 +787,70 @@ async function gateVerify(){
 
 async function sair(){ try{ await EfixAuth.logout(); }catch(e){} try{ await EfixWallet.disconnect(); }catch(e){} location.reload(); }
 
+/* ── ativação da carteira on-chain (smart account Alchemy) ──
+   O gate do v2 autentica só no backend (OTP próprio) e NÃO provisiona conta
+   on-chain — usuário novo ficava sem carteira (bug Vlad 18/08). Aqui portamos
+   o miolo comprovado do classic: OTP do signer Alchemy → smart account →
+   EfixAuth.login(email, sca) vincula no backend (link-on-first-use) e
+   re-minta o JWT. O endereço vinculado é o da SMART ACCOUNT (onde os tokens
+   vivem), nunca o EOA do signer. */
+async function scaDaSessao(){
+  const client = await EfixWallet.getSmartClient();
+  if(typeof client.requestAccount === 'function') return (await client.requestAccount()).address;
+  if(client.account && client.account.address) return client.account.address;
+  throw new Error('não consegui resolver a smart account');
+}
+function abrirAtivar(){
+  if(!EfixAuth.isLoggedIn()){ location.reload(); return; }
+  $('atv-email').textContent = (EfixAuth.getUser()||{}).email||'';
+  $('atv-step1').style.display='block'; $('atv-step2').style.display='none';
+  $('atvCode').value=''; $('atvMsg').textContent=''; $('atvMsg').className='mmsg';
+  $('mAtivar').classList.add('on');
+}
+async function ativarEnviarCodigo(){
+  const b=$('atvSend'), m=$('atvMsg');
+  b.disabled=true; m.className='mmsg'; m.textContent='enviando código…';
+  // rejeição tardia do authenticate() em background (padrão do classic —
+  // sem isso o usuário espera um e-mail que nunca chega); devolve ao passo 1
+  window._efixAuthError = (e)=>{ m.className='mmsg err';
+    m.textContent='Falha no envio do código: '+((e&&e.message)||e);
+    $('atv-step2').style.display='none'; $('atv-step1').style.display='block'; };
+  // magic link clicado em vez do código: conclui a ativação do mesmo jeito
+  window._efixAuthCallback = async ()=>{ try{ await ativarConcluir(m); }
+    catch(e){ m.className='mmsg err'; m.textContent=e.message; } };
+  try{
+    await Promise.race([
+      EfixWallet.sendOTP(((EfixAuth.getUser()||{}).email||'').toLowerCase()),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error(
+        'Timeout — janela anônima ou bloqueador pode estar travando signer.alchemy.com; tente numa janela normal.')),15000)),
+    ]);
+    $('atv-step1').style.display='none'; $('atv-step2').style.display='block';
+    m.textContent='Código enviado — confira seu e-mail.'; $('atvCode').focus();
+  }catch(e){ m.className='mmsg err'; m.textContent=e.message; }
+  finally{ b.disabled=false; }
+}
+async function ativarVerificar(){
+  const b=$('atvVerify'), m=$('atvMsg');
+  const code=$('atvCode').value.trim();
+  if(!/^\d{6}$/.test(code)){ m.className='mmsg err'; m.textContent='código de 6 dígitos'; return; }
+  b.disabled=true; m.className='mmsg'; m.textContent='verificando…';
+  try{ await EfixWallet.verifyOTP(code); await ativarConcluir(m); }
+  catch(e){ m.className='mmsg err'; m.textContent=e.message; b.disabled=false; }
+}
+let _atvFeito = false;
+async function ativarConcluir(m){
+  // o caminho OTP resolve DUAS vezes (verifyOTP + a promise de fundo do
+  // sendOTP chamando _efixAuthCallback) — sem esta trava sairiam dois
+  // POST /users/login concorrentes
+  if(_atvFeito) return; _atvFeito = true;
+  m.className='mmsg'; m.textContent='criando sua conta on-chain…';
+  const sca = await scaDaSessao();
+  const email = ((EfixAuth.getUser()||{}).email||'').toLowerCase();
+  await EfixAuth.login(email, sca);   // vincula no backend + re-minta o JWT
+  m.className='mmsg ok'; m.textContent='Carteira ativada: '+short(sca)+' — recarregando…';
+  setTimeout(()=>location.reload(), 900);
+}
+
 /* modo visualização: mesmos dados, sem lookup por e-mail */
 async function carregarView(addr){ await carregarCore(null, [addr.toLowerCase()]); }
 
@@ -773,6 +864,8 @@ async function carregar(email, sessAddr){
   }catch(e){}
   const wallets = [...new Set([registered, sessAddr].filter(Boolean).map(a=>a.toLowerCase()))];
   $('sb-wallet').textContent = registered ? short(registered) : (sessAddr ? short(sessAddr) : '—');
+  // sem carteira on-chain nenhuma: oferece a ativação (smart account Alchemy)
+  $('sb-ativar').style.display = wallets.length ? 'none' : 'inline-block';
   await carregarCore(email, wallets);
 }
 
@@ -808,7 +901,11 @@ async function carregarCore(email, wallets){
 
   // organizado por classe: cabeçalho do grupo com subtotal, ativos por valor
   const tb = $('assets-tb');
-  if(!rows.length){ tb.innerHTML = '<tr><td colspan="5"><div class="empty">Nenhum ativo ainda — faça seu primeiro depósito.</div></td></tr>'; }
+  if(!rows.length){
+    tb.innerHTML = WALLETS.length
+      ? '<tr><td colspan="5"><div class="empty">Nenhum ativo ainda — faça seu primeiro depósito.</div></td></tr>'
+      : '<tr><td colspan="5"><div class="empty">Sua conta ainda não tem carteira on-chain. <a href="#" onclick="abrirAtivar();return false" style="color:var(--mag);text-decoration:underline">Ativar carteira →</a></div></td></tr>';
+  }
   else {
     let html = '';
     for(const g of GRUPOS){
@@ -1233,6 +1330,10 @@ function walletPodeAssinar(){
 
 async function abrirEnviar(){
   if(!walletPodeAssinar()){ alert('Envio disponível para contas criadas no app. Carteira externa (MetaMask) assina pela própria carteira.'); return; }
+  // sem carteira ≠ "sem ativos". getUser().address já está populado antes do
+  // render; WALLETS só depois do lookup — checar os dois evita falso positivo
+  // no primeiro segundo.
+  if(!((EfixAuth.getUser()||{}).address) && !WALLETS.length){ abrirAtivar(); return; }
   _saldos = await saldosAtuais();
   const opts = opsToken(_saldos);
   if(!opts){ alert('Sem ativos para enviar.'); return; }
@@ -1292,6 +1393,9 @@ function depCopiar(srcId, btnId, rotulo){
 }
 function abrirDepositar(){
   if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para depositar.'); return; }
+  // o depósito minta tokens PARA a carteira — sem ela, o backend recusa (e
+  // antes do fix 18/08 mintaria para um placeholder). Ativa primeiro.
+  if(!((EfixAuth.getUser()||{}).address)){ abrirAtivar(); return; }
   _depRef=null; _depTries=0; if(_depTimer){clearTimeout(_depTimer);_depTimer=null;}
   $('dep-form').style.display='block'; $('dep-qr').style.display='none';
   $('depAmt').value=''; $('depMsg').textContent=''; $('depMsg').className='mmsg';
