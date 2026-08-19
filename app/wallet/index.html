@@ -434,6 +434,7 @@ tr.grp:first-child td{padding-top:6px}
         <div class="quick" data-reveal style="animation-delay:.08s">
           <button class="primary" onclick="abrirDepositar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14m-7-7h14"/></svg>Depositar</button>
           <button onclick="go('remessas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg>Nova remessa</button>
+          <button class="oc" onclick="abrirSacar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14m0 0 5-5m-5 5-5-5"/></svg>Sacar PIX</button>
           <button class="oc" onclick="abrirEnviar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 19V6m0 0-5 5m5-5 5 5"/></svg>Enviar</button>
           <button class="oc" onclick="abrirTrocar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 8h11m0 0-3-3m3 3-3 3"/><path d="M17 16H6m0 0 3 3m-3-3 3-3"/></svg>Trocar</button>
           <button onclick="go('extrato')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v17l-2.5-1.7L14 21l-2-1.4L10 21l-2.5-1.7L5 21z"/><path d="M9 9h6m-6 4h6"/></svg>Extrato</button>
@@ -456,8 +457,10 @@ tr.grp:first-child td{padding-top:6px}
       <!-- ═══ stubs elegantes (beta: ações na wallet clássica) ═══ -->
       <section class="view" id="view-investir"><div class="card stub" data-reveal>
         <div class="big">Investir</div>
-        <p>Depósito PIX, efixDI e ofertas BTR chegam ao novo painel em breve. Durante a beta, as operações seguem na wallet clássica.</p>
-        <a href="/app/wallet/classic.html">Abrir na wallet clássica →</a>
+        <!-- 19/08: o texto dizia que depósito PIX seguia na clássica — já é
+             nativo aqui (Depositar), e o saque também. Só as ofertas BTR faltam. -->
+        <p>Depósito e saque por PIX já são nativos aqui, na tela Início. As ofertas BTR chegam ao novo painel em breve.</p>
+        <a href="/app/wallet/classic.html">Ver ofertas na wallet clássica →</a>
       </div></section>
       <section class="view" id="view-remessas">
         <div class="rem2col">
@@ -506,8 +509,12 @@ tr.grp:first-child td{padding-top:6px}
       </section>
       <section class="view" id="view-brle"><div class="card stub" data-reveal>
         <div class="big">BRLE</div>
-        <p>O real tokenizado da EFIX. Emissão e resgate PIX seguem na wallet clássica durante a beta.</p>
-        <a href="/app/wallet/classic.html">Abrir BRLE →</a>
+        <!-- 19/08: o texto anterior prometia "emissão e resgate PIX na wallet
+             clássica". A compra por PIX existe lá, mas o rail está desligado no
+             backend (/api/mint/gate = enabled:false) e resgate BRLE→PIX nunca
+             foi implementado. Não prometer o que não funciona. -->
+        <p>O real tokenizado da EFIX. Seu saldo BRLE já aparece nos seus ativos; emissão e resgate por PIX estão em preparo.</p>
+        <p class="muted">Para transformar efixDI em reais, use <b>Sacar PIX</b> na tela Início.</p>
       </div></section>
       <section class="view" id="view-cartao"><div class="card stub" data-reveal>
         <div class="big">EFIX Card</div>
@@ -612,6 +619,34 @@ tr.grp:first-child td{padding-top:6px}
   <input id="swAmt" class="fld mono" type="number" min="0" step="any" placeholder="0.00">
   <button class="cta pri" id="swBtn" onclick="trocarOnchain()">Continuar</button>
   <div class="mmsg" id="swMsg"></div>
+</div></div>
+
+<div class="modal" id="mSacar"><div class="mbox" style="position:relative">
+  <button class="x" onclick="fecharModal('mSacar')">&times;</button>
+  <h3>Sacar via PIX <span class="badge">on-chain</span></h3>
+  <p class="lead">Seus efixDI são queimados na rede Base e o valor sai por PIX. A queima é assinada por você e é irreversível.</p>
+  <div id="sac-form">
+    <label class="fldl">Quantidade (efixDI) — mínimo 10,00</label>
+    <input id="sacAmt" class="fld mono" type="number" min="10" step="0.01" placeholder="0,00" oninput="sacarLimpaPreview()">
+    <div class="muted" id="sacSaldo" style="margin:4px 0 10px"></div>
+    <label class="fldl">Chave PIX de destino</label>
+    <input id="sacPix" class="fld mono" placeholder="CPF, e-mail, telefone ou chave aleatória" autocomplete="off">
+    <button class="cta pri" id="sacBtnCotar" onclick="sacarCotar()">Cotar saque</button>
+  </div>
+  <div id="sac-quote" style="display:none">
+    <div class="refbox" style="display:block">
+      <div class="up">você recebe</div>
+      <div class="code" id="sacQuoteBRL"></div>
+      <div class="hint" id="sacQuoteDet"></div>
+    </div>
+    <div class="steps" id="sacSteps">
+      <div class="stp" data-s="1"><span class="b">1</span>Assinar a queima</div>
+      <div class="stp" data-s="2"><span class="b">2</span>PIX enviado</div>
+    </div>
+    <button class="cta pri" id="sacBtnExec" onclick="sacarExecutar()">Assinar queima &amp; receber PIX</button>
+    <button class="hmini" onclick="sacarLimpaPreview()">alterar valor</button>
+  </div>
+  <div class="mmsg" id="sacMsg"></div>
 </div></div>
 
 <div class="modal" id="mAtivar"><div class="mbox" style="position:relative">
@@ -1137,7 +1172,7 @@ async function rem2Fiat(){
       // M-DVP-SELF v2: sem cadastro → ativação self-service (nome + KYC hospedado)
       box.innerHTML = _esc(d.motivo||'Conta fiat ainda não disponível.')+
         (d.sem_cadastro?'<div style="margin-top:8px"><input id="fiatNome" placeholder="Nome completo (como no documento)" style="width:60%;max-width:260px"> '+
-          '<button class="mini" id="fiatBtnKyc">Ativar conta fiat →</button><div id="fiatKycMsg" class="mut" style="margin-top:4px"></div></div>'
+          '<button class="mini" id="fiatBtnKyc">Ativar conta fiat →</button><div id="fiatKycMsg" class="muted" style="margin-top:4px"></div></div>'
         :(d.kyc_ok===false?'<br><span class="up">verificação (KYC) em análise — a conta nasce sozinha quando aprovar</span>':''));
       if(d.sem_cadastro) $('fiatBtnKyc').onclick=rem2FiatKyc;
       return;
@@ -1184,7 +1219,7 @@ async function rem2FavPend(){
   try{
     const p = await rf('/remessas/allowlist-pending');
     $('favPend').innerHTML = (p&&p.length)
-      ? '<div class="mut">Aguardando aprovação da mesa: '+p.map(x=>_esc(x.name)).join(' · ')+'</div>' : '';
+      ? '<div class="muted">Aguardando aprovação da mesa: '+p.map(x=>_esc(x.name)).join(' · ')+'</div>' : '';
   }catch(_e){ /* silencioso: pendências são informativas */ }
 }
 async function rem2Quote(){
@@ -1328,13 +1363,386 @@ async function saldosAtuais(){
 function opsToken(saldos){
   return Object.values(saldos).map(({t,b})=>'<option value="'+t.sym+'">'+t.sym+' — '+b.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</option>').join('');
 }
-function fecharModal(id){ $(id).classList.remove('on'); }
-document.addEventListener('click',(e)=>{ if(e.target.classList&&e.target.classList.contains('modal')) e.target.classList.remove('on'); });
+function fecharModal(id){
+  // um saque em andamento não pode ser "fechado": a queima já pode ter saído e
+  // esconder a tela faria o usuário achar que cancelou.
+  if(id==='mSacar' && _sacEmVoo){
+    const m=$('sacMsg'); m.className='mmsg';
+    m.textContent='Aguarde o fim da operação — não feche esta janela.';
+    return;
+  }
+  $(id).classList.remove('on');
+}
+document.addEventListener('click',(e)=>{
+  if(!(e.target.classList&&e.target.classList.contains('modal'))) return;
+  if(e.target.id==='mSacar' && _sacEmVoo) return;   // idem para o clique no fundo
+  e.target.classList.remove('on');
+});
+// se o usuário tentar sair no meio da queima, o navegador avisa
+window.addEventListener('beforeunload',(e)=>{ if(_sacEmVoo){ e.preventDefault(); e.returnValue=''; } });
 
 function walletPodeAssinar(){
   // só a conta criada no app assina; carteira externa registrada não
   if(window.IS_EXTERNAL_WALLET){ return false; }
   return EfixAuth.isLoggedIn();
+}
+
+/* ═══ SACAR (efixDI → PIX) — portado do classic para poder desligá-lo ═══
+   Ordem que NÃO pode mudar: cotar (fail-closed) → confirmar → provar sessão do
+   signer → garantir conta deployada → QUEIMAR → pedir o PIX. O burn é
+   irreversível e, no backend, o único caminho pós-burn SEM refund automático é
+   "Burn verification failed" — por isso tudo que pode falhar é verificado ANTES
+   de assinar. */
+const EFIXDI = TOKENS.find(t=>t.sym==='efixDI');
+let _sac = null;              // cotação vigente
+let _sacUuid = null, _sacKey = null;   // idempotência por INTENÇÃO (anti-PIX duplo)
+let _sacEmVoo = false;        // operação em andamento: não deixar fechar o modal
+const SAC_COTACAO_TTL_MS = 120000;     // cotação velha = recotar (o NAV anda)
+const SAC_MIN = 10;
+
+// wei a partir do MESMO string de 2 casas que o backend usa (ethers.parseEther
+// do amount.toFixed(2)). O classic fazia BigInt(Math.round(amount*1e18)), que
+// para valores como 999.99 dá um wei DIFERENTE do que o backend espera — e a
+// divergência cai justamente no caminho pós-burn sem refund.
+function weiDe2Casas(valorStr){
+  const [i, f=''] = String(valorStr).split('.');
+  return BigInt(i + (f + '000000000000000000').slice(0, 18));
+}
+
+function sacarLimpaPreview(){
+  _sac = null;
+  const q=$('sac-quote'), f=$('sac-form');
+  if(q) q.style.display='none';
+  if(f) f.style.display='block';
+  const m=$('sacMsg'); if(m){ m.className='mmsg'; m.textContent=''; }
+  // sem isto, depois de um saque o botão ficava display:none para sempre (só F5
+  // resolvia) e os passos guardavam o ✓ do saque anterior.
+  const b=$('sacBtnExec');
+  if(b && b.dataset.modo!=='reenviar'){ b.style.display=''; b.disabled=false; b.textContent='Assinar queima & receber PIX'; }
+  depSetStep('sacSteps',1,'off'); depSetStep('sacSteps',2,'off');
+}
+
+async function abrirSacar(){
+  if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para sacar.'); return; }
+  const u = EfixAuth.getUser()||{};
+  if(!u.address){ abrirAtivar(); return; }   // sem carteira on-chain não há o que queimar
+  if(!walletPodeAssinar()){
+    alert('O saque queima tokens da conta criada no app. Carteira externa (MetaMask) precisa queimar pela própria carteira.');
+    return;
+  }
+  sacarLimpaPreview();
+  $('sacAmt').value=''; $('sacPix').value='';
+  // saque interrompido no meio (reload/queda de rede): repõe os dados para o
+  // usuário concluir com a MESMA intenção, em vez de começar outra.
+  const pend = sacarRetomaIntencao();
+  if(pend){
+    _sacUuid = pend.uuid; _sacKey = pend.key;
+    $('sacAmt').value = pend.amount; $('sacPix').value = pend.pix;
+    const m0=$('sacMsg'); m0.className='mmsg';
+    m0.textContent='Você tem um saque de '+pend.amount+' efixDI que não foi concluído. Cote de novo para retomar — não vamos cobrar duas vezes.';
+  }
+  $('mSacar').classList.add('on');
+  // saldo real da carteira que vai assinar (não do consolidado de várias)
+  $('sacSaldo').textContent = 'carregando saldo…';
+  delete $('sacSaldo').dataset.bal;   // nunca reaproveitar o saldo de uma abertura anterior
+  try{
+    const b = await balanceOf(EFIXDI, u.address);
+    $('sacSaldo').textContent = 'disponível: ' + b.toLocaleString('pt-BR',{maximumFractionDigits:2}) + ' efixDI';
+    $('sacSaldo').dataset.bal = String(b);
+  }catch(e){ $('sacSaldo').textContent = 'não consegui ler seu saldo agora — reabra para tentar de novo'; }
+}
+
+async function sacarCotar(){
+  const m=$('sacMsg'), b=$('sacBtnCotar');
+  const amount = parseFloat($('sacAmt').value);
+  const pix = $('sacPix').value.trim();
+  m.className='mmsg';
+  if(!amount || amount < SAC_MIN){ m.className='mmsg err'; m.textContent='mínimo '+SAC_MIN.toFixed(2)+' efixDI'; return; }
+  if(!pix){ m.className='mmsg err'; m.textContent='informe a chave PIX de destino'; return; }
+  // a queima acontece ANTES de o banco olhar a chave: chave malformada = queima
+  // + recusa. Barrar aqui é mais barato que depender do refund.
+  if(!chavePixValida(pix)){
+    m.className='mmsg err';
+    m.textContent='chave PIX inválida — use CPF/CNPJ (só números), e-mail, telefone com DDD ou chave aleatória';
+    return;
+  }
+  // saldo desconhecido não pode virar "pode sacar": bloqueia até saber
+  const balRaw = $('sacSaldo').dataset.bal;
+  if(balRaw === undefined){
+    m.className='mmsg err'; m.textContent='não consegui confirmar seu saldo — reabra o saque e tente de novo'; return;
+  }
+  const bal = parseFloat(balRaw||'0');
+  if(amount > bal){ m.className='mmsg err'; m.textContent='saldo insuficiente (você tem '+bal.toFixed(2)+' efixDI)'; return; }
+  b.disabled=true; b.textContent='Cotando…'; m.textContent='consultando o NAV…';
+  try{
+    // fail-closed: sem cotação NÃO seguimos. Se o NAV faltar depois do burn, o
+    // backend recusaria o pagamento e teria que re-mintar — pior para todos.
+    const r = await fetch(BACKEND+'/api/quote/redeem?amountTokens='+amount.toFixed(2));
+    const d = await r.json();
+    if(!r.ok || d.amountBRL==null) throw new Error(d.error || 'cotação NAV indisponível — saque temporariamente bloqueado');
+    _sac = { amount, pix, brl:Number(d.amountBRL), nav:Number(d.navAtOp), em:Date.now() };
+    $('sacQuoteBRL').textContent = 'R$ ' + _sac.brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    $('sacQuoteDet').innerHTML = amount.toFixed(2)+' efixDI · NAV R$ '+_sac.nav.toFixed(6)+'/efixDI<br>PIX para <span class="mono">'+_esc(pix)+'</span>'+
+      '<br><span class="muted">valor recalculado no pagamento — pode variar alguns centavos</span>';
+    $('sac-form').style.display='none'; $('sac-quote').style.display='block';
+    m.textContent='';
+  }catch(e){ m.className='mmsg err'; m.textContent=e.message; }
+  finally{ b.disabled=false; b.textContent='Cotar saque'; }
+}
+
+/* POST do saque SEM lançar: o backend devolve todo desfecho pós-queima em
+   non-2xx (refunded=502, failed=500, replay=409, pausado=503). Com o rf()
+   genérico, que lança, esses casos cairiam todos num catch só — e um catch
+   depois da queima não pode reabilitar um botão que queima. */
+async function sacarPost(body){
+  const r = await fetch(BACKEND+'/withdraw/request',{
+    method:'POST', headers:{'Content-Type':'application/json',...EfixAuth.headers()},
+    body: JSON.stringify(body) });
+  let d = {}; try{ d = await r.json(); }catch(e){}
+  return { http:r.status, ok:r.ok, body:d };
+}
+
+// Depois da queima o dinheiro já saiu do usuário: o botão nunca mais oferece
+// "queimar", só "reenviar PIX" com o MESMO hash e o MESMO uuid.
+function sacarModoReenviar(rotulo){
+  const b=$('sacBtnExec');
+  b.style.display=''; b.disabled=false;
+  b.textContent = rotulo || 'Reenviar PIX (sem queimar de novo)';
+  b.dataset.modo = 'reenviar';
+}
+function sacarModoQueimar(){
+  const b=$('sacBtnExec');
+  b.style.display=''; b.disabled=false;
+  b.textContent = 'Assinar queima & receber PIX';
+  delete b.dataset.modo;
+}
+
+async function sacarExecutar(){
+  if(!_sac){ sacarLimpaPreview(); return; }
+  // cotação velha: o NAV já andou, então recotar antes de queimar
+  if(Date.now() - (_sac.em||0) > SAC_COTACAO_TTL_MS){
+    const m0=$('sacMsg'); sacarLimpaPreview();
+    m0.className='mmsg'; m0.textContent='A cotação expirou (o NAV muda). Cote de novo para ver o valor atual.';
+    return;
+  }
+  const m=$('sacMsg'), b=$('sacBtnExec');
+  const u = EfixAuth.getUser()||{};
+  const { amount, pix, brl, nav } = _sac;
+  const pend = sacarRetomaIntencao();
+  // já queimado (nesta sessão ou numa anterior interrompida)? então só falta o PIX
+  let burnTxHash = (pend && pend.burnTxHash) || null;
+
+  if(!burnTxHash && !confirm('Confirmar saque de '+amount.toFixed(2)+' efixDI?\n\n'+
+              'Você recebe ≈ R$ '+brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+
+              ' via PIX (NAV R$ '+nav.toFixed(6)+' por efixDI).\nO valor final é recalculado no momento do pagamento e pode variar alguns centavos.\n'+
+              'Chave PIX: '+pix+'\n\n'+
+              'Você vai assinar a QUEIMA dos tokens. A queima é irreversível e o PIX é enviado em seguida.')) return;
+
+  // mesma intenção (carteira+valor+chave) reusa o MESMO uuid, para o backend
+  // deduplicar em vez de mandar um segundo PIX.
+  const intent = (u.address||'')+'|'+amount.toFixed(2)+'|'+pix;
+  if(_sacKey !== intent || !_sacUuid){
+    _sacUuid = (crypto.randomUUID ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{
+          const r=Math.random()*16|0; return (c==='x'?r:((r&0x3)|0x8)).toString(16); }));
+    _sacKey = intent;
+  }
+  const gravaIntencao = (extra) => { try{ localStorage.setItem('efix_saque_intencao',
+    JSON.stringify({ uuid:_sacUuid, key:intent, amount:amount.toFixed(2), pix, em:Date.now(),
+                     ...(burnTxHash?{burnTxHash}:{}) , ...(extra||{}) })); }catch(e){} };
+  gravaIntencao();
+
+  b.disabled=true; m.className='mmsg'; _sacEmVoo=true;
+  try{
+    if(!burnTxHash){
+      // ── tudo que pode recusar o saque é checado ANTES de queimar ──
+      b.textContent='Verificando…'; m.textContent='';
+
+      // 1. o backend está aceitando saque agora? fail-closed: sem resposta, não queima.
+      let stt;
+      try{ stt = await fetch(BACKEND+'/api/wallet/status').then(x=>x.json()); }catch(e){ stt = null; }
+      if(!stt){
+        m.className='mmsg err';
+        m.textContent='Não consegui confirmar com o servidor se o saque está liberado. Tente de novo em instantes — nada foi queimado.';
+        sacarModoQueimar(); return;
+      }
+      if(stt.pause_withdrawals){
+        m.className='mmsg err';
+        m.textContent='Saques estão pausados no momento'+(stt.pause_reason?' ('+stt.pause_reason+')':'')+'. Nada foi queimado — tente mais tarde.';
+        sacarModoQueimar(); return;
+      }
+      const trust = !!stt.withdraw_trust_mode;
+
+      // 2. teto por saque: o backend recusa acima disso DEPOIS da queima
+      if(brl > 100000){
+        m.className='mmsg err';
+        m.textContent='O limite por saque é R$ 100.000,00 e esta cotação dá R$ '+brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'. Divida em saques menores — nada foi queimado.';
+        sacarModoQueimar(); return;
+      }
+
+      if(!trust){
+        // 3. o JWT ainda vale E o endereço que o BACKEND vai exigir é o que vai
+        //    assinar. O backend usa o claim do JWT (congelado por 7 dias), não o
+        //    endereço do banco — comparar com o banco deixaria passar JWT velho.
+        const claim = (parseJwtLocal(EfixAuth.getToken())||{}).address || '';
+        let vivo = false;
+        try{ const me = await fetch(BACKEND+'/users/me',{headers:EfixAuth.headers()}); vivo = me.ok; }catch(e){}
+        if(!vivo){
+          m.className='mmsg err';
+          m.textContent='Sua sessão expirou. Entre de novo e refaça o saque — nada foi queimado.';
+          sacarModoQueimar(); return;
+        }
+        // 4. a chave de assinatura da Alchemy ainda está viva?
+        b.textContent='Verificando sessão…';
+        const fresco = await Promise.race([
+          EfixWallet.checkSession().then(a=>!!a).catch(()=>false),
+          new Promise(r=>setTimeout(()=>r(false), 4000)),
+        ]);
+        if(!fresco){
+          m.className='mmsg err';
+          m.textContent='Sua chave de assinatura expirou. Use "ativar carteira" para renovar e refaça o saque — nada foi queimado.';
+          sacarModoQueimar(); return;
+        }
+        const sca = await scaDaSessao();
+        if(!claim || String(sca).toLowerCase() !== String(claim).toLowerCase()){
+          m.className='mmsg err';
+          m.textContent='A carteira desta sessão ('+short(sca)+') não é a que sua sessão autoriza a sacar'+(claim?' ('+short(claim)+')':'')+'. Saia e entre de novo — nada foi queimado.';
+          sacarModoQueimar(); return;
+        }
+        // 5. smart account nunca deployada não assina
+        b.textContent='Preparando sua conta…';
+        if(!(await sacarGarantirConta(sca))){
+          m.className='mmsg err';
+          m.textContent='Não consegui preparar sua conta on-chain agora. Tente de novo em alguns minutos — nada foi queimado.';
+          sacarModoQueimar(); return;
+        }
+
+        // ── ponto de não retorno ──
+        b.textContent='Queimando tokens…'; depSetStep('sacSteps',1,'run');
+        const data = '0x42966c68' + weiDe2Casas(amount.toFixed(2)).toString(16).padStart(64,'0'); // burn(uint256)
+        gravaIntencao({ queimando:true, sca, wei:weiDe2Casas(amount.toFixed(2)).toString() });
+        burnTxHash = await EfixWallet.sendUserOp(EFIXDI.addr, data, '0x0', sca);
+        gravaIntencao();          // grava o hash IMEDIATAMENTE: nunca queimar duas vezes
+        depSetStep('sacSteps',1,'done');
+      }
+    } else {
+      depSetStep('sacSteps',1,'done');   // retomada: a queima já aconteceu
+    }
+
+    b.textContent='Enviando PIX…'; depSetStep('sacSteps',2,'run');
+    const r = await sacarPost({
+      amount: Number(amount.toFixed(2)), pixKey: pix, requestUuid: _sacUuid,
+      ...(burnTxHash ? { burnTxHash } : {}),
+    });
+    const st = String(r.body.status||'');
+    const linkTx = burnTxHash ? ' · <a href="https://basescan.org/tx/'+burnTxHash+'" target="_blank" style="color:var(--mag)">ver queima</a>' : '';
+
+    if(r.ok && st.startsWith('completed')){
+      depSetStep('sacSteps',2,'done');
+      m.className='mmsg ok';
+      m.innerHTML='PIX enviado ✓ R$ '+Number(r.body.amountBRL||brl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+linkTx;
+      _sacUuid=null; _sacKey=null; sacarEsqueceIntencao();
+      $('sacBtnExec').style.display='none';
+      _transfers=null; _web2=null; carregar(u.email, u.address);
+    } else if(st==='refunded'){
+      // tokens voltaram: aqui é seguro tentar outro saque (e com uuid novo)
+      depSetStep('sacSteps',2,'err');
+      m.className='mmsg err';
+      m.innerHTML='O PIX não foi aceito e seus tokens foram devolvidos (re-emitidos). Confira a chave e tente de novo.'+linkTx;
+      _sacUuid=null; _sacKey=null; sacarEsqueceIntencao();
+      sacarModoQueimar();
+      _transfers=null; carregar(u.email, u.address);
+    } else if(burnTxHash){
+      // queimado e sem confirmação de PIX: NUNCA reoferecer a queima.
+      depSetStep('sacSteps',2,'err');
+      m.className='mmsg err';
+      m.innerHTML='Seus tokens foram queimados, mas o PIX ainda não foi confirmado'+
+        (r.body.error?' ('+_esc(String(r.body.error))+')':'')+'.<br>Seu pedido está registrado — <b>não queime de novo</b>. '+
+        'Você pode reenviar o pedido do PIX, ou nos chamar com este comprovante.'+linkTx;
+      sacarModoReenviar();
+    } else {
+      m.className='mmsg err';
+      m.textContent = (r.body.error || 'não foi possível concluir agora')+' — nada foi queimado.';
+      sacarModoQueimar();
+    }
+  }catch(e){
+    const msg = String(e.message||e);
+    m.className='mmsg err';
+    if(burnTxHash){
+      // exceção DEPOIS da queima (rede caiu no POST, etc.)
+      depSetStep('sacSteps',2,'err');
+      m.innerHTML='Seus tokens foram queimados e não conseguimos confirmar o PIX ('+_esc(msg)+').<br>'+
+        '<b>Não queime de novo.</b> Clique em reenviar — usamos o mesmo comprovante.'+
+        ' · <a href="https://basescan.org/tx/'+burnTxHash+'" target="_blank" style="color:var(--mag)">ver queima</a>';
+      sacarModoReenviar();
+    } else {
+      m.textContent = /orgId|not authenticated|Signer/i.test(msg)
+        ? 'A assinatura falhou por sessão expirada — nada foi queimado. Renove em "ativar carteira" e refaça.'
+        : msg + ' — nada foi queimado.';
+      sacarModoQueimar();
+    }
+  }finally{ _sacEmVoo=false; }
+}
+
+// leitura local do payload do JWT (sem validar assinatura — só para saber qual
+// endereço o backend vai exigir neste saque)
+function parseJwtLocal(tok){
+  try{ return JSON.parse(atob(String(tok).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); }
+  catch(e){ return null; }
+}
+
+// smart account contrafactual (endereço existe, contrato não): faz um UserOp
+// no-op para o deploy acontecer, senão o burn falha. Portado do classic.
+async function sacarGarantirConta(sca){
+  try{
+    const r = await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getCode',params:[sca,'latest']})}).then(x=>x.json());
+    if(r.result && r.result.length > 2) return true;   // já deployada
+    await EfixWallet.sendUserOp(sca, '0x', '0x0', sca);
+    return true;
+  }catch(e){ console.warn('[sacar] deploy da conta falhou:', e.message); return false; }
+}
+
+// CPF/CNPJ (só dígitos), e-mail, telefone BR (+55DDD) ou chave aleatória (uuid)
+function chavePixValida(k){
+  const s = String(k||'').trim();
+  if(/^\d{11}$/.test(s) || /^\d{14}$/.test(s)) return true;                  // CPF / CNPJ
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) return true;                    // e-mail
+  if(/^\+?55\d{10,11}$/.test(s.replace(/[\s()-]/g,''))) return true;          // telefone
+  if(/^\d{10,11}$/.test(s.replace(/[\s()-]/g,''))) return true;              // telefone sem +55
+  if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) return true; // EVP
+  return false;
+}
+
+function sacarEsqueceIntencao(){
+  try{ localStorage.removeItem('efix_saque_intencao'); }catch(e){}
+}
+// Se a página caiu entre a queima e o PIX, a intenção ficou no storage. Ao abrir
+// o saque de novo, retomamos o MESMO uuid: o backend deduplica e conclui o
+// pagamento em vez de queimar/pagar duas vezes.
+function sacarRetomaIntencao(){
+  try{
+    const raw = localStorage.getItem('efix_saque_intencao'); if(!raw) return null;
+    const d = JSON.parse(raw);
+    if(!d || !d.uuid) return null;
+    if(Date.now() - (d.em||0) > 24*3600*1000){ sacarEsqueceIntencao(); return null; }  // velha demais
+    return d;
+  }catch(e){ return null; }
+}
+
+// stepper genérico (o do depósito é fixo em #depSteps)
+function depSetStep(containerId, n, estado){
+  const el = document.querySelector('#'+containerId+' .stp[data-s="'+n+'"]'); if(!el) return;
+  el.classList.remove('done','run');
+  el.style.color='';
+  const bol = el.querySelector('.b');
+  if(estado==='done'){ el.classList.add('done'); bol.textContent='✓'; bol.style.background=''; }
+  else if(estado==='run'){ el.classList.add('run'); bol.textContent=String(n); bol.style.background=''; }
+  else if(estado==='err'){ // não existia: 'run' pintava de verde um passo que falhou
+    bol.textContent='!'; bol.style.background='var(--neg,#b91c1c)'; bol.style.color='#fff';
+    el.style.color='var(--neg,#b91c1c)';
+  }
+  else { bol.textContent=String(n); bol.style.background=''; }   // 'off' devolve o número
 }
 
 async function abrirEnviar(){
