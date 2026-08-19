@@ -644,8 +644,10 @@ tr.grp:first-child td{padding-top:6px}
 
   <div id="inv-form">
     <label class="fldl">Valor a investir (R$)</label>
-    <!-- step=0.01: o pagamento é conciliado pelo VALOR, então induzir valores
-         redondos (step=100) faria reservas de investidores diferentes colidirem -->
+    <!-- step=0.01: o casamento primário hoje é pelo id embutido no QR
+         (conciliation_id); o VALOR é fallback só para QRs antigos sem id —
+         enquanto esse passe 2 existir, induzir valores redondos (step=100)
+         ainda faria QRs antigos de investidores diferentes colidirem -->
     <input id="invAmt" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
     <div class="muted" id="invCaps" style="margin:4px 0 10px"></div>
     <!-- Só PIX: os trilhos em dólar/euro criam uma conta virtual nova a cada
@@ -684,6 +686,15 @@ tr.grp:first-child td{padding-top:6px}
     </div>
     <div id="invFiatBox" style="display:none"></div>
     <button class="hmini" onclick="investirVerReservas()">ver minhas reservas →</button>
+  </div>
+
+  <!-- confirmação ao vivo: o vigia troca o QR por isto quando o PIX casa -->
+  <div id="inv-pago" style="display:none">
+    <div class="refbox" style="display:block;border-color:var(--green)">
+      <div class="up" style="color:var(--green)">pagamento confirmado ✓</div>
+      <div class="hint" id="invPagoTxt">Recebemos seu pagamento.</div>
+    </div>
+    <button class="cta pri" onclick="investirVerReservas()">ver minhas reservas →</button>
   </div>
 
   <div class="mmsg" id="invMsg"></div>
@@ -1608,6 +1619,7 @@ function imovelCard(p){
    carteira é OBRIGATÓRIA na reserva, Reg S proíbe pessoa dos EUA, e há caps
    anuais por investidor e por emissor (CVM 88). ── */
 let _ofertas = [], _invOferta = null, _invAlloc = null, _invKycTimer = null;
+let _invPagoTimer = null;   // vigia do PIX: vivo só enquanto o modal mostra o QR
 let _invEnviando = false;   // o backend NÃO deduplica: cada POST cria reserva nova
 let _invPendente = null;    // reserva a criar depois que o KYC aprovar
 
@@ -1619,7 +1631,7 @@ const INV_STATUS = {
   kyc_review:       ['verificação pendente',    AMBAR],
   kyc_approved:     ['verificado',              ''],
   awaiting_deposit: ['aguardando seu pagamento',AMBAR],
-  deposit_received: ['pagamento recebido',      ''],
+  deposit_received: ['pagamento recebido ✓',    'color:var(--green)'],
   ready_to_settle:  ['em liquidação',           ''],
   settled:          ['liquidado ✓',             'color:var(--green)'],
   rejected:         ['recusado',                'color:var(--red)'],
@@ -1687,6 +1699,7 @@ async function abrirInvestir(ofertaId){
   $('invLead').textContent = (_invOferta.name||'')+' — cota de R$ '+Number(_invOferta.parPriceBrl||0).toFixed(2).replace('.',',')+
     '. Você reserva agora e paga em seguida; a entrega das cotas é on-chain, na sua carteira.';
   $('inv-form').style.display='block'; $('inv-kyc').style.display='none'; $('inv-pgto').style.display='none';
+  $('inv-pago').style.display='none';
   $('invAmt').value=''; $('invNaoUS').checked=false;
   $('invMsg').className='mmsg'; $('invMsg').textContent='';
   $('invCaps').textContent='';
@@ -1859,21 +1872,23 @@ async function investirInstrucoes(allocId){
       return;
     }
     $('inv-kyc').style.display='none'; $('inv-pgto').style.display='block';
+    $('inv-pago').style.display='none';
     $('invRef').textContent = d.reference || allocId; $('invRef').dataset.code = d.reference || allocId;
     if(d.rail==='pix'){
       $('invQrBox').style.display='block';
       if(d.qrImageUrl) $('invQrImg').src = d.qrImageUrl;
       if(d.emv){ $('invEmv').textContent = d.emv; $('invEmv').dataset.code = d.emv; }
       $('invFiatBox').style.display='none';
-      // O conciliador casa o depósito pelo VALOR EXATO dentro de ~15 min — ele
-      // NÃO lê a descrição do PIX. Dizer o contrário (como este texto dizia
-      // antes) faria o investidor confiar num identificador que ninguém lê.
-      $('invPgtoHint').innerHTML = 'Pague <b>exatamente R$ '+
+      // O QR nasce com o valor travado e um identificador embutido que o banco
+      // devolve no extrato — o pagamento casa com ESTA reserva sozinho, em
+      // geral em menos de um minuto (o vigia abaixo confirma na tela).
+      $('invPgtoHint').innerHTML = 'O QR já vem com o valor de <b>R$ '+
         Number(d.amountBrl||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+
-        '</b> — é o valor que identifica a sua reserva. Pague em uma única transferência e de preferência agora: '+
-        'depósitos com valor diferente, ou muito depois, precisam ser conferidos pela nossa mesa.'+
+        '</b> travado e identifica a sua reserva sozinho. Pague em uma única transferência — '+
+        'assim que o PIX chegar, esta tela confirma o recebimento.'+
         '<br>Guarde o identificador abaixo para qualquer conversa com a gente.'+
         investirCoolingOff();
+      investirVigiarPagamento(allocId);
     } else {
       $('invQrBox').style.display='none';
       const di = d.depositInstructions || {};
@@ -1898,11 +1913,63 @@ function investirCoolingOff(){
     'Para desistir dentro do prazo, fale com a gente.</span>';
 }
 
+// ── Confirmação ao vivo do PIX ────────────────────────────────────────────
+// Enquanto o modal mostra o QR, pergunta ao backend se o pagamento chegou (o
+// conciliador casa pelo id embutido no QR em ~30s). Quando casa, troca o QR
+// pela confirmação verde. Sem isso a pessoa paga e fica olhando um QR mudo —
+// foi exatamente a confusão do primeiro pagamento real (19/08).
+function investirVigiarPagamento(allocId){
+  clearInterval(_invPagoTimer);
+  const meu = setInterval(async ()=>{
+    // tick de vigia antigo (outro vigia foi armado enquanto o fetch voava):
+    // NUNCA mexer na tela nem no timer do sucessor
+    if(_invPagoTimer !== meu){ clearInterval(meu); return; }
+    // modal fechou (X, "ver reservas", navegação): o vigia morre sozinho
+    if(!$('mInvestir').classList.contains('on') || $('inv-pgto').style.display==='none'){
+      clearInterval(meu); if(_invPagoTimer===meu) _invPagoTimer=null; return;
+    }
+    try{
+      const d = await fetch(OFFERINGS+'/v1/allocations/'+allocId).then(r=>r.json());
+      if(_invPagoTimer !== meu) { clearInterval(meu); return; }   // revalida pós-await
+      const st = d.allocation && d.allocation.status;
+      if(!st || st==='awaiting_deposit' || st==='kyc_approved' || st==='pending') return;
+      clearInterval(meu); _invPagoTimer=null;
+      investirPagoConfirmado(d.allocation);
+      carregarReservas();
+    }catch(e){ /* rede oscilou — tenta no próximo tick */ }
+  }, 6000);
+  _invPagoTimer = meu;
+}
+
+function investirPagoConfirmado(a){
+  if(a.status==='rejected' || a.status==='expired'){
+    // esconder o QR JUNTO com o aviso: deixá-lo visível convidaria a pagar uma
+    // reserva morta (o poller só olha awaiting_deposit — o PIX viraria órfão)
+    $('inv-pgto').style.display='none'; $('inv-kyc').style.display='none'; $('inv-form').style.display='none';
+    $('invMsg').className='mmsg err';
+    $('invMsg').textContent = a.status==='rejected'
+      ? 'Esta reserva foi recusada — fale com a gente.' : 'Esta reserva expirou.';
+    return;
+  }
+  $('inv-pgto').style.display='none'; $('inv-kyc').style.display='none'; $('inv-form').style.display='none';
+  const valor = a.amountBrl ? 'de R$ '+Number(a.amountBrl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ' : '';
+  $('invPagoTxt').innerHTML = a.status==='settled'
+    ? 'Pagamento '+valor+'recebido e cotas entregues na sua carteira'+
+      (a.onChainTx?' — <a href="https://basescan.org/tx/'+_esc(a.onChainTx)+'" target="_blank" style="color:var(--mag)">ver on-chain</a>':'')+'.'
+    : 'Recebemos seu pagamento '+valor+'✓. '+
+      (a.coolingOffUntil
+        ? 'Suas cotas serão entregues on-chain a partir de '+new Date(a.coolingOffUntil).toLocaleDateString('pt-BR')+' (prazo de arrependimento da CVM 88).'
+        : 'Suas cotas serão entregues on-chain em breve — te avisamos aqui na wallet.');
+  $('inv-pago').style.display='block';
+  $('invMsg').className='mmsg'; $('invMsg').textContent='';
+}
+
 async function investirPagar(allocId){
   _invAlloc = { id: allocId };
   $('invTitulo').textContent='Como pagar sua reserva';
   $('invLead').textContent='';
   $('inv-form').style.display='none'; $('inv-kyc').style.display='none'; $('inv-pgto').style.display='none';
+  $('inv-pago').style.display='none';
   $('invMsg').className='mmsg'; $('invMsg').textContent='';
   $('mInvestir').classList.add('on');
   // busca a reserva completa: sem isso o prazo de arrependimento não aparece
@@ -1912,6 +1979,11 @@ async function investirPagar(allocId){
     if(d.allocation) _invAlloc = d.allocation;
     if(_invAlloc.amountBrl) $('invLead').textContent = 'Reserva de R$ '+
       Number(_invAlloc.amountBrl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'.';
+    // já pagou (ex.: pagou, fechou e voltou): confirmação direta, sem QR morto
+    const st = _invAlloc.status;
+    if(st && st!=='awaiting_deposit' && st!=='kyc_approved' && st!=='pending' && st!=='kyc_review'){
+      investirPagoConfirmado(_invAlloc); return;
+    }
   }catch(e){}
   await investirInstrucoes(allocId);
 }
