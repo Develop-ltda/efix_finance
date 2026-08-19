@@ -1058,7 +1058,7 @@
          mid-flow, which holds the in-flight OTP id between send and verify.
          Users with truly broken state click the "Reset login" button instead. -->
     <script src="efix-wallet-bundle-v3.js"></script>
-    <script src="efix-auth.js"></script>
+    <script src="efix-auth.js?v=20260818"></script>
     <script src="/shared/js/config.js"></script>
     <script src="/shared/js/formatters.js"></script>
     <script src="/shared/js/ui.js"></script>
@@ -1522,6 +1522,9 @@
                             return;
                         } catch (e) {
                             console.warn('[EfixAuth] login failed on session restore — forcing OTP screen:', e.message);
+                            // Conta sem carteira vinculada: o vínculo agora exige
+                            // prova de posse do e-mail, que só a wallet nova faz.
+                            if (precisaAtivarNaWalletNova(e)) return;
                             // Fall through to OTP screen below
                         }
                     } else {
@@ -1605,6 +1608,11 @@
                     console.log(session.isNew ? 'New user registered' : 'User logged in');
                 } catch(e) {
                     console.error('Backend login failed:', e.message);
+                    // SEC 2026-08-18: vincular endereço a conta existente passou
+                    // a exigir prova de posse do e-mail (OTP do backend), e o
+                    // classic só tem o OTP da Alchemy — não há como provar aqui.
+                    // Manda para a wallet nova, que tem "Ativar carteira".
+                    if (precisaAtivarNaWalletNova(e)) return;
                     setStatus('Erro ao conectar sua conta: ' + e.message, 'error');
                     return; // stay on the login screen; do not enter the app without a session
                 }
@@ -1693,7 +1701,22 @@
             return _ensureDeployPromise;
         }
 
+        // A wallet nova (/app/wallet/) é a única frente que sabe provar posse do
+        // e-mail (OTP do backend) e portanto vincular a carteira. Quando o
+        // backend recusa o vínculo, mandamos o usuário para lá em vez de
+        // deixá-lo preso numa tela que nunca vai resolver.
+        function precisaAtivarNaWalletNova(err) {
+            const msg = String((err && err.message) || '');
+            if (!/Ativar carteira|Entre pela carteira|No wallet linked/i.test(msg)) return false;
+            try { sessionStorage.setItem('efix_ativar_carteira', '1'); } catch {}
+            location.replace('/app/wallet/');
+            return true;
+        }
+
         async function showApp(address) {
+            // Sem endereço vinculado não há app: o antigo `address.slice()`
+            // lançava DEPOIS de trocar as telas, deixando um app vazio e mudo.
+            if (!address) { precisaAtivarNaWalletNova({ message: 'No wallet linked' }); return; }
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             const short = address.slice(0,6) + '...' + address.slice(-4);

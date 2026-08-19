@@ -642,7 +642,7 @@ tr.grp:first-child td{padding-top:6px}
 
 <script src="/shared/js/config.js"></script>
 <script src="/app/wallet/efix-wallet-bundle-v3.js"></script>
-<script src="/app/wallet/efix-auth.js"></script>
+<script src="/app/wallet/efix-auth.js?v=20260818"></script>
 <script>
 /* ═══ EFIX Wallet v2 — dados 100% reais, zero número inventado ═══ */
 const BACKEND = EFIX_CONFIG.backend;
@@ -844,9 +844,12 @@ async function ativarConcluir(m){
   // POST /users/login concorrentes
   if(_atvFeito) return; _atvFeito = true;
   m.className='mmsg'; m.textContent='criando sua conta on-chain…';
-  const sca = await scaDaSessao();
-  const email = ((EfixAuth.getUser()||{}).email||'').toLowerCase();
-  await EfixAuth.login(email, sca);   // vincula no backend + re-minta o JWT
+  let sca, email;
+  try{
+    sca = await scaDaSessao();
+    email = ((EfixAuth.getUser()||{}).email||'').toLowerCase();
+    await EfixAuth.login(email, sca);   // vincula no backend + re-minta o JWT
+  }catch(e){ _atvFeito = false; throw e; }  // libera a retentativa
   m.className='mmsg ok'; m.textContent='Carteira ativada: '+short(sca)+' — recarregando…';
   setTimeout(()=>location.reload(), 900);
 }
@@ -866,6 +869,12 @@ async function carregar(email, sessAddr){
   $('sb-wallet').textContent = registered ? short(registered) : (sessAddr ? short(sessAddr) : '—');
   // sem carteira on-chain nenhuma: oferece a ativação (smart account Alchemy)
   $('sb-ativar').style.display = wallets.length ? 'none' : 'inline-block';
+  // veio do classic, que não sabe vincular carteira: abre a ativação direto
+  if(!wallets.length){ try{
+    if(sessionStorage.getItem('efix_ativar_carteira')){
+      sessionStorage.removeItem('efix_ativar_carteira'); setTimeout(abrirAtivar, 400);
+    }
+  }catch(e){} }
   await carregarCore(email, wallets);
 }
 

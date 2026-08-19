@@ -52,10 +52,24 @@ const EfixAuth = (() => {
   }
 
   // ── Login: call backend after Alchemy OTP success ──
+  // SEC 2026-08-18: manda o Bearer QUANDO existe sessão. O backend exige essa
+  // prova de posse do e-mail para VINCULAR endereço a uma conta já existente
+  // (link-on-first-use) — sem ela, um POST anônimo {email da vítima, address
+  // do atacante} sequestraria os depósitos dela. Signup Alchemy-first (sem
+  // sessão ainda) segue funcionando: cai no INSERT de e-mail novo.
+  // ⚠️ Cópia espelho de /app/wallet/efix-auth.js — manter as duas em sincronia.
   async function login(email, address) {
+    const headers = { "Content-Type": "application/json" };
+    const tok = _token || (() => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } })();
+    // Só anexa o token se for DESTE e-mail: token de outra conta no mesmo
+    // navegador (troca de usuário sem logout) levaria 403 indevido no backend.
+    const tokEmail = tok ? String((parseJWT(tok) || {}).email || "").toLowerCase() : "";
+    if (tok && !isExpired(tok) && tokEmail === email.trim().toLowerCase()) {
+      headers["Authorization"] = `Bearer ${tok}`;
+    }
     const res = await fetch(`${BACKEND}/users/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ email: email.trim().toLowerCase(), address }),
     });
 
@@ -96,9 +110,13 @@ const EfixAuth = (() => {
         headers: { Authorization: `Bearer ${_token}` },
       });
 
+      // SEC 2026-08-18: só descartar a sessão quando o BACKEND a rejeita
+      // (401/403). Antes, qualquer 5xx/cold start do Railway apagava um token
+      // válido — e agora que vincular carteira exige esse token, um soluço de
+      // rede rebaixava o usuário a "sem prova" e o travava fora do vínculo.
       if (!res.ok) {
-        clear();
-        return null;
+        if (res.status === 401 || res.status === 403) { clear(); return null; }
+        return _user ? { token: _token, user: _user } : null;  // mantém o token
       }
 
       _user = await res.json();
@@ -106,8 +124,9 @@ const EfixAuth = (() => {
 
       return { token: _token, user: _user };
     } catch {
-      clear();
-      return null;
+      // Falha de REDE (offline, DNS, CORS): não é rejeição do backend — manter
+      // a sessão em cache pelo mesmo motivo do bloco acima.
+      return _token && !isExpired(_token) && _user ? { token: _token, user: _user } : null;
     }
   }
 
