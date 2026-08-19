@@ -205,6 +205,10 @@ tr.grp:first-child td{padding-top:6px}
 .actcard .body .dot{width:28px;height:28px;border-radius:8px;border:1px solid var(--nv-3);display:grid;place-items:center;
   font-family:var(--font-m);font-size:8px;flex-shrink:0}
 .actcard .body .tk{flex:1;min-width:0}
+/* base global (usada nas listas de ofertas/reservas); o navy do card de
+   atividade continua como override abaixo */
+.tk .t1{font-size:12.5px}
+.tk .t2{font-family:var(--font-m);font-size:9.5px;color:var(--ink-3)}
 .actcard .body .tk .t1{font-size:12.5px;color:var(--nv-ink)}
 .actcard .body .tk .t2{font-family:var(--font-m);font-size:9.5px;color:var(--nv-ink3)}
 .actcard .body .amt{font-family:var(--font-m);font-size:12px;text-align:right;white-space:nowrap;color:var(--nv-ink)}
@@ -454,14 +458,17 @@ tr.grp:first-child td{padding-top:6px}
         </div>
       </section>
 
-      <!-- ═══ stubs elegantes (beta: ações na wallet clássica) ═══ -->
-      <section class="view" id="view-investir"><div class="card stub" data-reveal>
-        <div class="big">Investir</div>
-        <!-- 19/08: o texto dizia que depósito PIX seguia na clássica — já é
-             nativo aqui (Depositar), e o saque também. Só as ofertas BTR faltam. -->
-        <p>Depósito e saque por PIX já são nativos aqui, na tela Início. As ofertas BTR chegam ao novo painel em breve.</p>
-        <a href="/app/wallet/classic.html">Ver ofertas na wallet clássica →</a>
-      </div></section>
+      <!-- ═══ INVESTIR · ofertas BTR + minhas reservas (nativo desde 19/08) ═══ -->
+      <section class="view" id="view-investir">
+        <div class="card" data-reveal>
+          <h2>Ofertas abertas <span class="up">imobiliário · BTR</span></h2>
+          <div id="ofertas-list"><div class="empty">carregando ofertas…</div></div>
+        </div>
+        <div class="card" data-reveal style="animation-delay:.08s">
+          <h2>Minhas reservas</h2>
+          <div id="reservas-list"><div class="empty">carregando…</div></div>
+        </div>
+      </section>
       <section class="view" id="view-remessas">
         <div class="rem2col">
           <div class="card" data-reveal>
@@ -621,6 +628,58 @@ tr.grp:first-child td{padding-top:6px}
   <div class="mmsg" id="swMsg"></div>
 </div></div>
 
+<div class="modal" id="mInvestir"><div class="mbox" style="position:relative">
+  <button class="x" onclick="fecharModal('mInvestir')">&times;</button>
+  <h3 id="invTitulo">Reservar cotas</h3>
+  <p class="lead" id="invLead"></p>
+
+  <div id="inv-form">
+    <label class="fldl">Valor a investir (R$)</label>
+    <!-- step=0.01: o pagamento é conciliado pelo VALOR, então induzir valores
+         redondos (step=100) faria reservas de investidores diferentes colidirem -->
+    <input id="invAmt" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
+    <div class="muted" id="invCaps" style="margin:4px 0 10px"></div>
+    <!-- Só PIX: os trilhos em dólar/euro criam uma conta virtual nova a cada
+         consulta e sem identificador da reserva, então o depósito não tem como
+         ser conciliado. Enquanto isso não mudar no backend, a mesa atende. -->
+    <input type="hidden" id="invRail" value="pix">
+    <label style="display:flex;gap:8px;align-items:flex-start;margin:12px 0;font-size:13px;color:var(--ink-2)">
+      <input type="checkbox" id="invNaoUS" style="margin-top:2px">
+      <span>Declaro que <b>não</b> sou pessoa dos EUA (exigência Reg S da oferta).</span>
+    </label>
+    <button class="cta pri" id="invBtnReservar" onclick="investirReservar()">Continuar</button>
+  </div>
+
+  <div id="inv-kyc" style="display:none">
+    <div class="refbox" style="display:block">
+      <div class="up">verificação de identidade</div>
+      <div class="hint" id="invKycTxt">Sua reserva foi criada. Para liberar o pagamento, precisamos verificar sua identidade uma única vez.</div>
+    </div>
+    <button class="cta pri" id="invBtnKyc" onclick="investirAbrirKyc()">Verificar identidade →</button>
+    <button class="hmini" onclick="investirChecarKyc()">já verifiquei, atualizar</button>
+  </div>
+
+  <div id="inv-pgto" style="display:none">
+    <div class="qrbox" id="invQrBox" style="display:none">
+      <img id="invQrImg" alt="QR PIX">
+      <div class="emv" id="invEmv"></div>
+      <button class="hmini" id="invCopyEmv" onclick="depCopiar('invEmv','invCopyEmv','copiar código PIX')">copiar código PIX</button>
+    </div>
+    <div class="refbox" style="display:block">
+      <div class="up">identificador da sua reserva</div>
+      <!-- o identificador é um UUID de 36 chars: o .code padrão (20px, muito
+           espaçado) o deixaria ilegível -->
+      <div class="code" id="invRef" style="font-size:13px;letter-spacing:.04em;word-break:break-all"></div>
+      <button class="hmini" id="invCopyRef" onclick="depCopiar('invRef','invCopyRef','copiar')">copiar</button>
+      <div class="hint" id="invPgtoHint"></div>
+    </div>
+    <div id="invFiatBox" style="display:none"></div>
+    <button class="hmini" onclick="investirVerReservas()">ver minhas reservas →</button>
+  </div>
+
+  <div class="mmsg" id="invMsg"></div>
+</div></div>
+
 <div class="modal" id="mSacar"><div class="mbox" style="position:relative">
   <button class="x" onclick="fecharModal('mSacar')">&times;</button>
   <h3>Sacar via PIX <span class="badge">on-chain</span></h3>
@@ -738,6 +797,7 @@ function go(v){
   if(v==='extrato') renderConsolidado('extrato-full', 40);
   if(v==='remessas') initRemessas2();
   if(v==='posicao') renderPosicao();
+  if(v==='investir') carregarInvestir();
   if(history.replaceState) history.replaceState(null,'','#'+v);
 }
 document.querySelectorAll('#nav a, #bnav a').forEach(a=>a.addEventListener('click',(e)=>{e.preventDefault();go(a.dataset.view)}));
@@ -1364,6 +1424,7 @@ function opsToken(saldos){
   return Object.values(saldos).map(({t,b})=>'<option value="'+t.sym+'">'+t.sym+' — '+b.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</option>').join('');
 }
 function fecharModal(id){
+  if(id==='mInvestir' && _invKycTimer){ clearInterval(_invKycTimer); _invKycTimer=null; }
   // um saque em andamento não pode ser "fechado": a queima já pode ter saído e
   // esconder a tela faria o usuário achar que cancelou.
   if(id==='mSacar' && _sacEmVoo){
@@ -1373,10 +1434,10 @@ function fecharModal(id){
   }
   $(id).classList.remove('on');
 }
+// clique no fundo do modal delega para fecharModal — assim as travas (saque em
+// voo, timer de KYC) valem para os DOIS caminhos de fechamento
 document.addEventListener('click',(e)=>{
-  if(!(e.target.classList&&e.target.classList.contains('modal'))) return;
-  if(e.target.id==='mSacar' && _sacEmVoo) return;   // idem para o clique no fundo
-  e.target.classList.remove('on');
+  if(e.target.classList&&e.target.classList.contains('modal')) fecharModal(e.target.id);
 });
 // se o usuário tentar sair no meio da queima, o navegador avisa
 window.addEventListener('beforeunload',(e)=>{ if(_sacEmVoo){ e.preventDefault(); e.returnValue=''; } });
@@ -1386,6 +1447,321 @@ function walletPodeAssinar(){
   if(window.IS_EXTERNAL_WALLET){ return false; }
   return EfixAuth.isLoggedIn();
 }
+
+/* ═══ INVESTIR · ofertas BTR (offerings-backend) ═══
+   O motor (KYC Sumsub, trilhos PIX/ACH/wire/SEPA, liquidação Fireblocks) já
+   roda; aqui é só a vitrine + a reserva. Regras do backend que a UI respeita:
+   carteira é OBRIGATÓRIA na reserva, Reg S proíbe pessoa dos EUA, e há caps
+   anuais por investidor e por emissor (CVM 88). ── */
+let _ofertas = [], _invOferta = null, _invAlloc = null, _invKycTimer = null;
+let _invEnviando = false;   // o backend NÃO deduplica: cada POST cria reserva nova
+let _invPendente = null;    // reserva a criar depois que o KYC aprovar
+
+// rótulo humano + cor inline. --warn não existe no arquivo; uso o mesmo âmbar
+// de .stt.wait, que tem contraste nos dois temas.
+const AMBAR = 'color:#d99e17';
+const INV_STATUS = {
+  pending:          ['em processamento',        ''],
+  kyc_review:       ['verificação pendente',    AMBAR],
+  kyc_approved:     ['verificado',              ''],
+  awaiting_deposit: ['aguardando seu pagamento',AMBAR],
+  deposit_received: ['pagamento recebido',      ''],
+  ready_to_settle:  ['em liquidação',           ''],
+  settled:          ['liquidado ✓',             'color:var(--green)'],
+  rejected:         ['recusado',                'color:var(--red)'],
+  expired:          ['expirado',                'color:var(--red)'],
+};
+
+async function carregarInvestir(){
+  // ofertas: rota pública
+  try{
+    const d = await fetch(OFFERINGS+'/v1/offerings').then(r=>r.json());
+    _ofertas = d.items || [];
+    $('ofertas-list').innerHTML = _ofertas.length ? _ofertas.map(ofertaCard).join('')
+      : '<div class="empty">Nenhuma oferta aberta agora.</div>';
+  }catch(e){ $('ofertas-list').innerHTML = '<div class="empty">não consegui carregar as ofertas agora</div>'; }
+  carregarReservas();
+}
+
+function ofertaCard(o){
+  const par = Number(o.parPriceBrl||0);
+  const sup = o.chain && o.chain.totalSupplyFormatted ? Number(o.chain.totalSupplyFormatted) : null;
+  return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)">'+
+    '<div class="tk" style="flex:1;min-width:0">'+
+      '<div class="t1">'+_esc(o.name||o.symbol)+'</div>'+
+      '<div class="t2">'+_esc(o.symbol)+' · cota R$ '+par.toFixed(2).replace('.',',')+
+        (sup ? ' · '+sup.toLocaleString('pt-BR',{maximumFractionDigits:0})+' cotas emitidas' : '')+
+        (o.kycRequired ? ' · exige verificação' : '')+'</div>'+
+    '</div>'+
+    '<button class="mini" onclick="abrirInvestir(\''+_esc(o.id)+'\')">Reservar</button>'+
+  '</div>';
+}
+
+async function carregarReservas(){
+  const el = $('reservas-list');
+  if(!EfixAuth.isLoggedIn()){ el.innerHTML='<div class="empty">Entre com sua conta para ver suas reservas.</div>'; return; }
+  try{
+    const r = await fetch(OFFERINGS+'/v1/my/allocations',{headers:EfixAuth.headers()});
+    if(!r.ok) throw new Error('falha ao carregar');
+    const d = await r.json();
+    if(!d.items || !d.items.length){ el.innerHTML='<div class="empty">Você ainda não tem reservas.</div>'; return; }
+    el.innerHTML = d.items.map(a=>{
+      const [rot, cor] = INV_STATUS[a.status] || [a.status, ''];
+      const podePagar = a.status==='awaiting_deposit' || a.status==='kyc_approved';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">'+
+        '<div class="tk" style="flex:1;min-width:0">'+
+          '<div class="t1">'+_esc(a.symbol)+' · <span class="money">R$ '+Number(a.amountBrl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>'+
+          '<div class="t2"><span style="'+cor+'">'+rot+'</span> · '+String(a.rail).toUpperCase()+' · '+new Date(a.createdAt).toLocaleDateString('pt-BR')+
+            (a.onChainTx?' · <a href="https://basescan.org/tx/'+a.onChainTx+'" target="_blank" style="color:var(--mag)">on-chain</a>':'')+'</div>'+
+        '</div>'+
+        (podePagar?'<button class="mini" onclick="investirPagar(\''+a.id+'\')">Como pagar</button>':'')+
+      '</div>';
+    }).join('');
+    // respeita o olhinho de privacidade, como os outros renders do v2
+    if(HIDDEN) document.querySelectorAll('#reservas-list .money').forEach(e=>e.classList.add('blur'));
+  }catch(e){ el.innerHTML='<div class="empty">não consegui carregar suas reservas agora</div>'; }
+}
+
+async function abrirInvestir(ofertaId){
+  if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para reservar cotas.'); return; }
+  const u = EfixAuth.getUser()||{};
+  // o backend RECUSA reserva sem carteira (a liquidação não teria destino)
+  if(!u.address){ abrirAtivar(); return; }
+  _invOferta = _ofertas.find(o=>o.id===ofertaId); if(!_invOferta) return;
+  _invAlloc = null;
+  $('invTitulo').textContent = 'Reservar · '+(_invOferta.symbol||'');
+  $('invLead').textContent = (_invOferta.name||'')+' — cota de R$ '+Number(_invOferta.parPriceBrl||0).toFixed(2).replace('.',',')+
+    '. Você reserva agora e paga em seguida; a entrega das cotas é on-chain, na sua carteira.';
+  $('inv-form').style.display='block'; $('inv-kyc').style.display='none'; $('inv-pgto').style.display='none';
+  $('invAmt').value=''; $('invNaoUS').checked=false;
+  $('invMsg').className='mmsg'; $('invMsg').textContent='';
+  $('invCaps').textContent='';
+  _invPendente = null;
+  // trava o botão até o precheck responder, senão dá para reservar antes do
+  // aviso de carteira divergente chegar (justamente o que ele evita)
+  $('invBtnReservar').disabled = true;
+  $('mInvestir').classList.add('on');
+  // avisa AGORA se o e-mail já está preso a outra carteira (o backend só diria
+  // isso no submit, com a reserva já digitada)
+  try{
+    const p = await fetch(OFFERINGS+'/v1/investors/precheck',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:u.email, wallet_address:u.address})}).then(r=>r.json());
+    if(p.registered && p.walletMatches === false){
+      $('invMsg').className='mmsg err';
+      $('invMsg').innerHTML='Sua conta já tem reservas em outra carteira ('+_esc(p.walletOnRecordMasked||'')+'). Fale com a gente para religar antes de reservar.';
+      $('invBtnReservar').disabled = true;
+    } else {
+      $('invBtnReservar').disabled = false;
+      if(p.kycApproved) $('invCaps').textContent = 'identidade já verificada ✓';
+    }
+  }catch(e){ $('invBtnReservar').disabled = false; }
+}
+
+async function investirReservar(){
+  const m=$('invMsg'), b=$('invBtnReservar');
+  const u = EfixAuth.getUser()||{};
+  const amount = parseFloat($('invAmt').value);
+  m.className='mmsg';
+  if(!amount || amount <= 0){ m.className='mmsg err'; m.textContent='informe o valor que deseja investir'; return; }
+  if(!$('invNaoUS').checked){ m.className='mmsg err'; m.textContent='a oferta é Reg S: confirme que você não é pessoa dos EUA'; return; }
+  // POST /v1/allocations não tem idempotência: dois cliques = duas reservas, e o
+  // cliente pagaria duas vezes. A trava é aqui.
+  if(_invEnviando) return;
+  _invEnviando = true;
+  b.disabled=true; b.textContent='Verificando…'; m.textContent='';
+  try{
+    // KYC ANTES de criar a reserva. Reserva em kyc_review JÁ CONTA no limite
+    // anual do investidor (CVM 88) e nada expira sozinho no backend — então
+    // quem abandonasse o KYC ficaria com o limite preso pelo resto do ano.
+    if(_invOferta.kycRequired){
+      const k = await fetch(OFFERINGS+'/v1/kyc/sumsub/link',{method:'POST',
+        headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:u.email})})
+        .then(r=>r.json()).catch(()=>({}));
+      if(!k.alreadyApproved){
+        _invPendente = { amount, rail:'pix' };     // retoma a reserva após aprovar
+        $('inv-form').style.display='none'; $('inv-kyc').style.display='block';
+        if(k.url){ window.open(k.url,'_blank');
+          $('invKycTxt').textContent='Complete a verificação na aba que abriu. Assim que aprovar, criamos sua reserva automaticamente — nada foi reservado ainda.';
+          clearInterval(_invKycTimer); _invKycTimer = setInterval(investirChecarKyc, 8000);
+        } else {
+          $('invKycTxt').textContent='Precisamos verificar sua identidade antes de reservar. Clique abaixo para começar.';
+        }
+        return;
+      }
+    }
+    b.textContent='Reservando…';
+    const r = await fetch(OFFERINGS+'/v1/allocations',{method:'POST',
+      headers:{'Content-Type':'application/json',...EfixAuth.headers()},
+      body:JSON.stringify({ email:u.email, wallet_address:u.address, amount_brl:amount,
+                            rail:'pix', offering_id:_invOferta.id,
+                            // a declaração do investidor viaja de verdade: o
+                            // checkbox marcado significa "NÃO sou US person"
+                            country:'BR', is_us_person: !$('invNaoUS').checked })});
+    if(!r.ok){
+      const d = await investirJson(r);
+      m.className='mmsg err'; m.textContent = investirErro(d, amount); return;
+    }
+    const d = await investirJson(r);
+    _invAlloc = d.allocation;
+    // caps informativos (CVM 88)
+    if(d.compliance){
+      const usado = Number(d.compliance.perInvestorUsedBrl||0), cap = Number(d.compliance.perInvestorCapBrl||0);
+      if(cap) $('invCaps').textContent = 'usado no ano: R$ '+usado.toLocaleString('pt-BR')+' de R$ '+cap.toLocaleString('pt-BR');
+    }
+    $('inv-form').style.display='none';
+    _invPendente = null;
+    if(_invAlloc.status==='kyc_review'){ $('inv-kyc').style.display='block'; }
+    else { await investirInstrucoes(_invAlloc.id); }
+    carregarReservas();
+  }catch(e){
+    m.className='mmsg err';
+    // resposta pode nem ser JSON (502/504 do gateway devolve HTML): não jogar
+    // erro de parse na cara de quem está investindo
+    m.textContent = /JSON|Unexpected token/i.test(String(e.message))
+      ? 'A conexão falhou no meio do pedido. Confira em "Minhas reservas" antes de tentar de novo — pode já ter sido criada.'
+      : String(e.message||'não foi possível reservar agora');
+  }
+  finally{ _invEnviando=false; b.disabled=false; b.textContent='Continuar'; }
+}
+
+// lê o corpo com tolerância: gateway em erro devolve HTML, não JSON
+async function investirJson(r){
+  try{ return await r.json(); }
+  catch(e){ return { error:'resposta_invalida', message:'o servidor respondeu de forma inesperada (HTTP '+r.status+')' }; }
+}
+
+// traduz os códigos do backend para linguagem de gente
+function investirErro(d, amount){
+  const cod = String(d.error||'');
+  if(cod==='over_investor_cap') return 'Isso passa do seu limite anual (R$ '+Number(d.cap_brl||0).toLocaleString('pt-BR')+
+    '; você já usou R$ '+Number(d.used_brl||0).toLocaleString('pt-BR')+'). Reserve um valor menor.';
+  if(cod==='over_issuer_cap')   return 'A oferta atingiu o limite anual de captação. Fale com a gente.';
+  if(cod==='us_person_not_allowed') return 'Esta oferta (Reg S) não aceita pessoas dos EUA.';
+  if(cod==='wallet_required')   return 'Sua conta precisa de uma carteira on-chain — use "ativar carteira".';
+  if(cod==='wallet_mismatch')   return 'Sua conta já tem reservas em outra carteira ('+(d.on_record||'').slice(0,10)+'…). Fale com a gente para religar.';
+  if(cod==='offering_not_found')return 'Esta oferta não está mais aberta.';
+  return d.message || 'não foi possível reservar agora';
+}
+
+async function investirAbrirKyc(){
+  const b=$('invBtnKyc'), m=$('invMsg');
+  const u = EfixAuth.getUser()||{};
+  b.disabled=true; m.className='mmsg'; m.textContent='preparando sua verificação…';
+  try{
+    const d = await fetch(OFFERINGS+'/v1/kyc/sumsub/link',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:u.email})}).then(r=>r.json());
+    if(d.alreadyApproved){ m.textContent=''; await investirChecarKyc(); return; }
+    if(d.url){ window.open(d.url,'_blank');
+      $('invKycTxt').textContent='Complete a verificação na aba que abriu. Quando aprovar, voltamos aqui sozinhos.';
+      m.textContent='';
+      // polling leve enquanto o modal estiver aberto
+      clearInterval(_invKycTimer);
+      _invKycTimer = setInterval(investirChecarKyc, 8000);
+    } else { m.className='mmsg err'; m.textContent = d.message || 'não consegui abrir a verificação agora'; }
+  }catch(e){ m.className='mmsg err'; m.textContent=e.message; }
+  finally{ b.disabled=false; }
+}
+
+async function investirChecarKyc(){
+  const u = EfixAuth.getUser()||{}, m=$('invMsg');
+  try{
+    const r = await fetch(OFFERINGS+'/v1/kyc/status?email='+encodeURIComponent(u.email||''));
+    const d = await investirJson(r);
+    if(d.kycStatus==='approved'){
+      clearInterval(_invKycTimer); _invKycTimer=null;
+      m.className='mmsg ok'; m.textContent='identidade verificada ✓';
+      if(_invPendente){                     // KYC veio ANTES da reserva: cria agora
+        $('inv-kyc').style.display='none'; $('inv-form').style.display='block';
+        await investirReservar();
+      } else if(_invAlloc){ await investirInstrucoes(_invAlloc.id); }
+      carregarReservas();
+    } else if(d.kycStatus==='rejected'){
+      clearInterval(_invKycTimer); _invKycTimer=null;
+      m.className='mmsg err'; m.textContent='a verificação foi recusada — fale com a gente.';
+    } else {
+      // sem isto, o botão "já verifiquei" não dava sinal nenhum de vida
+      m.className='mmsg'; m.textContent='ainda em análise — costuma levar alguns minutos.';
+    }
+  }catch(e){ m.className='mmsg err'; m.textContent='não consegui checar sua verificação agora.'; }
+}
+
+async function investirInstrucoes(allocId){
+  const m=$('invMsg');
+  m.className='mmsg'; m.textContent='gerando as instruções de pagamento…';
+  try{
+    const r = await fetch(OFFERINGS+'/v1/allocations/'+allocId+'/payment-instructions');
+    const d = await r.json();
+    if(r.status===202 && d.error==='kyc_required'){
+      $('inv-kyc').style.display='block'; $('inv-pgto').style.display='none';
+      if(d.kycLink){ $('invKycTxt').innerHTML='Falta verificar sua identidade para liberar o pagamento. <a href="'+_esc(d.kycLink)+'" target="_blank" style="color:var(--mag)">abrir verificação</a>'; }
+      m.textContent=''; return;
+    }
+    if(!r.ok){
+      m.className='mmsg err';
+      m.textContent = d.error==='provider_not_configured'
+        ? 'O meio de pagamento escolhido está indisponível agora. Sua reserva está salva — fale com a gente.'
+        : (d.message || 'não consegui gerar as instruções agora. Sua reserva está salva.');
+      return;
+    }
+    $('inv-kyc').style.display='none'; $('inv-pgto').style.display='block';
+    $('invRef').textContent = d.reference || allocId; $('invRef').dataset.code = d.reference || allocId;
+    if(d.rail==='pix'){
+      $('invQrBox').style.display='block';
+      if(d.qrImageUrl) $('invQrImg').src = d.qrImageUrl;
+      if(d.emv){ $('invEmv').textContent = d.emv; $('invEmv').dataset.code = d.emv; }
+      $('invFiatBox').style.display='none';
+      // O conciliador casa o depósito pelo VALOR EXATO dentro de ~15 min — ele
+      // NÃO lê a descrição do PIX. Dizer o contrário (como este texto dizia
+      // antes) faria o investidor confiar num identificador que ninguém lê.
+      $('invPgtoHint').innerHTML = 'Pague <b>exatamente R$ '+
+        Number(d.amountBrl||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+
+        '</b> — é o valor que identifica a sua reserva. Pague em uma única transferência e de preferência agora: '+
+        'depósitos com valor diferente, ou muito depois, precisam ser conferidos pela nossa mesa.'+
+        '<br>Guarde o identificador abaixo para qualquer conversa com a gente.'+
+        investirCoolingOff();
+    } else {
+      $('invQrBox').style.display='none';
+      const di = d.depositInstructions || {};
+      $('invFiatBox').style.display='block';
+      $('invFiatBox').innerHTML = '<div class="up" style="margin-top:8px">transferência em '+String(d.currency||'').toUpperCase()+'</div>'+
+        Object.keys(di).filter(k=>typeof di[k]!=='object').map(k=>
+          '<div>'+_esc(k.replace(/_/g,' '))+': <span class="mono">'+_esc(String(di[k]))+'</span></div>').join('');
+      $('invPgtoHint').innerHTML = 'Use os dados acima e cite o identificador da reserva na transferência.'+investirCoolingOff();
+    }
+    m.textContent='';
+  }catch(e){ m.className='mmsg err'; m.textContent=e.message; }
+}
+
+// CVM 88: coolingOffUntil é o prazo que a EFIX espera antes de entregar as
+// cotas. NÃO existe cancelamento self-service no backend, então não prometemos
+// um botão de desistir que não existe — dizemos o que é verdade e onde pedir.
+function investirCoolingOff(){
+  const at = _invAlloc && _invAlloc.coolingOffUntil;
+  if(!at) return '';
+  return '<br><span class="muted">Suas cotas são entregues a partir de '+
+    new Date(at).toLocaleDateString('pt-BR')+' (prazo de arrependimento da CVM 88). '+
+    'Para desistir dentro do prazo, fale com a gente.</span>';
+}
+
+async function investirPagar(allocId){
+  _invAlloc = { id: allocId };
+  $('invTitulo').textContent='Como pagar sua reserva';
+  $('invLead').textContent='';
+  $('inv-form').style.display='none'; $('inv-kyc').style.display='none'; $('inv-pgto').style.display='none';
+  $('invMsg').className='mmsg'; $('invMsg').textContent='';
+  $('mInvestir').classList.add('on');
+  // busca a reserva completa: sem isso o prazo de arrependimento não aparece
+  // para quem volta por "Como pagar"
+  try{
+    const d = await fetch(OFFERINGS+'/v1/allocations/'+allocId).then(r=>r.json());
+    if(d.allocation) _invAlloc = d.allocation;
+    if(_invAlloc.amountBrl) $('invLead').textContent = 'Reserva de R$ '+
+      Number(_invAlloc.amountBrl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'.';
+  }catch(e){}
+  await investirInstrucoes(allocId);
+}
+function investirVerReservas(){ fecharModal('mInvestir'); go('investir'); carregarReservas(); }
 
 /* ═══ SACAR (efixDI → PIX) — portado do classic para poder desligá-lo ═══
    Ordem que NÃO pode mudar: cotar (fail-closed) → confirmar → provar sessão do
