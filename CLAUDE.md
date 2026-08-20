@@ -14,6 +14,14 @@ node test-efixdi-protocol.js --mode=full   # Full protocol test suite
 git add . && git commit -m "msg" && git push  # Deploy (Railway auto-deploys backend, GH Pages frontend)
 ```
 
+## White-label (OBRIGATÓRIO ao editar a wallet v2)
+`/app/lobie/index.html` é uma cópia bit a bit de `/app/wallet/index.html`
+(white-label Lobie — a marca é decidida em runtime por `IS_LOBIE` via pathname).
+**Sempre que editar `app/wallet/index.html`, rode antes do commit:**
+```bash
+powershell -File tools/sync-lobie.ps1
+```
+
 ## Architecture
 ```
 PIX deposit → iHold/HausBank confirms → Backend mints efixDI to operator pool
