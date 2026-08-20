@@ -671,11 +671,11 @@ tr.grp:first-child td{padding-top:6px}
   <h3>Trocar <span class="badge">on-chain</span></h3>
   <p class="lead">Converta entre seus ativos na rede Base.</p>
   <label class="fldl">De</label>
-  <select id="swFrom" class="fld"></select>
+  <select id="swFrom" class="fld" onchange="trocarLimpa()"></select>
   <label class="fldl">Para</label>
-  <select id="swTo" class="fld"></select>
+  <select id="swTo" class="fld" onchange="trocarLimpa()"></select>
   <label class="fldl">Quantidade</label>
-  <input id="swAmt" class="fld mono" type="number" min="0" step="any" placeholder="0.00">
+  <input id="swAmt" class="fld mono" type="number" min="0" step="any" placeholder="0.00" oninput="trocarLimpa()">
   <button class="cta pri" id="swBtn" onclick="trocarOnchain()">Continuar</button>
   <div class="mmsg" id="swMsg"></div>
 </div></div>
@@ -929,8 +929,10 @@ function aplicarMarca(){
   // Imóveis é o produto central: visível desde o boot (o maybeShowImoveis
   // respeita a marca e não re-esconde)
   ['nav-imoveis','bnav-imoveis'].forEach(id=>{ const el=$(id); if(el) el.style.display=''; });
-  // atalhos: Depositar/Sacar/Trocar/Remessa são trilhos efixDI/EFIX
-  ['qk-dep','qk-rem','qk-sac','qk-tro'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; });
+  // atalhos: Depositar/Sacar/Remessa são trilhos efixDI/EFIX. TROCAR fica: é a
+  // peça do fluxo do proprietário Lobie (recebe BRLE do repasse e converte para
+  // USDC quando quiser) — e o par BRLE↔USDC é exatamente o grupo CAIXA da marca.
+  ['qk-dep','qk-rem','qk-sac'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; });
   // métricas efixDI do hero e teasers de conexão (Haus/Open Finance)
   ['m-nav','m-cdi'].forEach(id=>{ const el=$(id); const it=el&&el.closest('.it'); if(it) it.style.display='none'; });
   document.querySelectorAll('.cstrip .cs.off').forEach(el=>el.style.display='none');
@@ -3030,22 +3032,194 @@ async function enviarOnchain(){
 }
 
 async function abrirTrocar(){
+  // guardas do abrirEnviar: sem carteira/sem saldo o cliente recebia
+  // "escolha ativos diferentes", que não tem relação com o problema dele
+  if(!walletPodeAssinar()){ alert('Troca disponível para contas criadas no app. Carteira externa (MetaMask) opera pela própria carteira.'); return; }
+  if(!((EfixAuth.getUser()||{}).address) && !WALLETS.length){ abrirAtivar(); return; }
   _saldos = await saldosAtuais();
   const held = opsToken(_saldos);
+  if(!held){ alert('Sem ativos para trocar.'); return; }
   const todos = TOKENS.map(t=>'<option value="'+t.sym+'">'+t.sym+' · '+t.nome+'</option>').join('');
-  $('swFrom').innerHTML = held || todos;
+  $('swFrom').innerHTML = held;                 // só o que ele TEM (o par sai do saldo real)
   $('swTo').innerHTML = todos;
+  // destino = o outro lado do par PSM, não o primeiro da lista (na marca Lobie a
+  // lista começa em BRLE e o default virava "comprar BRLE", inverso do fluxo)
+  const de = $('swFrom').value;
+  $('swTo').value = (de==='BRLE') ? 'USDC' : 'BRLE';
   $('swAmt').value=''; $('swMsg').textContent=''; $('swMsg').className='mmsg';
+  trocarLimpa();
   $('mTrocar').classList.add('on');
 }
-function trocarOnchain(){
+/* ═══ SWAP BRLE ↔ USDC pelo EfixPSM (nativo desde 20/08) ═══
+   Quem assina é a conta DO CLIENTE (gasless pela policy) e o PSM é
+   permissionless — nenhuma chave nossa entra no caminho. Padrão provado em
+   produção no smoke G2 (efixdi-backend/scripts/g2-smoke-psm.js): approve do
+   valor exato + swap com minOut. Doutrina do saque aplicada: cotação fresca,
+   reserva, caps, saldo e sessão do signer são checados ANTES de assinar.
+   ⚠️ Este é o EfixPSM (BRLE↔USDC) — NÃO o EFIX_CONFIG.brle.psm, que é o PSM
+   de fiat (mint/redeem) e tem os roles zerados. */
+const PSM_SWAP = '0xB2317fB547486cD9e03825b1351516eC889D4CFC';
+const PSM_TOL_BPS = 20n;   // mesma tolerância do smoke provado
+// selectors via keccak256 e CONFERIDOS on-chain (1200 BRLE → 230,36 USDC):
+const PSM_SEL = {
+  quoteB2U: '0xab7e295b', quoteU2B: '0x04ef9dbc',
+  swapB2U:  '0x6d8d01f8', swapU2B:  '0xf53a3c30',
+  reserves: '0x1fa7c668', capBrl: '0xaa8bcc95', capUsdc: '0x3635d1b5',
+};
+const hex32 = (v) => BigInt(v).toString(16).padStart(64,'0');
+const psmRead = async (sel, args) => rpc('eth_call',[{to:PSM_SWAP, data:sel+(args||[]).map(hex32).join('')},'latest']);
+const _fmtTok = (v,d) => (Number(v)/Math.pow(10,d)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+let _sw = null;                 // cotação vigente
+let _swEnviado = false;         // a 2ª perna saiu? então não reoferecer o botão
+const SW_TTL_MS = 90000;        // cotação velha = recotar (o oráculo anda)
+
+function trocarLimpa(){ _sw = null; _swEnviado = false; const b=$('swBtn'); if(b){ b.textContent='Continuar'; b.disabled=false; } }
+
+async function trocarCotar(){
   const f=$('swFrom').value, t=$('swTo').value, m=$('swMsg');
-  if(f===t){ m.className='mmsg err'; m.textContent='escolha ativos diferentes'; return; }
-  // rotas com liquidez real hoje: BRLE<->USDC (PSM). demais pares: roteador em preparo.
-  const psm = (f==='BRLE'&&t==='USDC')||(f==='USDC'&&t==='BRLE');
-  m.className='mmsg';
-  if(psm){ m.innerHTML='Rota '+f+'→'+t+' via BRLE-PSM. Execução de swap on-chain entra na próxima fase (assinatura da sua conta). Por ora, use Remessas (USDC→PIX) ou Depositar.'; }
-  else { m.textContent='Par '+f+'→'+t+': roteador de swap em preparo. Enquanto isso, Enviar e Remessas já operam on-chain.'; }
+  _sw = null;
+  if(f===t){ m.className='mmsg err'; m.textContent='escolha ativos diferentes'; return null; }
+  const par = (f==='BRLE'&&t==='USDC') ? 'b2u' : ((f==='USDC'&&t==='BRLE') ? 'u2b' : null);
+  if(!par){ m.className='mmsg err'; m.textContent='Par '+f+'→'+t+': só BRLE↔USDC tem liquidez hoje (PSM). Para mover os outros, use Enviar.'; return null; }
+  const dec = par==='b2u' ? 18 : 6, decOut = par==='b2u' ? 6 : 18;
+  const wei = weiDeToken($('swAmt').value, dec);
+  if(wei<=0n){ m.className='mmsg err'; m.textContent='informe a quantidade'; return null; }
+  m.className='mmsg'; m.textContent='cotando no PSM…';
+  try{
+    const r = await psmRead(par==='b2u'?PSM_SEL.quoteB2U:PSM_SEL.quoteU2B, [wei]);
+    if(!r || r.length < 130) throw new Error('sem cotação');
+    const out = BigInt('0x'+r.slice(2,66)), fee = BigInt('0x'+r.slice(66,130));
+    if(out<=0n) throw new Error('cotação zero');
+    // CAP: o contrato limita a SAÍDA (EfixPSM: "Enforced on the OUTPUT amount"),
+    // então comparar a ENTRADA com o cap do outro lado liberava swap que reverte.
+    // cap==0 significa PSM FECHADO (setLimits(0,0,0)) — recusar, não liberar.
+    const cap = BigInt(await psmRead(par==='b2u'?PSM_SEL.capUsdc:PSM_SEL.capBrl)||'0x0');
+    if(cap===0n){ m.className='mmsg err'; m.textContent='A troca está fechada no momento.'; return null; }
+    if(out>cap){
+      const tetoEntrada = (wei*cap)/out;   // regra de três: teto aproximado na moeda de entrada
+      m.className='mmsg err';
+      m.textContent='O limite por operação é '+_fmtTok(cap,decOut)+' '+t+' (≈ '+_fmtTok(tetoEntrada,dec)+' '+f+' agora). Faça em partes.';
+      return null;
+    }
+    _sw = { par, wei, out, fee, dec, decOut, from:f, to:t, em:Date.now() };
+    m.className='mmsg ok';
+    m.innerHTML = 'Você recebe <b>'+_fmtTok(out,decOut)+' '+t+'</b> · taxa do PSM '+_fmtTok(fee,decOut)+' '+t+'.';
+    const b=$('swBtn'); if(b) b.textContent='Trocar '+_fmtTok(wei,dec)+' '+f+' →';
+    return _sw;
+  }catch(e){
+    m.className='mmsg err';
+    m.textContent='Não consegui cotar agora — a rota pode estar sem reserva neste momento.';
+    return null;
+  }
+}
+
+async function trocarOnchain(){
+  const m=$('swMsg'), b=$('swBtn');
+  // sempre recotar antes de assinar: taxa, reserva e caps mudam
+  if(!_sw || (Date.now()-_sw.em) > SW_TTL_MS){
+    const q = await trocarCotar();
+    if(!q) return;
+    m.innerHTML += '<br><span class="muted">confira o valor e toque de novo para confirmar.</span>';
+    return;                       // 2 toques: cotar → confirmar (nunca assina no 1º)
+  }
+  const q = _sw;
+  // o que valida é o que assina: se o formulário mudou desde a cotação, recotar
+  const fAgora=$('swFrom').value, tAgora=$('swTo').value;
+  const decAgora = fAgora==='BRLE' ? 18 : 6;
+  if(fAgora!==q.from || tAgora!==q.to || weiDeToken($('swAmt').value, decAgora)!==q.wei){
+    trocarLimpa();
+    m.className='mmsg err'; m.textContent='Os dados mudaram — cote de novo antes de confirmar.';
+    return;
+  }
+  const tokFrom = TOKENS_ALL.find(x=>x.sym===q.from), tokTo = TOKENS_ALL.find(x=>x.sym===q.to);
+  if(!tokFrom || !tokTo){ m.className='mmsg err'; m.textContent='ativo indisponível'; return; }
+  if(b){ b.disabled=true; b.textContent='Verificando…'; }
+  try{
+    // DONA = WALLETS[0] (a fonte real dos saldos exibidos), não getUser().address:
+    // usar o segundo bloqueava holder MAv2 e checava saldo de outra conta
+    const dona = String(WALLETS[0]||'').toLowerCase();
+    if(!dona){ m.className='mmsg err'; m.textContent='Não consegui resolver a carteira dona destes ativos. Recarregue a página.'; return; }
+    const bal = BigInt(await rpc('eth_call',[{to:tokFrom.addr, data:'0x70a08231'+padHex(dona)},'latest'])||'0x0');
+    if(bal < q.wei){ m.className='mmsg err'; m.textContent='saldo de '+q.from+' insuficiente'; return; }
+    // reserva DISPONÍVEL (o contrato exige saldo ≥ saída + fees acumuladas;
+    // balanceOf cru liberava swap que reverte por InsufficientReserve)
+    const rr = await psmRead(PSM_SEL.reserves);
+    if(!rr || rr.length < 130){ m.className='mmsg err'; m.textContent='não consegui ler a reserva do PSM agora'; return; }
+    const resBrl = BigInt('0x'+rr.slice(2,66)), resUsdc = BigInt('0x'+rr.slice(66,130));
+    const res = q.par==='b2u' ? resUsdc : resBrl;
+    if(res < q.out){
+      m.className='mmsg err';
+      m.textContent='A reserva do PSM não cobre esse valor agora ('+_fmtTok(res,q.decOut)+' '+q.to+' disponível). Tente menos.';
+      return;
+    }
+    // sessão do signer viva (mesmo preflight do Enviar/Sacar)
+    b.textContent='Verificando sessão…';
+    const fresco = await Promise.race([
+      EfixWallet.checkSession().then(a=>!!a).catch(()=>false),
+      new Promise(r=>setTimeout(()=>r(false), 4000)),
+    ]);
+    if(!fresco){ m.className='mmsg err'; m.innerHTML='Sua chave de assinatura expirou. '+linkRenovar('mTrocar')+' e refaça a troca.'; return; }
+    const sca = await scaDaSessao();
+    if(String(sca).toLowerCase() !== dona){
+      // a dona pode ser MAv2 (holders de julho): a derivação da sessão nunca
+      // bate com ela e quem decide é a validação 4337 — mesma exceção do Enviar
+      const tipo = await (EfixWallet.accountKind ? EfixWallet.accountKind(dona).catch(()=>'light') : 'light');
+      if(tipo !== 'mav2'){
+        m.className='mmsg err';
+        m.innerHTML='Os ativos estão em '+short(dona)+', mas a sessão deste navegador controla outra conta ('+short(sca)+') — nada foi trocado. '+
+          'Você pode '+linkRenovar('mTrocar')+' com o e-mail desta conta e refazer.';
+        return;
+      }
+    }
+    b.textContent='Preparando sua conta…';
+    if(!(await sacarGarantirConta(dona))){ m.className='mmsg err'; m.textContent='Não consegui preparar sua conta on-chain agora.'; return; }
+    // approve BOUNDED ao valor exato da perna + swap com minOut (anti-slippage)
+    const minOut = (q.out * (10000n - PSM_TOL_BPS)) / 10000n;
+    // saldo do DESTINO antes: em ERC-4337 a UserOp com inner call revertido é
+    // minerada e o SDK devolve hash sem olhar receipt.success — o hash NÃO é
+    // prova de que trocou. A prova é o saldo ter mudado.
+    const antes = BigInt(await rpc('eth_call',[{to:tokTo.addr, data:'0x70a08231'+padHex(dona)},'latest'])||'0x0');
+    b.textContent='Autorizando…';
+    await EfixWallet.sendUserOp(tokFrom.addr, '0x095ea7b3'+padHex(PSM_SWAP)+hex32(q.wei), '0x0', dona);
+    b.textContent='Trocando…';
+    _swEnviado = true;   // a partir daqui NUNCA reoferecer o botão sem conferir
+    const tx = await EfixWallet.sendUserOp(PSM_SWAP,
+      (q.par==='b2u'?PSM_SEL.swapB2U:PSM_SEL.swapU2B)+hex32(q.wei)+hex32(minOut), '0x0', dona);
+    const depois = BigInt(await rpc('eth_call',[{to:tokTo.addr, data:'0x70a08231'+padHex(dona)},'latest'])||'0x0');
+    const recebeu = depois > antes ? (depois - antes) : 0n;
+    const link = '<a href="https://basescan.org/tx/'+tx+'" target="_blank" style="color:var(--mag)">'+String(tx).slice(0,12)+'…</a>';
+    if(recebeu <= 0n){
+      // reverteu (câmbio andou > tolerância, cap por bloco, reserva) — dizer a verdade
+      m.className='mmsg err';
+      m.innerHTML='Não consegui confirmar a troca: seu saldo não mudou. '+
+        'Isso acontece quando o câmbio se move ou o limite do momento é atingido — seus '+q.from+' continuam com você. '+link;
+    } else {
+      m.className='mmsg ok';
+      m.innerHTML='trocado ✓ recebeu <b>'+_fmtTok(recebeu,q.decOut)+' '+q.to+'</b> '+link;
+    }
+    _sw=null; _saldos=null; _transfers=null;
+    const uu = EfixAuth.getUser()||{};
+    carregar(uu.email, uu.address);
+  }catch(e){
+    const msg=String((e&&e.message)||e);
+    m.className='mmsg err';
+    if(_swEnviado){
+      // a troca pode ter liquidado mesmo com erro aqui (wait esgotou, rede caiu):
+      // NÃO convidar a repetir — repetir converteria em dobro
+      m.innerHTML='Enviamos a troca mas não conseguimos confirmar o resultado ('+_esc(msg)+').<br>'+
+        '<b>Não repita agora</b> — confira seu saldo em instantes antes de tentar de novo.';
+    } else {
+      m.textContent = /orgId|not authenticated|Signer/i.test(msg)
+        ? 'A assinatura falhou por sessão expirada. Renove em "ativar carteira" e refaça.'
+        : (msg||'não foi possível trocar agora');
+    }
+  }
+  finally{
+    // cotação NUNCA sobrevive a uma tentativa: o próximo toque tem de recotar
+    _sw=null; _swEnviado=false;
+    if(b){ b.disabled=false; b.textContent='Continuar'; }
+  }
 }
 
 /* ── depósito PIX nativo (endpoints da clássica: /deposit/qr + /deposit/confirm-paid) ── */
