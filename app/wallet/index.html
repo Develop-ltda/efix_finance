@@ -1870,7 +1870,8 @@ function antAtualizaSel(){
   const liq   = recs.reduce((a,r)=>a+Number((r.antecipation||{}).netNow||0),0);
   const brlf = v => 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   $('ant-sel-bruto').textContent = brlf(cheio);
-  $('ant-sel-taxa').textContent  = brlf(cheio-liq)+' ('+(cheio>0?((cheio-liq)/cheio*100).toFixed(1):'0')+'%)';
+  // pt-BR: vírgula decimal (saía "11.9%" numa tela de dinheiro em português)
+  $('ant-sel-taxa').textContent  = brlf(cheio-liq)+' ('+(cheio>0?((cheio-liq)/cheio*100).toFixed(1).replace('.',','):'0')+'%)';
   $('ant-sel-liq').textContent   = brlf(liq);
   $('ant-sel').style.display='block';
   const bt = $('antBtn');
