@@ -380,7 +380,7 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
 <!-- EfixAuth = wallet canônica da tabela users do efixdi-backend (a MESMA que
      o app /app/wallet/ mostra). Sem ela, requestAccount() deriva um endereço
      novo que pode divergir da wallet registrada de usuários antigos. -->
-<script src="/app/wallet/efix-auth.js?v=20260818"></script>
+<script src="/app/wallet/efix-auth.js?v=20260820"></script>
 <script>
 const API_BASE = (new URLSearchParams(location.search).get('api')) || 'https://efix-offerings-backend-production.up.railway.app';
 const OFFERING_ID = (new URLSearchParams(location.search).get('intent')) || 'salrio';
@@ -403,7 +403,16 @@ let LAST_RENDERED_STATUS = null;   // triggers a full re-render when status adva
 // no matter what today's bundle derives — (3) fallback to the fresh derivation.
 // Fixes: legacy users (pre-v2 factory) got a DIFFERENT derived address here,
 // so allocations bound to a wallet the wallet app never shows.
+// SEC 2026-08-20: o /users/login era usado aqui como CONSULTA de endereço — e
+// ele deixou de emitir sessão sem prova de posse (raiz fechada). A fonte certa
+// para "onde as alocações deste e-mail estão amarradas" é o próprio
+// offerings-backend (/v1/investor-lookup, read-only). Se nem a sessão nem o
+// lookup responderem, NÃO seguimos calados com o endereço derivado: marcamos
+// CANONICAL_UNCONFIRMED e a reserva pede confirmação de e-mail antes — amarrar
+// cota num endereço que a wallet nunca mostra é o bug que esta função evita.
+let CANONICAL_UNCONFIRMED = false;
 async function resolveCanonicalAddress(email, derived) {
+  CANONICAL_UNCONFIRMED = false;
   if (!email || !email.includes('@')) return derived;
   try {
     const s = await EfixAuth.restore();
@@ -411,11 +420,20 @@ async function resolveCanonicalAddress(email, derived) {
       return s.user.address;
     }
   } catch {}
+  // investidor que JÁ tem registro: este é o endereço que evita wallet_mismatch
+  try {
+    const l = await fetch(`${API_BASE}/v1/investor-lookup?email=` + encodeURIComponent(email)).then(r => r.json());
+    if (l && l.walletAddress) return l.walletAddress;
+    if (l && l.walletAddress === null) return derived;   // sem registro: o derivado é o que será cadastrado
+  } catch (e) {
+    console.warn('investor-lookup falhou:', e.message);
+  }
   try {
     const sess = await EfixAuth.login(email, derived);
     if (sess?.user?.address) return sess.user.address;
   } catch (e) {
-    console.warn('EfixAuth canonical lookup failed — using derived address:', e.message);
+    if (e && e.code === 'otp_required') CANONICAL_UNCONFIRMED = true;
+    console.warn('EfixAuth canonical lookup failed:', e.message);
   }
   return derived;
 }
@@ -641,6 +659,15 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!USER_ADDRESS || !USER_EMAIL) {
     showAlert('f-alert', 'err', 'Please log in first (Step 1).');
+    return;
+  }
+  // Endereço canônico não confirmado: reservar aqui amarraria a cota num
+  // endereço que a carteira do investidor pode nunca mostrar. Pedimos a
+  // confirmação de e-mail (gate da wallet) antes de comprometer capital.
+  if (CANONICAL_UNCONFIRMED) {
+    showAlert('f-alert', 'err',
+      'Confirme seu e-mail em efix.finance/app/wallet (código de 6 dígitos) e volte para reservar — ' +
+      'assim garantimos que as cotas vão para a carteira que você vê no app.');
     return;
   }
   const btn = document.getElementById('f-submit');

@@ -770,7 +770,7 @@ tr.grp:first-child td{padding-top:6px}
 <!-- ?v= força o navegador a buscar o bundle NOVO junto com o HTML novo: sem
      isso, HTML novo + bundle velho em cache = EfixWallet.accountKind ausente -->
 <script src="/app/wallet/efix-wallet-bundle-v3.js?v=mav2-2"></script>
-<script src="/app/wallet/efix-auth.js?v=20260818"></script>
+<script src="/app/wallet/efix-auth.js?v=20260820"></script>
 <script>
 /* ═══ EFIX Wallet v2 — dados 100% reais, zero número inventado ═══ */
 
@@ -1413,6 +1413,15 @@ async function rem2Criar(){
     const fund = await rf('/remessas/deals/'+deal.id+'/fund',{method:'POST',body:JSON.stringify({
       amount_usdc:usdc, quote_set_id:_rem2Quote.quote_set_id,
     })});
+    if(fund.deferred){
+      // fluxo direto (payout ao favorecido): sem depósito manual — a mesa
+      // aprova e a conversão sai direto para quem você cadastrou
+      _rem2Addr='';
+      $('remInstrDetails').innerHTML =
+        'Remessa <span class="pos">#'+deal.id+'</span> · quita R$ '+amount.toFixed(2)+'<br>'+
+        'Registrada e aguardando aprovação da mesa.<br>'+
+        'Após a aprovação, o pagamento sai <b>direto para o favorecido</b> que você cadastrou — sem passo de depósito manual.';
+    } else {
     const instr = fund.deposit_instructions||{};
     _rem2Addr = instr.to_address||'';
     $('remInstrDetails').innerHTML =
@@ -1421,6 +1430,7 @@ async function rem2Criar(){
       'Valor a enviar: '+(instr.amount||usdc)+' USDC<br>'+
       'Endereço: '+(_rem2Addr||'(indisponível — ver detalhes da remessa)')+
       (fund.status==='failed' ? '<br><span class="neg">Falha ao armar a rota: '+(fund.reason||'')+'</span>' : '');
+    }
     $('rem-form').style.display='none';
     $('rem-instr').style.display='block';
     rem2Refresh();

@@ -63,7 +63,11 @@ const EfixAuth = (() => {
     // Só anexa o token se for DESTE e-mail: token de outra conta no mesmo
     // navegador (troca de usuário sem logout) levaria 403 indevido no backend.
     const tokEmail = tok ? String((parseJWT(tok) || {}).email || "").toLowerCase() : "";
-    if (tok && !isExpired(tok) && tokEmail === email.trim().toLowerCase()) {
+    // SEC 2026-08-20: manda o token mesmo EXPIRADO (mesmo e-mail) — o backend
+    // aceita como prova de refresh dentro da janela dele e é quem decide. Antes
+    // filtrávamos aqui e o expirado nunca chegava, o que forçaria um código
+    // novo a cada expiração de sessão.
+    if (tok && tokEmail === email.trim().toLowerCase()) {
       headers["Authorization"] = `Bearer ${tok}`;
     }
     const res = await fetch(`${BACKEND}/users/login`, {
@@ -74,7 +78,11 @@ const EfixAuth = (() => {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: "Login failed" }));
-      throw new Error(err.error || "Login failed");
+      // otp_required: o backend não tem prova de que este navegador possui o
+      // e-mail. Quem chama decide o caminho (o classic manda para o gate do v2).
+      const e = new Error(err.message || err.error || "Login failed");
+      e.code = err.error || null;
+      throw e;
     }
 
     const data = await res.json();
@@ -96,8 +104,18 @@ const EfixAuth = (() => {
   async function restore() {
     try {
       const savedToken = localStorage.getItem(TOKEN_KEY);
-      if (!savedToken || isExpired(savedToken)) {
-        clear();
+      if (!savedToken) { clear(); return null; }
+      // SEC 2026-08-20: token EXPIRADO fica no storage (não entra em _token, e
+      // isLoggedIn/headers seguem vendo "deslogado"). Ele é a PROVA de refresh
+      // que o /users/login passou a exigir — sem guardá-lo, quem tivesse a
+      // sessão vencida precisaria de um código novo a cada expiração.
+      if (isExpired(savedToken)) {
+        // Guardamos APENAS a prova (o token). O USER_KEY não serve de prova e,
+        // sobrevivendo, cruzava identidade em navegador compartilhado: o tdic lê
+        // esse cache direto e mostraria o e-mail do usuário ANTERIOR ao lado da
+        // carteira do novo.
+        _token = null; _user = null;
+        try { localStorage.removeItem(USER_KEY); } catch {}
         return null;
       }
 

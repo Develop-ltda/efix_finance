@@ -1058,7 +1058,7 @@
          mid-flow, which holds the in-flight OTP id between send and verify.
          Users with truly broken state click the "Reset login" button instead. -->
     <script src="efix-wallet-bundle-v3.js"></script>
-    <script src="efix-auth.js?v=20260818"></script>
+    <script src="efix-auth.js?v=20260820"></script>
     <script src="/shared/js/config.js"></script>
     <script src="/shared/js/formatters.js"></script>
     <script src="/shared/js/ui.js"></script>
@@ -1707,8 +1707,16 @@
         // deixá-lo preso numa tela que nunca vai resolver.
         function precisaAtivarNaWalletNova(err) {
             const msg = String((err && err.message) || '');
-            if (!/Ativar carteira|Entre pela carteira|No wallet linked/i.test(msg)) return false;
+            // SEC 2026-08-20: otp_required = o backend não tem prova de que este
+            // navegador possui o e-mail (a raiz do /users/login foi fechada). O
+            // classic confirma e-mail pela Alchemy, que o servidor não vê — então
+            // o caminho é o gate da wallet nova, que usa o OTP do backend.
+            const semProva = (err && err.code === 'otp_required') || /otp_required|c[óo]digo de 6 d[íi]gitos/i.test(msg);
+            if (!semProva && !/Ativar carteira|Entre pela carteira|No wallet linked/i.test(msg)) return false;
             try { sessionStorage.setItem('efix_ativar_carteira', '1'); } catch {}
+            if (semProva) {
+                try { setStatus('Confirme seu e-mail na carteira nova para continuar — redirecionando…', 'error'); } catch {}
+            }
             location.replace('/app/wallet/');
             return true;
         }
