@@ -478,6 +478,13 @@ tr.grp:first-child td{padding-top:6px}
       <section class="view" id="view-imoveis">
         <div class="card" data-reveal>
           <h2>Meus imóveis <span class="up" id="imv-cnt"></span></h2>
+          <!-- visão do operador: só aparece se o backend aceitar o token deste
+               login em /admin/lobie-clients (allowlist WALLET_OPS_EMAILS) -->
+          <div id="imv-ops" style="display:none;margin:0 0 14px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:10px">
+            <div class="up" style="margin-bottom:6px">visão do operador · ver como cliente</div>
+            <select id="imvCliSel" class="fld" style="max-width:460px" onchange="imoveisVerComo(this.value)"><option value="">carregando…</option></select>
+            <div class="muted" id="imvOpsHint" style="font-size:11px;margin-top:6px">Mostra as unidades registradas na Lobie para o e-mail do cliente (a parte com NFT segue sendo a da SUA carteira).</div>
+          </div>
           <p class="muted" style="margin:0 0 14px">Unidades sob gestão Lobie. O NPV é um <b>valor de referência</b> calculado pelo fluxo de aluguel (Gordon 6%/3%) — não é preço de venda, oferta de compra nem valor de liquidez.</p>
           <div id="imoveis-list"><div class="empty">carregando…</div></div>
         </div>
@@ -1566,30 +1573,79 @@ async function imoveisFetch(){
   if(!(EfixAuth.isLoggedIn && EfixAuth.isLoggedIn())) return null;
   const u = EfixAuth.getUser()||{};
   if(!u.address) return null;
-  const url = BACKEND+'/wallet/properties/'+u.address+(u.email?'?email='+encodeURIComponent(u.email):'');
+  // visão do operador: o backend só aceita e-mail ≠ do token se o token for
+  // de operador (WALLET_OPS_EMAILS) — para os demais, _imvVerComo nunca seta
+  const email = _imvVerComo || u.email;
+  const url = BACKEND+'/wallet/properties/'+u.address+(email?'?email='+encodeURIComponent(email):'');
   const r = await fetch(url,{headers:EfixAuth.headers()});
   if(!r.ok) throw new Error('HTTP '+r.status);   // 502 do lens não pode virar "nenhuma unidade"
   _imoveis = await r.json();
   return _imoveis;
 }
 
+/* ── visão do operador (dropdown "ver como cliente") ──
+   Liga sozinho: tenta /admin/lobie-clients com o token do login; 200 = é
+   operador (allowlist no backend) e o dropdown aparece; 401/403 = some.
+   Nenhum segredo no navegador — o poder mora no backend. */
+let _imvVerComo = null, _imvOpsTentou = false, _imvSeq = 0;
+async function imoveisOpsInit(){
+  if(_imvOpsTentou) return;
+  _imvOpsTentou = true;
+  try{
+    const r = await fetch(BACKEND+'/admin/lobie-clients?limit=1000',{headers:EfixAuth.headers()});
+    // 401/403 = não é operador (resposta definitiva: mantém o latch e some).
+    // 5xx / cold-start do Railway = transiente: solta o latch p/ tentar de novo
+    // na próxima visita à aba, senão o operador fica sem dropdown até F5.
+    if(!r.ok){ if(r.status>=500) _imvOpsTentou=false; return; }
+    const d = await r.json();
+    const cls = d.clients||[];
+    if(!cls.length) return;
+    $('imvCliSel').innerHTML = '<option value="">— eu mesmo —</option>'+cls.map(c=>
+      '<option value="'+_esc(c.email)+'">'+_esc(c.nome||c.email)+' · '+(c.unitCount||0)+' un.'+(c.buildings?' · '+_esc(c.buildings):'')+'</option>').join('');
+    $('imv-ops').style.display='block';
+  }catch(e){ _imvOpsTentou=false; /* rede caiu: tenta de novo na próxima */ }
+}
+function imoveisVerComo(email){
+  _imvVerComo = email || null;
+  _imoveis = null;                      // derruba o cache do próprio painel
+  $('imvOpsHint').textContent = _imvVerComo
+    ? 'Vendo como '+_imvVerComo+' — unidades registradas na Lobie para este e-mail (a parte com NFT segue sendo a da SUA carteira).'
+    : 'Mostra as unidades registradas na Lobie para o e-mail do cliente (a parte com NFT segue sendo a da SUA carteira).';
+  // heading honesto: "Cliente: x" no modo operador, "Meus imóveis" no próprio
+  const h = document.querySelector('#view-imoveis h2');
+  if(h) h.childNodes[0].nodeValue = _imvVerComo ? 'Cliente · ' : 'Meus imóveis ';
+  carregarImoveis();
+}
+
 async function carregarImoveis(){
   const el = $('imoveis-list');
   const u = EfixAuth.getUser()||{};
+  imoveisOpsInit();   // operador? liga o dropdown (assíncrono, não bloqueia)
   if(!u.address){ el.innerHTML='<div class="empty">Ative sua carteira para ver seus imóveis.</div>'; return; }
+  // token de sequência: no modo operador o fetch é lento (lens + MySQL); trocar
+  // de cliente com uma resposta anterior em voo não pode pintar dados do cliente
+  // A sob o rótulo do B (PII trocada). Só a chamada mais recente renderiza.
+  const seq = ++_imvSeq;
+  const alvo = _imvVerComo;   // congela para o rótulo bater com o dado
   if(!_imoveis) el.innerHTML = '<div class="empty">carregando…</div>';
   try{
     const d = _imoveis || await imoveisFetch();
+    if(seq !== _imvSeq) return;          // chegou tarde: uma seleção mais nova mandou
     if(!d){ el.innerHTML='<div class="empty">não consegui carregar seus imóveis agora</div>'; return; }
     const t=(d.counts&&d.counts.tokenized)||0, v=(d.counts&&d.counts.virtual)||0;
-    // não anunciar "0 tokenizadas" (o caso da maioria) nem prometer ação
-    $('imv-cnt').textContent = [ t?(t+' com NFT'):'', v?(v+' registrada'+(v===1?'':'s')+' na Lobie'):'' ]
-      .filter(Boolean).join(' · ');
+    // rótulo honesto: no modo operador a contagem é do CLIENTE; a parte com NFT
+    // é sempre da carteira do operador (fica explícito para não confundir)
+    if(alvo){
+      $('imv-cnt').textContent = v ? (v+' registrada'+(v===1?'':'s')+' na Lobie p/ '+alvo) : 'nenhuma registrada na Lobie p/ '+alvo;
+    } else {
+      $('imv-cnt').textContent = [ t?(t+' com NFT'):'', v?(v+' registrada'+(v===1?'':'s')+' na Lobie'):'' ]
+        .filter(Boolean).join(' · ');
+    }
     el.innerHTML = (d.properties||[]).length
       ? d.properties.map(imovelCard).join('')
-      : '<div class="empty">Nenhuma unidade encontrada para sua conta.</div>';
+      : '<div class="empty">'+(alvo?('Nenhuma unidade registrada na Lobie para '+_esc(alvo)+'.'):'Nenhuma unidade encontrada para sua conta.')+'</div>';
     if(HIDDEN) document.querySelectorAll('#imoveis-list .money').forEach(e=>e.classList.add('blur'));
-  }catch(e){ el.innerHTML='<div class="empty">não consegui carregar seus imóveis agora</div>'; }
+  }catch(e){ if(seq===_imvSeq) el.innerHTML='<div class="empty">não consegui carregar seus imóveis agora</div>'; }
 }
 
 // mostra a aba só para quem tem unidade (mesmo padrão da aba Posição).
@@ -1597,6 +1653,11 @@ async function carregarImoveis(){
 // que mostrar vazia para os ~todos que não são proprietários Lobie.
 async function maybeShowImoveis(){
   if(IS_LOBIE) return;   // na marca Lobie a aba é o produto central: sempre visível (aplicarMarca)
+  // no modo operador a aba já está visível — NÃO recomputar visibilidade com o
+  // cliente selecionado (senão um saque/depósito no meio da sessão sumia a aba
+  // se o cliente atual não tivesse unidade). E imoveisFetch aqui usaria
+  // _imvVerComo, contaminando o cache com o cliente.
+  if(_imvVerComo) return;
   let tem = false;
   try{ const d = await imoveisFetch();
     tem = !!(d && d.counts && (d.counts.tokenized>0 || d.counts.virtual>0)); }catch(e){}
