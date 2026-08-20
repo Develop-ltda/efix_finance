@@ -841,8 +841,11 @@ function aplicarMarca(){
   // classic é produto EFIX: no lugar, a assinatura do white-label
   const alt = document.querySelector('#gate .alt');
   if(alt) alt.innerHTML = '<span class="up" style="letter-spacing:.14em">powered by EFIX</span>';
+  // wordmark COMPLETO no app (o monograma "l." sozinho passava despercebido —
+  // feedback 20/08); com o menu recolhido, o miolo "obie" some e sobra "l."
+  document.head.insertAdjacentHTML('beforeend','<style>.sbmin .brand .wm-x{display:none}</style>');
   const sb = document.querySelector('.sb .brand');
-  if(sb) sb.innerHTML = '<span style="font-weight:800;font-size:20px;letter-spacing:-.5px">l<b style="color:#7c3aed">.</b></span>';
+  if(sb) sb.innerHTML = '<span style="font-weight:800;font-size:22px;letter-spacing:-.5px">l<span class="wm-x">obie</span><b style="color:#7c3aed">.</b></span>';
   const foot = document.querySelector('.sb .foot');
   if(foot) foot.insertAdjacentHTML('beforeend','<span class="up" style="margin-top:8px">powered by EFIX</span>');
   // trilhos EFIX fora do produto Lobie (menu lateral + barra mobile)
