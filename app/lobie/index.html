@@ -476,6 +476,17 @@ tr.grp:first-child td{padding-top:6px}
       </section>
       <!-- ═══ IMÓVEIS · Lobie Units (nativo desde 19/08) ═══ -->
       <section class="view" id="view-imoveis">
+        <!-- resumo FIXO: NPV + repasses 12m consolidados grudam no topo ao rolar
+             (o card de uma unidade rola para fora e perdia o contexto do total) -->
+        <!-- top:60px = altura da .top (que também é sticky em top:0); sem o
+             offset este resumo grudava ATRÁS da topbar e sumia ao rolar -->
+        <div id="imv-fixo" style="display:none;position:sticky;top:60px;z-index:5;background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:12px;box-shadow:var(--shadow)">
+          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:baseline">
+            <div><div class="up">NPV total (referência)</div><div class="money" id="imv-fixo-npv" style="font-family:var(--font-d);font-size:18px">—</div></div>
+            <div><div class="up">repasses 12m</div><div class="money" id="imv-fixo-noi" style="font-family:var(--font-d);font-size:18px">—</div></div>
+            <div style="flex:1;min-width:0;text-align:right"><span class="up" id="imv-fixo-cnt"></span></div>
+          </div>
+        </div>
         <div class="card" data-reveal>
           <h2>Meus imóveis <span class="up" id="imv-cnt"></span></h2>
           <!-- visão do operador: só aparece se o backend aceitar o token deste
@@ -1699,6 +1710,8 @@ async function carregarImoveis(){
     const d = _imoveis || await imoveisFetch();
     if(seq !== _imvSeq) return;          // chegou tarde: uma seleção mais nova mandou
     if(!d){ el.innerHTML='<div class="empty">não consegui carregar seus imóveis agora</div>'; return; }
+    await tokCarregarPedidos();          // pedidos de tokenização (p/ o card mostrar "em andamento")
+    if(seq !== _imvSeq) return;
     const t=(d.counts&&d.counts.tokenized)||0, v=(d.counts&&d.counts.virtual)||0;
     // rótulo honesto: no modo operador a contagem é do CLIENTE; a parte com NFT
     // é sempre da carteira do operador (fica explícito para não confundir)
@@ -1708,11 +1721,26 @@ async function carregarImoveis(){
       $('imv-cnt').textContent = [ t?(t+' com NFT'):'', v?(v+' registrada'+(v===1?'':'s')+' na Lobie'):'' ]
         .filter(Boolean).join(' · ');
     }
-    el.innerHTML = (d.properties||[]).length
-      ? d.properties.map(imovelCard).join('')
+    const props = d.properties||[];
+    el.innerHTML = props.length
+      ? props.map(imovelCard).join('')
       : '<div class="empty">'+(alvo?('Nenhuma unidade registrada na Lobie para '+_esc(alvo)+'.'):'Nenhuma unidade encontrada para sua conta.')+'</div>';
-    if(HIDDEN) document.querySelectorAll('#imoveis-list .money').forEach(e=>e.classList.add('blur'));
-  }catch(e){ if(seq===_imvSeq) el.innerHTML='<div class="empty">não consegui carregar seus imóveis agora</div>'; }
+    // header FIXO: soma NPV (parte do dono p/ virtual, unidade p/ tokenizada) e
+    // repasses 12m das unidades. No modo operador, conta SÓ o virtual do cliente
+    // (o payload mistura os NFTs da carteira do operador — não são do cliente),
+    // espelhando a lógica do imv-cnt logo acima.
+    const baseHdr = alvo ? props.filter(p=>p.tokenized===false) : props;
+    const somaNpv = baseHdr.reduce((a,p)=>a+(Number((p.tokenized===false?p.estimatedNpvBRL:p.npvBRL))||0),0);
+    const somaNoi = baseHdr.reduce((a,p)=>a+(Number((p.tokenized===false?p.ownerTrailing12NOI:p.trailing12NOI))||0),0);
+    const fixo = $('imv-fixo');
+    if(baseHdr.length && (somaNpv>0 || somaNoi>0)){
+      $('imv-fixo-npv').textContent = somaNpv>0?brl(somaNpv):'—';
+      $('imv-fixo-noi').textContent = somaNoi>0?brl(somaNoi):'—';
+      $('imv-fixo-cnt').textContent = baseHdr.length+' unidade'+(baseHdr.length===1?'':'s')+(alvo?(' · '+alvo):'');
+      fixo.style.display='block';
+    } else { fixo.style.display='none'; }
+    if(HIDDEN) document.querySelectorAll('#imoveis-list .money, #imv-fixo .money').forEach(e=>e.classList.add('blur'));
+  }catch(e){ if(seq===_imvSeq){ el.innerHTML='<div class="empty">não consegui carregar seus imóveis agora</div>'; $('imv-fixo').style.display='none'; } }
   // recebíveis a antecipar entram no mesmo painel (mesmo público, mesma aba)
   if(seq === _imvSeq) carregarAntecipacao();
 }
@@ -2011,16 +2039,28 @@ function imovelCard(p){
 
   const selo = virtual
     ? (p.participacao!=null ? '<span class="hmini">'+Number(p.participacao).toFixed(0)+'% seu</span>' : '')
-    : '<span class="hmini">NFT</span>';
-  // sem botão de tokenizar (o endpoint está desativado por desenho — o mint é
-  // operação com custódia 2-de-2), então dizemos a quem procurar
+    : '<span class="hmini" style="border-color:var(--mag);color:var(--mag)">NFT on-chain</span>';
+  // meses atestados on-chain = o track record que vive no LobieUnitRegistry
+  const atestados = obs.filter(o=>o && o.attested).length;
   const situacao = virtual
-    ? '<span class="muted">registrada na Lobie · ainda sem NFT — fale com a gente para tokenizar</span>'
+    ? '<span class="muted">registrada na Lobie · ainda <b>sem NFT</b>. Tokenize para ter seu track record de aluguel gravado on-chain.</span>'
     : (semHistorico
         ? '<span class="muted">histórico de repasses indisponível agora</span>'
-        : (ult && ult.attested
-            ? '<span class="pos">repasse atestado · '+_mesLabel(ult.yearMonth)+'</span>'
-            : '<span style="color:#d99e17">atestação pendente · '+_mesLabel(ult.yearMonth)+'</span>'));
+        : (atestados>0
+            ? '<span class="pos">'+atestados+' m&ecirc;s'+(atestados===1?'':'es')+' de repasse atestado'+(atestados===1?'':'s')+' on-chain</span>'
+            : '<span style="color:#d99e17">atestação on-chain pendente · '+_mesLabel((ult||{}).yearMonth)+'</span>'));
+  // CTA de tokenização: só para unidade virtual (sem NFT), e nunca em visão de
+  // operador (o pedido sai da conta do TOKEN — seria do operador, não do dono).
+  // Se já há pedido em andamento (via _tokPedidos), mostra o estado, não o CTA —
+  // senão um F5 fazia parecer que nunca pediu.
+  const podeTokenizar = virtual && !IS_OPS_VIEW();
+  const jaPediu = podeTokenizar && _tokPedidos[Number(p.empId)+'/'+String(p.unitCode||'')];
+  // data-attrs (NÃO onclick com dado do PMS: unitCode com aspa/backslash viraria
+  // XSS na carteira que assina — o listener lê o dataset, contexto de atributo)
+  const btnTok = !podeTokenizar ? ''
+    : (jaPediu
+        ? '<button class="mini" disabled>Solicitação em andamento</button>'
+        : '<button class="mini bt-tok" data-emp="'+Number(p.empId)+'" data-unit="'+_esc(String(p.unitCode||''))+'">Criar meu NFT →</button>');
 
   const sub = [ p.unitCode?('Unidade '+_esc(p.unitCode)):'', p.neighborhood?_esc(p.neighborhood):'',
                 (!virtual && p.tokenId)?('token '+String(p.tokenId).slice(0,10)+'…'):'' ].filter(Boolean).join(' · ');
@@ -2056,8 +2096,61 @@ function imovelCard(p){
     '</div>'+
     '<div style="font-size:11px;margin-bottom:6px">'+situacao+'</div>'+
     '<span class="money">'+imvSpark(obs)+'</span>'+
-    (links?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'+links+'</div>':'')+
+    (links?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+links+'</div>':'')+
+    (btnTok?'<div style="margin-top:10px">'+btnTok+'<span class="muted" style="font-size:11px;margin-left:8px">emissão pela custódia (2-de-2); o NFT aparece aqui quando sair</span></div>':'')+
   '</div>';
+}
+
+/* ═══ TOKENIZAÇÃO (pedido) ═══
+   O mint real é custódia 2-de-2 (não dá para um botão mintar na hora). Aqui o
+   cliente REGISTRA o pedido; a operação cumpre e o NFT nasce on-chain — o card
+   então já mostra tokenizado (o lens lê a cadeia). Doutrina: nada aqui assina. */
+let _tokEnviando = false;
+let _tokPedidos = {};   // 'empId/unitCode' -> true (pedidos pending/minting do cliente)
+
+// delegação: o botão é montado por data-attr (sem dado do PMS no onclick)
+document.addEventListener('click', function(ev){
+  const b = ev.target.closest && ev.target.closest('.bt-tok');
+  if(!b) return;
+  tokenizarPedir(b.getAttribute('data-emp'), b.getAttribute('data-unit'), b);
+});
+
+// carrega os pedidos do cliente para o card mostrar "em andamento" após F5
+async function tokCarregarPedidos(){
+  _tokPedidos = {};
+  if(IS_OPS_VIEW()) return;   // pedidos são do dono do token, não do operador
+  try{
+    const r = await fetch(BACKEND+'/wallet/tokenizations/me',{headers:EfixAuth.headers()});
+    if(!r.ok) return;
+    const d = await r.json();
+    (d.requests||[]).forEach(q=>{
+      if(q.status==='pending' || q.status==='minting') _tokPedidos[q.emp_id+'/'+q.unit_code]=true;
+    });
+  }catch(e){}
+}
+
+async function tokenizarPedir(empId, unitCode, btn){
+  if(_tokEnviando) return;
+  _tokEnviando = true;
+  const orig = btn ? btn.textContent : '';
+  if(btn){ btn.disabled=true; btn.textContent='Enviando…'; }
+  try{
+    const r = await fetch(BACKEND+'/wallet/tokenize-unit',{method:'POST',
+      headers:EfixAuth.headers(), body:JSON.stringify({ empId:Number(empId), unitCode:String(unitCode) })});
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok && r.status!==200 && r.status!==202){
+      alert(d.message || d.error || 'não foi possível registrar o pedido agora');
+      if(btn){ btn.disabled=false; btn.textContent=orig; }
+      return;
+    }
+    _tokPedidos[Number(empId)+'/'+String(unitCode)] = true;   // persiste no render
+    if(btn){ btn.disabled=true; btn.textContent = d.alreadyRequested ? 'Solicitação em andamento' : 'Solicitação registrada ✓'; }
+    alert(d.message || 'Solicitação registrada.');
+  }catch(e){
+    alert('A conexão falhou. Confira mais tarde antes de pedir de novo.');
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+  finally{ _tokEnviando=false; }
 }
 
 /* ═══ INVESTIR · ofertas BTR (offerings-backend) ═══
