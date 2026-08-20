@@ -756,7 +756,9 @@ tr.grp:first-child td{padding-top:6px}
 </nav>
 
 <script src="/shared/js/config.js"></script>
-<script src="/app/wallet/efix-wallet-bundle-v3.js"></script>
+<!-- ?v= força o navegador a buscar o bundle NOVO junto com o HTML novo: sem
+     isso, HTML novo + bundle velho em cache = EfixWallet.accountKind ausente -->
+<script src="/app/wallet/efix-wallet-bundle-v3.js?v=mav2-2"></script>
 <script src="/app/wallet/efix-auth.js?v=20260818"></script>
 <script>
 /* ═══ EFIX Wallet v2 — dados 100% reais, zero número inventado ═══ */
@@ -2205,11 +2207,25 @@ async function sacarExecutar(){
           m.innerHTML='Sua chave de assinatura expirou — nada foi queimado. Você pode '+linkRenovar('mSacar')+' e refazer o saque.';
           sacarModoQueimar(); return;
         }
-        const sca = await scaDaSessao();
-        if(!claim || String(sca).toLowerCase() !== String(claim).toLowerCase()){
+        let sca = await scaDaSessao();
+        if(!claim){
           m.className='mmsg err';
-          m.textContent='A carteira desta sessão ('+short(sca)+') não é a que sua sessão autoriza a sacar'+(claim?' ('+short(claim)+')':'')+'. Saia e entre de novo — nada foi queimado.';
+          m.textContent='Sua sessão não diz qual carteira pode sacar. Saia e entre de novo — nada foi queimado.';
           sacarModoQueimar(); return;
+        }
+        if(String(sca).toLowerCase() !== String(claim).toLowerCase()){
+          // O claim pode ser uma conta MAv2 (era wallet-client, holders de
+          // julho) do MESMO signer — a derivação LightAccount da sessão nunca
+          // bate com ela. Aí quem decide é a validação 4337: assinatura de quem
+          // não controla morre na simulação e NADA é queimado. Outros casos:
+          // recusa fail-closed como sempre.
+          const tipo = await (EfixWallet.accountKind ? EfixWallet.accountKind(claim).catch(()=>'light') : 'light');
+          if(tipo !== 'mav2'){
+            m.className='mmsg err';
+            m.textContent='A carteira desta sessão ('+short(sca)+') não é a que sua sessão autoriza a sacar ('+short(claim)+'). Saia e entre de novo — nada foi queimado.';
+            sacarModoQueimar(); return;
+          }
+          sca = claim;   // queima assinada PELA conta do claim; 4337 valida o controle
         }
         // 5. smart account nunca deployada não assina
         b.textContent='Preparando sua conta…';
@@ -2280,6 +2296,11 @@ async function sacarExecutar(){
     } else {
       if(/orgId|not authenticated|Signer/i.test(msg)){
         m.innerHTML='A assinatura falhou por sessão expirada — nada foi queimado. Você pode '+linkRenovar('mSacar')+' e refazer.';
+      } else if(/\bAA3\d\b/i.test(msg)){
+        m.textContent='Não conseguimos patrocinar a taxa da rede agora — nada foi queimado. Tente de novo em instantes.';
+      } else if(/\bAA24\b|signature error|invalid signature|SignatureValidation/i.test(msg)){
+        m.innerHTML='A rede recusou a assinatura: esta sessão não controla a carteira do saque — nada foi queimado. '+
+          'Você pode '+linkRenovar('mSacar')+' com o e-mail dono dela e refazer.';
       } else {
         m.textContent = msg + ' — nada foi queimado.';
       }
@@ -2301,7 +2322,11 @@ async function sacarGarantirConta(sca){
   try{
     const r = await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getCode',params:[sca,'latest']})}).then(x=>x.json());
-    if(r.result && r.result.length > 2) return true;   // já deployada
+    // resposta inconclusiva (429/erro JSON-RPC) NÃO é "não deployada": tentar o
+    // deploy no-op aqui mandaria uma tx patrocinada de verdade numa conta que
+    // provavelmente já existe. Fail-closed: recusa e o usuário tenta de novo.
+    if(typeof r.result !== 'string') return false;
+    if(r.result.length > 2) return true;   // já deployada
     await EfixWallet.sendUserOp(sca, '0x', '0x0', sca);
     return true;
   }catch(e){ console.warn('[sacar] deploy da conta falhou:', e.message); return false; }
@@ -2411,28 +2436,38 @@ async function enviarOnchain(){
     //    senão gastaria de outra carteira que não é a mostrada na tela.
     const sca = await scaDaSessao();
     const dona = String(WALLETS[0]||'').toLowerCase();
-    if(!dona || String(sca).toLowerCase() !== dona){
+    if(!dona){
       m.className='mmsg err';
-      // "sair e entrar" NÃO renova o signer (o gate autentica só no backend);
-      // o caminho real é refazer o OTP da assinatura — por isso o link.
-      if(!dona){
-        m.textContent = 'Não consegui resolver a carteira dona destes ativos. Recarregue a página e tente de novo — nada foi enviado.';
-      } else {
-        m.innerHTML = 'Os ativos exibidos estão em '+short(dona)+', mas a sessão de assinatura deste navegador controla outra conta ('+short(sca)+') — nada foi enviado. '+
-          'Você pode '+linkRenovar('mEnviar')+' com o e-mail desta conta e refazer o envio. Se '+short(dona)+' é uma carteira externa (MetaMask), envie por ela.';
-      }
+      m.textContent = 'Não consegui resolver a carteira dona destes ativos. Recarregue a página e tente de novo — nada foi enviado.';
       return;
     }
+    if(String(sca).toLowerCase() !== dona){
+      // A dona pode ser uma conta MAv2 (era wallet-client, holders de julho —
+      // ex.: 0xa867) do MESMO signer: a derivação LightAccount da sessão NUNCA
+      // bate com ela. Nesse caso quem decide é a validação 4337 — assinatura
+      // de quem não controla a conta morre na SIMULAÇÃO e nada se move.
+      // Qualquer outro caso continua recusado de cara (fail-closed).
+      const tipo = await (EfixWallet.accountKind ? EfixWallet.accountKind(dona).catch(()=>'light') : 'light');
+      if(tipo !== 'mav2'){
+        m.className='mmsg err';
+        // "sair e entrar" NÃO renova o signer (o gate autentica só no backend);
+        // o caminho real é refazer o OTP da assinatura — por isso o link.
+        m.innerHTML = 'Os ativos exibidos estão em '+short(dona)+', mas a sessão de assinatura deste navegador controla outra conta ('+short(sca)+') — nada foi enviado. '+
+          'Você pode '+linkRenovar('mEnviar')+' com o e-mail desta conta e refazer o envio. Se '+short(dona)+' é uma carteira externa (MetaMask), envie por ela.';
+        return;
+      }
+    }
     // 3. smart account contrafactual não assina: garante o deploy antes
+    // Assina SEMPRE pela conta DONA dos saldos exibidos (não pela derivada).
     b.textContent='Preparando sua conta…';
-    if(!(await sacarGarantirConta(sca))){
+    if(!(await sacarGarantirConta(dona))){
       m.className='mmsg err';
       m.textContent='Não consegui preparar sua conta on-chain agora. Tente de novo em instantes — nada foi enviado.';
       return;
     }
     b.textContent='Assinando…'; m.textContent='confirme na sua conta…';
     const data = '0xa9059cbb' + to.toLowerCase().replace('0x','').padStart(64,'0') + wei.toString(16).padStart(64,'0');
-    const tx = await EfixWallet.sendUserOp(rec.t.addr, data, '0x0', sca);
+    const tx = await EfixWallet.sendUserOp(rec.t.addr, data, '0x0', dona);
     m.className='mmsg ok'; m.innerHTML='enviado ✓ <a href="https://basescan.org/tx/'+tx+'" target="_blank" style="color:var(--mag)">'+tx.slice(0,12)+'…</a>';
     _transfers=null; carregar((EfixAuth.getUser()||{}).email,(EfixAuth.getUser()||{}).address);
   }catch(e){
@@ -2440,6 +2475,15 @@ async function enviarOnchain(){
     m.className='mmsg err';
     if(/orgId|not authenticated|Signer/i.test(msg)){
       m.innerHTML='A assinatura falhou por sessão expirada — nada foi enviado. Você pode '+linkRenovar('mEnviar')+' e refazer o envio.';
+    } else if(/\bAA3\d\b/i.test(msg)){
+      // AA3x = assinatura/validação do PAYMASTER (patrocínio de gás), não do
+      // usuário — dizer "sessão não controla" aqui mandaria o dono legítimo
+      // para um loop de re-OTP que nunca resolve
+      m.textContent='Não conseguimos patrocinar a taxa da rede agora — nada foi enviado. Tente de novo em instantes.';
+    } else if(/\bAA24\b|signature error|invalid signature|SignatureValidation/i.test(msg)){
+      // validação 4337 recusou a assinatura da CONTA: o signer não a controla
+      m.innerHTML='A rede recusou a assinatura: esta sessão não controla a carteira '+short(String(WALLETS[0]||''))+' — nada foi enviado. '+
+        'Você pode '+linkRenovar('mEnviar')+' com o e-mail dono dela e refazer o envio.';
     } else {
       m.textContent = msg || 'falha ao enviar';
     }

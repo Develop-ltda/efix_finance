@@ -2,7 +2,7 @@
 // Entry point for esbuild bundle - exposes Alchemy Account Kit to window.EfixWallet
 
 import { AlchemyWebSigner } from "@account-kit/signer";
-import { createLightAccountClient } from "@account-kit/smart-contracts";
+import { createLightAccountClient, createModularAccountV2Client } from "@account-kit/smart-contracts";
 import { alchemy, base } from "@account-kit/infra";
 
 // We use createLightAccountClient (not the higher-level createSmartWalletClient
@@ -232,6 +232,48 @@ async function checkSession() {
  *   action after the initial login moment).
  * @returns {Promise<object>} LightAccount client bound to explicit SCA if given
  */
+// ── Account-type detection ──────────────────────────────────
+// Holders da era wallet-client v4 (jul/2026) são ModularAccount v2 on-chain
+// (ex.: 0xa867…6B38); o bundle atual deriva/assina LightAccount v2. Um client
+// LightAccount apontado numa conta MAv2 produz assinatura que a MAv2 REJEITA —
+// então o client certo é escolhido pelo tipo REAL da conta, lido do slot de
+// implementação ERC-1967. Conta não deployada (sem code/slot) = LightAccount
+// contrafactual nosso, o caminho de sempre.
+const MAV2_IMPL_SUFFIX = "c5a9089039570dd36455b5c07383"; // impl canônica MAv2 (todas as chains)
+const ERC1967_IMPL_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+const _kindCache = new Map();
+
+async function accountKind(sca) {
+  const key = String(sca || "").toLowerCase();
+  if (!key.startsWith("0x")) return "light";
+  if (_kindCache.has(key)) return _kindCache.get(key);
+  try {
+    // timeout de 4s como o resto do preflight — sem ele, uma conexão pendurada
+    // trava "Assinando…" por minutos (e o classic usa este mesmo caminho)
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 4000);
+    const r = await fetch(`https://base-mainnet.g.alchemy.com/v2/${EFIX_CONFIG.apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getStorageAt", params: [key, ERC1967_IMPL_SLOT, "latest"] }),
+      signal: ctrl.signal,
+    }).then((x) => x.json()).finally(() => clearTimeout(timer));
+    // Só cachear resposta CONCLUSIVA (valor real de storage). Um 429/erro
+    // JSON-RPC tem r.result undefined — cachear "light" aqui condenaria o
+    // holder MAv2 a recusas pelo resto da vida da página.
+    if (!r || r.error || typeof r.result !== "string" || !r.result.startsWith("0x")) {
+      return "light";   // inconclusivo: fail-closed, SEM cachear
+    }
+    const kind = r.result.toLowerCase().endsWith(MAV2_IMPL_SUFFIX) ? "mav2" : "light";
+    _kindCache.set(key, kind);
+    return kind;
+  } catch {
+    // RPC fora: NÃO cachear; devolve "light" (fail-closed — a MAv2 recusaria a
+    // assinatura LightAccount na simulação, nada se move)
+    return "light";
+  }
+}
+
 async function getClient(explicitSCA = null) {
   if (!_signer) throw new Error("Signer not initialized");
 
@@ -240,6 +282,15 @@ async function getClient(explicitSCA = null) {
   // address. The cache is only used for the no-explicit fast path.
   if (explicitSCA) {
     const transport = alchemy({ apiKey: EFIX_CONFIG.apiKey });
+    if ((await accountKind(explicitSCA)) === "mav2") {
+      return await createModularAccountV2Client({
+        transport,
+        chain: EFIX_CONFIG.chain,
+        signer: _signer,
+        accountAddress: explicitSCA,
+        policyId: EFIX_CONFIG.gasPolicyId,
+      });
+    }
     return await createLightAccountClient({
       transport,
       chain: EFIX_CONFIG.chain,
@@ -413,6 +464,7 @@ window.EfixWallet = {
   transferEfixDI,
   collateralize,
   sendUserOp,  // v4 helper — used by handleWithdraw in index.html
+  accountKind, // "mav2" | "light" — tipo REAL da conta on-chain (slot ERC-1967)
   config: EFIX_CONFIG,
 };
 
