@@ -488,6 +488,27 @@ tr.grp:first-child td{padding-top:6px}
           <p class="muted" style="margin:0 0 14px">Unidades sob gestão Lobie. O NPV é um <b>valor de referência</b> calculado pelo fluxo de aluguel (Gordon 6%/3%) — não é preço de venda, oferta de compra nem valor de liquidez.</p>
           <div id="imoveis-list"><div class="empty">carregando…</div></div>
         </div>
+
+        <!-- ═══ ANTECIPAÇÃO DE RECEBÍVEIS (nativa desde 20/08) ═══
+             Reservas com checkout feito, aguardando o repasse do dia 20.
+             O cliente escolhe quais quer receber hoje; a mesa aprova e o PIX
+             sai da conta HausBank. O cálculo mostrado é informativo — o
+             servidor RECALCULA no envio e é a fonte da verdade. -->
+        <div class="card" id="ant-card" data-reveal style="display:none;animation-delay:.08s">
+          <h2>Receber antes <span class="up" id="ant-cnt"></span></h2>
+          <p class="muted" id="ant-lead" style="margin:0 0 12px">Reservas já hospedadas, com a data prevista do repasse.</p>
+          <div id="ant-list"><div class="empty">carregando…</div></div>
+          <div id="ant-sel" style="display:none;margin-top:12px;padding:12px;border:1px solid var(--line-2);border-radius:10px">
+            <div style="display:flex;gap:18px;flex-wrap:wrap">
+              <div><div class="up">selecionado (valor cheio)</div><div class="money" id="ant-sel-bruto" style="font-family:var(--font-d);font-size:15px">—</div></div>
+              <div><div class="up">desconto</div><div class="money" id="ant-sel-taxa" style="font-family:var(--font-d);font-size:15px">—</div></div>
+              <div><div class="up">recebe hoje</div><div class="money pos" id="ant-sel-liq" style="font-family:var(--font-d);font-size:15px">—</div></div>
+            </div>
+            <button class="cta pri" id="antBtn" style="margin-top:10px" onclick="abrirAntecipar()">Solicitar antecipação →</button>
+            <div class="muted" style="font-size:11px;margin-top:6px">O valor final é recalculado pelo servidor no envio (os dias até o repasse mudam a cada dia).</div>
+          </div>
+          <div id="ant-pedidos" style="margin-top:14px"></div>
+        </div>
       </section>
       <section class="view" id="view-remessas">
         <div class="rem2col">
@@ -699,6 +720,8 @@ tr.grp:first-child td{padding-top:6px}
     <button class="hmini" onclick="investirVerReservas()">ver minhas reservas →</button>
   </div>
 
+  <!-- (modal de antecipação fica no fim do arquivo, junto dos outros) -->
+
   <!-- confirmação ao vivo: o vigia troca o QR por isto quando o PIX casa -->
   <div id="inv-pago" style="display:none">
     <div class="refbox" style="display:block;border-color:var(--green)">
@@ -709,6 +732,39 @@ tr.grp:first-child td{padding-top:6px}
   </div>
 
   <div class="mmsg" id="invMsg"></div>
+</div></div>
+
+<div class="modal" id="mAntecipar"><div class="mbox" style="position:relative">
+  <button class="x" onclick="fecharModal('mAntecipar')">&times;</button>
+  <h3>Solicitar antecipação</h3>
+  <p class="lead">O pagamento vai para a chave PIX que você informar. A mesa confere e libera — não é automático.</p>
+  <div id="ant-form">
+    <div class="refbox" style="display:block">
+      <div class="up">resumo do pedido</div>
+      <div class="hint" id="antResumo"></div>
+    </div>
+    <label class="fldl">Tipo de chave PIX</label>
+    <select id="antPixTipo" class="fld" onchange="antLimpaChave()">
+      <option value="cpf">CPF</option>
+      <option value="cnpj">CNPJ</option>
+      <option value="email">E-mail</option>
+      <option value="phone">Telefone</option>
+      <option value="evp">Chave aleatória</option>
+    </select>
+    <label class="fldl">Chave PIX</label>
+    <input id="antPixChave" class="fld mono" type="text" placeholder="somente números, sem pontos ou barras">
+    <div class="muted" id="antPixHint" style="font-size:11px;margin:4px 0 10px">CPF: 11 dígitos, sem pontos.</div>
+    <button class="cta pri" id="antBtnEnviar" onclick="antecipacaoEnviar()">Confirmar pedido</button>
+    <div class="muted" style="font-size:11px;margin-top:8px">Enviando, estes recebíveis ficam travados para novos pedidos e passam a aparecer como &ldquo;já em pedido&rdquo; at&eacute; a mesa decidir. A baixa junto da Lobie &eacute; feita pela mesa.</div>
+  </div>
+  <div id="ant-ok" style="display:none">
+    <div class="refbox" style="display:block;border-color:var(--green)">
+      <div class="up" style="color:var(--green)">pedido registrado ✓</div>
+      <div class="hint" id="antOkTxt"></div>
+    </div>
+    <button class="cta pri" onclick="fecharModal('mAntecipar')">Fechar</button>
+  </div>
+  <div class="mmsg" id="antMsg"></div>
 </div></div>
 
 <div class="modal" id="mSacar"><div class="mbox" style="position:relative">
@@ -1656,6 +1712,8 @@ async function carregarImoveis(){
       : '<div class="empty">'+(alvo?('Nenhuma unidade registrada na Lobie para '+_esc(alvo)+'.'):'Nenhuma unidade encontrada para sua conta.')+'</div>';
     if(HIDDEN) document.querySelectorAll('#imoveis-list .money').forEach(e=>e.classList.add('blur'));
   }catch(e){ if(seq===_imvSeq) el.innerHTML='<div class="empty">não consegui carregar seus imóveis agora</div>'; }
+  // recebíveis a antecipar entram no mesmo painel (mesmo público, mesma aba)
+  if(seq === _imvSeq) carregarAntecipacao();
 }
 
 // mostra a aba só para quem tem unidade (mesmo padrão da aba Posição).
@@ -1672,6 +1730,228 @@ async function maybeShowImoveis(){
   try{ const d = await imoveisFetch();
     tem = !!(d && d.counts && (d.counts.tokenized>0 || d.counts.virtual>0)); }catch(e){}
   ['nav-imoveis','bnav-imoveis'].forEach(id=>{ const el=$(id); if(el) el.style.display = tem?'':'none'; });
+}
+
+/* ═══ ANTECIPAÇÃO DE RECEBÍVEIS (portado do classic, nativo desde 20/08) ═══
+   Doutrina do saque aplicada: tudo que pode recusar é checado ANTES, o
+   servidor recalcula o dinheiro (o número da tela é informativo) e nenhuma
+   frase promete o que o backend não faz — o PIX sai depois da aprovação da
+   mesa, não na hora. */
+let _ant = null;            // payload de /wallet/upcoming-receivables
+let _antSel = new Set();    // reservation ids escolhidos
+let _antEnviando = false;   // sem duplo clique: o POST cria pedido novo a cada chamada
+const ANT_ST = {
+  pending:             ['em análise',        'color:#d99e17'],
+  approved:            ['aprovado',          'color:#d99e17'],
+  disbursed:           ['pago ✓',            'color:var(--green)'],
+  disbursement_failed: ['falha no pagamento','color:var(--red)'],
+  rejected:            ['recusado',          'color:var(--red)'],
+  cancelled:           ['cancelado',         'color:var(--ink-3)'],
+};
+const ANT_MASCARA = {
+  cpf:   { hint:'CPF: 11 dígitos, sem pontos.',            ok:v=>/^\d{11}$/.test(v) },
+  cnpj:  { hint:'CNPJ: 14 dígitos, sem pontos ou barra.',  ok:v=>/^\d{14}$/.test(v) },
+  email: { hint:'E-mail cadastrado como chave PIX.',       ok:v=>/^.+@.+\..+$/.test(v) },
+  phone: { hint:'Telefone com +55 e DDD (ex.: +5521999998888).', ok:v=>/^\+\d{12,14}$/.test(v) },
+  evp:   { hint:'Chave aleatória (32 caracteres com hífens).',   ok:v=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v) },
+};
+
+async function carregarAntecipacao(){
+  const card = $('ant-card'); if(!card) return;
+  // No modo operador NÃO oferecemos a ação: o POST usa o e-mail do TOKEN, então
+  // um pedido feito aqui seria do operador, não do cliente. Mostramos só leitura.
+  const u = EfixAuth.getUser()||{};
+  if(!u.address){ card.style.display='none'; return; }
+  // token de sequência (mesmo motivo do _imvSeq): no modo operador, resposta
+  // lenta do cliente A não pode pintar recebíveis dele sob o rótulo do B
+  const seq = _imvSeq;
+  const alvo = _imvVerComo;
+  try{
+    const email = alvo || u.email;
+    const r = await fetch(BACKEND+'/wallet/upcoming-receivables/'+u.address+'?email='+encodeURIComponent(email),
+      {headers:EfixAuth.headers()});
+    if(seq !== _imvSeq) return;                    // chegou tarde: seleção mais nova mandou
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    _ant = await r.json();
+  }catch(e){
+    if(seq !== _imvSeq) return;
+    // fail-closed na AÇÃO, não no produto: esconder o card calado deixava o
+    // dono sem distinguir "acabaram meus recebíveis" de "nossa falha"
+    _ant = null;
+    card.style.display='block';
+    $('ant-list').innerHTML = '<div class="empty">não consegui carregar seus recebíveis agora</div>';
+    $('ant-sel').style.display='none';
+    antCarregarPedidos();                          // status não depende da lista
+    return;
+  }
+  const recs = (_ant && _ant.receivables) || [];
+  if(!recs.length){
+    // sem recebível a listar, mas PODE haver pedido em andamento — e a regra do
+    // produto proíbe e-mail, então esta é a ÚNICA via de status do cliente
+    card.style.display='block';
+    $('ant-cnt').textContent='';
+    $('ant-list').innerHTML = '<div class="empty">Nenhuma reserva aguardando repasse agora.</div>';
+    $('ant-sel').style.display='none';
+    antCarregarPedidos();
+    return;
+  }
+  card.style.display='block';
+  _antSel.clear();
+  const s = _ant.summary||{};
+  const ligado = !!((_ant.rate||{}).enabled);
+  // Produto desligado (cessão com a Lobie pendente): a LISTA continua valiosa
+  // — o dono vê o que entra e quando — mas não oferecemos um botão que o
+  // backend recusa. Título e texto mudam para não prometer o que não há.
+  document.querySelector('#ant-card h2').childNodes[0].nodeValue = ligado ? 'Receber antes ' : 'A receber ';
+  // taxas do SERVIDOR (são env): num produto de crédito, texto e número não
+  // podem discordar — o classic já lia data.rate, o v2 tinha cravado no HTML
+  const rt = _ant.rate||{};
+  const flatTxt = (Number(rt.flatPct||0.05)*100).toFixed(0);
+  const mesTxt  = (Number(rt.monthlyPct||0.08)*100).toFixed(0);
+  const prefixo = alvo ? ('Cliente '+_esc(alvo)+' · ') : '';
+  $('ant-lead').innerHTML = prefixo + (ligado
+    ? ('Reservas já hospedadas, aguardando o repasse. '+(alvo?'O cliente pode':'Você pode')+' receber hoje com desconto de <b>'+flatTxt+'% fixo + '+mesTxt+'% ao mês</b> proporcional aos dias que faltam — ou não fazer nada e receber o valor cheio na data.')
+    : 'Reservas já hospedadas, com a data prevista do repasse. <b>Antecipar está em contratação</b> e aparece aqui quando liberado.');
+  $('ant-cnt').textContent = ligado
+    ? ((s.availableCount||0)+' de '+(s.count||0)+' disponíveis'+(s.committedCount?(' · '+s.committedCount+' já em pedido'):''))
+    : '';
+  if(!ligado) $('ant-cnt').innerHTML = (s.count||0)+' reserva'+((s.count||0)===1?'':'s')+' · <span class="money">R$ '+Number(s.ownerTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>';
+  $('ant-list').innerHTML = recs.map(r=>antLinha(r, ligado)).join('');
+  if(HIDDEN) document.querySelectorAll('#ant-list .money, #ant-cnt .money').forEach(e=>e.classList.add('blur'));
+  antAtualizaSel();
+  antCarregarPedidos();
+}
+
+function antLinha(r, ligado){
+  const dias = Number(r.daysUntilPayout||0);
+  const cheio = Number(r.ownerBRL||0), liq = Number((r.antecipation||{}).netNow||0);
+  const data = r.estimatedPayoutDate ? new Date(r.estimatedPayoutDate).toLocaleDateString('pt-BR') : '—';
+  const trava = !ligado || r.committed || IS_OPS_VIEW();
+  const motivo = r.committed ? ('já em pedido ('+((ANT_ST[r.committedStatus]||[r.committedStatus])[0])+')')
+    : (IS_OPS_VIEW() ? 'visão de operador — o cliente pede pela conta dele' : '');
+  return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">'+
+    (ligado?('<input type="checkbox" '+(trava?'disabled':'')+' data-rid="'+Number(r.reservationDbId)+'" onchange="antToggle(this)">'):'')+
+    '<div class="tk" style="flex:1;min-width:0">'+
+      '<div class="t1">'+_esc(r.buildingName||'')+' · '+_esc(r.unitCode||'')+' <span class="money">R$ '+cheio.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>'+
+      '<div class="t2">repasse '+data+' ('+dias+' dia'+(dias===1?'':'s')+') · '+_esc(r.bookingSource||'')+' · '+Number(r.nights||0)+' noite'+(Number(r.nights)===1?'':'s')+
+        (motivo?(' · <span style="color:var(--ink-3)">'+_esc(motivo)+'</span>'):'')+'</div>'+
+    '</div>'+
+    (trava?'':'<div class="up money" style="white-space:nowrap">hoje R$ '+liq.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>')+
+  '</div>';
+}
+function IS_OPS_VIEW(){ return !!_imvVerComo; }
+
+function antToggle(el){
+  const rid = Number(el.dataset.rid);
+  if(el.checked) _antSel.add(rid); else _antSel.delete(rid);
+  antAtualizaSel();
+}
+
+function antAtualizaSel(){
+  const recs = ((_ant&&_ant.receivables)||[]).filter(r=>_antSel.has(Number(r.reservationDbId)));
+  if(!recs.length){ $('ant-sel').style.display='none'; return; }
+  const cheio = recs.reduce((a,r)=>a+Number(r.ownerBRL||0),0);
+  const liq   = recs.reduce((a,r)=>a+Number((r.antecipation||{}).netNow||0),0);
+  const brlf = v => 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  $('ant-sel-bruto').textContent = brlf(cheio);
+  $('ant-sel-taxa').textContent  = brlf(cheio-liq)+' ('+(cheio>0?((cheio-liq)/cheio*100).toFixed(1):'0')+'%)';
+  $('ant-sel-liq').textContent   = brlf(liq);
+  $('ant-sel').style.display='block';
+  if(HIDDEN) document.querySelectorAll('#ant-sel .money').forEach(e=>e.classList.add('blur'));
+}
+
+function antLimpaChave(){
+  const t = $('antPixTipo').value;
+  $('antPixChave').value='';
+  $('antPixHint').textContent = (ANT_MASCARA[t]||{}).hint||'';
+}
+
+function abrirAntecipar(){
+  if(IS_OPS_VIEW()){ alert('Visão de operador: o pedido tem de sair da conta do próprio cliente.'); return; }
+  if(!_antSel.size) return;
+  const recs = ((_ant&&_ant.receivables)||[]).filter(r=>_antSel.has(Number(r.reservationDbId)));
+  const cheio = recs.reduce((a,r)=>a+Number(r.ownerBRL||0),0);
+  const liq   = recs.reduce((a,r)=>a+Number((r.antecipation||{}).netNow||0),0);
+  $('antResumo').innerHTML = recs.length+' reserva'+(recs.length===1?'':'s')+' · valor cheio R$ '+
+    cheio.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+
+    '<br>você recebe <b>R$ '+liq.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b> (estimativa de hoje)';
+  $('ant-form').style.display='block'; $('ant-ok').style.display='none';
+  $('antMsg').className='mmsg'; $('antMsg').textContent='';
+  antLimpaChave();
+  $('mAntecipar').classList.add('on');
+}
+
+async function antecipacaoEnviar(){
+  const m=$('antMsg'), b=$('antBtnEnviar');
+  const tipo = $('antPixTipo').value, chave = $('antPixChave').value.trim();
+  m.className='mmsg';
+  const regra = ANT_MASCARA[tipo];
+  if(!regra || !regra.ok(chave)){ m.className='mmsg err'; m.textContent='Chave PIX inválida — '+((regra||{}).hint||''); return; }
+  if(!_antSel.size){ m.className='mmsg err'; m.textContent='selecione ao menos um recebível'; return; }
+  if(_antEnviando) return;                 // cada POST cria um pedido NOVO
+  _antEnviando = true; b.disabled=true; b.textContent='Enviando…';
+  try{
+    const r = await fetch(BACKEND+'/wallet/antecipate-receivables',{method:'POST',
+      headers:EfixAuth.headers(),
+      body:JSON.stringify({ reservationDbIds:[..._antSel], pixKey:chave, pixKeyType:tipo })});
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok){
+      m.className='mmsg err';
+      m.textContent = d.error==='already_requested'
+        ? 'Alguns destes recebíveis já estão em um pedido. Atualizei a lista — selecione outros.'
+        : d.error==='no_eligible_reservations_for_user'
+          ? 'Estes recebíveis não estão mais elegíveis (podem ter sido repassados ou cancelados). Atualizei a lista.'
+          : (d.message || d.error || 'não foi possível registrar o pedido agora');
+      if(d.error==='already_requested' || d.error==='no_eligible_reservations_for_user'){
+        // o resumo do modal virou fantasma (a seleção foi limpa no refresh):
+        // esconder o form evita um "3 reservas" que não existe mais
+        const nomes = (d.blockedIds||[]).map(function(id){
+          const r = ((_ant&&_ant.receivables)||[]).find(function(x){ return Number(x.reservationDbId)===Number(id); });
+          return r ? (r.buildingName+' · '+r.unitCode) : ('reserva '+id);
+        });
+        if(nomes.length) m.textContent += ' ('+nomes.join('; ')+')';
+        $('ant-form').style.display='none';
+        carregarAntecipacao();
+      }
+      return;
+    }
+    const req = d.request||{};
+    const perdidos = (d.droppedIds||[]).length;
+    $('antOkTxt').innerHTML = 'Pedido #'+req.id+' registrado: <b>R$ '+
+      Number(req.total_net_brl||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+
+      '</b> na chave informada, referente a '+(req.reservation_count||0)+' reserva'+(Number(req.reservation_count)===1?'':'s')+'.'+
+      (perdidos?('<br><span style="color:var(--ink-3)">'+perdidos+' recebível(is) não entrou(ram): deixou(aram) de estar elegível(is).</span>'):'')+
+      '<br>A mesa confere e libera o PIX — o status aparece aqui na carteira (não enviamos e-mail).';
+    $('ant-form').style.display='none'; $('ant-ok').style.display='block';
+    carregarAntecipacao();
+  }catch(e){
+    m.className='mmsg err';
+    m.textContent = 'A conexão falhou. Confira em "meus pedidos" antes de tentar de novo — o pedido pode já ter sido criado.';
+    carregarAntecipacao();
+  }
+  finally{ _antEnviando=false; b.disabled=false; b.textContent='Confirmar pedido'; }
+}
+
+async function antCarregarPedidos(){
+  const el = $('ant-pedidos');
+  if(IS_OPS_VIEW()){ el.innerHTML=''; return; }   // pedidos são do dono do token
+  try{
+    const r = await fetch(BACKEND+'/wallet/antecipations/me',{headers:EfixAuth.headers()});
+    if(!r.ok){ el.innerHTML=''; return; }
+    const d = await r.json();
+    const reqs = d.requests||[];
+    if(!reqs.length){ el.innerHTML=''; return; }
+    el.innerHTML = '<div class="up" style="margin-bottom:6px">meus pedidos</div>'+reqs.map(q=>{
+      const [rot,cor] = ANT_ST[q.status]||[q.status,''];
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">'+
+        '<div class="tk" style="flex:1;min-width:0">'+
+          '<div class="t1"><span class="money">R$ '+Number(q.total_net_brl||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span> · '+(q.reservation_count||0)+' reserva(s)</div>'+
+          '<div class="t2"><span style="'+cor+'">'+rot+'</span> · pedido em '+new Date(q.requested_at).toLocaleDateString('pt-BR')+
+            (q.rejected_reason?(' · '+_esc(q.rejected_reason)):'')+'</div>'+
+        '</div></div>';
+    }).join('');
+    if(HIDDEN) document.querySelectorAll('#ant-pedidos .money').forEach(e=>e.classList.add('blur'));
+  }catch(e){ el.innerHTML=''; }
 }
 
 const _mesLabel = ym => {
