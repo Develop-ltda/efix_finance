@@ -2202,7 +2202,7 @@ async function sacarExecutar(){
         ]);
         if(!fresco){
           m.className='mmsg err';
-          m.textContent='Sua chave de assinatura expirou. Use "ativar carteira" para renovar e refaça o saque — nada foi queimado.';
+          m.innerHTML='Sua chave de assinatura expirou — nada foi queimado. Você pode '+linkRenovar('mSacar')+' e refazer o saque.';
           sacarModoQueimar(); return;
         }
         const sca = await scaDaSessao();
@@ -2278,9 +2278,11 @@ async function sacarExecutar(){
         ' · <a href="https://basescan.org/tx/'+burnTxHash+'" target="_blank" style="color:var(--mag)">ver queima</a>';
       sacarModoReenviar();
     } else {
-      m.textContent = /orgId|not authenticated|Signer/i.test(msg)
-        ? 'A assinatura falhou por sessão expirada — nada foi queimado. Renove em "ativar carteira" e refaça.'
-        : msg + ' — nada foi queimado.';
+      if(/orgId|not authenticated|Signer/i.test(msg)){
+        m.innerHTML='A assinatura falhou por sessão expirada — nada foi queimado. Você pode '+linkRenovar('mSacar')+' e refazer.';
+      } else {
+        m.textContent = msg + ' — nada foi queimado.';
+      }
       sacarModoQueimar();
     }
   }finally{ _sacEmVoo=false; }
@@ -2359,22 +2361,84 @@ async function abrirEnviar(){
   $('envToken').innerHTML = opts; $('envTo').value=''; $('envAmt').value=''; $('envMsg').textContent='';
   $('envMsg').className='mmsg'; $('mEnviar').classList.add('on');
 }
+// wei EXATO a partir do texto digitado, sem passar por float: Math.round(amt*1e18)
+// perde precisão acima de ~9.007 tokens (2^53/1e18) — mesma classe do bug do
+// saque. Trunca casas além de `dec` (nunca arredonda pra cima do que foi digitado).
+function weiDeToken(valorStr, dec){
+  const s = String(valorStr||'').trim().replace(',','.');
+  if(!/^\d+(\.\d+)?$/.test(s)) return 0n;
+  const [i, f=''] = s.split('.');
+  return BigInt(i + f.slice(0,dec).padEnd(dec,'0'));
+}
+
+// link que leva DE VERDADE à renovação: o botão "ativar carteira" da lateral
+// fica escondido para quem já tem carteira — que é exatamente quem cai em
+// sessão expirada. Sem isto a mensagem apontava para um controle invisível.
+function linkRenovar(modal){
+  return '<a onclick="fecharModal(\''+modal+'\');abrirAtivar()" style="color:var(--mag);cursor:pointer;text-decoration:underline">renovar a sessão de assinatura</a>';
+}
+
 async function enviarOnchain(){
-  const sym = $('envToken').value, to = $('envTo').value.trim(), amt = parseFloat($('envAmt').value);
+  const sym = $('envToken').value, to = $('envTo').value.trim();
+  const amtRaw = $('envAmt').value;   // capturado UMA vez: o que valida é o que assina
   const m = $('envMsg'); m.className='mmsg';
   if(!/^0x[0-9a-fA-F]{40}$/.test(to)){ m.className='mmsg err'; m.textContent='endereço inválido (0x + 40 hex)'; return; }
   const rec = _saldos[sym]; if(!rec){ m.className='mmsg err'; m.textContent='ativo indisponível'; return; }
-  if(!amt || amt<=0 || amt>rec.b){ m.className='mmsg err'; m.textContent='quantidade inválida (máx '+rec.b.toFixed(2)+')'; return; }
-  const b=$('envBtn'); b.disabled=true; b.textContent='Assinando…'; m.textContent='confirme na sua conta…';
+  // parser ÚNICO: o wei exato decide; o float derivado serve só para o teto.
+  // (parseFloat parava na vírgula: '5,9' validava 5 e assinava 5,9)
+  const wei = weiDeToken(amtRaw, rec.t.dec);
+  const amt = Number(wei) / 10**rec.t.dec;
+  if(wei <= 0n || amt > rec.b){ m.className='mmsg err'; m.textContent='quantidade inválida (máx '+rec.b.toFixed(2)+')'; return; }
+  const b=$('envBtn'); b.disabled=true;
   try{
-    const client = await EfixWallet.getClient();
-    const wei = BigInt(Math.round(amt * 10**rec.t.dec));
+    // ── preflight portado do saque: o caminho antigo ia direto ao client sem
+    // explicitAccount e morria em "No orgId provided" (whoami do signer
+    // degrada segundos após o login — ver comentário em build/entry.js) ──
+    // 1. chave de assinatura da Alchemy ainda viva?
+    b.textContent='Verificando sessão…'; m.textContent='';
+    const fresco = await Promise.race([
+      EfixWallet.checkSession().then(a=>!!a).catch(()=>false),
+      new Promise(r=>setTimeout(()=>r(false), 4000)),
+    ]);
+    if(!fresco){
+      m.className='mmsg err';
+      m.innerHTML='Sua chave de assinatura expirou — nada foi enviado. Você pode '+linkRenovar('mEnviar')+' e refazer o envio.';
+      return;
+    }
+    // 2. a conta da sessão é a DONA dos saldos exibidos? Os saldos vêm de
+    //    WALLETS[0] (carteira registrada primeiro — saldosAtuais). FAIL-CLOSED
+    //    como no saque: sem dona resolvida, ou sessão ≠ dona, NÃO assina —
+    //    senão gastaria de outra carteira que não é a mostrada na tela.
+    const sca = await scaDaSessao();
+    const dona = String(WALLETS[0]||'').toLowerCase();
+    if(!dona || String(sca).toLowerCase() !== dona){
+      m.className='mmsg err';
+      m.textContent = !dona
+        ? 'Não consegui resolver a carteira dona destes ativos. Recarregue a página e tente de novo — nada foi enviado.'
+        : 'Os ativos exibidos estão em '+short(dona)+', que esta sessão ('+short(sca)+') não controla — nada foi enviado. Se essa carteira é externa (MetaMask), envie por ela; senão, saia e entre de novo.';
+      return;
+    }
+    // 3. smart account contrafactual não assina: garante o deploy antes
+    b.textContent='Preparando sua conta…';
+    if(!(await sacarGarantirConta(sca))){
+      m.className='mmsg err';
+      m.textContent='Não consegui preparar sua conta on-chain agora. Tente de novo em instantes — nada foi enviado.';
+      return;
+    }
+    b.textContent='Assinando…'; m.textContent='confirme na sua conta…';
     const data = '0xa9059cbb' + to.toLowerCase().replace('0x','').padStart(64,'0') + wei.toString(16).padStart(64,'0');
-    const h = await client.sendUserOperation({ uo:{ target: rec.t.addr, data, value:0n } });
-    const tx = await client.waitForUserOperationTransaction(h);
+    const tx = await EfixWallet.sendUserOp(rec.t.addr, data, '0x0', sca);
     m.className='mmsg ok'; m.innerHTML='enviado ✓ <a href="https://basescan.org/tx/'+tx+'" target="_blank" style="color:var(--mag)">'+tx.slice(0,12)+'…</a>';
     _transfers=null; carregar((EfixAuth.getUser()||{}).email,(EfixAuth.getUser()||{}).address);
-  }catch(e){ m.className='mmsg err'; m.textContent=e.message||'falha ao enviar'; }
+  }catch(e){
+    const msg = String((e&&e.message)||e);
+    m.className='mmsg err';
+    if(/orgId|not authenticated|Signer/i.test(msg)){
+      m.innerHTML='A assinatura falhou por sessão expirada — nada foi enviado. Você pode '+linkRenovar('mEnviar')+' e refazer o envio.';
+    } else {
+      m.textContent = msg || 'falha ao enviar';
+    }
+  }
   finally{ b.disabled=false; b.textContent='Assinar & enviar'; }
 }
 
