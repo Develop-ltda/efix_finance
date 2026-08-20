@@ -1810,7 +1810,7 @@ async function carregarAntecipacao(){
   const mesTxt  = (Number(rt.monthlyPct||0.08)*100).toFixed(0);
   const prefixo = alvo ? ('Cliente '+_esc(alvo)+' · ') : '';
   $('ant-lead').innerHTML = prefixo + (ligado
-    ? ('Reservas já hospedadas, aguardando o repasse. '+(alvo?'O cliente pode':'Você pode')+' receber hoje com desconto de <b>'+flatTxt+'% fixo + '+mesTxt+'% ao mês</b> proporcional aos dias que faltam — ou não fazer nada e receber o valor cheio na data.')
+    ? ('Reservas já hospedadas, aguardando o repasse. '+(alvo?'O cliente pode':'Você pode')+' receber hoje com desconto de <b>'+flatTxt+'% fixo + '+mesTxt+'% ao mês</b> proporcional aos dias que faltam — ou não fazer nada e receber o valor cheio na data.'+(alvo?' <span style="color:var(--ink-3)">Só o cliente pode pedir, pela conta dele.</span>':''))
     : 'Reservas já hospedadas, com a data prevista do repasse. <b>Antecipar está em contratação</b> e aparece aqui quando liberado.');
   $('ant-cnt').textContent = ligado
     ? ((s.availableCount||0)+' de '+(s.count||0)+' disponíveis'+(s.committedCount?(' · '+s.committedCount+' já em pedido'):''))
@@ -1827,8 +1827,9 @@ function antLinha(r, ligado){
   const cheio = Number(r.ownerBRL||0), liq = Number((r.antecipation||{}).netNow||0);
   const data = r.estimatedPayoutDate ? new Date(r.estimatedPayoutDate).toLocaleDateString('pt-BR') : '—';
   const trava = !ligado || r.committed || IS_OPS_VIEW();
-  const motivo = r.committed ? ('já em pedido ('+((ANT_ST[r.committedStatus]||[r.committedStatus])[0])+')')
-    : (IS_OPS_VIEW() ? 'visão de operador — o cliente pede pela conta dele' : '');
+  // o aviso de operador é do CARD (aparece no lead), não de cada linha:
+  // repetido em 18 reservas virava ruído que enterrava o dado
+  const motivo = r.committed ? ('já em pedido ('+((ANT_ST[r.committedStatus]||[r.committedStatus])[0])+')') : '';
   return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">'+
     (ligado?('<input type="checkbox" '+(trava?'disabled':'')+' data-rid="'+Number(r.reservationDbId)+'" onchange="antToggle(this)">'):'')+
     '<div class="tk" style="flex:1;min-width:0">'+
