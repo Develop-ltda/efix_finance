@@ -2413,9 +2413,14 @@ async function enviarOnchain(){
     const dona = String(WALLETS[0]||'').toLowerCase();
     if(!dona || String(sca).toLowerCase() !== dona){
       m.className='mmsg err';
-      m.textContent = !dona
-        ? 'Não consegui resolver a carteira dona destes ativos. Recarregue a página e tente de novo — nada foi enviado.'
-        : 'Os ativos exibidos estão em '+short(dona)+', que esta sessão ('+short(sca)+') não controla — nada foi enviado. Se essa carteira é externa (MetaMask), envie por ela; senão, saia e entre de novo.';
+      // "sair e entrar" NÃO renova o signer (o gate autentica só no backend);
+      // o caminho real é refazer o OTP da assinatura — por isso o link.
+      if(!dona){
+        m.textContent = 'Não consegui resolver a carteira dona destes ativos. Recarregue a página e tente de novo — nada foi enviado.';
+      } else {
+        m.innerHTML = 'Os ativos exibidos estão em '+short(dona)+', mas a sessão de assinatura deste navegador controla outra conta ('+short(sca)+') — nada foi enviado. '+
+          'Você pode '+linkRenovar('mEnviar')+' com o e-mail desta conta e refazer o envio. Se '+short(dona)+' é uma carteira externa (MetaMask), envie por ela.';
+      }
       return;
     }
     // 3. smart account contrafactual não assina: garante o deploy antes
