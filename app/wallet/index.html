@@ -504,7 +504,7 @@ tr.grp:first-child td{padding-top:6px}
               <div><div class="up">desconto</div><div class="money" id="ant-sel-taxa" style="font-family:var(--font-d);font-size:15px">—</div></div>
               <div><div class="up">recebe hoje</div><div class="money pos" id="ant-sel-liq" style="font-family:var(--font-d);font-size:15px">—</div></div>
             </div>
-            <button class="cta pri" id="antBtn" style="margin-top:10px" onclick="abrirAntecipar()">Solicitar antecipação →</button>
+            <button class="cta pri" id="antBtn" style="margin-top:10px" onclick="abrirAntecipar()">Antecipe já →</button>
             <div class="muted" style="font-size:11px;margin-top:6px">O valor final é recalculado pelo servidor no envio (os dias até o repasse mudam a cada dia).</div>
           </div>
           <div id="ant-pedidos" style="margin-top:14px"></div>
@@ -1653,7 +1653,7 @@ async function imoveisFetch(){
    Liga sozinho: tenta /admin/lobie-clients com o token do login; 200 = é
    operador (allowlist no backend) e o dropdown aparece; 401/403 = some.
    Nenhum segredo no navegador — o poder mora no backend. */
-let _imvVerComo = null, _imvOpsTentou = false, _imvSeq = 0;
+let _imvVerComo = null, _imvOpsTentou = false, _imvSeq = 0, _ehOperador = false;
 async function imoveisOpsInit(){
   if(_imvOpsTentou) return;
   _imvOpsTentou = true;
@@ -1669,6 +1669,7 @@ async function imoveisOpsInit(){
     $('imvCliSel').innerHTML = '<option value="">— eu mesmo —</option>'+cls.map(c=>
       '<option value="'+_esc(c.email)+'">'+_esc(c.nome||c.email)+' · '+(c.unitCount||0)+' un.'+(c.buildings?' · '+_esc(c.buildings):'')+'</option>').join('');
     $('imv-ops').style.display='block';
+    _ehOperador = true;   // libera a PRÉVIA da antecipação (ver carregarAntecipacao)
   }catch(e){ _imvOpsTentou=false; /* rede caiu: tenta de novo na próxima */ }
 }
 function imoveisVerComo(email){
@@ -1740,6 +1741,7 @@ async function maybeShowImoveis(){
 let _ant = null;            // payload de /wallet/upcoming-receivables
 let _antSel = new Set();    // reservation ids escolhidos
 let _antEnviando = false;   // sem duplo clique: o POST cria pedido novo a cada chamada
+let _antPrevia = false;     // prévia de operador: layout ligado, envio barrado
 const ANT_ST = {
   pending:             ['em análise',        'color:#d99e17'],
   approved:            ['aprovado',          'color:#d99e17'],
@@ -1798,11 +1800,17 @@ async function carregarAntecipacao(){
   card.style.display='block';
   _antSel.clear();
   const s = _ant.summary||{};
-  const ligado = !!((_ant.rate||{}).enabled);
+  const ligadoReal = !!((_ant.rate||{}).enabled);
+  // PRÉVIA (operador): renderiza a experiência COMPLETA — VP por linha, totais
+  // e o botão — para a mesa ver o que o cliente verá quando a cessão sair. O
+  // envio segue barrado (o backend recusa de qualquer forma: gate no POST).
+  const previa = !ligadoReal && _ehOperador;
+  _antPrevia = previa;
+  const ligado = ligadoReal || previa;
   // Produto desligado (cessão com a Lobie pendente): a LISTA continua valiosa
   // — o dono vê o que entra e quando — mas não oferecemos um botão que o
   // backend recusa. Título e texto mudam para não prometer o que não há.
-  document.querySelector('#ant-card h2').childNodes[0].nodeValue = ligado ? 'Receber antes ' : 'A receber ';
+  document.querySelector('#ant-card h2').childNodes[0].nodeValue = ligado ? 'Antecipe já ' : 'A receber ';
   // taxas do SERVIDOR (são env): num produto de crédito, texto e número não
   // podem discordar — o classic já lia data.rate, o v2 tinha cravado no HTML
   const rt = _ant.rate||{};
@@ -1810,10 +1818,15 @@ async function carregarAntecipacao(){
   const mesTxt  = (Number(rt.monthlyPct||0.08)*100).toFixed(0);
   const prefixo = alvo ? ('Cliente '+_esc(alvo)+' · ') : '';
   $('ant-lead').innerHTML = prefixo + (ligado
-    ? ('Reservas já hospedadas, aguardando o repasse. '+(alvo?'O cliente pode':'Você pode')+' receber hoje com desconto de <b>'+flatTxt+'% fixo + '+mesTxt+'% ao mês</b> proporcional aos dias que faltam — ou não fazer nada e receber o valor cheio na data.'+(alvo?' <span style="color:var(--ink-3)">Só o cliente pode pedir, pela conta dele.</span>':''))
+    ? ('Reservas já hospedadas, aguardando o repasse. '+(alvo?'O cliente pode':'Você pode')+' receber hoje com desconto de <b>'+flatTxt+'% fixo + '+mesTxt+'% ao mês</b> proporcional aos dias que faltam — ou não fazer nada e receber o valor cheio na data.'
+       + (previa ? ' <span style="color:var(--mag)">PRÉVIA da mesa: é exatamente o que o cliente verá quando a cessão com a Lobie for ligada; o envio está desligado.</span>' : '')
+       + (alvo&&!previa ? ' <span style="color:var(--ink-3)">Só o cliente pode pedir, pela conta dele.</span>' : ''))
     : 'Reservas já hospedadas, com a data prevista do repasse. <b>Antecipar está em contratação</b> e aparece aqui quando liberado.');
-  $('ant-cnt').textContent = ligado
-    ? ((s.availableCount||0)+' de '+(s.count||0)+' disponíveis'+(s.committedCount?(' · '+s.committedCount+' já em pedido'):''))
+  const vpTudo = recs.reduce(function(a,r){ return a + Number((r.antecipation||{}).netNow||0); },0);
+  const cheioTudo = recs.reduce(function(a,r){ return a + Number(r.ownerBRL||0); },0);
+  $('ant-cnt').innerHTML = ligado
+    ? ((s.availableCount||0)+' de '+(s.count||0)+' disponíveis'+(s.committedCount?(' · '+s.committedCount+' já em pedido'):'')
+       + ' · tudo hoje <span class="money pos">R$ '+vpTudo.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>')
     : '';
   if(!ligado) $('ant-cnt').innerHTML = (s.count||0)+' reserva'+((s.count||0)===1?'':'s')+' · <span class="money">R$ '+Number(s.ownerTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>';
   $('ant-list').innerHTML = recs.map(r=>antLinha(r, ligado)).join('');
@@ -1826,7 +1839,9 @@ function antLinha(r, ligado){
   const dias = Number(r.daysUntilPayout||0);
   const cheio = Number(r.ownerBRL||0), liq = Number((r.antecipation||{}).netNow||0);
   const data = r.estimatedPayoutDate ? new Date(r.estimatedPayoutDate).toLocaleDateString('pt-BR') : '—';
-  const trava = !ligado || r.committed || IS_OPS_VIEW();
+  // na PRÉVIA as linhas são selecionáveis (é o ponto: ver os totais e o VP);
+  // o freio real é o botão + o gate do backend
+  const trava = !ligado || r.committed || (IS_OPS_VIEW() && !_antPrevia);
   // o aviso de operador é do CARD (aparece no lead), não de cada linha:
   // repetido em 18 reservas virava ruído que enterrava o dado
   const motivo = r.committed ? ('já em pedido ('+((ANT_ST[r.committedStatus]||[r.committedStatus])[0])+')') : '';
@@ -1858,6 +1873,8 @@ function antAtualizaSel(){
   $('ant-sel-taxa').textContent  = brlf(cheio-liq)+' ('+(cheio>0?((cheio-liq)/cheio*100).toFixed(1):'0')+'%)';
   $('ant-sel-liq').textContent   = brlf(liq);
   $('ant-sel').style.display='block';
+  const bt = $('antBtn');
+  if(bt) bt.textContent = _antPrevia ? 'Antecipe já → (prévia · envio desligado)' : 'Antecipe já →';
   if(HIDDEN) document.querySelectorAll('#ant-sel .money').forEach(e=>e.classList.add('blur'));
 }
 
@@ -1868,6 +1885,10 @@ function antLimpaChave(){
 }
 
 function abrirAntecipar(){
+  if(_antPrevia){
+    alert('Prévia da mesa: é assim que o cliente verá a tela.\n\nO envio está desligado até a cessão do recebível com a Lobie estar ligada (senão o dono receberia da EFIX hoje e da Lobie no dia 20).');
+    return;
+  }
   if(IS_OPS_VIEW()){ alert('Visão de operador: o pedido tem de sair da conta do próprio cliente.'); return; }
   if(!_antSel.size) return;
   const recs = ((_ant&&_ant.receivables)||[]).filter(r=>_antSel.has(Number(r.reservationDbId)));
