@@ -836,7 +836,7 @@ tr.grp:first-child td{padding-top:6px}
 <script src="/shared/js/config.js"></script>
 <!-- ?v= força o navegador a buscar o bundle NOVO junto com o HTML novo: sem
      isso, HTML novo + bundle velho em cache = EfixWallet.accountKind ausente -->
-<script src="/app/wallet/efix-wallet-bundle-v3.js?v=mav2-2"></script>
+<script src="/app/wallet/efix-wallet-bundle-v4.js?v=privy-1"></script>
 <script src="/app/wallet/efix-auth.js?v=20260820"></script>
 <script>
 /* ═══ EFIX Wallet v2 — dados 100% reais, zero número inventado ═══ */
@@ -1058,16 +1058,58 @@ async function scaDaSessao(){
   if(client.account && client.account.address) return client.account.address;
   throw new Error('não consegui resolver a smart account');
 }
-function abrirAtivar(){
+
+/* ── migração de signer Alchemy→Privy (25/08/2026) ──
+   Os 7 holders legados ainda assinam com o signer Alchemy; a chave deles migra
+   TEE→TEE em breve. Se logassem na Privy AGORA, nasceria uma embedded wallet
+   prematura que atrapalha o import da chave — então TODO caminho de auth do
+   signer (ativação e renovação afunilam em abrirAtivar) recusa esses e-mails
+   e aponta o acesso clássico (bundle v3/Alchemy, intocado). Lista = SHA-256
+   do e-mail lowercase (sem PII no fonte). Ao concluir a migração de cada um,
+   remover o hash; quando zerar, apagar o bloco inteiro. */
+const LEGACY_SIGNER_SHA256 = new Set([
+  'b6ac57ecb6878a3ea1a924d05516d6eb4649d81fd7e106cda0ff6357243f4817',
+  '0d2c91b8c6924533d2b5277f2bdf43aa15670eaa0f17b68b66fc71e1c06f5518',
+  '8d4151c178a07fc0138842bf3a540ec9a02753eb6528832236041e0e96a2cfcd',
+  'e31d80d64c9b3ab559b412c6411a1d33cb77f1156db6ab145e0f70678c7e21ef',
+  '0330daa5fcc0a71d5c5fd5b28a8f4f7a60ee9cfed920b7079bf55b8e4dedd74a',
+  '46bdb170d80cd2f4df9a75655584405b7692df7d8ce048744b656bbff637f5e3',
+  'd89b594310cd47a3d2077152821051a649c4c7bcd74857071838e34b5a0789d2',
+]);
+async function isLegacyEmail(email){
+  try{
+    const buf = await crypto.subtle.digest('SHA-256',
+      new TextEncoder().encode(String(email||'').trim().toLowerCase()));
+    const hex = [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    return LEGACY_SIGNER_SHA256.has(hex);
+  }catch(e){
+    // sem WebCrypto (http fora de localhost) a própria Privy não funciona;
+    // não bloquear aqui — o saque continua fail-closed pela checagem de SCA
+    return false;
+  }
+}
+async function abrirAtivar(){
   if(!EfixAuth.isLoggedIn()){ location.reload(); return; }
-  $('atv-email').textContent = (EfixAuth.getUser()||{}).email||'';
+  const email = ((EfixAuth.getUser()||{}).email||'').toLowerCase();
+  $('atv-email').textContent = email;
   $('atv-step1').style.display='block'; $('atv-step2').style.display='none';
   $('atvCode').value=''; $('atvMsg').textContent=''; $('atvMsg').className='mmsg';
   $('mAtivar').classList.add('on');
+  if(await isLegacyEmail(email)){
+    $('atv-step1').style.display='none';
+    const m=$('atvMsg'); m.className='mmsg err';
+    m.innerHTML='Sua carteira está na fila da migração de assinatura e será migrada em breve — o endereço e o saldo não mudam. Até lá, para movimentar use o <a href="/app/wallet/classic.html" style="color:var(--mag);text-decoration:underline">acesso clássico</a>.';
+  }
 }
 async function ativarEnviarCodigo(){
   const b=$('atvSend'), m=$('atvMsg');
   b.disabled=true; m.className='mmsg'; m.textContent='enviando código…';
+  // holder legado nunca inicia auth Privy (ver LEGACY_SIGNER_SHA256)
+  if(await isLegacyEmail(((EfixAuth.getUser()||{}).email||''))){
+    m.className='mmsg err';
+    m.textContent='Carteira na fila de migração — use o acesso clássico para movimentar até concluirmos.';
+    b.disabled=false; return;
+  }
   // rejeição tardia do authenticate() em background (padrão do classic —
   // sem isso o usuário espera um e-mail que nunca chega); devolve ao passo 1
   window._efixAuthError = (e)=>{ m.className='mmsg err';
