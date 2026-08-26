@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>POC Privy Signer · staging (não é produção)</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: ui-monospace, Consolas, monospace; background:#0b0e14; color:#d5dbe5; max-width:720px; margin:32px auto; padding:0 16px; }
+  h1 { font-size:18px; } h1 small { color:#e6b450; font-weight:normal; }
+  fieldset { border:1px solid #2a3040; border-radius:8px; margin:16px 0; padding:12px 16px; }
+  legend { color:#7aa2f7; padding:0 6px; }
+  input { background:#11151f; color:#d5dbe5; border:1px solid #2a3040; border-radius:6px; padding:8px 10px; font:inherit; width:260px; }
+  button { background:#1a2233; color:#d5dbe5; border:1px solid #3a4560; border-radius:6px; padding:8px 14px; font:inherit; cursor:pointer; margin-left:8px; }
+  button:hover { background:#243049; } button:disabled { opacity:.4; cursor:default; }
+  #log { background:#0d1118; border:1px solid #2a3040; border-radius:8px; padding:12px; min-height:180px; white-space:pre-wrap; font-size:12px; overflow-x:auto; }
+  .kv { margin:4px 0; } .kv b { color:#9ece6a; } .warn { color:#e6b450; }
+  a { color:#7aa2f7; }
+</style>
+</head>
+<body>
+<h1>POC Privy Signer <small>· staging — bundle v4, nada aqui toca a produção</small></h1>
+
+<fieldset>
+  <legend>1 · Login (email OTP via Privy)</legend>
+  <div><input id="email" type="email" placeholder="email de teste" autocomplete="off">
+       <button id="btnSend">Enviar código</button></div>
+  <div style="margin-top:8px"><input id="otp" inputmode="numeric" placeholder="código de 6 dígitos" autocomplete="off">
+       <button id="btnVerify" disabled>Verificar</button>
+       <button id="btnRestore">Restaurar sessão</button>
+       <button id="btnLogout">Sair</button></div>
+</fieldset>
+
+<fieldset>
+  <legend>2 · Conta</legend>
+  <div class="kv">EOA (signer): <b id="eoa">—</b></div>
+  <div class="kv">Smart account: <b id="sca">—</b> <span id="kind" class="warn"></span></div>
+  <div class="kv">Saldo efixDI: <b id="bal">—</b> <button id="btnBal" disabled>Atualizar</button></div>
+</fieldset>
+
+<fieldset>
+  <legend>3 · Prova on-chain (gasless)</legend>
+  <div>UserOp de teste: chamada vazia para a própria conta, valor 0, patrocinada pelo Gas Manager.</div>
+  <div style="margin-top:8px"><button id="btnUserOp" disabled>Enviar userOp de teste</button>
+       <span id="txout"></span></div>
+</fieldset>
+
+<fieldset><legend>Log</legend><div id="log"></div></fieldset>
+
+<script src="/app/wallet/efix-wallet-bundle-v4.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const log = (m) => { $("log").textContent += `[${new Date().toLocaleTimeString()}] ${m}\n`; console.log("[staging]", m); };
+
+async function refreshAccount() {
+  try {
+    const eoa = await EfixWallet.getAddress();
+    $("eoa").textContent = eoa || "—";
+    const sca = await EfixWallet.getSmartAccountAddress();
+    $("sca").textContent = sca || "—";
+    if (sca) {
+      const kind = await EfixWallet.accountKind(sca);
+      $("kind").textContent = `(${kind}${kind === "light" ? " — contrafactual ou LightAccount v2" : ""})`;
+      $("btnBal").disabled = false; $("btnUserOp").disabled = false;
+    }
+  } catch (e) { log("refreshAccount: " + e.message); }
+}
+
+$("btnSend").onclick = async () => {
+  try {
+    log("enviando código para " + $("email").value + "…");
+    await EfixWallet.sendOTP($("email").value.trim());
+    $("btnVerify").disabled = false;
+    log("código enviado — confira a caixa de entrada (remetente Privy).");
+  } catch (e) { log("ERRO sendOTP: " + e.message); }
+};
+
+$("btnVerify").onclick = async () => {
+  try {
+    log("verificando código…");
+    const addr = await EfixWallet.verifyOTP($("otp").value.trim());
+    log("autenticado. EOA: " + addr);
+    await refreshAccount();
+  } catch (e) { log("ERRO verifyOTP: " + e.message); }
+};
+
+$("btnRestore").onclick = async () => {
+  try {
+    const addr = await EfixWallet.checkSession();
+    log(addr ? ("sessão restaurada: " + addr) : "sem sessão ativa.");
+    if (addr) await refreshAccount();
+  } catch (e) { log("ERRO checkSession: " + e.message); }
+};
+
+$("btnLogout").onclick = async () => {
+  await EfixWallet.disconnect();
+  ["eoa","sca","bal"].forEach(id => $(id).textContent = "—");
+  $("kind").textContent = ""; $("txout").textContent = "";
+  $("btnVerify").disabled = true; $("btnBal").disabled = true; $("btnUserOp").disabled = true;
+  log("desconectado.");
+};
+
+$("btnBal").onclick = async () => {
+  try {
+    const sca = $("sca").textContent;
+    const b = await EfixWallet.getBalance(sca);
+    $("bal").textContent = b.formatted + " " + b.symbol;
+  } catch (e) { log("ERRO getBalance: " + e.message); }
+};
+
+$("btnUserOp").onclick = async () => {
+  try {
+    const sca = $("sca").textContent;
+    $("btnUserOp").disabled = true;
+    log("enviando userOp de teste (self-call 0x, value 0) via " + sca + "…");
+    const tx = await EfixWallet.sendUserOp(sca, "0x", "0x0", sca);
+    $("txout").innerHTML = `✅ <a target="_blank" rel="noopener" href="https://basescan.org/tx/${tx}">${tx.slice(0,10)}…</a>`;
+    log("INCLUÍDA: https://basescan.org/tx/" + tx);
+  } catch (e) { log("ERRO sendUserOp: " + e.message); }
+  finally { $("btnUserOp").disabled = false; }
+};
+
+log("harness pronto. Bundle: " + (window.EfixWallet ? ("v" + (EfixWallet.version || "?") + " · signer " + (EfixWallet.signerBackend || "?")) : "NÃO CARREGADO"));
+window.addEventListener("load", () => $("btnRestore").click());
+</script>
+</body>
+</html>

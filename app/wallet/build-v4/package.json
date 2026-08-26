@@ -1,0 +1,16 @@
+{
+  "name": "efix-wallet-build-v4",
+  "version": "0.1.0",
+  "description": "Bundle v4 da wallet EFIX — signer Privy (js-sdk-core) + Alchemy Wallet APIs. Árvore isolada do build v3 (account-kit 4.86 pina ox@0.6; js-sdk-core exige ox@0.8).",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "npx esbuild entry-privy.js --bundle --format=iife --outfile=../efix-wallet-bundle-v4.js --minify"
+  },
+  "dependencies": {
+    "@alchemy/wallet-apis": "^5.2.0",
+    "@privy-io/js-sdk-core": "^0.72.0",
+    "viem": "^2.37.0",
+    "esbuild": "^0.28.1"
+  }
+}
