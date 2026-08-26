@@ -564,6 +564,21 @@ tr.grp:first-child td{padding-top:6px}
             <h2>Minhas remessas <button class="mini" id="remBtnRef">atualizar</button></h2>
             <div id="remDeals"><div class="empty">—</div></div>
           </div>
+          <!-- Operação programada (26/08): pedido do cliente nasce 'solicitada';
+               a mesa aprova antes de ligar as fatias automáticas (regulatório) -->
+          <div class="card" data-reveal style="animation-delay:.12s">
+            <h2>Operação programada <span class="up">alvo único · fatias automáticas</span></h2>
+            <div id="opBox"><div class="empty">—</div></div>
+            <div id="opForm" style="display:none">
+              <p class="rem-lead">Para valores maiores: defina o alvo total em reais e, após a aprovação da mesa, cada depósito seu na sua conta fiat vira uma fatia diária automática até completar o alvo — sem criar remessa a remessa.</p>
+              <label class="fldl">Alvo total (R$)</label>
+              <input id="opAlvo" class="fld mono" type="number" min="100" step="0.01" placeholder="0,00">
+              <label class="fldl">Favorecido (opcional — pode definir depois)</label>
+              <select id="opFav" class="fld"><option value="">— definir depois —</option></select>
+              <button class="cta pri" id="opBtnCriar">Solicitar operação</button>
+              <div id="opMsg" class="rem-msg"></div>
+            </div>
+          </div>
         </div>
       </section>
       <section class="view" id="view-brle"><div class="card stub" data-reveal>
@@ -1410,7 +1425,7 @@ async function initRemessas2(){
   _rem2Init=true;
   $('remBtnQuote').onclick=rem2Quote;
   $('remBtnCreate').onclick=rem2Criar;
-  $('remBtnRef').onclick=rem2Refresh;
+  $('remBtnRef').onclick=()=>{ rem2Refresh(); rem2Ops(); };
   $('remBtnCopy').onclick=()=>{ if(!_rem2Addr) return;
     navigator.clipboard.writeText(_rem2Addr).then(()=>{ $('remBtnCopy').textContent='copiado ✓';
       setTimeout(()=>{ $('remBtnCopy').textContent='Copiar endereço'; },2000); }); };
@@ -1422,12 +1437,14 @@ async function initRemessas2(){
   $('remBtnFavNew').onclick=()=>{ const f=$('remFavForm');
     f.style.display=f.style.display==='none'?'block':'none'; };
   $('favBtnSend').onclick=rem2FavRequest;
+  $('opBtnCriar').onclick=rem2OpCriar;
   if(!EfixAuth.isLoggedIn()){ $('remMsg').textContent='Entre com sua conta para usar remessas.'; return; }
   try{
     const favs = await rf('/remessas/allowlist');
-    $('remFav').innerHTML = '<option value="">— selecionar —</option>'+
-      favs.map(f=>'<option value="'+f.id+'" data-name="'+f.name+'">'+f.name+' ('+f.doc_root+')</option>').join('');
-    rem2Refresh(); rem2FavPend();
+    const favOpts = favs.map(f=>'<option value="'+f.id+'" data-name="'+_esc(f.name)+'">'+_esc(f.name)+' ('+_esc(f.doc_root)+')</option>').join('');
+    $('remFav').innerHTML = '<option value="">— selecionar —</option>'+favOpts;
+    $('opFav').innerHTML = '<option value="">— definir depois —</option>'+favOpts;
+    rem2Refresh(); rem2FavPend(); rem2Ops();
   }catch(e){ $('remMsg').textContent = e.message; }
 }
 const _esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1490,6 +1507,42 @@ async function rem2FavPend(){
     $('favPend').innerHTML = (p&&p.length)
       ? '<div class="muted">Aguardando aprovação da mesa: '+p.map(x=>_esc(x.name)).join(' · ')+'</div>' : '';
   }catch(_e){ /* silencioso: pendências são informativas */ }
+}
+/* Operação programada: pedido nasce 'solicitada' no DVP e a mesa aprova antes
+   de ligar as fatias automáticas (fluxo regulatório 26/08) */
+const OP_ST = {solicitada:'aguardando aprovação da mesa',aberta:'em andamento',completa:'concluída',rejeitada:'não aprovada',cancelada:'cancelada'};
+async function rem2Ops(){
+  const box=$('opBox'), form=$('opForm');
+  try{
+    const ops = await rf('/remessas/operacoes');
+    const ativa = (ops||[]).find(o=>o.status==='aberta'||o.status==='solicitada');
+    if(!ativa){
+      const hist=(ops||[]).slice(0,2).map(o=>'<div class="muted">#'+o.id+' · alvo R$ '+Number(o.alvo_brl).toFixed(2)+' · '+_esc(OP_ST[o.status]||o.status)+'</div>').join('');
+      box.innerHTML = hist || '<div class="empty">Nenhuma operação programada.</div>';
+      form.style.display='block';
+      return;
+    }
+    form.style.display='none';
+    const alvo=Number(ativa.alvo_brl), feito=Number(ativa.convertido_brl||0);
+    const pct=alvo>0?Math.min(100,feito/alvo*100):0;
+    box.innerHTML =
+      '<div style="margin-bottom:6px">Operação <b>#'+ativa.id+'</b> · alvo <b>R$ '+alvo.toFixed(2)+'</b> — <span class="'+(ativa.status==='aberta'?'pos':'up')+'">'+_esc(OP_ST[ativa.status]||ativa.status)+'</span></div>'+
+      (ativa.status==='solicitada'
+        ? '<div class="muted">Recebemos seu pedido. A mesa revisa e libera — você não precisa fazer nada agora.</div>'
+        : '<div style="height:8px;border-radius:5px;background:var(--line,#e5e5e0);overflow:hidden;margin:6px 0"><i style="display:block;height:100%;width:'+pct.toFixed(1)+'%;background:var(--green,#178a4c)"></i></div>'+
+          '<div class="muted">R$ '+feito.toFixed(2)+' convertidos ('+pct.toFixed(1)+'%) · '+(ativa.fatias||0)+' fatia(s). Cada depósito seu na conta fiat vira fatia automática — acompanhe em "Minhas remessas".</div>');
+  }catch(e){ box.innerHTML='<div class="empty">'+_esc(e.message)+'</div>'; }
+}
+async function rem2OpCriar(){
+  const alvo=parseFloat($('opAlvo').value);
+  if(!(alvo>0)){ $('opMsg').textContent='Informe o alvo em R$.'; return; }
+  const b=$('opBtnCriar'); b.disabled=true; b.textContent='Enviando…';
+  try{
+    await rf('/remessas/operacoes',{method:'POST',body:JSON.stringify({alvo_brl:alvo, favorecido_id:$('opFav').value||undefined})});
+    $('opMsg').textContent=''; $('opAlvo').value='';
+    rem2Ops();
+  }catch(e){ $('opMsg').textContent=e.message; }
+  finally{ b.disabled=false; b.textContent='Solicitar operação'; }
 }
 async function rem2Quote(){
   const amount = parseFloat($('remAmount').value);
@@ -1557,10 +1610,10 @@ async function rem2Refresh(){
     box.innerHTML = deals.map(d=>
       '<div class="deal" data-deal="'+d.id+'">'+
         '<div class="hd"><span>#'+d.id+' · '+(d.expected_currency==='BRL'?'R$ ':'')+(d.expected_amount?Number(d.expected_amount).toFixed(2):'—')+
-        (d.expected_currency==='USDC'?' USDC':'')+'</span><span class="stt">'+(REM_ST[d.status]||d.status)+'</span></div>'+
+        (d.expected_currency==='USDC'?' USDC':'')+'</span><span class="stt">'+(REM_ST[d.status]||_esc(d.status))+'</span></div>'+
         '<div class="det"></div>'+
       '</div>').join('');
-  }catch(e){ box.innerHTML='<div class="empty">'+e.message+'</div>'; }
+  }catch(e){ box.innerHTML='<div class="empty">'+_esc(e.message)+'</div>'; }
 }
 document.addEventListener('click', async (ev)=>{
   const card = ev.target.closest('[data-deal]'); if(!card) return;
@@ -1569,9 +1622,11 @@ document.addEventListener('click', async (ev)=>{
   det.style.display='block'; det.textContent='carregando…';
   try{
     const d = await rf('/remessas/deals/'+card.dataset.deal);
-    const dep = (d.deposits||[]).map(x=>'depósito '+(x.bridge_transfer_id?x.bridge_transfer_id.slice(0,8)+'…':x.id)+': '+x.state).join('<br>')||'sem depósitos';
-    const off = (d.offramps||[]).map(x=>'rota '+x.adapter+': '+x.status+(x.brl_net_expected?' · ~R$ '+Number(x.brl_net_expected).toFixed(2):'')).join('<br>')||'sem offramp';
-    const pay = (d.payouts||[]).map(x=>'payout R$ '+Number(x.amount_brl).toFixed(2)+' → '+(x.beneficiary_name||'?')+': '+x.status+(x.receipt_ref?' · '+x.receipt_ref:'')).join('<br>')||'payout ainda não criado (mesa)';
+    /* _esc em TUDO que vem da API (revisão 26/08): beneficiary_name é texto
+       livre do cliente — sem escape aqui era XSS armazenado no card */
+    const dep = (d.deposits||[]).map(x=>'depósito '+_esc(x.bridge_transfer_id?x.bridge_transfer_id.slice(0,8)+'…':x.id)+': '+_esc(x.state)).join('<br>')||'sem depósitos';
+    const off = (d.offramps||[]).map(x=>'rota '+_esc(x.adapter)+': '+_esc(x.status)+(x.brl_net_expected?' · ~R$ '+Number(x.brl_net_expected).toFixed(2):'')).join('<br>')||'sem offramp';
+    const pay = (d.payouts||[]).map(x=>'payout R$ '+Number(x.amount_brl).toFixed(2)+' → '+_esc(x.beneficiary_name||'?')+': '+_esc(x.status)+(x.receipt_ref?' · '+_esc(x.receipt_ref):'')).join('<br>')||'payout ainda não criado (mesa)';
     det.innerHTML = dep+'<br>'+off+'<br>'+pay;
   }catch(e){ det.textContent=e.message; }
 });
