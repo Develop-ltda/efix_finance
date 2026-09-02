@@ -303,8 +303,9 @@
     <div class="callout warn"><div class="ct">Two scope honesties</div>
       <p><strong>1. Audit scope.</strong> OpenZeppelin audited the efixDI token (15/15 resolved, including one high-severity finding
       fixed with a custody redesign). The collateral vault as a whole and the off-chain backing sat outside that scope. A dedicated
-      vault audit is being scoped to the curator's go-live, and the off-chain backing is covered by the monthly Harris &amp; Trotter
-      supply-vs-NAV attestation.</p>
+      vault audit is being scoped to the curator's go-live. Backing is reconciled internally against the fund administrator's
+      settled statements of units; an on-chain solvency gate provides the continuous check. There is no third-party attestation
+      of efixDI backing today. A zero-knowledge proof-of-backing pilot on the administrator statement series is on the roadmap.</p>
       <p><strong>2. Oracle.</strong> The May 2026 staleness incident came from a threshold set inside the 24-hour heartbeat. The fix
       has three parts: a staleness threshold above 25 hours, an external uptime monitor with hourly checks, and webhooks on low
       operator-wallet gas and on RPC failure.</p></div>
