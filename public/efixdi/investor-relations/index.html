@@ -162,7 +162,7 @@
   <!-- hero -->
   <div class="hero" id="hero"></div>
 
-  <div class="thesis">A tokenized share of a <b>R$28.6bn</b> Brazilian sovereign money-market fund &mdash; <b>daily-liquid</b>, settled on Base, earning roughly <b>100% of CDI</b>. A fund share, not private credit and not an algorithmic stablecoin.</div>
+  <div class="thesis">A tokenized share of a <b>R$33.7bn</b> Brazilian sovereign money-market fund &mdash; <b>daily-liquid</b>, settled on Base, earning roughly <b>100% of CDI</b>. A fund share, not private credit and not an algorithmic stablecoin.</div>
 
   <!-- on-chain -->
   <div class="sec">
@@ -299,7 +299,7 @@
     asOf: null, supply: 5340, navUsd: 0.194915, navBrl: 1.014474, fxUsdPerBrl: 0.192134,
     tvlUsd: 1040.83, tvlBrl: 5417.21, psmSwapFeeBps: 30,
     backing: { fund:"BTG Pactual Tesouro Selic FIRF Ref DI", cnpj:"09.215.250/0001-13",
-      mandate:">=95% federal Treasury (LFTs)", aum:"R$28.6bn (~US$5.5bn)", redemption:"T+0", rating:"Ba1 / BB / BB (stable)" },
+      mandate:">=95% federal Treasury (LFTs)", aum:"R$33.7bn (~US$6.6bn, CVM 31 Aug 2026)", redemption:"D+0", rating:"Ba1 / BB / BB (stable)" },
     audit: "OpenZeppelin 15/15",
     status: { oracle:"live", pixRail:"live", keeper:"active", contract:"active" }
   };
@@ -312,7 +312,7 @@
     $("st-dot").className = "dot" + (live ? "" : " snap");
     set("st-as", live && d.asOf ? "Live · " + new Date(d.asOf).toISOString().slice(11, 16) + " UTC" : "Snapshot");
     const b = d.backing || {};
-    const aum = (b.aum || "R$28.6bn").replace(/\s*\(.*\)\s*/, "");
+    const aum = (b.aum || "R$33.7bn").replace(/\s*\(.*\)\s*/, "");
     const aumSub = (b.aum && b.aum.match(/\((.*)\)/)) ? b.aum.match(/\((.*)\)/)[1] : "~US$5.5bn";
     $("hero").innerHTML =
       `<div class="hcol"><div class="hk">Underlying yield · p.a.</div><div class="hv">${FUND_YIELD}</div><div class="hs">&#8776;100% CDI · gross · BRL</div></div>`
@@ -328,7 +328,7 @@
     $("metrics").innerHTML = M.map(m=>`<div class="mcell"><div class="mk">${m.k}</div><div class="mv">${m.v}</div><div class="ms">${m.s}</div></div>`).join("");
     set("bk-fund", b.fund||"\u2014"); set("bk-cnpj", b.cnpj||"\u2014"); set("bk-mandate", b.mandate||"\u2014");
     set("bk-aum", b.aum||"\u2014"); set("bk-rating", b.rating||"\u2014");
-    set("bk-redemption", (b.redemption||"T+0").replace(/^D\+0$/,"T+0"));
+    set("bk-redemption", (b.redemption||"D+0"));
     set("psm-navusd", num(d.navUsd,4)); set("psm-navbrl", num(d.navBrl,4)); set("psm-fx", num(d.fxUsdPerBrl,4));
     set("psm-fee", d.psmSwapFeeBps==null?"\u2014":d.psmSwapFeeBps+" bps");
     const s = d.status||{};

@@ -30,7 +30,7 @@
 ## Common description prefix (paste at the top of every Description field)
 
 ```
-EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/2025) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Smart contracts audited by OpenZeppelin (March 2026, 15/15 findings resolved). Built on Base.
+EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/2025) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Built on Base.
 ```
 
 ---
@@ -48,9 +48,9 @@ EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/
 **Description** (copy block below, paste into Description field):
 
 ```
-EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/2025) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Smart contracts audited by OpenZeppelin (March 2026, 15/15 findings resolved). Built on Base.
+EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/2025) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Built on Base.
 
-BRLE is a Brazilian Real (BRL) pegged stablecoin issued by EFIX. Backed 1:1 by Brazilian Reais held in segregated custody at regulated institutions, redeemable on-chain via the EFIX PSM (Peg Stability Module). BRLE serves as the unit of account for EFIX's RWA market — including the efixDI+ Morpho Blue collateral pair — and as on/off-ramp settlement currency between fiat BRL and DeFi liquidity.
+BRLE is a Brazilian Real (BRL) pegged stablecoin issued by EFIX. Backed 1:1 by Brazilian Reais held in segregated custody at regulated institutions, redeemable on-chain via the EFIX PSM (Peg Stability Module). BRLE serves as the unit of account for EFIX's RWA market — including the efixDI+ / USDC collateral market on Euler v2 — and as on/off-ramp settlement currency between fiat BRL and DeFi liquidity.
 ```
 
 ---
@@ -68,7 +68,7 @@ BRLE is a Brazilian Real (BRL) pegged stablecoin issued by EFIX. Backed 1:1 by B
 **Description:**
 
 ```
-EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/2025) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Smart contracts audited by OpenZeppelin (March 2026, 15/15 findings resolved). Built on Base.
+EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/2025) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Built on Base.
 
 sBRLE is the ERC-4626 yield vault for BRLE. Depositors stake BRLE and receive sBRLE shares that accrue yield from underlying BRL-denominated investments — primarily Brazilian DI (interbank deposit) money-market exposures held in regulated custody. sBRLE is fully composable on-chain: usable as DeFi collateral, in lending markets, and as the staking primitive for the EFIX protocol.
 ```
@@ -90,11 +90,11 @@ sBRLE is the ERC-4626 yield vault for BRLE. Depositors stake BRLE and receive sB
 **Description:**
 
 ```
-EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/2025) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Smart contracts audited by OpenZeppelin (March 2026, 15/15 findings resolved). Built on Base.
+EFIX is a Brazilian, CVM-licensed (Resolution 88/2022, Ato Declaratório 23.635/2025) protocol tokenizing regulated yield-bearing assets and bringing them on-chain for composability with DeFi liquidity. Built on Base.
 
-efixDI+ tokenizes shares of regulated Brazilian DI (interbank deposit) money-market funds, exposing the Brazilian CDI yield curve (currently ~14.4% APY) as on-chain collateral. Each token represents a pro-rata claim on fund shares custodied by licensed Brazilian fund administrators, with NAV updated on-chain via an oracle backed by daily fund pricing. Live as Morpho Blue collateral on Base — efixDI+ / USDC market — enabling permissionless borrowing against Brazilian sovereign-grade yield.
+efixDI+ tokenizes shares of regulated Brazilian DI (interbank deposit) money-market funds, exposing the Brazilian CDI yield curve (currently ~14.4% APY) as on-chain collateral. Each token represents a pro-rata claim on fund shares custodied by licensed Brazilian fund administrators, with NAV updated on-chain via an oracle backed by daily fund pricing. Live as collateral on Euler v2 on Base (efixDI+ / USDC market), enabling permissionless borrowing against Brazilian sovereign-grade yield. The efixDI token contract (EfixDIToken, Polygon) was audited by OpenZeppelin (March 2026, 15/15 findings resolved); the Base token is a verified LayerZero OFT deployment (source on Sourcify) and is not covered by that audit.
 
-Live Morpho market: https://app.morpho.org/base/market/0x31d65cadef8eb085dd3bead61b987b3f86a7ac7d3e1f4763f6d4ec6a477d345a
+Live Euler v2 market (USDC vault, Base): https://basescan.org/address/0xe276BB91E0C63C0BC6ABdd3Dc37DF324f90e3956
 DefiLlama: https://defillama.com/protocol/efixdi
 ```
 
