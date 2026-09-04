@@ -525,7 +525,12 @@ tr.grp:first-child td{padding-top:6px}
         <div class="rem2col">
           <div class="card" data-reveal>
             <h2>Nova remessa <span class="up">USDC → PIX · trilha DvP</span></h2>
-            <p class="rem-lead">Cote em reais, envie USDC na rede Base e acompanhe cada etapa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
+            <!-- 04/09: o lead dizia "envie USDC na rede Base" (herança do v0.3.0).
+                 O fund da wallet é HOUSE-FUNDED: o proxy não repassa from_address,
+                 o DVP arma a rota Bridge com BRIDGE_FROM_ADDRESS (carteira operacional
+                 da EFIX) e o AUTOFUND financia. USDC que o cliente mande ao to_address
+                 da Bridge NÃO casa (fica órfão) — nunca instruir depósito aqui. -->
+            <p class="rem-lead">Cote em reais e acompanhe cada etapa. A conversão é financiada pela EFIX — você não envia USDC por conta própria: paga em fiat (dados abaixo) ou, em USDC, conforme instruções da mesa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
             <div id="rem-form">
               <label class="fldl">Favorecido (allowlist)</label>
               <select id="remFav" class="fld"><option value="">carregando…</option></select>
@@ -534,12 +539,11 @@ tr.grp:first-child td{padding-top:6px}
               <button class="cta" id="remBtnQuote">Cotar</button>
               <div id="remQuoteBox" style="display:none">
                 <div id="remQuoteDetails" class="qd"></div>
-                <button class="cta pri" id="remBtnCreate">Criar remessa &amp; gerar depósito</button>
+                <button class="cta pri" id="remBtnCreate">Criar remessa</button>
               </div>
             </div>
             <div id="rem-instr" style="display:none">
               <div class="qd" id="remInstrDetails"></div>
-              <button class="cta" id="remBtnCopy">Copiar endereço</button>
               <button class="cta" id="remBtnNova">Nova remessa</button>
             </div>
             <div id="remMsg" class="rem-msg"></div>
@@ -1413,7 +1417,7 @@ async function renderActivity(elId, n, chipsId){
 }
 
 /* ═══ REMESSAS NATIVA (BRL-first via /remessas/* do backend; browser nunca fala com o DVP) ═══ */
-let _rem2Init=false, _rem2Quote=null, _rem2Addr='';
+let _rem2Init=false, _rem2Quote=null;
 async function rf(path, opts={}){
   const r = await fetch(BACKEND+path,{...opts,headers:{'Content-Type':'application/json',...EfixAuth.headers(),...(opts.headers||{})}});
   const d = await r.json().catch(()=>({}));
@@ -1426,10 +1430,7 @@ async function initRemessas2(){
   $('remBtnQuote').onclick=rem2Quote;
   $('remBtnCreate').onclick=rem2Criar;
   $('remBtnRef').onclick=()=>{ rem2Refresh(); rem2Ops(); };
-  $('remBtnCopy').onclick=()=>{ if(!_rem2Addr) return;
-    navigator.clipboard.writeText(_rem2Addr).then(()=>{ $('remBtnCopy').textContent='copiado ✓';
-      setTimeout(()=>{ $('remBtnCopy').textContent='Copiar endereço'; },2000); }); };
-  $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Addr='';
+  $('remBtnNova').onclick=()=>{ _rem2Quote=null;
     $('remAmount').value=''; $('remQuoteBox').style.display='none';
     $('rem-instr').style.display='none'; $('rem-form').style.display='block'; $('remMsg').textContent=''; };
   // M-DVP-SELF: dados fiat da PROPRIA conta virtual + favorecido self-service
@@ -1553,7 +1554,7 @@ async function rem2Quote(){
     const ok = _rem2Quote.usdc_needed!=null;
     $('remQuoteDetails').innerHTML = ok
       ? 'Valor a quitar: R$ '+Number(_rem2Quote.amount_brl).toFixed(2)+'<br>'+
-        'Você envia: <span class="pos">'+Number(_rem2Quote.usdc_needed).toFixed(2)+' USDC</span><br>'+
+        'A converter: <span class="pos">'+Number(_rem2Quote.usdc_needed).toFixed(2)+' USDC</span><br>'+
         'Câmbio efetivo: R$ '+Number(_rem2Quote.rate_efetiva).toFixed(4)+'/USDC <span style="color:var(--ink-3)">(taxas inclusas)</span>'
       : '<span class="neg">Nenhuma rota disponível agora.</span>';
     $('remQuoteBox').style.display='block';
@@ -1580,26 +1581,37 @@ async function rem2Criar(){
     if(fund.deferred){
       // fluxo direto (payout ao favorecido): sem depósito manual — a mesa
       // aprova e a conversão sai direto para quem você cadastrou
-      _rem2Addr='';
       $('remInstrDetails').innerHTML =
         'Remessa <span class="pos">#'+deal.id+'</span> · quita R$ '+amount.toFixed(2)+'<br>'+
         'Registrada e aguardando aprovação da mesa.<br>'+
         'Após a aprovação, o pagamento sai <b>direto para o favorecido</b> que você cadastrou — sem passo de depósito manual.';
     } else {
-    const instr = fund.deposit_instructions||{};
-    _rem2Addr = instr.to_address||'';
-    $('remInstrDetails').innerHTML =
-      'Remessa <span class="pos">#'+deal.id+'</span> · quita R$ '+amount.toFixed(2)+'<br>'+
-      'Rede: '+String(instr.payment_rail||'base').toUpperCase()+' · Moeda: '+String(instr.currency||'usdc').toUpperCase()+'<br>'+
-      'Valor a enviar: '+(instr.amount||usdc)+' USDC<br>'+
-      'Endereço: '+(_rem2Addr||'(indisponível — ver detalhes da remessa)')+
-      (fund.status==='failed' ? '<br><span class="neg">Falha ao armar a rota: '+(fund.reason||'')+'</span>' : '');
+      // fluxo clássico (sem favorecido chaveado) — HOUSE-FUNDED (04/09):
+      // o proxy (/remessas/deals/:id/fund) só repassa amount_usdc+quote_set_id,
+      // o DVP arma a rota Bridge com source.from_address = BRIDGE_FROM_ADDRESS
+      // (carteira operacional da EFIX) e o AUTOFUND financia o deal a partir
+      // dela. USDC que o cliente mande ao to_address da Bridge NÃO casa (fica
+      // órfão) — por isso NÃO exibimos endereço nem "valor a enviar" (texto
+      // herdado do v0.3.0). Mostramos o estado + a orientação de pagamento.
+      // Motivo interno do autofund (kill switch, teto, gas) não vai ao cliente;
+      // o hash da tx da casa também não (levaria de volta ao to_address).
+      const auto = fund.autofund||{};
+      const estado = fund.status==='failed'
+        ? '<span class="neg">Falha ao armar a rota'+(fund.reason?': '+_esc(fund.reason):'')+'</span>'
+        : (auto.enviado
+          ? '<span class="pos">Rota armada · financiada pela EFIX</span>'
+          : '<span class="up">Rota armada · aguardando financiamento pela mesa</span>');
+      $('remInstrDetails').innerHTML =
+        'Remessa <span class="pos">#'+deal.id+'</span> · quita R$ '+amount.toFixed(2)+'<br>'+
+        'Estado: '+estado+'<br>'+
+        '<span class="neg">Não envie USDC por conta própria.</span> Esta remessa é financiada pela carteira operacional da EFIX — USDC vindo de outra carteira não é reconhecido pela rota.<br>'+
+        'Como pagar: em <b>fiat</b>, use "Dados para depósito fiat" abaixo; em <b>USDC</b>, solicite uma <b>operação programada</b> — as instruções vêm da mesa após a aprovação.';
     }
     $('rem-form').style.display='none';
     $('rem-instr').style.display='block';
     rem2Refresh();
   }catch(e){ $('remMsg').textContent=e.message; }
-  finally{ b.disabled=false; b.textContent='Criar remessa & gerar depósito'; }
+  finally{ b.disabled=false; b.textContent='Criar remessa'; }
 }
 const REM_ST = {open:'aberta',funded:'financiada',settled:'liquidada',closed:'encerrada'};
 async function rem2Refresh(){
