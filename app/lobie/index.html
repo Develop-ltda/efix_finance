@@ -525,7 +525,7 @@ tr.grp:first-child td{padding-top:6px}
         <div class="rem2col">
           <div class="card" data-reveal>
             <h2>Nova remessa <span class="up">USDC → PIX · trilha DvP</span></h2>
-            <!-- 04/09: o lead dizia "envie USDC na rede Base" (herança do v0.3.0).
+            <!-- 08/09: o lead dizia "envie USDC na rede Base" (herança do v0.3.0).
                  O fund da wallet é HOUSE-FUNDED: o proxy não repassa from_address,
                  o DVP arma a rota Bridge com BRIDGE_FROM_ADDRESS (carteira operacional
                  da EFIX) e o AUTOFUND financia. USDC que o cliente mande ao to_address
@@ -1586,7 +1586,7 @@ async function rem2Criar(){
         'Registrada e aguardando aprovação da mesa.<br>'+
         'Após a aprovação, o pagamento sai <b>direto para o favorecido</b> que você cadastrou — sem passo de depósito manual.';
     } else {
-      // fluxo clássico (sem favorecido chaveado) — HOUSE-FUNDED (04/09):
+      // fluxo clássico (sem favorecido chaveado) — HOUSE-FUNDED (08/09):
       // o proxy (/remessas/deals/:id/fund) só repassa amount_usdc+quote_set_id,
       // o DVP arma a rota Bridge com source.from_address = BRIDGE_FROM_ADDRESS
       // (carteira operacional da EFIX) e o AUTOFUND financia o deal a partir
