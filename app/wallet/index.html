@@ -530,10 +530,17 @@ tr.grp:first-child td{padding-top:6px}
                  o DVP arma a rota Bridge com BRIDGE_FROM_ADDRESS (carteira operacional
                  da EFIX) e o AUTOFUND financia. USDC que o cliente mande ao to_address
                  da Bridge NÃO casa (fica órfão) — nunca instruir depósito aqui. -->
-            <p class="rem-lead">Cote em reais e acompanhe cada etapa. A conversão é financiada pela EFIX — você não envia USDC por conta própria: paga em fiat (dados abaixo) ou, em USDC, conforme instruções da mesa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
+            <p class="rem-lead">Cote em reais e acompanhe cada etapa. Suba o boleto (PDF) e nós lemos valor e vencimento. A conversão é financiada pela EFIX — você não envia USDC por conta própria: paga em fiat (dados abaixo) ou, em USDC, conforme instruções da mesa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
             <div id="rem-form">
               <label class="fldl">Favorecido (allowlist)</label>
               <select id="remFav" class="fld"><option value="">carregando…</option></select>
+              <!-- M-BOLETO-UPLOAD (08/09): o cliente sobe o PDF do boleto; o proxy
+                   (/remessas/boletos) repassa ao DVP, que lê a linha digitável e devolve
+                   valor/vencimento/beneficiário/cotação. Self-service ⇒ a mesa confere
+                   antes de pagar; o favorecido vem do boleto, nunca de digitação livre. -->
+              <label class="fldl">Boleto a quitar <span class="up">(PDF, opcional)</span></label>
+              <input id="remBoleto" class="fld" type="file" accept="application/pdf">
+              <div id="remBoletoBox" class="qd" style="display:none"></div>
               <label class="fldl">Valor a quitar (R$)</label>
               <input id="remAmount" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
               <button class="cta" id="remBtnQuote">Cotar</button>
@@ -1417,11 +1424,14 @@ async function renderActivity(elId, n, chipsId){
 }
 
 /* ═══ REMESSAS NATIVA (BRL-first via /remessas/* do backend; browser nunca fala com o DVP) ═══ */
-let _rem2Init=false, _rem2Quote=null;
+let _rem2Init=false, _rem2Quote=null, _rem2Boleto=null; // _rem2Boleto (08/09): {id, valor_brl} do PDF lido
 async function rf(path, opts={}){
-  const r = await fetch(BACKEND+path,{...opts,headers:{'Content-Type':'application/json',...EfixAuth.headers(),...(opts.headers||{})}});
+  // opts.tolerar (08/09): lista de status HTTP cujo corpo volta em vez de virar erro.
+  // (O DVP devolve boleto duplicado com 200 + duplicado:true; 409 fica tolerado por compatibilidade.)
+  const {tolerar=[], ...init} = opts;
+  const r = await fetch(BACKEND+path,{...init,headers:{'Content-Type':'application/json',...EfixAuth.headers(),...(init.headers||{})}});
   const d = await r.json().catch(()=>({}));
-  if(!r.ok) throw new Error(d.error||('HTTP '+r.status));
+  if(!r.ok && !tolerar.includes(r.status)) throw new Error(d.error||('HTTP '+r.status));
   return d;
 }
 async function initRemessas2(){
@@ -1430,8 +1440,10 @@ async function initRemessas2(){
   $('remBtnQuote').onclick=rem2Quote;
   $('remBtnCreate').onclick=rem2Criar;
   $('remBtnRef').onclick=()=>{ rem2Refresh(); rem2Ops(); };
-  $('remBtnNova').onclick=()=>{ _rem2Quote=null;
+  $('remBoleto').onchange=rem2Boleto; // M-BOLETO-UPLOAD (08/09)
+  $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Boleto=null;
     $('remAmount').value=''; $('remQuoteBox').style.display='none';
+    $('remBoleto').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
     $('rem-instr').style.display='none'; $('rem-form').style.display='block'; $('remMsg').textContent=''; };
   // M-DVP-SELF: dados fiat da PROPRIA conta virtual + favorecido self-service
   $('remBtnFiat').onclick=rem2Fiat;
@@ -1545,6 +1557,70 @@ async function rem2OpCriar(){
   }catch(e){ $('opMsg').textContent=e.message; }
   finally{ b.disabled=false; b.textContent='Solicitar operação'; }
 }
+// M-BOLETO-UPLOAD (08/09): PDF do boleto → base64 → POST /remessas/boletos (proxy →
+// DVP lê a linha digitável). Limite espelha o proxy: PDF ≤ 600 KB. Se leu, preenche o
+// valor e cota sozinho; beneficiário fora da allowlist NÃO bloqueia — a mesa confere
+// antes de pagar. Se não leu, o boleto fica salvo mesmo assim (a mesa lê o PDF) e o
+// cliente digita o valor. TUDO que vem da API passa por _esc.
+const _venc = v => (typeof v==='string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? v.split('-').reverse().join('/') : (v||'—');
+const _docFmt = d => { const s=String(d||'').replace(/\D/g,'');
+  if(s.length===14) return s.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
+  if(s.length===11) return s.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4');
+  return d||''; };
+async function rem2Boleto(){
+  const inp=$('remBoleto'), box=$('remBoletoBox'), f=inp.files&&inp.files[0];
+  // arquivo novo: nada do boleto anterior (valor preenchido, cotação) pode sobrar
+  if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
+  _rem2Boleto=null; box.style.display='none'; box.innerHTML='';
+  if(!f) return;
+  if(!(f.type==='application/pdf' || /\.pdf$/i.test(f.name))){ $('remMsg').textContent='Envie o boleto em PDF.'; inp.value=''; return; }
+  if(f.size>600*1024){ $('remMsg').textContent='PDF grande demais (máx. 600 KB).'; inp.value=''; return; }
+  $('remMsg').textContent='';
+  box.style.display='block'; box.textContent='lendo o boleto…';
+  try{
+    const b64 = await new Promise((res,rej)=>{ const rd=new FileReader();
+      rd.onload=()=>res(String(rd.result).replace(/^data:[^,]*,/,''));
+      rd.onerror=()=>rej(new Error('Não consegui ler o arquivo.'));
+      rd.readAsDataURL(f); });
+    // mesmo PDF já enviado e ainda não pago: o DVP devolve (200) o boleto existente com
+    // duplicado:true — reaproveitamos só se ainda não está ligado a uma remessa.
+    const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify({filename:f.name, pdf_base64:b64})});
+    if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
+    if(d.duplicado && d.deal_id!=null){
+      inp.value='';
+      box.innerHTML='Este boleto já está ligado à remessa <span class="pos">#'+_esc(d.deal_id)+'</span> — acompanhe em "Minhas remessas". Para outra remessa, escolha outro PDF.';
+      return;
+    }
+    const ben = d.beneficiario||{};
+    const avisos = (Array.isArray(d.avisos)?d.avisos:[]).map(a=>'<div style="color:var(--warn,#b45309)">⚠ '+_esc(a)+'</div>').join('');
+    const dup = d.duplicado?'<div style="color:var(--ink-3)">este PDF já havia sido enviado — reaproveitado (boleto #'+_esc(d.id)+')</div>':'';
+    if(d.status==='lido' && d.valor_brl!=null){
+      _rem2Boleto={id:d.id, valor_brl:Number(d.valor_brl)};
+      box.innerHTML =
+        '<span class="pos">Boleto lido ✓</span> · '+brl(d.valor_brl)+
+        ' · vence '+_esc(_venc(d.vencimento))+
+        (ben.nome?' · beneficiário: '+_esc(ben.nome)+(ben.doc?' ('+_esc(_docFmt(ben.doc))+')':''):'')+
+        (d.referencia?' · '+_esc(d.referencia):'')+
+        (d.banco?'<br><span style="color:var(--ink-3)">banco: '+_esc(d.banco)+'</span>':'')+
+        (ben.na_allowlist===false?'<div style="color:var(--warn,#b45309)">favorecido ainda não cadastrado — a mesa confere antes de pagar</div>':'')+
+        (d.cotacao&&d.cotacao.usdc_needed!=null?'<div>A converter: <span class="pos">'+Number(d.cotacao.usdc_needed).toFixed(2)+' USDC</span> (câmbio efetivo R$ '+Number(d.cotacao.rate_efetiva).toFixed(4)+')</div>':'')+
+        avisos+dup;
+      $('remAmount').value = Number(d.valor_brl).toFixed(2);
+      rem2Quote();
+    } else {
+      _rem2Boleto={id:d.id};
+      box.innerHTML = 'Não consegui ler o boleto automaticamente. Digite o valor em R$; a mesa lê o PDF.'+avisos+dup;
+      $('remAmount').focus();
+    }
+    box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover PDF</button></div>';
+    $('remBoletoRm').onclick=rem2BoletoRm;
+  }catch(e){ box.style.display='none'; box.innerHTML=''; inp.value=''; $('remMsg').textContent=e.message; }
+}
+// remove o PDF escolhido (e o valor/cotação que vieram dele)
+function rem2BoletoRm(){
+  if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
+  _rem2Boleto=null; $('remBoleto').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
+}
 async function rem2Quote(){
   const amount = parseFloat($('remAmount').value);
   if(!amount || amount<=0){ $('remMsg').textContent='Informe o valor em R$.'; return; }
@@ -1567,13 +1643,18 @@ async function rem2Criar(){
   const sel = $('remFav');
   const favName = sel.selectedOptions[0] ? (sel.selectedOptions[0].dataset.name||'') : '';
   if(!amount || !_rem2Quote || _rem2Quote.usdc_needed==null){ $('remMsg').textContent='Cote antes de criar.'; return; }
+  // M-BOLETO-UPLOAD (08/09): com boleto lido, o valor da remessa tem de ser o do boleto
+  // (o payout nasce com amount_brl do boleto; deal com outro valor ficaria inconsistente)
+  if(_rem2Boleto && _rem2Boleto.valor_brl!=null && Math.abs(amount-_rem2Boleto.valor_brl)>0.005){
+    $('remMsg').textContent='O valor difere do boleto ('+brl(_rem2Boleto.valor_brl)+'). Ajuste o valor e cote de novo, ou remova o PDF.'; return; }
   const usdc = _rem2Quote.usdc_needed;
   const b=$('remBtnCreate'); b.disabled=true; b.textContent='Criando…';
   try{
     const deal = await rf('/remessas/deals',{method:'POST',body:JSON.stringify({
       expected_amount:amount, expected_currency:'BRL',
       favorecido_id: sel.value||undefined,
-      notes:(favName?('favorecido pretendido: '+favName+' · '):'')+'alvo R$ '+amount.toFixed(2)+' · envia '+usdc.toFixed(2)+' USDC @ '+Number(_rem2Quote.rate_efetiva).toFixed(4),
+      boleto_id: _rem2Boleto ? _rem2Boleto.id : undefined, // M-BOLETO-UPLOAD (08/09)
+      notes:(favName?('favorecido pretendido: '+favName+' · '):'')+'alvo R$ '+amount.toFixed(2)+' · envia '+usdc.toFixed(2)+' USDC @ '+Number(_rem2Quote.rate_efetiva).toFixed(4)+(_rem2Boleto?' · boleto #'+_rem2Boleto.id:''),
     })});
     const fund = await rf('/remessas/deals/'+deal.id+'/fund',{method:'POST',body:JSON.stringify({
       amount_usdc:usdc, quote_set_id:_rem2Quote.quote_set_id,
@@ -1606,6 +1687,18 @@ async function rem2Criar(){
         'Estado: '+estado+'<br>'+
         '<span class="neg">Não envie USDC por conta própria.</span> Esta remessa é financiada pela carteira operacional da EFIX — USDC vindo de outra carteira não é reconhecido pela rota.<br>'+
         'Como pagar: em <b>fiat</b>, use "Dados para depósito fiat" abaixo; em <b>USDC</b>, solicite uma <b>operação programada</b> — as instruções vêm da mesa após a aprovação.';
+    }
+    // M-BOLETO-UPLOAD (08/09): só afirma "anexado" se o DVP confirmou o vínculo (deal.boleto)
+    if(_rem2Boleto){
+      const bl = deal.boleto;
+      if(bl && bl.id){
+        const st = bl.status==='com_payout' ? 'favorecido já aprovado — pagamento preparado, a mesa libera após a liquidação'
+                 : bl.status==='aguardando_favorecido' ? 'favorecido ainda não cadastrado — a mesa confere antes de pagar'
+                 : 'a mesa lê o PDF antes de pagar';
+        $('remInstrDetails').innerHTML += '<br>Boleto <span class="pos">#'+_esc(bl.id)+'</span> anexado — '+_esc(st)+'.';
+      } else {
+        $('remInstrDetails').innerHTML += '<br><span class="neg">Boleto #'+_esc(_rem2Boleto.id)+' NÃO foi vinculado a esta remessa</span> — avise a mesa ou anexe de novo em uma nova remessa.';
+      }
     }
     $('rem-form').style.display='none';
     $('rem-instr').style.display='block';
