@@ -1609,7 +1609,9 @@ async function rem2Boleto(){
       rem2Quote();
     } else {
       _rem2Boleto={id:d.id};
-      box.innerHTML = 'Não consegui ler o boleto automaticamente. Digite o valor em R$; a mesa lê o PDF.'+avisos+dup;
+      box.innerHTML = (d.status==='lido_valor_aberto'
+        ? 'Boleto lido, mas com <b>valor em aberto</b>. Digite o valor a pagar em R$; a mesa confere.'
+        : 'Não consegui ler o boleto automaticamente. Digite o valor em R$; a mesa lê o PDF.')+avisos+dup;
       $('remAmount').focus();
     }
     box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover PDF</button></div>';
@@ -1692,7 +1694,7 @@ async function rem2Criar(){
     if(_rem2Boleto){
       const bl = deal.boleto;
       if(bl && bl.id){
-        const st = bl.status==='com_payout' ? 'favorecido já aprovado — pagamento preparado, a mesa libera após a liquidação'
+        const st = bl.status==='com_payout' ? 'pagamento preparado — a mesa confere o favorecido no banco e libera após a liquidação'
                  : bl.status==='aguardando_favorecido' ? 'favorecido ainda não cadastrado — a mesa confere antes de pagar'
                  : 'a mesa lê o PDF antes de pagar';
         $('remInstrDetails').innerHTML += '<br>Boleto <span class="pos">#'+_esc(bl.id)+'</span> anexado — '+_esc(st)+'.';
