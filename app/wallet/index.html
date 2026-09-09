@@ -247,6 +247,8 @@ tr.grp:first-child td{padding-top:6px}
 .deal{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:9px;cursor:pointer;background:var(--bg-raise)}
 .deal .hd{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-m);font-size:12px}
 .deal .hd .stt{color:var(--ink-3)}
+.deal .hd .mini{margin-left:8px;cursor:pointer;vertical-align:middle}
+.deal .bol{margin-top:5px;font-family:var(--font-m);font-size:10.5px;color:var(--ink-3);line-height:1.6}
 .deal .det{display:none;margin-top:9px;font-family:var(--font-m);font-size:11px;color:var(--ink-2);line-height:1.9;border-top:1px solid var(--line);padding-top:8px}
 
 /* extrato consolidado (web2 + web3) */
@@ -1431,7 +1433,8 @@ async function rf(path, opts={}){
   const {tolerar=[], ...init} = opts;
   const r = await fetch(BACKEND+path,{...init,headers:{'Content-Type':'application/json',...EfixAuth.headers(),...(init.headers||{})}});
   const d = await r.json().catch(()=>({}));
-  if(!r.ok && !tolerar.includes(r.status)) throw new Error(d.error||('HTTP '+r.status));
+  // (09/09) o erro carrega .status: quem chama distingue 422 (regra de negócio) de rede/5xx
+  if(!r.ok && !tolerar.includes(r.status)){ const e=new Error(d.error||('HTTP '+r.status)); e.status=r.status; throw e; }
   return d;
 }
 async function initRemessas2(){
@@ -1708,7 +1711,26 @@ async function rem2Criar(){
   }catch(e){ $('remMsg').textContent=e.message; }
   finally{ b.disabled=false; b.textContent='Criar remessa'; }
 }
-const REM_ST = {open:'aberta',funded:'financiada',settled:'liquidada',closed:'encerrada'};
+const REM_ST = {open:'aberta',funded:'financiada',settled:'liquidada',closed:'encerrada',cancelado:'cancelada'}; // cancelado (09/09): decisão explícita da mesa/cliente
+// (09/09) boleto ligado à remessa — status legível p/ o cliente (o cru é vocabulário do DVP).
+// lido/com_payout = pagamento preparado, a mesa valida o CIP antes de pagar.
+const REM_BOL_ST = {lido:'na mesa',lido_valor_aberto:'valor em aberto — mesa confere',com_payout:'na mesa',aguardando_favorecido:'favorecido em cadastro',
+  aguardando_mesa:'mesa vai conferir',ilegivel:'PDF sem leitura automática',pago:'pago',cancelado:'cancelado'};
+// mesa_motivo: códigos do DVP viram texto; texto livre da mesa passa por _esc como está
+const REM_BOL_MOT = {vencido:'boleto vencido',sem_valor:'sem valor no boleto',valor_em_aberto:'valor em aberto',
+  ilegivel:'PDF sem leitura automática',payout_existente:'já existe pagamento para esta linha digitável',
+  vencimento_indeterminado:'vencimento a conferir no PDF',acima_do_teto:'valor acima do teto — mesa decide',payout_retirado:'pagamento descartado — mesa redige de novo'};
+// linha compacta 'boleto #id · R$ valor · vence dd/mm/aaaa · status' (+ motivo). Usada no card e no detalhe.
+// vencimento pode vir 'aaaa-mm-dd' ou ISO completo (DATE do Postgres) — corta nos 10 primeiros.
+function _remBoletoLinha(b){
+  if(!b || b.id==null) return '';
+  const venc = _venc(typeof b.vencimento==='string' ? b.vencimento.slice(0,10) : b.vencimento);
+  const st = REM_BOL_ST[b.status] || _esc(b.status||'—');
+  const mot = b.mesa_motivo ? ' · '+(REM_BOL_MOT[b.mesa_motivo] || _esc(b.mesa_motivo)) : '';
+  return 'boleto #'+_esc(b.id)+(b.valor_brl!=null?' · '+brl(b.valor_brl):'')+' · vence '+_esc(venc)+' · '+st+mot;
+}
+// cancelar só faz sentido enquanto não entrou dinheiro: aberta ou financiada (o DVP confirma; 422 senão)
+const _remCancelavel = st => ['open','aberta','funded'].includes(st);
 async function rem2Refresh(){
   const box = $('remDeals');
   try{
@@ -1717,12 +1739,40 @@ async function rem2Refresh(){
     box.innerHTML = deals.map(d=>
       '<div class="deal" data-deal="'+d.id+'">'+
         '<div class="hd"><span>#'+d.id+' · '+(d.expected_currency==='BRL'?'R$ ':'')+(d.expected_amount?Number(d.expected_amount).toFixed(2):'—')+
-        (d.expected_currency==='USDC'?' USDC':'')+'</span><span class="stt">'+(REM_ST[d.status]||_esc(d.status))+'</span></div>'+
+        (d.expected_currency==='USDC'?' USDC':'')+'</span><span class="stt">'+(REM_ST[d.status]||_esc(d.status))+
+        // (09/09) botão só em aberta/financiada — nunca liquidada/encerrada/cancelada
+        (_remCancelavel(d.status)?'<button type="button" class="mini" data-cancel="'+_esc(d.id)+'">cancelar remessa</button>':'')+
+        '</span></div>'+
+        // (09/09) boleto anexado (quando o DVP manda d.boleto no listar)
+        (d.boleto&&d.boleto.id!=null?'<div class="bol">'+_remBoletoLinha(d.boleto)+'</div>':'')+
         '<div class="det"></div>'+
       '</div>').join('');
+    box.querySelectorAll('[data-cancel]').forEach(b=>{ b.onclick=rem2Cancelar; });
   }catch(e){ box.innerHTML='<div class="empty">'+_esc(e.message)+'</div>'; }
 }
+// (09/09) cancelamento self-service: confirm + motivo opcional → POST /remessas/deals/:id/cancelar.
+// O DVP só cancela sem dinheiro recebido (422 senão) e retira o payout draft da fila da mesa.
+async function rem2Cancelar(ev){
+  ev.stopPropagation(); // o clique no botão NÃO abre/fecha o detalhe do card
+  const btn=ev.currentTarget, id=btn.dataset.cancel;
+  if(!confirm('Cancelar a remessa #'+id+'? Só é possível enquanto nenhum dinheiro entrou.')) return;
+  // prompt dispensado (Cancelar/Esc) = desiste — irreversível pede intenção explícita
+  const motivo=prompt('Motivo (opcional). OK confirma o cancelamento; Cancelar desiste.','');
+  if(motivo===null) return;
+  btn.disabled=true; btn.textContent='cancelando…'; $('remMsg').textContent='';
+  try{
+    const r = await rf('/remessas/deals/'+id+'/cancelar',{method:'POST',body:JSON.stringify({motivo:motivo.trim().slice(0,200)})});
+    $('remMsg').textContent='Remessa #'+id+' cancelada.'+
+      (Array.isArray(r.payouts_retirados)&&r.payouts_retirados.length?' O pagamento preparado saiu da fila da mesa.':'');
+  }catch(e){
+    // 422 = regra de negócio do DVP (dinheiro em trânsito / payout aprovado / conversão liquidada)
+    $('remMsg').textContent = e.status===422 ? 'Esta remessa não pode mais ser cancelada por aqui — fale com a mesa. ('+e.message+')' : e.message;
+    btn.disabled=false; btn.textContent='cancelar remessa';
+  }
+  rem2Refresh();
+}
 document.addEventListener('click', async (ev)=>{
+  if(ev.target.closest('[data-cancel]')) return; // (09/09) cinto extra: o botão já para a propagação
   const card = ev.target.closest('[data-deal]'); if(!card) return;
   const det = card.querySelector('.det');
   if(det.style.display==='block'){ det.style.display='none'; return; }
@@ -1734,7 +1784,9 @@ document.addEventListener('click', async (ev)=>{
     const dep = (d.deposits||[]).map(x=>'depósito '+_esc(x.bridge_transfer_id?x.bridge_transfer_id.slice(0,8)+'…':x.id)+': '+_esc(x.state)).join('<br>')||'sem depósitos';
     const off = (d.offramps||[]).map(x=>'rota '+_esc(x.adapter)+': '+_esc(x.status)+(x.brl_net_expected?' · ~R$ '+Number(x.brl_net_expected).toFixed(2):'')).join('<br>')||'sem offramp';
     const pay = (d.payouts||[]).map(x=>'payout R$ '+Number(x.amount_brl).toFixed(2)+' → '+_esc(x.beneficiary_name||'?')+': '+_esc(x.status)+(x.receipt_ref?' · '+_esc(x.receipt_ref):'')).join('<br>')||'payout ainda não criado (mesa)';
-    det.innerHTML = dep+'<br>'+off+'<br>'+pay;
+    // (09/09) boleto anexado (mesmos campos do card), quando o DVP manda d.boleto no detalhe
+    const bol = (d.boleto&&d.boleto.id!=null) ? '<br>'+_remBoletoLinha(d.boleto) : '';
+    det.innerHTML = dep+'<br>'+off+'<br>'+pay+bol;
   }catch(e){ det.textContent=e.message; }
 });
 
