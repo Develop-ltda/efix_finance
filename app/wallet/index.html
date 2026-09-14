@@ -1464,19 +1464,45 @@ async function initRemessas2(){
   }catch(e){ $('remMsg').textContent = e.message; }
 }
 const _esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let _fiatPoll=null, _fiatGen=0;
+// v0.19.1 (14/09): em análise → re-consulta a cada 30 s (máx. 20×) enquanto o painel estiver aberto; para sozinho quando muda.
+// Token de geração (revisão 14/09): fechar/reabrir o painel invalida um tick que ainda estava no ar — nunca duas cadeias, nunca reabre painel fechado.
+function rem2FiatPoll(){
+  clearTimeout(_fiatPoll); const g=++_fiatGen; let n=0;
+  const tick=async()=>{ const box=$('remFiatBox'); if(g!==_fiatGen||!box||box.style.display!=='block') return;
+    if(n++>=20){ const s=box.querySelector('.up'); if(s) s.textContent='verificação em análise — a atualização automática pausou; feche e abra este painel para consultar de novo'; return; }
+    try{ const d=await rf('/remessas/deposit-instructions'); if(g!==_fiatGen) return; if(d.tem_conta||!d.em_analise){ box.style.display='none'; rem2Fiat(); return; } }catch(_e){}
+    if(g!==_fiatGen) return; _fiatPoll=setTimeout(tick,30000); };
+  _fiatPoll=setTimeout(tick,30000);
+}
+const _urlHttps=u=>/^https:\/\/\S+$/i.test(String(u||''));
 async function rem2Fiat(){
   const box=$('remFiatBox');
-  if(box.style.display==='block'){ box.style.display='none'; return; }
+  if(box.style.display==='block'){ box.style.display='none'; clearTimeout(_fiatPoll); _fiatGen++; return; }
   box.style.display='block'; box.textContent='carregando…';
   try{
     const d = await rf('/remessas/deposit-instructions');
     if(!d.tem_conta){
       // M-DVP-SELF v2: sem cadastro → ativação self-service (nome + KYC hospedado)
+      // v0.19.1 (14/09, caso Tiago): a Bridge esperando o CLIENTE (not_started/incomplete) não é "em análise" —
+      // mostra o que falta e o botão para completar a verificação (link vem do DVP; só https)
+      const faltando=(d.faltando&&d.faltando.length)?'<div class="muted" style="margin-top:6px">Falta informar: '+d.faltando.map(_esc).join(' · ')+'</div>':'';
+      const temLink=_urlHttps(d.kyc_link)||(d.tos_aceito===false&&_urlHttps(d.tos_link));
+      const acao = d.precisa_do_cliente&&temLink
+        ? '<div style="margin-top:8px">'+(_urlHttps(d.kyc_link)?'<button class="mini" id="fiatBtnKycGo">Completar verificação →</button> ':'')+
+          (d.tos_aceito===false&&_urlHttps(d.tos_link)?'<button class="mini" id="fiatBtnTos">Aceitar termos →</button>':'')+faltando+
+          '<div class="muted" style="margin-top:4px">Ao terminar, volte aqui e abra este painel de novo.</div></div>'
+        : (d.em_analise?'<br><span class="up">verificação em análise — a conta nasce sozinha quando aprovar (esta tela atualiza sozinha)</span>'
+        : (d.precisa_do_cliente?'<br><span class="up">sua verificação está incompleta e não conseguimos abrir o link agora — tente de novo em instantes</span>'+faltando
+        : (d.kyc_ok===false&&!d.bloqueado?'<br><span class="up">verificação (KYC) pendente — a conta nasce sozinha quando aprovar</span>':'')));
       box.innerHTML = _esc(d.motivo||'Conta fiat ainda não disponível.')+
         (d.sem_cadastro?'<div style="margin-top:8px"><input id="fiatNome" placeholder="Nome completo (como no documento)" style="width:60%;max-width:260px"> '+
           '<button class="mini" id="fiatBtnKyc">Ativar conta fiat →</button><div id="fiatKycMsg" class="muted" style="margin-top:4px"></div></div>'
-        :(d.kyc_ok===false?'<br><span class="up">verificação (KYC) em análise — a conta nasce sozinha quando aprovar</span>':''));
+        :acao);
       if(d.sem_cadastro) $('fiatBtnKyc').onclick=rem2FiatKyc;
+      if($('fiatBtnKycGo')) $('fiatBtnKycGo').onclick=()=>window.open(d.kyc_link,'_blank','noopener');
+      if($('fiatBtnTos')) $('fiatBtnTos').onclick=()=>window.open(d.tos_link,'_blank','noopener');
+      if(d.em_analise) rem2FiatPoll();
       return;
     }
     box.innerHTML = (d.criada_agora?'<div class="pos" style="margin-bottom:6px">✓ Sua conta fiat acabou de ser criada.</div>':'')+
@@ -1498,10 +1524,12 @@ async function rem2FiatKyc(){
   try{
     const r = await rf('/remessas/kyc-link',{method:'POST',body:JSON.stringify({full_name:$('fiatNome').value})});
     if(r.ja_verificado){ $('fiatKycMsg').textContent='Sua verificação já está aprovada — feche e abra este painel de novo.'; return; }
-    const url = r.kyc_link || r.tos_link;
-    if(url){ window.open(url,'_blank');
-      $('fiatKycMsg').textContent='Complete a verificação na aba que abriu. Quando aprovar, volte aqui: sua conta fiat nasce sozinha.'; }
-    else $('fiatKycMsg').textContent='Verificação criada ('+_esc(r.status||'em análise')+'). Aguarde alguns minutos e abra o painel de novo.';
+    const url = _urlHttps(r.kyc_link) ? r.kyc_link : (_urlHttps(r.tos_link) ? r.tos_link : null);
+    if(url){ window.open(url,'_blank','noopener');
+      $('fiatKycMsg').textContent='Complete a verificação na aba que abriu'+((r.faltando&&r.faltando.length)?' ('+r.faltando.join(', ')+')':'')+'. Quando terminar, volte aqui e abra este painel de novo.'; }
+    else if(r.em_analise) $('fiatKycMsg').textContent='Sua verificação está em análise — a conta fiat nasce sozinha quando aprovar.';
+    else if(r.bloqueado) $('fiatKycMsg').textContent='Sua verificação não foi aprovada — fale com a mesa.';
+    else $('fiatKycMsg').textContent=r.aviso||'Não conseguimos abrir o link de verificação agora. Abra o painel de novo em instantes; se persistir, fale com a mesa.';
   }catch(e){ $('fiatKycMsg').textContent=e.message; }
   finally{ b.disabled=false; }
 }
