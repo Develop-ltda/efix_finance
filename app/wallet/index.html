@@ -1461,6 +1461,7 @@ async function initRemessas2(){
     $('remFav').innerHTML = '<option value="">— selecionar —</option>'+favOpts;
     $('opFav').innerHTML = '<option value="">— definir depois —</option>'+favOpts;
     rem2Refresh(); rem2FavPend(); rem2Ops();
+    rem2FiatAuto(); // v0.21: sem conta fiat, o painel abre sozinho mostrando o que falta
   }catch(e){ $('remMsg').textContent = e.message; }
 }
 const _esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1470,19 +1471,106 @@ let _fiatPoll=null, _fiatGen=0;
 function rem2FiatPoll(){
   clearTimeout(_fiatPoll); const g=++_fiatGen; let n=0;
   const tick=async()=>{ const box=$('remFiatBox'); if(g!==_fiatGen||!box||box.style.display!=='block') return;
-    if(n++>=20){ const s=box.querySelector('.up'); if(s) s.textContent='verificação em análise — a atualização automática pausou; feche e abra este painel para consultar de novo'; return; }
-    try{ const d=await rf('/remessas/deposit-instructions'); if(g!==_fiatGen) return; if(d.tem_conta||!d.em_analise){ box.style.display='none'; rem2Fiat(); return; } }catch(_e){}
+    if(n++>=20){ const s=$('fiatPollNote')||box.querySelector('.up'); if(s) s.textContent='verificação em análise — a atualização automática pausou; use "Atualizar agora" para consultar de novo'; return; }
+    // v0.21: saiu de "em análise" → redesenha com a resposta que já veio (sem 2ª consulta nem fechar/abrir o painel)
+    try{ const d=await rf('/remessas/deposit-instructions'); if(g!==_fiatGen) return; if(!_fiatEmAnalise(d)){ rem2FiatRender(d); return; } }catch(_e){}
     if(g!==_fiatGen) return; _fiatPoll=setTimeout(tick,30000); };
   _fiatPoll=setTimeout(tick,30000);
 }
 const _urlHttps=u=>/^https:\/\/\S+$/i.test(String(u||''));
+// v0.21: o estado do onboarding (quando o DVP manda) é a verdade; o flag solto fica como fallback p/ DVP velho
+const _fiatEmAnalise=d=>!d.tem_conta&&(d.onboarding?d.onboarding.estado==='em_analise':!!d.em_analise);
+// v0.21: o painel pode abrir sozinho — o rótulo do toggle diz o que o clique faz (aberto ⇒ fecha), senão o cliente
+// que voltou do Persona não acha "fechar" em lugar nenhum (revisão 14/09)
+const _fiatToggle=aberto=>{ const b=$('remBtnFiat'); if(b) b.textContent=aberto?'Fechar painel ↑':'Dados para depósito fiat (IBAN) →'; };
 async function rem2Fiat(){
   const box=$('remFiatBox');
-  if(box.style.display==='block'){ box.style.display='none'; clearTimeout(_fiatPoll); _fiatGen++; return; }
-  box.style.display='block'; box.textContent='carregando…';
+  if(box.style.display==='block'){ box.style.display='none'; clearTimeout(_fiatPoll); _fiatGen++; _fiatToggle(false); return; }
+  _fiatGen++; // abrir à mão também invalida uma auto-abertura ainda no ar (nunca dois desenhos)
+  box.style.display='block'; _fiatToggle(true); box.textContent='carregando…';
   try{
     const d = await rf('/remessas/deposit-instructions');
+    rem2FiatRender(d);
+  }catch(e){ box.textContent=e.message; }
+}
+// v0.21 (revisão 14/09): "Já terminei — atualizar" no próprio checklist — antes o texto mandava "feche e abra este
+// painel" e o único controle era o toggle. UMA consulta; erro aparece no painel. Invalida poll/auto-abertura em voo.
+async function rem2FiatReload(){
+  _fiatGen++; clearTimeout(_fiatPoll);
+  const box=$('remFiatBox'); box.textContent='atualizando…';
+  try{ rem2FiatRender(await rf('/remessas/deposit-instructions')); }catch(e){ box.textContent=e.message; }
+}
+const _fiatTrilhos=d=>{ const ob=d&&d.onboarding; return ob&&Array.isArray(ob.etapas)?(ob.etapas.find(e=>e&&e.id==='trilhos')||null):null; };
+// v0.21 (14/09) "onboarding espelhado": ao entrar em Remessas sem conta fiat, o painel abre sozinho com o checklist —
+// o cliente vê o que falta sem precisar clicar. UMA consulta; erro de rede é silencioso (a aba não pode quebrar por isso).
+// Também abre com conta quando um trilho espera o cliente (conta USD pronta, SEPA sem comprovante): é o único jeito de
+// ele descobrir o que falta para o IBAN EUR (revisão 14/09, P1).
+async function rem2FiatAuto(){
+  const box=$('remFiatBox'); if(!box||box.style.display==='block') return;
+  const g=_fiatGen; // fechar ou abrir à mão durante a consulta incrementa o token: esta auto-abertura morre (não reabre painel fechado)
+  let d; try{ d=await rf('/remessas/deposit-instructions'); }catch(_e){ return; }
+  if(g!==_fiatGen||box.style.display==='block') return;
+  const tr=_fiatTrilhos(d), trilhoAcao=!!(tr&&tr.estado==='acao');
+  const falta = d.onboarding ? (d.onboarding.estado!=='pronto'||trilhoAcao)
+    : (!d.tem_conta&&!!(d.sem_cadastro||d.precisa_do_cliente||d.em_analise||d.bloqueado)); // DVP velho: só sem conta
+  if(!falta) return; // nada a fazer: o painel fica fechado como hoje
+  box.style.display='block'; _fiatToggle(true); rem2FiatRender(d); // o render não lança: erro de desenho aparece no próprio painel
+}
+// Ícone por estado da etapa (contrato v0.21): ✓ feito · → ação do cliente · ⏳ em análise · ✕ bloqueado · ○ pendente
+const _fiatIco={feito:['✓','pos'],acao:['→',''],analise:['⏳',''],bloqueado:['✕','neg'],pendente:['○','muted']};
+// Rótulo do botão "abrir_link" por etapa — o contrato manda só a url; o texto é da carteira
+const _fiatLinkLabel={termos:'Aceitar termos →',identidade:'Completar verificação →',trilhos:'Completar liberação →'};
+// R4 (caso Tiago 14/09): o self-service cria UM customer por e-mail de login — quem já tem cadastro com outro e-mail
+// vira duplicado e a Bridge rejeita. O aviso fica junto do input, nos dois desenhos (checklist v0.21 e fallback v0.19.1).
+const _fiatAvisoDup='<div class="muted" style="margin-top:4px">Já tem cadastro EFIX ou Lobie com outro e-mail? Entre com ele em vez de criar um novo.</div>';
+// Uma etapa do checklist (contrato v0.21) em HTML. Todo texto do servidor passa por _esc; a url NUNCA vai para o
+// HTML — o botão guarda só o índice (i) e abre a url do objeto em _fiatLigar (só https, noopener).
+function _fiatLinha(e,i){
+  const ic=_fiatIco[e.estado]||_fiatIco.pendente, ac=e.acao||null;
+  let extra='';
+  if(ac&&ac.tipo==='ativar_cadastro')
+    extra='<div style="margin-top:4px"><input id="fiatNome" placeholder="Nome completo (como no documento)" style="width:60%;max-width:260px"> '+
+      '<button class="mini" id="fiatBtnKyc">Ativar conta fiat →</button>'+_fiatAvisoDup+'<div id="fiatKycMsg" class="muted" style="margin-top:4px"></div></div>';
+  else if(ac&&ac.tipo==='abrir_link')
+    extra=_urlHttps(ac.url)?' <button class="mini" data-fiat-link="'+i+'">'+(_fiatLinkLabel[e.id]||'Abrir →')+'</button>'
+      :' <span class="muted">não conseguimos abrir o link agora — tente de novo em instantes</span>';
+  // o detalhe da rejeição (R3) já termina em "fale com a mesa" — não repetir
+  else if(ac&&ac.tipo==='falar_mesa') extra=/mesa/i.test(e.detalhe||'')?'':' <span class="muted">fale com a mesa</span>';
+  return '<div style="display:flex;gap:8px;align-items:baseline;margin-top:2px">'+
+    '<span class="mono '+ic[1]+'" style="flex:0 0 14px;text-align:center">'+ic[0]+'</span>'+
+    '<span style="flex:1"><span'+(e.estado==='pendente'?' class="muted"':'')+'>'+_esc(e.titulo)+'</span>'+
+    (e.detalhe?' <span class="muted">· '+_esc(e.detalhe)+'</span>':'')+extra+'</span></div>';
+}
+// Liga os botões desenhados por _fiatLinha (e o "atualizar"): a url vem do objeto, nunca do DOM
+function _fiatLigar(box,etapas){
+  if($('fiatBtnKyc')) $('fiatBtnKyc').onclick=rem2FiatKyc;
+  box.querySelectorAll('[data-fiat-link]').forEach(b=>{ const e=etapas[+b.dataset.fiatLink];
+    b.onclick=()=>{ if(e&&e.acao&&_urlHttps(e.acao.url)) window.open(e.acao.url,'_blank','noopener'); }; });
+  if($('fiatBtnRefresh')) $('fiatBtnRefresh').onclick=rem2FiatReload;
+}
+// v0.21: checklist do onboarding (d.onboarding, derivado no DVP sem PII) — próximo passo em destaque + 5 etapas.
+function rem2FiatChecklist(d){
+  const box=$('remFiatBox'), ob=d.onboarding, etapas=Array.isArray(ob.etapas)?ob.etapas:[];
+  const temLink=etapas.some(e=>e.acao&&e.acao.tipo==='abrir_link'&&_urlHttps(e.acao.url));
+  const tenteDeNovo=etapas.some(e=>/tente de novo/i.test(e.detalhe||''))||/tente de novo/i.test(ob.proximo_passo||'');
+  // botão de atualizar: quem terminou o Persona/aceitou os termos volta e clica; "tente de novo" ganha um botão de fato
+  const rotuloRefresh = temLink?'Já terminei — atualizar →':(ob.estado==='em_analise'?'Atualizar agora →':(tenteDeNovo?'Tentar de novo →':null));
+  box.innerHTML = '<div style="word-break:normal;line-height:1.7">'+
+    (ob.proximo_passo?'<div style="margin-bottom:8px"><b>'+_esc(ob.proximo_passo)+'</b></div>':'')+
+    etapas.map(_fiatLinha).join('')+
+    (ob.estado==='em_analise'?'<div class="up" id="fiatPollNote" style="margin-top:8px">verificação em análise — a conta nasce sozinha quando aprovar (esta tela atualiza sozinha)</div>':'')+
+    (rotuloRefresh?'<div style="margin-top:8px"><button class="mini" id="fiatBtnRefresh">'+rotuloRefresh+'</button></div>':'')+
+    '</div>';
+  _fiatLigar(box,etapas);
+  if(ob.estado==='em_analise') rem2FiatPoll();
+}
+// Desenha o painel a partir da resposta de /remessas/deposit-instructions — usado pelo clique, pela auto-abertura e pelo poll
+function rem2FiatRender(d){
+  const box=$('remFiatBox');
+  try{
     if(!d.tem_conta){
+      // v0.21: DVP novo manda o checklist derivado — a carteira só desenha. Sem 'onboarding' (DVP velho) cai no bloco v0.19.1 abaixo.
+      if(d.onboarding&&d.onboarding.estado!=='pronto'){ rem2FiatChecklist(d); return; }
       // M-DVP-SELF v2: sem cadastro → ativação self-service (nome + KYC hospedado)
       // v0.19.1 (14/09, caso Tiago): a Bridge esperando o CLIENTE (not_started/incomplete) não é "em análise" —
       // mostra o que falta e o botão para completar a verificação (link vem do DVP; só https)
@@ -1497,7 +1585,7 @@ async function rem2Fiat(){
         : (d.kyc_ok===false&&!d.bloqueado?'<br><span class="up">verificação (KYC) pendente — a conta nasce sozinha quando aprovar</span>':'')));
       box.innerHTML = _esc(d.motivo||'Conta fiat ainda não disponível.')+
         (d.sem_cadastro?'<div style="margin-top:8px"><input id="fiatNome" placeholder="Nome completo (como no documento)" style="width:60%;max-width:260px"> '+
-          '<button class="mini" id="fiatBtnKyc">Ativar conta fiat →</button><div id="fiatKycMsg" class="muted" style="margin-top:4px"></div></div>'
+          '<button class="mini" id="fiatBtnKyc">Ativar conta fiat →</button>'+_fiatAvisoDup+'<div id="fiatKycMsg" class="muted" style="margin-top:4px"></div></div>'
         :acao);
       if(d.sem_cadastro) $('fiatBtnKyc').onclick=rem2FiatKyc;
       if($('fiatBtnKycGo')) $('fiatBtnKycGo').onclick=()=>window.open(d.kyc_link,'_blank','noopener');
@@ -1505,6 +1593,15 @@ async function rem2Fiat(){
       if(d.em_analise) rem2FiatPoll();
       return;
     }
+    // v0.21 (revisão 14/09, P1): com conta, o checklist não aparece — mas um trilho ainda pode esperar o cliente
+    // (conta USD pronta, SEPA sem comprovante: o DVP manda trilhos em 'acao' com o link dedicado). Sem esta linha o
+    // cliente nunca saberia que falta algo para o IBAN EUR. Só a etapa trilhos, no mesmo desenho do checklist.
+    const etapas=(d.onboarding&&Array.isArray(d.onboarding.etapas))?d.onboarding.etapas:[];
+    const iTr=etapas.findIndex(e=>e&&e.id==='trilhos'), tr=iTr>=0?etapas[iTr]:null;
+    const trilho = tr&&tr.estado!=='feito'
+      ? '<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--ln,#e5e5e0);line-height:1.7">'+_fiatLinha(tr,iTr)+
+        (tr.estado==='acao'?'<div style="margin-top:4px"><button class="mini" id="fiatBtnRefresh">Já terminei — atualizar →</button></div>':'')+'</div>'
+      : '';
     box.innerHTML = (d.criada_agora?'<div class="pos" style="margin-bottom:6px">✓ Sua conta fiat acabou de ser criada.</div>':'')+
       (d.titular?'<div style="margin-bottom:8px'+(d.conta_da_casa?';color:var(--warn,#b45309)':'')+'">Titular: <b>'+_esc(d.titular)+'</b>'+(d.conta_da_casa?' — estas são as contas operacionais da EFIX, não uma conta pessoal':'')+'</div>':'')+
       d.contas.map(c=>
@@ -1515,7 +1612,8 @@ async function rem2Fiat(){
       (c.bic?'BIC: <span class="mono">'+_esc(c.bic)+'</span><br>':'')+
       (c.bank_name?'Banco: '+_esc(c.bank_name)+'<br>':'')+
       (c.beneficiary?'Beneficiário: '+_esc(c.beneficiary)+'<br>':'')
-    ).join('<hr>')+'<div class="up" style="margin-top:6px">'+_esc(d.aviso||'')+'</div>';
+    ).join('<hr>')+trilho+'<div class="up" style="margin-top:6px">'+_esc(d.aviso||'')+'</div>';
+    _fiatLigar(box,etapas);
   }catch(e){ box.textContent=e.message; }
 }
 // M-DVP-SELF v2: cria o cadastro Bridge do próprio usuário e abre o KYC hospedado
@@ -1528,7 +1626,8 @@ async function rem2FiatKyc(){
     if(url){ window.open(url,'_blank','noopener');
       $('fiatKycMsg').textContent='Complete a verificação na aba que abriu'+((r.faltando&&r.faltando.length)?' ('+r.faltando.join(', ')+')':'')+'. Quando terminar, volte aqui e abra este painel de novo.'; }
     else if(r.em_analise) $('fiatKycMsg').textContent='Sua verificação está em análise — a conta fiat nasce sozinha quando aprovar.';
-    else if(r.bloqueado) $('fiatKycMsg').textContent='Sua verificação não foi aprovada — fale com a mesa.';
+    // R3: motivo da Bridge (ex.: cadastro duplicado com outro e-mail) em vez da frase genérica
+    else if(r.bloqueado) $('fiatKycMsg').textContent=(Array.isArray(r.motivo_rejeicao)&&r.motivo_rejeicao[0])?('Sua verificação não foi aprovada: '+r.motivo_rejeicao[0]+'.'):'Sua verificação não foi aprovada — fale com a mesa.';
     else $('fiatKycMsg').textContent=r.aviso||'Não conseguimos abrir o link de verificação agora. Abra o painel de novo em instantes; se persistir, fale com a mesa.';
   }catch(e){ $('fiatKycMsg').textContent=e.message; }
   finally{ b.disabled=false; }
