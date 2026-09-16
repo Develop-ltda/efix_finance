@@ -53,14 +53,17 @@
 </head>
 <body>
 <header><div class="wrap">
-  <h1>HAUS PAY <small>Como testar · atualizado 18/08/2026 (agora com a vitrine de lançamentos)</small></h1>
+  <h1>HAUS PAY <small>Como testar · atualizado 16/09/2026 (agora com o piloto do dinheiro, só para convidados)</small></h1>
 </div></header>
 <main>
 
 <p>O <strong>Haus Pay</strong> é onde o corretor registra a proposta de compra e
 venda e o incorporador aprova depois de conferir os documentos.
-<strong>Nesta fase nenhum dinheiro se move</strong> — não existe cobrança, PIX
-ou comissão. Leva ~10 minutos.</p>
+<strong>Para quem não foi convidado ao piloto do dinheiro, nenhum dinheiro se move</strong>:
+não existe cobrança, PIX ou comissão. Leva ~10 minutos.
+Convidados do piloto (Fase 3) têm um passo a passo próprio no fim desta página: uma
+cobrança de teste de <b>R$ 1,00</b>, paga por você mesmo, que cai na carteira Haus Pay
+da sua imobiliária. Nenhum valor sai para conta bancária nesta fase.</p>
 
 <div class="box stop">
   <h3>⛔ Três coisas que você NÃO deve fazer</h3>
@@ -249,7 +252,50 @@ A mensagem de erro aparece no canto inferior direito com borda vermelha e fica
       <td>é de propósito (segurança); libere pop-ups e procure em Downloads</td></tr>
   <tr><td>Tabela cortada no celular</td>
       <td>role a tabela para o lado com o dedo</td></tr>
+  <tr><td colspan="2"><b>Só no piloto do dinheiro (Fase 3)</b></td></tr>
+  <tr><td>"A cobrança do sinal é emitida pela incorporadora"</td>
+      <td>a imobiliária vê e copia o código PIX; quem emite é a incorporadora (ou a EFIX)</td></tr>
+  <tr><td>No app do banco o recebedor é uma pessoa física</td>
+      <td>no piloto a conta que recebe é a conta de teste da pagadoria; a descrição
+      <code>HAUSPAY HP-XXXXXX</code> confirma que é a cobrança certa</td></tr>
+  <tr><td>"aguardando pagamento" demora para virar "paga"</td>
+      <td>o sistema confere o extrato do banco a cada minuto; toque em <b>Atualizar</b></td></tr>
+  <tr><td>Entrou R$ 0,99 e não R$ 1,00 na Carteira</td>
+      <td>R$ 0,01 é a tarifa do Haus Pay (0,99%), descontada no repasse</td></tr>
+  <tr><td>"Sua parte ainda não tem conta bancária cadastrada para saque"</td>
+      <td>esperado no piloto: a EFIX cadastra e confirma a conta com um PIX de teste
+      antes de liberar saques; nada é debitado</td></tr>
 </table></div>
+
+<h2>Piloto do dinheiro (Fase 3) — só para convidados</h2>
+<p>Você foi convidado se recebeu da EFIX uma mensagem dizendo isso. O teste custa
+<b>R$ 1,00 do seu próprio bolso</b>, pago de <b>outro banco</b> (não HausBank), e o
+valor cai na carteira Haus Pay da sua imobiliária. Nesta fase o dinheiro <b>não sai</b>
+para conta bancária: o pedido de saque é recusado de propósito.</p>
+<ol class="p">
+  <li><b class="t">Cadastro da empresa</b> — em <b>/cadastro</b>, confira os dados e
+  clique <b>Enviar para análise</b>. A EFIX aprova e libera a sua imobiliária para
+  receber. Sem isso, a cobrança não pode ser emitida.</li>
+  <li><b class="t">Proposta</b> — em <b>/app</b>, crie uma proposta de teste numa
+  unidade do seu lançamento (comece o nome com <code>TESTE —</code>) e clique
+  <b>Enviar ao incorporador</b>.</li>
+  <li><b class="t">Aprovação e cobrança</b> — a incorporadora aprova e emite a
+  cobrança de <b>R$ 1,00</b>. No piloto isso é feito pela EFIX; avise por WhatsApp.</li>
+  <li><b class="t">Código PIX</b> — em <b>/app</b> › Propostas › Funil › abra a proposta
+  › role até <b>Sinal / cobranças</b> › <b>Atualizar</b> › <b>código PIX</b> ›
+  <b>Copiar código</b>.</li>
+  <li><b class="t">Pague uma vez só</b> — no app do seu outro banco: Pix › copia e
+  cola › cole. Confira: R$ 1,00, descrição <code>HAUSPAY HP-…</code>. Não mude o valor.
+  Pague no mesmo dia (o código vale 24 horas).</li>
+  <li><b class="t">Veja virar "paga"</b> — espere 1 minuto e toque em <b>Atualizar</b>
+  no quadro Sinal / cobranças.</li>
+  <li><b class="t">Carteira</b> — a EFIX faz o repasse e avisa. Na aba <b>Carteira</b>
+  você vê <b>R$ 0,99</b> e um movimento "entrada · repasse de venda".</li>
+  <li><b class="t">Tente sacar</b> — em <b>Pedir saque</b>, valor 0,99 e qualquer chave
+  PIX. A recusa em vermelho é o esperado: nada é debitado.</li>
+  <li><b class="t">Reporte</b> — prints de cada tela e toda palavra que você não
+  entendeu. É exatamente isso que queremos descobrir.</li>
+</ol>
 
 <h2>Onde estamos</h2>
 <div class="tw"><table>
@@ -259,8 +305,10 @@ A mensagem de erro aparece no canto inferior direito com borda vermelha e fica
       vitrine de lançamentos (tabela oficial versionada, condições, folders,
       vídeos e links)</td>
       <td>não</td></tr>
-  <tr><td>3</td><td>a pagadoria: cobrança com divisão automática entre
-      incorporadora, imobiliária e corretor</td><td><b>sim</b></td></tr>
+  <tr><td><b>3 — piloto</b></td><td>a pagadoria: cobrança PIX na proposta aprovada,
+      conferência pelo extrato do banco, repasse para a carteira Haus Pay de cada parte,
+      saque com aprovação da EFIX. Em piloto com convidados, R$ 1,00 por teste; saída para
+      conta bancária ainda desligada</td><td><b>sim (R$ 1, convidados)</b></td></tr>
 </table></div>
 
 <footer>
