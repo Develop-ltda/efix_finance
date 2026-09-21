@@ -243,6 +243,7 @@ tr.grp:first-child td{padding-top:6px}
 .cta:disabled{opacity:.55}
 .mini{font-family:var(--font-m);font-size:10px;padding:3px 10px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2)}
 .qd{background:var(--bg-raise);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;font-family:var(--font-m);font-size:12px;line-height:2;word-break:break-all}
+.rem-ou{margin:6px 0 4px;color:var(--ink-3);font-size:12px}.rem-linha-row{display:flex;gap:6px;align-items:center}.rem-linha-row .fld{flex:1;min-width:0}
 .rem-msg{margin-top:10px;font-family:var(--font-m);font-size:11.5px;color:var(--ink-2);min-height:16px}
 .deal{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:9px;cursor:pointer;background:var(--bg-raise)}
 .deal .hd{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-m);font-size:12px}
@@ -532,7 +533,7 @@ tr.grp:first-child td{padding-top:6px}
                  o DVP arma a rota Bridge com BRIDGE_FROM_ADDRESS (carteira operacional
                  da EFIX) e o AUTOFUND financia. USDC que o cliente mande ao to_address
                  da Bridge NÃO casa (fica órfão) — nunca instruir depósito aqui. -->
-            <p class="rem-lead">Cote em reais e acompanhe cada etapa. Suba o boleto (PDF) e nós lemos valor e vencimento. A conversão é financiada pela EFIX — você não envia USDC por conta própria: paga em fiat (dados abaixo) ou, em USDC, conforme instruções da mesa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
+            <p class="rem-lead">Cote em reais e acompanhe cada etapa. Envie o boleto (PDF ou foto) ou digite a linha digitável e nós lemos valor e vencimento. A conversão é financiada pela EFIX — você não envia USDC por conta própria: paga em fiat (dados abaixo) ou, em USDC, conforme instruções da mesa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
             <div id="rem-form">
               <label class="fldl">Favorecido (allowlist)</label>
               <select id="remFav" class="fld"><option value="">carregando…</option></select>
@@ -540,8 +541,15 @@ tr.grp:first-child td{padding-top:6px}
                    (/remessas/boletos) repassa ao DVP, que lê a linha digitável e devolve
                    valor/vencimento/beneficiário/cotação. Self-service ⇒ a mesa confere
                    antes de pagar; o favorecido vem do boleto, nunca de digitação livre. -->
-              <label class="fldl">Boleto a quitar <span class="up">(PDF, opcional)</span></label>
-              <input id="remBoleto" class="fld" type="file" accept="application/pdf">
+              <!-- F1/F2 (21/09): PDF ou FOTO (reduzida no navegador) ate 5 MB, ou a LINHA DIGITAVEL digitada.
+                   O cliente manda o que tem; o servidor decide pelo conteudo, nunca pela extensao. -->
+              <label class="fldl">Boleto a quitar <span class="up">(PDF ou foto, opcional)</span></label>
+              <input id="remBoleto" class="fld" type="file" accept="application/pdf,image/jpeg,image/png">
+              <div class="rem-ou">ou digite os 47 números do boleto</div>
+              <div class="rem-linha-row">
+                <input id="remLinha" class="fld mono" type="text" inputmode="numeric" autocomplete="off" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000" maxlength="60">
+                <button type="button" class="mini" id="remBtnLinha">Usar a linha</button>
+              </div>
               <div id="remBoletoBox" class="qd" style="display:none"></div>
               <label class="fldl">Valor a quitar (R$)</label>
               <input id="remAmount" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
@@ -1044,6 +1052,9 @@ async function balanceOf(token, addr){
   $('chip-email').textContent = email;
   $('chip-init').textContent = (email[0]||'·').toUpperCase();
   carregar(email, user.address);
+  // F1 (21/09): link direto — efix.finance/app/wallet/#remessas abre a aba certa (antes o hash só era ESCRITO por go()).
+  const h0 = (location.hash||'').replace('#','');
+  if(h0 && h0!=='inicio' && document.getElementById('view-'+h0)) go(h0);
 })();
 
 async function gateSend(){
@@ -1444,9 +1455,11 @@ async function initRemessas2(){
   $('remBtnCreate').onclick=rem2Criar;
   $('remBtnRef').onclick=()=>{ rem2Refresh(); rem2Ops(); };
   $('remBoleto').onchange=rem2Boleto; // M-BOLETO-UPLOAD (08/09)
+  $('remBtnLinha').onclick=rem2Linha;  // F2 (21/09): linha digitável como alternativa ao arquivo
+  $('remLinha').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); rem2Linha(); } });
   $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Boleto=null;
     $('remAmount').value=''; $('remQuoteBox').style.display='none';
-    $('remBoleto').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
+    $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
     $('rem-instr').style.display='none'; $('rem-form').style.display='block'; $('remMsg').textContent=''; };
   // M-DVP-SELF: dados fiat da PROPRIA conta virtual + favorecido self-service
   $('remBtnFiat').onclick=rem2Fiat;
@@ -1703,18 +1716,28 @@ async function rem2Boleto(){
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
   _rem2Boleto=null; box.style.display='none'; box.innerHTML='';
   if(!f) return;
-  if(!(f.type==='application/pdf' || /\.pdf$/i.test(f.name))){ $('remMsg').textContent='Envie o boleto em PDF.'; inp.value=''; return; }
-  if(f.size>600*1024){ $('remMsg').textContent='PDF grande demais (máx. 600 KB).'; inp.value=''; return; }
+  const ehPdf = f.type==='application/pdf' || /\.pdf$/i.test(f.name);
+  const ehFoto = /^image\/(jpeg|png)$/.test(f.type) || /\.(jpe?g|png)$/i.test(f.name);
+  if(!ehPdf && !ehFoto){ $('remMsg').textContent='Envie o boleto em PDF ou uma foto (JPG/PNG).'; inp.value=''; return; }
   $('remMsg').textContent='';
-  box.style.display='block'; box.textContent='lendo o boleto…';
+  box.style.display='block'; box.textContent=ehFoto?'preparando a foto…':'lendo o boleto…';
   try{
+    // F1 (21/09): foto do celular pode ter 4-12 MB — reduzimos no navegador (lado maior 1800 px, JPEG 0,85)
+    // ANTES de mandar; PDF vai como esta. Teto do servidor: 5 MB.
+    const blob = ehFoto ? await _rem2ReduzirFoto(f) : f;
+    if(blob.size>5*1024*1024){ $('remMsg').textContent=ehPdf?'PDF grande demais (máx. 5 MB). Digite a linha digitável abaixo.':'Foto grande demais mesmo reduzida (máx. 5 MB). Tente outra foto ou digite a linha digitável.'; inp.value=''; box.style.display='none'; return; }
+    box.textContent='lendo o boleto…';
     const b64 = await new Promise((res,rej)=>{ const rd=new FileReader();
       rd.onload=()=>res(String(rd.result).replace(/^data:[^,]*,/,''));
       rd.onerror=()=>rej(new Error('Não consegui ler o arquivo.'));
-      rd.readAsDataURL(f); });
-    // mesmo PDF já enviado e ainda não pago: o DVP devolve (200) o boleto existente com
+      rd.readAsDataURL(blob); });
+    // linha digitável já digitada vai junto: ela manda em valor/vencimento (a foto não é lida automaticamente)
+    const linhaJunto = ($('remLinha').value||'').replace(/\D/g,'');
+    const corpo = {filename: ehFoto&&!/\.(jpe?g|png)$/i.test(f.name) ? f.name.replace(/\.[^.]*$/,'')+'.jpg' : f.name, arquivo_base64:b64};
+    if(linhaJunto.length===47) corpo.linha_digitavel = linhaJunto;
+    // mesmo arquivo já enviado e ainda não pago: o DVP devolve (200) o boleto existente com
     // duplicado:true — reaproveitamos só se ainda não está ligado a uma remessa.
-    const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify({filename:f.name, pdf_base64:b64})});
+    const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify(corpo)});
     if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
     if(d.duplicado && d.deal_id!=null){
       inp.value='';
@@ -1739,19 +1762,71 @@ async function rem2Boleto(){
       rem2Quote();
     } else {
       _rem2Boleto={id:d.id};
+      const foto = d.mime && /^image\//.test(d.mime);
       box.innerHTML = (d.status==='lido_valor_aberto'
-        ? 'Boleto lido, mas com <b>valor em aberto</b>. Digite o valor a pagar em R$; a mesa confere.'
-        : 'Não consegui ler o boleto automaticamente. Digite o valor em R$; a mesa lê o PDF.')+avisos+dup;
-      $('remAmount').focus();
+        ? 'Boleto lido, mas com <b>valor em aberto</b>. Digite o valor a pagar em R$; nossa equipe confere.'
+        : (foto ? 'Foto recebida ✓. Para lermos valor e vencimento, <b>digite os 47 números do boleto</b> no campo acima e clique em "Usar a linha" — ou informe o valor em R$ e nossa equipe lê a foto.'
+                : 'Não consegui ler o boleto automaticamente. <b>Digite os 47 números do boleto</b> no campo acima e clique em "Usar a linha" — ou informe o valor em R$ e nossa equipe lê o arquivo.'))+avisos+dup;
+      if(!foto && d.status!=='lido_valor_aberto') $('remLinha').focus(); else $('remAmount').focus();
     }
-    box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover PDF</button></div>';
+    box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover arquivo</button></div>';
     $('remBoletoRm').onclick=rem2BoletoRm;
   }catch(e){ box.style.display='none'; box.innerHTML=''; inp.value=''; $('remMsg').textContent=e.message; }
 }
-// remove o PDF escolhido (e o valor/cotação que vieram dele)
+// F1 (21/09): reduz a foto no navegador (canvas) — lado maior 1800 px, JPEG 0,85. Se o navegador não
+// decodificar a imagem, manda o arquivo original (o servidor ainda limita a 5 MB).
+async function _rem2ReduzirFoto(f){
+  try{
+    const url = URL.createObjectURL(f);
+    const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('img')); i.src=url; });
+    const MAX=1800, esc=Math.min(1, MAX/Math.max(img.naturalWidth||1, img.naturalHeight||1));
+    const w=Math.max(1,Math.round((img.naturalWidth||1)*esc)), h=Math.max(1,Math.round((img.naturalHeight||1)*esc));
+    const c=document.createElement('canvas'); c.width=w; c.height=h;
+    c.getContext('2d').drawImage(img,0,0,w,h);
+    URL.revokeObjectURL(url);
+    const blob = await new Promise(res=>c.toBlob(res,'image/jpeg',0.85));
+    return blob && blob.size>0 ? blob : f;
+  }catch(e){ return f; }
+}
+// F2 (21/09): boleto SÓ pela linha digitável (47 números) — para PDF escaneado, foto, ou quem não tem o arquivo.
+// O servidor valida os dígitos verificadores e tira valor/vencimento da própria linha.
+async function rem2Linha(){
+  const raw=($('remLinha').value||''), dig=raw.replace(/\D/g,''), box=$('remBoletoBox');
+  if(dig.length!==47){ $('remMsg').textContent=dig.length?('A linha digitável tem 47 números (você digitou '+dig.length+').'):'Digite os 47 números do topo do boleto.'; $('remLinha').focus(); return; }
+  if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
+  _rem2Boleto=null; $('remMsg').textContent='';
+  box.style.display='block'; box.textContent='conferindo a linha digitável…';
+  const b=$('remBtnLinha'); b.disabled=true;
+  try{
+    const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify({linha_digitavel:dig})});
+    if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
+    if(d.duplicado && d.deal_id!=null){
+      box.innerHTML='Este boleto já está ligado à remessa <span class="pos">#'+_esc(d.deal_id)+'</span> — acompanhe em "Minhas remessas".';
+      return;
+    }
+    const avisos = (Array.isArray(d.avisos)?d.avisos:[]).map(a=>'<div style="color:var(--warn,#b45309)">⚠ '+_esc(a)+'</div>').join('');
+    if(d.status==='lido' && d.valor_brl!=null){
+      _rem2Boleto={id:d.id, valor_brl:Number(d.valor_brl)};
+      box.innerHTML='<span class="pos">Linha digitável conferida ✓</span> · '+brl(d.valor_brl)+' · vence '+_esc(_venc(d.vencimento))+
+        (d.banco?' · '+_esc(d.banco):'')+
+        '<div style="color:var(--ink-3)">Quem recebe é confirmado pela nossa equipe antes do pagamento. Escolha o favorecido acima, se souber.</div>'+
+        (d.cotacao&&d.cotacao.usdc_needed!=null?'<div>A converter: <span class="pos">'+Number(d.cotacao.usdc_needed).toFixed(2)+' USDC</span> (câmbio efetivo R$ '+Number(d.cotacao.rate_efetiva).toFixed(4)+')</div>':'')+avisos;
+      $('remAmount').value = Number(d.valor_brl).toFixed(2);
+      rem2Quote();
+    } else {
+      _rem2Boleto={id:d.id};
+      box.innerHTML='Linha conferida, mas o boleto está com <b>valor em aberto</b>. Digite o valor a pagar em R$; nossa equipe confere.'+avisos;
+      $('remAmount').focus();
+    }
+    box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover boleto</button></div>';
+    $('remBoletoRm').onclick=rem2BoletoRm;
+  }catch(e){ box.style.display='none'; box.innerHTML=''; $('remMsg').textContent=e.message; }
+  finally{ b.disabled=false; }
+}
+// remove o arquivo/linha escolhido (e o valor/cotação que vieram dele)
 function rem2BoletoRm(){
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
-  _rem2Boleto=null; $('remBoleto').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
+  _rem2Boleto=null; $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
 }
 async function rem2Quote(){
   const amount = parseFloat($('remAmount').value);
