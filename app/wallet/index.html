@@ -243,7 +243,7 @@ tr.grp:first-child td{padding-top:6px}
 .cta:disabled{opacity:.55}
 .mini{font-family:var(--font-m);font-size:10px;padding:3px 10px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2)}
 .qd{background:var(--bg-raise);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;font-family:var(--font-m);font-size:12px;line-height:2;word-break:break-all}
-.rem-ou{margin:6px 0 4px;color:var(--ink-3);font-size:12px}.rem-linha-row{display:flex;gap:6px;align-items:center}.rem-linha-row .fld{flex:1;min-width:0}
+.rem-ou{margin:6px 0 4px;color:var(--ink-3);font-size:12px}.rem-linha-row{display:flex;gap:6px;align-items:center}.rem-linha-row .fld{flex:1;min-width:0}.rem-linha-row .mini{white-space:nowrap;flex-shrink:0}
 .rem-msg{margin-top:10px;font-family:var(--font-m);font-size:11.5px;color:var(--ink-2);min-height:16px}
 .deal{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:9px;cursor:pointer;background:var(--bg-raise)}
 .deal .hd{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-m);font-size:12px}
@@ -535,7 +535,7 @@ tr.grp:first-child td{padding-top:6px}
                  da Bridge NÃO casa (fica órfão) — nunca instruir depósito aqui. -->
             <p class="rem-lead">Cote em reais e acompanhe cada etapa. Envie o boleto (PDF ou foto) ou digite a linha digitável e nós lemos valor e vencimento. A conversão é financiada pela EFIX — você não envia USDC por conta própria: paga em fiat (dados abaixo) ou, em USDC, conforme instruções da mesa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
             <div id="rem-form">
-              <label class="fldl">Favorecido (allowlist)</label>
+              <label class="fldl">Quem recebe <span class="up">(o nome impresso no boleto)</span></label>
               <select id="remFav" class="fld"><option value="">carregando…</option></select>
               <!-- M-BOLETO-UPLOAD (08/09): o cliente sobe o PDF do boleto; o proxy
                    (/remessas/boletos) repassa ao DVP, que lê a linha digitável e devolve
@@ -547,7 +547,7 @@ tr.grp:first-child td{padding-top:6px}
               <input id="remBoleto" class="fld" type="file" accept="application/pdf,image/jpeg,image/png">
               <div class="rem-ou">ou digite os 47 números do boleto</div>
               <div class="rem-linha-row">
-                <input id="remLinha" class="fld mono" type="text" inputmode="numeric" autocomplete="off" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000" maxlength="60">
+                <input id="remLinha" class="fld mono" type="text" inputmode="numeric" autocomplete="off" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000" maxlength="100">
                 <button type="button" class="mini" id="remBtnLinha">Usar a linha</button>
               </div>
               <div id="remBoletoBox" class="qd" style="display:none"></div>
@@ -1019,6 +1019,7 @@ async function balanceOf(token, addr){
 /* ── boot ── */
 (async function boot(){
   // completa magic-link se voltamos com bundle na URL
+  const _hash0 = location.hash||'';   // F1 (21/09): guardado ANTES do replaceState do bundle (link direto #remessas sobrevive ao magic link)
   const bundle = new URLSearchParams(location.search).get('bundle');
   // iframe órfão do Turnkey de sessão anterior colide no init ("already exists")
   try{ const c=document.getElementById('alchemy-signer-iframe-container');
@@ -1029,7 +1030,7 @@ async function balanceOf(token, addr){
   // outra pessoa — casá-la com o e-mail da sessão seria roubo de depósito
   // (confused deputy). O vínculo acontece SOMENTE no fluxo do modal
   // (ativarConcluir), onde e-mail e SCA vêm ambos da mesma sessão.
-  if(bundle){ try{ await EfixWallet.completeAuth(bundle); history.replaceState(null,'',location.pathname); }catch(e){} }
+  if(bundle){ try{ await EfixWallet.completeAuth(bundle); history.replaceState(null,'',location.pathname+_hash0); }catch(e){} }
   // modo visualização: ?view=0x… monta o painel read-only de qualquer endereço
   // (dado público on-chain; nenhuma ação exige isso — só leitura)
   const viewAddr = new URLSearchParams(location.search).get('view');
@@ -1053,7 +1054,7 @@ async function balanceOf(token, addr){
   $('chip-init').textContent = (email[0]||'·').toUpperCase();
   carregar(email, user.address);
   // F1 (21/09): link direto — efix.finance/app/wallet/#remessas abre a aba certa (antes o hash só era ESCRITO por go()).
-  const h0 = (location.hash||'').replace('#','');
+  const h0 = (_hash0||location.hash||'').replace('#','');
   if(h0 && h0!=='inicio' && document.getElementById('view-'+h0)) go(h0);
 })();
 
@@ -1457,7 +1458,7 @@ async function initRemessas2(){
   $('remBoleto').onchange=rem2Boleto; // M-BOLETO-UPLOAD (08/09)
   $('remBtnLinha').onclick=rem2Linha;  // F2 (21/09): linha digitável como alternativa ao arquivo
   $('remLinha').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); rem2Linha(); } });
-  $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Boleto=null;
+  $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Boleto=null; _rem2Arq=null;
     $('remAmount').value=''; $('remQuoteBox').style.display='none';
     $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
     $('rem-instr').style.display='none'; $('rem-form').style.display='block'; $('remMsg').textContent=''; };
@@ -1711,7 +1712,9 @@ const _docFmt = d => { const s=String(d||'').replace(/\D/g,'');
   if(s.length===11) return s.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4');
   return d||''; };
 async function rem2Boleto(){
+  if(_rem2Enviando) return;
   const inp=$('remBoleto'), box=$('remBoletoBox'), f=inp.files&&inp.files[0];
+  _rem2Arq=null;
   // arquivo novo: nada do boleto anterior (valor preenchido, cotação) pode sobrar
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
   _rem2Boleto=null; box.style.display='none'; box.innerHTML='';
@@ -1735,18 +1738,20 @@ async function rem2Boleto(){
     const linhaJunto = ($('remLinha').value||'').replace(/\D/g,'');
     const corpo = {filename: ehFoto&&!/\.(jpe?g|png)$/i.test(f.name) ? f.name.replace(/\.[^.]*$/,'')+'.jpg' : f.name, arquivo_base64:b64};
     if(linhaJunto.length===47) corpo.linha_digitavel = linhaJunto;
+    _rem2Arq={filename:corpo.filename, b64};
     // mesmo arquivo já enviado e ainda não pago: o DVP devolve (200) o boleto existente com
     // duplicado:true — reaproveitamos só se ainda não está ligado a uma remessa.
-    const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify(corpo)});
+    _rem2Enviando=true;
+    const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify(corpo)}).finally(()=>{ _rem2Enviando=false; });
     if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
     if(d.duplicado && d.deal_id!=null){
       inp.value='';
-      box.innerHTML='Este boleto já está ligado à remessa <span class="pos">#'+_esc(d.deal_id)+'</span> — acompanhe em "Minhas remessas". Para outra remessa, escolha outro PDF.';
+      box.innerHTML='Este boleto já está ligado à remessa <span class="pos">#'+_esc(d.deal_id)+'</span> — acompanhe em "Minhas remessas". Para outra remessa, escolha outro arquivo.';
       return;
     }
     const ben = d.beneficiario||{};
     const avisos = (Array.isArray(d.avisos)?d.avisos:[]).map(a=>'<div style="color:var(--warn,#b45309)">⚠ '+_esc(a)+'</div>').join('');
-    const dup = d.duplicado?'<div style="color:var(--ink-3)">este PDF já havia sido enviado — reaproveitado (boleto #'+_esc(d.id)+')</div>':'';
+    const dup = d.duplicado?'<div style="color:var(--ink-3)">este arquivo já havia sido enviado — reaproveitado (boleto #'+_esc(d.id)+')</div>':'';
     if(d.status==='lido' && d.valor_brl!=null){
       _rem2Boleto={id:d.id, valor_brl:Number(d.valor_brl)};
       box.innerHTML =
@@ -1755,7 +1760,7 @@ async function rem2Boleto(){
         (ben.nome?' · beneficiário: '+_esc(ben.nome)+(ben.doc?' ('+_esc(_docFmt(ben.doc))+')':''):'')+
         (d.referencia?' · '+_esc(d.referencia):'')+
         (d.banco?'<br><span style="color:var(--ink-3)">banco: '+_esc(d.banco)+'</span>':'')+
-        (ben.na_allowlist===false?'<div style="color:var(--warn,#b45309)">favorecido ainda não cadastrado — a mesa confere antes de pagar</div>':'')+
+        (ben.na_allowlist===false?'<div style="color:var(--warn,#b45309)">quem recebe será confirmado pela nossa equipe antes do pagamento</div>':'')+
         (d.cotacao&&d.cotacao.usdc_needed!=null?'<div>A converter: <span class="pos">'+Number(d.cotacao.usdc_needed).toFixed(2)+' USDC</span> (câmbio efetivo R$ '+Number(d.cotacao.rate_efetiva).toFixed(4)+')</div>':'')+
         avisos+dup;
       $('remAmount').value = Number(d.valor_brl).toFixed(2);
@@ -1765,14 +1770,17 @@ async function rem2Boleto(){
       const foto = d.mime && /^image\//.test(d.mime);
       box.innerHTML = (d.status==='lido_valor_aberto'
         ? 'Boleto lido, mas com <b>valor em aberto</b>. Digite o valor a pagar em R$; nossa equipe confere.'
-        : (foto ? 'Foto recebida ✓. Para lermos valor e vencimento, <b>digite os 47 números do boleto</b> no campo acima e clique em "Usar a linha" — ou informe o valor em R$ e nossa equipe lê a foto.'
-                : 'Não consegui ler o boleto automaticamente. <b>Digite os 47 números do boleto</b> no campo acima e clique em "Usar a linha" — ou informe o valor em R$ e nossa equipe lê o arquivo.'))+avisos+dup;
+        : (foto ? 'Foto recebida ✓. Agora <b>digite os 47 números do topo do boleto</b> no campo acima e clique em "Usar a linha": lemos valor e vencimento na hora. A foto fica guardada para nossa equipe conferir.'
+                : 'Não consegui ler o boleto automaticamente. <b>Digite os 47 números do topo do boleto</b> no campo acima e clique em "Usar a linha": lemos valor e vencimento na hora. O arquivo fica guardado para nossa equipe conferir.'))+avisos+dup;
       if(!foto && d.status!=='lido_valor_aberto') $('remLinha').focus(); else $('remAmount').focus();
     }
     box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover arquivo</button></div>';
     $('remBoletoRm').onclick=rem2BoletoRm;
   }catch(e){ box.style.display='none'; box.innerHTML=''; inp.value=''; $('remMsg').textContent=e.message; }
 }
+// revisão 21/09: o arquivo recém-enviado fica em memória para a linha digitada ir JUNTO (mesmo boleto no servidor,
+// foto preservada) em vez de criar um segundo boleto e deixar a foto órfã. Zera ao remover/nova remessa.
+let _rem2Arq=null, _rem2Enviando=false;
 // F1 (21/09): reduz a foto no navegador (canvas) — lado maior 1800 px, JPEG 0,85. Se o navegador não
 // decodificar a imagem, manda o arquivo original (o servidor ainda limita a 5 MB).
 async function _rem2ReduzirFoto(f){
@@ -1791,14 +1799,18 @@ async function _rem2ReduzirFoto(f){
 // F2 (21/09): boleto SÓ pela linha digitável (47 números) — para PDF escaneado, foto, ou quem não tem o arquivo.
 // O servidor valida os dígitos verificadores e tira valor/vencimento da própria linha.
 async function rem2Linha(){
+  const b=$('remBtnLinha'); if(b.disabled||_rem2Enviando) return;
   const raw=($('remLinha').value||''), dig=raw.replace(/\D/g,''), box=$('remBoletoBox');
   if(dig.length!==47){ $('remMsg').textContent=dig.length?('A linha digitável tem 47 números (você digitou '+dig.length+').'):'Digite os 47 números do topo do boleto.'; $('remLinha').focus(); return; }
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
   _rem2Boleto=null; $('remMsg').textContent='';
   box.style.display='block'; box.textContent='conferindo a linha digitável…';
-  const b=$('remBtnLinha'); b.disabled=true;
+  b.disabled=true; _rem2Enviando=true;
   try{
-    const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify({linha_digitavel:dig})});
+    // arquivo recém-enviado vai junto: no servidor vira o MESMO boleto (linha anexada à foto/PDF), nunca um segundo
+    const corpo={linha_digitavel:dig};
+    if(_rem2Arq){ corpo.filename=_rem2Arq.filename; corpo.arquivo_base64=_rem2Arq.b64; }
+    const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify(corpo)});
     if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
     if(d.duplicado && d.deal_id!=null){
       box.innerHTML='Este boleto já está ligado à remessa <span class="pos">#'+_esc(d.deal_id)+'</span> — acompanhe em "Minhas remessas".';
@@ -1809,7 +1821,8 @@ async function rem2Linha(){
       _rem2Boleto={id:d.id, valor_brl:Number(d.valor_brl)};
       box.innerHTML='<span class="pos">Linha digitável conferida ✓</span> · '+brl(d.valor_brl)+' · vence '+_esc(_venc(d.vencimento))+
         (d.banco?' · '+_esc(d.banco):'')+
-        '<div style="color:var(--ink-3)">Quem recebe é confirmado pela nossa equipe antes do pagamento. Escolha o favorecido acima, se souber.</div>'+
+        (d.linha_anexada?'<div style="color:var(--ink-3)">arquivo enviado antes ficou guardado neste mesmo boleto ✓</div>':'')+
+        '<div style="color:var(--ink-3)">Selecione acima <b>quem recebe</b> este boleto (o nome impresso nele). Se não estiver na lista, cadastre o favorecido. Nossa equipe confirma no banco antes de pagar.</div>'+
         (d.cotacao&&d.cotacao.usdc_needed!=null?'<div>A converter: <span class="pos">'+Number(d.cotacao.usdc_needed).toFixed(2)+' USDC</span> (câmbio efetivo R$ '+Number(d.cotacao.rate_efetiva).toFixed(4)+')</div>':'')+avisos;
       $('remAmount').value = Number(d.valor_brl).toFixed(2);
       rem2Quote();
@@ -1820,13 +1833,21 @@ async function rem2Linha(){
     }
     box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover boleto</button></div>';
     $('remBoletoRm').onclick=rem2BoletoRm;
-  }catch(e){ box.style.display='none'; box.innerHTML=''; $('remMsg').textContent=e.message; }
-  finally{ b.disabled=false; }
+  }catch(e){ box.style.display='none'; box.innerHTML=''; $('remMsg').textContent=_rem2ErroLinha(e.message); }
+  finally{ b.disabled=false; _rem2Enviando=false; }
+}
+// erro do validador em linguagem de gente: "DV do campo 2 nao confere" => qual bloco conferir
+function _rem2ErroLinha(msg){
+  const m=String(msg||''); const c=m.match(/DV do campo (\d)/);
+  if(c) return 'Algum número do '+c[1]+'º grupo da linha está errado — confira esse grupo (os blocos são separados por ponto ou espaço).';
+  if(/DV geral/.test(m)) return 'A linha não confere — confira número por número, principalmente o dígito solto e os 14 últimos.';
+  if(/47/.test(m)) return 'A linha digitável tem 47 números — confira se não faltou ou sobrou algum.';
+  return m;
 }
 // remove o arquivo/linha escolhido (e o valor/cotação que vieram dele)
 function rem2BoletoRm(){
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
-  _rem2Boleto=null; $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
+  _rem2Boleto=null; _rem2Arq=null; $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
 }
 async function rem2Quote(){
   const amount = parseFloat($('remAmount').value);
@@ -1853,7 +1874,7 @@ async function rem2Criar(){
   // M-BOLETO-UPLOAD (08/09): com boleto lido, o valor da remessa tem de ser o do boleto
   // (o payout nasce com amount_brl do boleto; deal com outro valor ficaria inconsistente)
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null && Math.abs(amount-_rem2Boleto.valor_brl)>0.005){
-    $('remMsg').textContent='O valor difere do boleto ('+brl(_rem2Boleto.valor_brl)+'). Ajuste o valor e cote de novo, ou remova o PDF.'; return; }
+    $('remMsg').textContent='O valor difere do boleto ('+brl(_rem2Boleto.valor_brl)+'). Ajuste o valor e cote de novo, ou remova o boleto.'; return; }
   const usdc = _rem2Quote.usdc_needed;
   const b=$('remBtnCreate'); b.disabled=true; b.textContent='Criando…';
   try{
@@ -1900,7 +1921,7 @@ async function rem2Criar(){
       const bl = deal.boleto;
       if(bl && bl.id){
         const st = bl.status==='com_payout' ? 'pagamento preparado — a mesa confere o favorecido no banco e libera após a liquidação'
-                 : bl.status==='aguardando_favorecido' ? 'favorecido ainda não cadastrado — a mesa confere antes de pagar'
+                 : bl.status==='aguardando_favorecido' ? 'quem recebe será confirmado pela nossa equipe antes do pagamento'
                  : 'a mesa lê o PDF antes de pagar';
         $('remInstrDetails').innerHTML += '<br>Boleto <span class="pos">#'+_esc(bl.id)+'</span> anexado — '+_esc(st)+'.';
       } else {
@@ -1916,11 +1937,11 @@ async function rem2Criar(){
 const REM_ST = {open:'aberta',funded:'financiada',settled:'liquidada',closed:'encerrada',cancelado:'cancelada'}; // cancelado (09/09): decisão explícita da mesa/cliente
 // (09/09) boleto ligado à remessa — status legível p/ o cliente (o cru é vocabulário do DVP).
 // lido/com_payout = pagamento preparado, a mesa valida o CIP antes de pagar.
-const REM_BOL_ST = {lido:'na mesa',lido_valor_aberto:'valor em aberto — mesa confere',com_payout:'na mesa',aguardando_favorecido:'favorecido em cadastro',
-  aguardando_mesa:'mesa vai conferir',ilegivel:'PDF sem leitura automática',pago:'pago',cancelado:'cancelado'};
+const REM_BOL_ST = {lido:'na mesa',lido_valor_aberto:'valor em aberto — equipe confere',com_payout:'na mesa',aguardando_favorecido:'quem recebe será confirmado pela equipe',
+  aguardando_mesa:'equipe vai conferir',ilegivel:'arquivo sem leitura automática — equipe confere',pago:'pago',cancelado:'cancelado'};
 // mesa_motivo: códigos do DVP viram texto; texto livre da mesa passa por _esc como está
 const REM_BOL_MOT = {vencido:'boleto vencido',sem_valor:'sem valor no boleto',valor_em_aberto:'valor em aberto',
-  ilegivel:'PDF sem leitura automática',payout_existente:'já existe pagamento para esta linha digitável',
+  ilegivel:'arquivo sem leitura automática — equipe confere',payout_existente:'já existe pagamento para esta linha digitável',linha_divergente:'a linha digitada difere da do arquivo — equipe confere qual boleto é',
   vencimento_indeterminado:'vencimento a conferir no PDF',acima_do_teto:'valor acima do teto — mesa decide',payout_retirado:'pagamento descartado — mesa redige de novo'};
 // linha compacta 'boleto #id · R$ valor · vence dd/mm/aaaa · status' (+ motivo). Usada no card e no detalhe.
 // vencimento pode vir 'aaaa-mm-dd' ou ISO completo (DATE do Postgres) — corta nos 10 primeiros.
