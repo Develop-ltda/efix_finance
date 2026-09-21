@@ -251,6 +251,17 @@ tr.grp:first-child td{padding-top:6px}
 .deal .hd .mini{margin-left:8px;cursor:pointer;vertical-align:middle}
 .deal .bol{margin-top:5px;font-family:var(--font-m);font-size:10.5px;color:var(--ink-3);line-height:1.6}
 .deal .det{display:none;margin-top:9px;font-family:var(--font-m);font-size:11px;color:var(--ink-2);line-height:1.9;border-top:1px solid var(--line);padding-top:8px}
+/* v0.24 (F3+F4+F5, 21/09): cotação em €/US$, "para onde transferir", etapas */
+.rem-big{font-family:var(--font-d);font-size:22px;letter-spacing:-.02em;color:var(--ink);line-height:1.25;margin:4px 0 6px;word-break:normal}
+.rem-kv{display:grid;grid-template-columns:minmax(84px,auto) 1fr auto;gap:3px 10px;align-items:baseline;word-break:normal;margin-top:6px}
+.rem-kv .k{font-family:var(--font-m);color:var(--ink-3);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.rem-kv .v{word-break:normal;overflow-wrap:anywhere;color:var(--ink)}
+.rem-txt{word-break:normal;line-height:1.7;font-family:var(--font-d);font-size:12.5px}
+.rem-msg.err{color:var(--red)}
+.deal .hd .stt.att{color:var(--red)} .deal .hd .stt.pos{color:var(--green)}
+.mini.on{border-color:var(--ink);color:var(--ink)}
+.steps .stp .b.neg{border-color:var(--red);color:var(--red)}
+@media (max-width:480px){.rem-kv{grid-template-columns:1fr auto}.rem-kv .k{grid-column:1/-1}}
 
 /* extrato consolidado (web2 + web3) */
 .crow{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -527,13 +538,13 @@ tr.grp:first-child td{padding-top:6px}
       <section class="view" id="view-remessas">
         <div class="rem2col">
           <div class="card" data-reveal>
-            <h2>Nova remessa <span class="up">USDC → PIX · trilha DvP</span></h2>
+            <h2>Nova remessa <span class="up">boleto no Brasil · pague em € ou US$</span></h2>
             <!-- 08/09: o lead dizia "envie USDC na rede Base" (herança do v0.3.0).
                  O fund da wallet é HOUSE-FUNDED: o proxy não repassa from_address,
                  o DVP arma a rota Bridge com BRIDGE_FROM_ADDRESS (carteira operacional
                  da EFIX) e o AUTOFUND financia. USDC que o cliente mande ao to_address
                  da Bridge NÃO casa (fica órfão) — nunca instruir depósito aqui. -->
-            <p class="rem-lead">Cote em reais e acompanhe cada etapa. Envie o boleto (PDF ou foto) ou digite a linha digitável e nós lemos valor e vencimento. A conversão é financiada pela EFIX — você não envia USDC por conta própria: paga em fiat (dados abaixo) ou, em USDC, conforme instruções da mesa. O pagamento ao favorecido é liberado pela mesa após a liquidação.</p>
+            <p class="rem-lead">Envie o boleto (PDF, foto ou os 47 números), veja quanto transferir em euros ou dólares e crie a remessa. Depois, transfira da sua conta bancária para a conta EFIX em seu nome — nós convertemos e pagamos o boleto. Acompanhe cada etapa em "Minhas remessas".</p>
             <div id="rem-form">
               <label class="fldl">Quem recebe <span class="up">(o nome impresso no boleto)</span></label>
               <select id="remFav" class="fld"><option value="">carregando…</option></select>
@@ -553,6 +564,7 @@ tr.grp:first-child td{padding-top:6px}
               <div id="remBoletoBox" class="qd" style="display:none"></div>
               <label class="fldl">Valor a quitar (R$)</label>
               <input id="remAmount" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
+              <div id="remCreditoBox" class="muted" style="display:none;margin-top:6px;font-size:12px;line-height:1.6"></div>
               <button class="cta" id="remBtnQuote">Cotar</button>
               <div id="remQuoteBox" style="display:none">
                 <div id="remQuoteDetails" class="qd"></div>
@@ -561,6 +573,7 @@ tr.grp:first-child td{padding-top:6px}
             </div>
             <div id="rem-instr" style="display:none">
               <div class="qd" id="remInstrDetails"></div>
+              <div class="qd" id="remParaOnde" data-paraonde-box style="display:none"></div>
               <button class="cta" id="remBtnNova">Nova remessa</button>
             </div>
             <div id="remMsg" class="rem-msg"></div>
@@ -922,6 +935,30 @@ const EULER = {
 
 const $ = (id) => document.getElementById(id);
 const brl = (v) => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+// v0.24 (F3+F4+F5): moeda por código, datas, erros humanos, copiar com fallback
+const fmtMoeda=(v,ccy)=>{ const n=Number(v); if(!Number.isFinite(n)) return '—'; const s=n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return ccy==='EUR'?'€ '+s:(ccy==='USD'?'US$ '+s:(ccy==='USDC'?s+' USDC':'R$ '+s)); };
+const _dt=iso=>{ const t=Date.parse(iso||''); return Number.isFinite(t)?new Date(t).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'}):''; };
+const _idade=s=>{ const n=Number(s); if(!Number.isFinite(n)||n<0) return ''; if(n<60) return 'agora'; if(n<3600) return 'há '+Math.round(n/60)+' min'; return 'há '+Math.round(n/3600)+' h'; };
+const _arr=x=>Array.isArray(x)?x:[];
+function _erroHumano(e){
+  const m=String((e&&e.message)||'');
+  if(!e||(e instanceof TypeError)||/failed to fetch|networkerror|load failed/i.test(m)) return 'Sem conexão com o servidor — verifique sua internet e tente de novo.';
+  if(e.status===401) return 'Sua sessão expirou — entre de novo.';
+  if(e.status===403&&/beta/i.test(m)) return 'Remessas ainda não está liberado para a sua conta — fale com a mesa.';
+  if(e.status===422&&/teto/i.test(m)) return 'Este valor passa do limite por remessa. Fale com a mesa para valores maiores.';
+  if((e.status&&e.status>=500)||/^HTTP 5/.test(m)) return 'Nosso sistema não respondeu — tente de novo em instantes.';
+  return m||'Algo deu errado. Tente de novo.';
+}
+function _msg(txt,err){ const el=$('remMsg'); if(!el) return; el.textContent=txt||''; el.className='rem-msg'+(err?' err':''); }
+async function _copiar(txt,btn){
+  const rotulo=(btn&&btn.dataset&&btn.dataset.label)||'copiar'; let okc=false;
+  try{ if(!navigator.clipboard) throw 0; await navigator.clipboard.writeText(String(txt)); okc=true; }
+  catch(_e){ try{ const ta=document.createElement('textarea'); ta.value=String(txt); ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); okc=document.execCommand('copy'); document.body.removeChild(ta); }catch(_e2){ okc=false; } }
+  if(btn){ btn.textContent = okc?'copiado ✓':'não copiou — selecione o texto'; setTimeout(()=>{ btn.textContent=rotulo; }, okc?1800:3000); }
+  return okc;
+}
 const short = (a) => a ? a.slice(0,6)+'…'+a.slice(-4) : '—';
 const tokIcon = (t, sym) => (t && t.logo)
   ? '<img src="'+t.logo+'" alt="'+(t.sym||sym)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">'
@@ -1387,8 +1424,7 @@ function chipsHtml(){
 }
 document.addEventListener('click', (ev)=>{
   const cp = ev.target.closest('[data-copy]');
-  if(cp){ navigator.clipboard.writeText(cp.dataset.copy).then(()=>{ const t=cp.textContent; cp.textContent='copiado ✓';
-    setTimeout(()=>{ cp.textContent='copiar'; }, 1800); }); return; }
+  if(cp){ _copiar(cp.dataset.copy, cp); return; }   // v0.24: fallback sem clipboard + rótulo por botão (data-label)
   const c = ev.target.closest('[data-fg]'); if(!c) return;
   const grp=c.dataset.fg, val=c.dataset.fv;
   FILT[grp] = (FILT[grp]===val && val!=='all') ? 'all' : val;
@@ -1461,7 +1497,16 @@ async function initRemessas2(){
   $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Boleto=null; _rem2Arq=null;
     $('remAmount').value=''; $('remQuoteBox').style.display='none';
     $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
-    $('rem-instr').style.display='none'; $('rem-form').style.display='block'; $('remMsg').textContent=''; };
+    $('rem-instr').style.display='none'; $('rem-form').style.display='block'; _msg('');
+    if($('remParaOnde')){ $('remParaOnde').innerHTML=''; $('remParaOnde').style.display='none'; } };
+  // v0.24 (F4): chips de moeda e "tentar de novo / ver dados" do painel "para onde" (delegado; registrado uma vez)
+  document.addEventListener('click', (ev)=>{
+    const ch=ev.target.closest('[data-moeda]');
+    if(ch){ const box=ch.closest('[data-paraonde-box]'); if(!box||!box._dados) return; try{ localStorage.setItem('efix_rem_moeda',ch.dataset.moeda); }catch(_e){}
+      box.innerHTML=rem2ParaOndeHtml(box._dados, box._dealId, ch.dataset.moeda); return; }
+    const po=ev.target.closest('[data-paraonde]');
+    if(po){ const box=po.closest('[data-paraonde-box]')||(po.parentElement&&po.parentElement.querySelector('[data-paraonde-box]')); if(box) rem2ParaOnde(po.dataset.paraonde, box); }
+  });
   // M-DVP-SELF: dados fiat da PROPRIA conta virtual + favorecido self-service
   $('remBtnFiat').onclick=rem2Fiat;
   $('remBtnFavNew').onclick=()=>{ const f=$('remFavForm');
@@ -1476,7 +1521,8 @@ async function initRemessas2(){
     $('opFav').innerHTML = '<option value="">— definir depois —</option>'+favOpts;
     rem2Refresh(); rem2FavPend(); rem2Ops();
     rem2FiatAuto(); // v0.21: sem conta fiat, o painel abre sozinho mostrando o que falta
-  }catch(e){ $('remMsg').textContent = e.message; }
+    rem2Credito();  // v0.24 (F3): crédito de remessas anteriores ao entrar na aba (silencioso em erro/404)
+  }catch(e){ _msg(_erroHumano(e),true); }
 }
 const _esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let _fiatPoll=null, _fiatGen=0;
@@ -1618,7 +1664,7 @@ function rem2FiatRender(d){
       : '';
     box.innerHTML = (d.criada_agora?'<div class="pos" style="margin-bottom:6px">✓ Sua conta fiat acabou de ser criada.</div>':'')+
       (d.titular?'<div style="margin-bottom:8px'+(d.conta_da_casa?';color:var(--warn,#b45309)':'')+'">Titular: <b>'+_esc(d.titular)+'</b>'+(d.conta_da_casa?' — estas são as contas operacionais da EFIX, não uma conta pessoal':'')+'</div>':'')+
-      d.contas.map(c=>
+      ((d.principal&&Object.keys(d.principal).length) ? rem2ContasPainelHtml(d) : _arr(d.contas).map(c=>
       '<b>'+_esc(c.currency)+'</b>'+(c.rails?' <span style="color:var(--ink-3)">· via '+_esc(c.rails)+'</span>':'')+'<br>'+
       (c.iban?'IBAN: <span class="mono">'+_esc(c.iban)+'</span><br>':'')+
       (c.account_number?'Conta: <span class="mono">'+_esc(c.account_number)+'</span><br>':'')+
@@ -1626,7 +1672,7 @@ function rem2FiatRender(d){
       (c.bic?'BIC: <span class="mono">'+_esc(c.bic)+'</span><br>':'')+
       (c.bank_name?'Banco: '+_esc(c.bank_name)+'<br>':'')+
       (c.beneficiary?'Beneficiário: '+_esc(c.beneficiary)+'<br>':'')
-    ).join('<hr>')+trilho+'<div class="up" style="margin-top:6px">'+_esc(d.aviso||'')+'</div>';
+    ).join('<hr>'))+trilho+'<div class="up" style="margin-top:6px">'+_esc(d.aviso||'')+'</div>';
     _fiatLigar(box,etapas);
   }catch(e){ box.textContent=e.message; }
 }
@@ -1761,7 +1807,7 @@ async function rem2Boleto(){
         (d.referencia?' · '+_esc(d.referencia):'')+
         (d.banco?'<br><span style="color:var(--ink-3)">banco: '+_esc(d.banco)+'</span>':'')+
         (ben.na_allowlist===false?'<div style="color:var(--warn,#b45309)">quem recebe será confirmado pela nossa equipe antes do pagamento</div>':'')+
-        (d.cotacao&&d.cotacao.usdc_needed!=null?'<div>A converter: <span class="pos">'+Number(d.cotacao.usdc_needed).toFixed(2)+' USDC</span> (câmbio efetivo R$ '+Number(d.cotacao.rate_efetiva).toFixed(4)+')</div>':'')+
+        (d.cotacao&&d.cotacao.usdc_needed!=null?rem2CotacaoHtml(d.cotacao,{compacto:true}):'')+
         avisos+dup;
       $('remAmount').value = Number(d.valor_brl).toFixed(2);
       rem2Quote();
@@ -1823,7 +1869,7 @@ async function rem2Linha(){
         (d.banco?' · '+_esc(d.banco):'')+
         (d.linha_anexada?'<div style="color:var(--ink-3)">arquivo enviado antes ficou guardado neste mesmo boleto ✓</div>':'')+
         '<div style="color:var(--ink-3)">Selecione acima <b>quem recebe</b> este boleto (o nome impresso nele). Se não estiver na lista, cadastre o favorecido. Nossa equipe confirma no banco antes de pagar.</div>'+
-        (d.cotacao&&d.cotacao.usdc_needed!=null?'<div>A converter: <span class="pos">'+Number(d.cotacao.usdc_needed).toFixed(2)+' USDC</span> (câmbio efetivo R$ '+Number(d.cotacao.rate_efetiva).toFixed(4)+')</div>':'')+avisos;
+        (d.cotacao&&d.cotacao.usdc_needed!=null?rem2CotacaoHtml(d.cotacao,{compacto:true}):'')+avisos;
       $('remAmount').value = Number(d.valor_brl).toFixed(2);
       rem2Quote();
     } else {
@@ -1849,28 +1895,160 @@ function rem2BoletoRm(){
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
   _rem2Boleto=null; _rem2Arq=null; $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
 }
+// ═══ v0.24 (F3+F4+F5, 21/09) — passo a passo do cliente: cotação em €/US$ com crédito, "para onde transferir", etapas ═══
+// Todas as funções de render devolvem HTML string (o wizard F6 as reaproveita). Toda string do servidor passa por _esc — no
+// texto E nos atributos data-copy. Todo campo novo é opcional: sem ele, o desenho de antes (DVP/proxy antigos).
+const REM_PAY_ST={draft:'em preparação',validated:'em preparação',approved:'aprovado — saindo',paid:'pago',rejected:'não aprovado — fale com a equipe',retirado:'descartado'};
+const _etIco={feito:['✓','pos'],andamento:['→',''],atencao:['!','neg'],pendente:['○','muted'],cancelado:['✕','muted']};
+// cotação: UMA função para os 3 caminhos (Cotar, boleto, linha). q = corpo de /remessas/quote ou d.cotacao do boleto.
+function rem2CotacaoHtml(q, opt){
+  opt=opt||{};
+  if(!q||q.usdc_needed==null) return '<span class="neg">Não conseguimos cotar agora — tente de novo em instantes.</span>';
+  const f=q.fiat&&typeof q.fiat==='object'?q.fiat:null, c=q.credito&&typeof q.credito==='object'?q.credito:{};
+  const _f4=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:4,maximumFractionDigits:4});
+  const usdcTxt=fmtMoeda(q.usdc_needed,'USDC'), rateTxt='R$ '+_f4(q.rate_efetiva)+' por USDC';
+  if(!f){ return opt.compacto ? '<div>A converter: <span class="pos">'+_esc(usdcTxt)+'</span> (câmbio efetivo '+_esc(rateTxt)+')</div>'
+    : 'Valor a quitar: '+_esc(brl(q.amount_brl))+'<br>A converter: <span class="pos">'+_esc(usdcTxt)+'</span><br>Câmbio efetivo: '+_esc(rateTxt)+' <span style="color:var(--ink-3)">(taxas inclusas)</span>'; }
+  const eur=f.eur!=null?fmtMoeda(f.eur,'EUR'):null, usd=f.usd!=null?fmtMoeda(f.usd,'USD'):null;
+  const big = eur ? eur+(usd?' ou '+usd:'') : (usd||'—');
+  if(opt.compacto) return '<div>A converter: <span class="pos">'+_esc(usdcTxt)+'</span> · você transfere ≈ <b>'+_esc(big)+'</b></div>';
+  const cred = (c.exibicao==='abatimento'&&Number(c.aplicado_usdc)>0) ? '<div class="rem-txt">Já descontamos seu crédito de <b>'+_esc(fmtMoeda(c.aplicado_usdc,'USDC'))+'</b>.</div>'
+    : c.exibicao==='consultar_mesa' ? '<div class="up rem-txt">Há crédito de remessas anteriores em conferência pela mesa — não descontado aqui.</div>'
+    : c.exibicao==='indisponivel' ? '<div class="muted rem-txt">Não conseguimos consultar seu crédito agora — o valor acima não desconta crédito.</div>' : '';
+  const aberto = Number(c.em_aberto_usdc)>0 ? '<div class="up rem-txt">Há '+_esc(fmtMoeda(c.em_aberto_usdc,'USDC'))+' de remessas anteriores ainda não identificados — não some a este valor sem falar com a mesa.</div>' : '';
+  const folga=(Number(f.folga_bps)/100).toLocaleString('pt-BR',{maximumFractionDigits:2})+'%';
+  if(Number(f.a_transferir_usdc)===0) return 'Boleto a quitar: '+_esc(brl(q.amount_brl))+'<div class="rem-big">Seu crédito cobre esta remessa — nada a transferir.</div>'+cred+
+    '<div class="muted rem-txt" style="font-size:11px">Equivalente a '+_esc(usdcTxt)+' · '+_esc(rateTxt)+'</div>';
+  return 'Boleto a quitar: '+_esc(brl(q.amount_brl))+'<br><span class="rem-txt">Você transfere aproximadamente</span>'+
+    '<div class="rem-big">'+_esc(big)+'</div>'+
+    (!eur?'<div class="muted rem-txt">€ — · '+_esc(f.eur_motivo||'câmbio EUR indisponível agora')+' — use o valor em dólares ou cote de novo em instantes.</div>':'')+
+    cred+aberto+
+    '<div class="muted rem-txt">Inclui câmbio, taxas e uma folga de '+_esc(folga)+' para o câmbio não faltar. O que sobrar vira crédito para a próxima remessa; se faltar, avisamos por aqui.</div>'+
+    '<div class="muted rem-txt" style="font-size:11px">'+(f.taxa&&f.taxa.valor!=null?'Câmbio EUR/USD '+_esc(_f4(f.taxa.valor))+' (Bridge, '+_esc(_idade(f.taxa.idade_s)||'agora')+') · ':'')+'equivalente a '+_esc(usdcTxt)+' · '+_esc(rateTxt)+'</div>';
+}
+// bloco de UMA conta em linhas rótulo / valor / copiar. o.valorTxt/o.valorCopia/o.referencia só no "para onde" de uma remessa.
+function rem2ContaHtml(c, o){
+  o=o||{}; if(!c) return '';
+  const kv=(k,v,copia)=> v ? '<div class="k">'+k+'</div><div class="v mono">'+_esc(v)+'</div><div>'+(copia===false?'':'<button type="button" class="hmini" data-copy="'+_esc(copia===undefined?v:copia)+'" data-label="copiar">copiar</button>')+'</div>' : '';
+  const ibanRaw=String(c.iban||'').replace(/\s+/g,'');
+  return '<div class="rem-kv">'+
+    (o.valorTxt?kv('Valor',o.valorTxt,o.valorCopia||o.valorTxt):'')+
+    (o.referencia?kv('Referência',o.referencia):'')+
+    kv('Beneficiário',c.beneficiary)+
+    (ibanRaw?kv('IBAN',ibanRaw.replace(/(.{4})/g,'$1 ').trim(),ibanRaw):'')+
+    (c.account_number?kv('Conta',c.account_number):'')+
+    (c.routing_number?kv('Routing',c.routing_number):'')+
+    (c.bic?kv('BIC',c.bic):'')+
+    kv('Banco',c.bank_name,false)+
+    '</div>'+(c.rails?'<div class="muted" style="font-size:11px">via '+_esc(c.rails)+'</div>':'');
+}
+// conta por moeda: principal (DVP 0.24) ou a primeira de contas[] (DVP antigo)
+function _remContaPorMoeda(d, moeda){
+  const p=d&&d.principal&&d.principal[moeda]; if(p) return p;
+  return _arr(d&&d.contas).find(c=>String(c.currency||'').toUpperCase()===moeda)||null;
+}
+function _remMoedaPadrao(d){
+  let pref=null; try{ pref=localStorage.getItem('efix_rem_moeda'); }catch(_e){}
+  const temEur=!!_remContaPorMoeda(d,'EUR'), temUsd=!!_remContaPorMoeda(d,'USD');
+  if(pref==='USD'&&temUsd) return 'USD'; if(pref==='EUR'&&temEur) return 'EUR';
+  return temEur?'EUR':(temUsd?'USD':null);
+}
+function _remOutrasHtml(d){
+  const out=_arr(d&&d.outras); if(!out.length) return '';
+  return '<details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Ver outras contas ('+out.length+' anterior'+(out.length>1?'es':'')+')</summary>'+
+    '<div class="muted rem-txt" style="margin:6px 0">Prefira a conta principal acima. Estas ainda funcionam.</div>'+
+    out.map(o=>'<div class="muted" style="font-size:11px;margin-top:6px">'+_esc(o.currency||'')+(o.criada_em?' · criada em '+_esc(_venc(o.criada_em)):'')+'</div>'+rem2ContaHtml(o,{})).join('')+'</details>';
+}
+// painel manual "Dados para depósito fiat": principal por moeda + outras colapsadas (sem valor/referência: não há remessa)
+function rem2ContasPainelHtml(d){
+  const moedas=Object.keys(d.principal||{});
+  return '<div class="muted rem-txt" style="margin-bottom:6px">Suas contas para transferir. Ao criar uma remessa, mostramos o valor e a referência dela.</div>'+
+    moedas.map(m=>'<div class="up" style="margin-top:8px">'+_esc(m==='EUR'?'Euros · SEPA':(m==='USD'?'Dólares · wire':m))+' — conta principal</div>'+rem2ContaHtml(d.principal[m],{})).join('')+
+    _remOutrasHtml(d);
+}
+// painel "Para onde transferir" de UMA remessa. d = deposit-instructions (com ou sem `remessa`/`principal`).
+function rem2ParaOndeHtml(d, dealId, moeda){
+  d=d||{}; const r=d.remessa&&typeof d.remessa==='object'?d.remessa:null;
+  const ref=(r&&r.referencia)||('EFIX-'+dealId);
+  if(r&&r.estado==='nao_transferir') return '<div class="neg rem-txt">'+_esc(r.motivo||'Esta remessa não precisa de transferência.')+'</div>';
+  if(d.tem_conta===false) return '<div class="rem-txt">Você ainda não tem conta em euros/dólares ativa. Complete o cadastro no painel "Dados para depósito fiat" abaixo — a conta nasce minutos após a aprovação. Guarde a referência <b class="mono">'+_esc(ref)+'</b>.</div>';
+  const temEur=!!_remContaPorMoeda(d,'EUR'), temUsd=!!_remContaPorMoeda(d,'USD');
+  moeda = (moeda&&_remContaPorMoeda(d,moeda))?moeda:_remMoedaPadrao(d);
+  if(!moeda) return '<div class="rem-txt">Nenhuma conta para transferir apareceu agora. Abra "Dados para depósito fiat (IBAN)" abaixo ou tente de novo.</div>';
+  const c=_remContaPorMoeda(d,moeda);
+  const est=r&&r.valor_estimado&&typeof r.valor_estimado==='object'?r.valor_estimado:null;
+  const q=(!r&&_rem2Quote&&_rem2Quote.fiat)?_rem2Quote.fiat:null;   // proxy antigo descarta deal_id: usa a cotação em memória
+  const val = est ? (moeda==='EUR'?est.eur:est.usd) : (q ? (moeda==='EUR'?q.eur:q.usd) : null);
+  const valorTxt = val!=null ? fmtMoeda(val, moeda) : null;
+  const chips = (temEur&&temUsd) ? '<div style="margin:4px 0 6px">'+
+      '<button type="button" class="mini'+(moeda==='EUR'?' on':'')+'" data-moeda="EUR">Euros (SEPA)</button> '+
+      '<button type="button" class="mini'+(moeda==='USD'?' on':'')+'" data-moeda="USD">Dólares (wire)</button></div>' : '';
+  const identificada = !!(r&&r.estado==='transferencia_identificada');
+  const semValor = !valorTxt ? '<div class="muted rem-txt">'+_esc((r&&r.motivo)||((est&&est.eur==null&&moeda==='EUR')?(est.eur_motivo||'Valor em euros indisponível agora')+' — use o valor em dólares ou cote de novo.':'O valor a transferir é o da sua cotação.'))+'</div>' : '';
+  return '<div class="up" style="margin-top:4px">Para onde transferir</div>'+chips+
+    (identificada?'<div class="pos rem-txt">Já identificamos uma transferência sua para esta remessa. Se ainda não transferiu, use os dados abaixo.</div>':'')+
+    rem2ContaHtml(c,{valorTxt:valorTxt, valorCopia:(val!=null?Number(val).toFixed(2):null), referencia:ref})+semValor+
+    (r&&Number(r.credito_aplicado_usdc)>0?'<div class="muted rem-txt">Já descontamos seu crédito de '+_esc(fmtMoeda(r.credito_aplicado_usdc,'USDC'))+' deste valor.</div>':'')+
+    (r&&Number(r.outros_em_aberto_usdc)>0?'<div class="up rem-txt">Há '+_esc(fmtMoeda(r.outros_em_aberto_usdc,'USDC'))+' de remessas anteriores ainda não identificados — não some a este valor sem falar com a mesa.</div>':'')+
+    '<div class="rem-txt" style="margin-top:8px">Transfira de uma conta bancária <b>em seu próprio nome</b> — de outra pessoa, o banco devolve. O beneficiário é a Bridge, parceira que emite a sua conta em euros/dólares: o dinheiro entra na sua conta EFIX. Se puder, escreva <b class="mono">'+_esc(ref)+'</b> na descrição — ajuda nossa equipe a identificar. Leva '+_esc((r&&r.prazo)||'1 a 2 dias úteis')+' para chegar; não precisa nos avisar.</div>'+
+    '<div class="muted rem-txt">Sobrou? Vira crédito para a próxima remessa. Faltou? Avisamos por aqui e você completa.</div>'+
+    _remOutrasHtml(d);
+}
+// carrega GET /remessas/deposit-instructions?deal_id e desenha em `box` (guarda o JSON para trocar de moeda sem nova chamada)
+async function rem2ParaOnde(dealId, box){
+  if(!box) return; box.style.display='block'; box.innerHTML='<div class="muted">carregando os dados para transferir…</div>';
+  let d=null;
+  try{ d = await rf('/remessas/deposit-instructions?deal_id='+encodeURIComponent(dealId)); }
+  catch(e){
+    box.innerHTML='<div class="rem-txt">Não conseguimos carregar os dados da conta agora ('+_esc(_erroHumano(e))+'). <button type="button" class="mini" data-paraonde="'+_esc(dealId)+'">tentar de novo</button> ou abra "Dados para depósito fiat (IBAN)" abaixo. Referência da remessa: <b class="mono">EFIX-'+_esc(dealId)+'</b>.</div>';
+    return;
+  }
+  box._dados=d; box._dealId=dealId;
+  box.innerHTML=rem2ParaOndeHtml(d, dealId, null);
+  if(d&&d.tem_conta===false) rem2FiatAuto();
+}
+// acompanhamento em etapas (contrato v0.24 `acompanhamento`); d = detalhe do deal (payouts projetados, somente_leitura)
+function rem2EtapasHtml(ac, d){
+  if(!ac||typeof ac!=='object') return '';
+  const linhas=_arr(ac.etapas).map(e=>{ const ic=_etIco[e.estado]||_etIco.pendente; const dim=(e.estado==='pendente'||e.estado==='cancelado');
+    return '<div class="stp'+(e.estado==='feito'?' done':(e.estado==='andamento'?' run':''))+'" style="align-items:flex-start"><span class="b '+ic[1]+'">'+ic[0]+'</span>'+
+      '<span class="rem-txt" style="flex:1;line-height:1.6'+(dim?';color:var(--ink-3)':'')+'"><b style="font-weight:500">'+_esc(e.titulo||'')+'</b>'+(e.em?' <span class="muted">· '+_esc(_dt(e.em))+'</span>':'')+
+      (e.detalhe?'<br><span class="muted">'+_esc(e.detalhe)+'</span>':'')+'</span></div>'; }).join('');
+  const pay=_arr(d&&d.payouts).filter(p=>p&&p.amount_brl!=null).map(p=>'Pagamento: '+_esc(brl(p.amount_brl))+(p.beneficiary_name?' → '+_esc(p.beneficiary_name):'')+' · '+_esc(REM_PAY_ST[p.status]||p.status||'')+(p.paid_at?' em '+_esc(_dt(p.paid_at)):'')+(p.comprovante_disponivel?' · comprovante com a nossa equipe':'')).join('<br>');
+  const btn = (ac.atual==='transferencia'&&!ac.concluida&&!ac.cancelada&&d&&d.id!=null) ? '<div style="margin-top:6px"><button type="button" class="mini" data-paraonde="'+_esc(d.id)+'">Ver dados para transferir →</button><div data-paraonde-box style="margin-top:6px;display:none"></div></div>' : '';
+  return '<div class="steps" style="margin-top:4px">'+linhas+'</div>'+
+    '<div class="rem-txt" style="margin-top:8px"><b>Próximo passo:</b> '+_esc(ac.proximo_passo||'')+'</div>'+
+    (d&&d.somente_leitura?'<div class="muted rem-txt">Remessa criada pela nossa equipe para você — para alterar, fale com a mesa.</div>':'')+
+    (pay?'<div class="muted rem-txt" style="margin-top:6px">'+pay+'</div>':'')+btn;
+}
+// crédito ao entrar na aba (GET /remessas/credito; proxy/DVP antigos => 404 => caixa oculta)
+async function rem2Credito(){
+  const box=$('remCreditoBox'); if(!box) return;
+  let c=null; try{ c=await rf('/remessas/credito'); }catch(_e){ box.style.display='none'; return; }
+  const disp=Number(c&&c.disponivel_usdc), aberto=Number(c&&c.em_aberto_usdc); let html='';
+  if(c&&c.exibicao==='abatimento'&&disp>0) html='Você tem crédito de <b>'+_esc(fmtMoeda(disp,'USDC'))+'</b> de remessas anteriores. Ele é descontado automaticamente do valor a transferir.';
+  else if(c&&c.exibicao==='consultar_mesa') html='Você tem crédito de remessas anteriores em conferência pela mesa.';
+  if(aberto>0) html+=(html?'<br>':'')+'Falta chegar <b>'+_esc(fmtMoeda(aberto,'USDC'))+'</b> de remessas já registradas — veja em "Minhas remessas".';
+  box.innerHTML=html; box.style.display=html?'block':'none';
+}
 async function rem2Quote(){
   const amount = parseFloat($('remAmount').value);
-  if(!amount || amount<=0){ $('remMsg').textContent='Informe o valor em R$.'; return; }
-  const b=$('remBtnQuote'); b.disabled=true; b.textContent='Cotando…'; $('remMsg').textContent='';
+  if(!amount || amount<=0){ _msg('Informe o valor em R$.',true); return; }
+  const b=$('remBtnQuote'); b.disabled=true; b.textContent='Cotando…'; _msg('');
   try{
     _rem2Quote = await rf('/remessas/quote',{method:'POST',body:JSON.stringify({amount_brl:amount})});
     const ok = _rem2Quote.usdc_needed!=null;
-    $('remQuoteDetails').innerHTML = ok
-      ? 'Valor a quitar: R$ '+Number(_rem2Quote.amount_brl).toFixed(2)+'<br>'+
-        'A converter: <span class="pos">'+Number(_rem2Quote.usdc_needed).toFixed(2)+' USDC</span><br>'+
-        'Câmbio efetivo: R$ '+Number(_rem2Quote.rate_efetiva).toFixed(4)+'/USDC <span style="color:var(--ink-3)">(taxas inclusas)</span>'
-      : '<span class="neg">Nenhuma rota disponível agora.</span>';
+    $('remQuoteDetails').innerHTML = rem2CotacaoHtml(_rem2Quote);   // v0.24 (F3): €/US$ + crédito quando o servidor mandar
     $('remQuoteBox').style.display='block';
     $('remBtnCreate').style.display = ok?'block':'none';
-  }catch(e){ $('remMsg').textContent=e.message; }
+  }catch(e){ _msg(_erroHumano(e),true); }
   finally{ b.disabled=false; b.textContent='Cotar'; }
 }
 async function rem2Criar(){
   const amount = parseFloat($('remAmount').value);
   const sel = $('remFav');
   const favName = sel.selectedOptions[0] ? (sel.selectedOptions[0].dataset.name||'') : '';
-  if(!amount || !_rem2Quote || _rem2Quote.usdc_needed==null){ $('remMsg').textContent='Cote antes de criar.'; return; }
+  if(!amount || !_rem2Quote || _rem2Quote.usdc_needed==null){ _msg('Cote antes de criar.',true); return; }
   // M-BOLETO-UPLOAD (08/09): com boleto lido, o valor da remessa tem de ser o do boleto
   // (o payout nasce com amount_brl do boleto; deal com outro valor ficaria inconsistente)
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null && Math.abs(amount-_rem2Boleto.valor_brl)>0.005){
@@ -1884,38 +2062,17 @@ async function rem2Criar(){
       boleto_id: _rem2Boleto ? _rem2Boleto.id : undefined, // M-BOLETO-UPLOAD (08/09)
       notes:(favName?('favorecido pretendido: '+favName+' · '):'')+'alvo R$ '+amount.toFixed(2)+' · envia '+usdc.toFixed(2)+' USDC @ '+Number(_rem2Quote.rate_efetiva).toFixed(4)+(_rem2Boleto?' · boleto #'+_rem2Boleto.id:''),
     })});
-    const fund = await rf('/remessas/deals/'+deal.id+'/fund',{method:'POST',body:JSON.stringify({
-      amount_usdc:usdc, quote_set_id:_rem2Quote.quote_set_id,
-    })});
-    if(fund.deferred){
-      // fluxo direto (payout ao favorecido): sem depósito manual — a mesa
-      // aprova e a conversão sai direto para quem você cadastrou
-      $('remInstrDetails').innerHTML =
-        'Remessa <span class="pos">#'+deal.id+'</span> · quita R$ '+amount.toFixed(2)+'<br>'+
-        'Registrada e aguardando aprovação da mesa.<br>'+
-        'Após a aprovação, o pagamento sai <b>direto para o favorecido</b> que você cadastrou — sem passo de depósito manual.';
-    } else {
-      // fluxo clássico (sem favorecido chaveado) — HOUSE-FUNDED (08/09):
-      // o proxy (/remessas/deals/:id/fund) só repassa amount_usdc+quote_set_id,
-      // o DVP arma a rota Bridge com source.from_address = BRIDGE_FROM_ADDRESS
-      // (carteira operacional da EFIX) e o AUTOFUND financia o deal a partir
-      // dela. USDC que o cliente mande ao to_address da Bridge NÃO casa (fica
-      // órfão) — por isso NÃO exibimos endereço nem "valor a enviar" (texto
-      // herdado do v0.3.0). Mostramos o estado + a orientação de pagamento.
-      // Motivo interno do autofund (kill switch, teto, gas) não vai ao cliente;
-      // o hash da tx da casa também não (levaria de volta ao to_address).
-      const auto = fund.autofund||{};
-      const estado = fund.status==='failed'
-        ? '<span class="neg">Falha ao armar a rota'+(fund.reason?': '+_esc(fund.reason):'')+'</span>'
-        : (auto.enviado
-          ? '<span class="pos">Rota armada · financiada pela EFIX</span>'
-          : '<span class="up">Rota armada · aguardando financiamento pela mesa</span>');
-      $('remInstrDetails').innerHTML =
-        'Remessa <span class="pos">#'+deal.id+'</span> · quita R$ '+amount.toFixed(2)+'<br>'+
-        'Estado: '+estado+'<br>'+
-        '<span class="neg">Não envie USDC por conta própria.</span> Esta remessa é financiada pela carteira operacional da EFIX — USDC vindo de outra carteira não é reconhecido pela rota.<br>'+
-        'Como pagar: em <b>fiat</b>, use "Dados para depósito fiat" abaixo; em <b>USDC</b>, solicite uma <b>operação programada</b> — as instruções vêm da mesa após a aprovação.';
-    }
+    // v0.24 (F4): se o fund falhar, a remessa JÁ existe — a tela de "para onde" aparece mesmo assim (a equipe arma a conversão).
+    // Motivo interno do autofund/rota nunca vai ao cliente. Os textos antigos sobre depósito manual/como pagar saíram.
+    let fund;
+    try{ fund = await rf('/remessas/deals/'+deal.id+'/fund',{method:'POST',body:JSON.stringify({ amount_usdc:usdc, quote_set_id:_rem2Quote.quote_set_id })}); }
+    catch(e){ fund={status:'failed'}; }
+    const estado = fund.status==='failed'
+      ? '<div class="up rem-txt">Sua remessa foi registrada, mas a conversão ainda não foi armada — nossa equipe cuida disso. Você já pode transferir o valor abaixo.</div>'
+      : (fund.deferred ? '<div class="muted rem-txt">Nossa equipe confere e paga o boleto após a conversão.</div>' : '');
+    $('remInstrDetails').innerHTML =
+      'Remessa <span class="pos">#'+_esc(deal.id)+'</span> criada · '+_esc(brl(amount))+estado+
+      '<div class="rem-txt" style="margin-top:4px"><b>Próximo passo:</b> transferir o valor abaixo da sua conta bancária para a conta EFIX em seu nome.</div>';
     // M-BOLETO-UPLOAD (08/09): só afirma "anexado" se o DVP confirmou o vínculo (deal.boleto)
     if(_rem2Boleto){
       const bl = deal.boleto;
@@ -1930,8 +2087,9 @@ async function rem2Criar(){
     }
     $('rem-form').style.display='none';
     $('rem-instr').style.display='block';
+    rem2ParaOnde(deal.id, $('remParaOnde'));   // v0.24 (F4): conta principal + valor + referência + copiar
     rem2Refresh();
-  }catch(e){ $('remMsg').textContent=e.message; }
+  }catch(e){ _msg(_erroHumano(e),true); }
   finally{ b.disabled=false; b.textContent='Criar remessa'; }
 }
 const REM_ST = {open:'aberta',funded:'financiada',settled:'liquidada',closed:'encerrada',cancelado:'cancelada'}; // cancelado (09/09): decisão explícita da mesa/cliente
@@ -1958,20 +2116,26 @@ async function rem2Refresh(){
   const box = $('remDeals');
   try{
     const deals = await rf('/remessas/deals');
+    if(!Array.isArray(deals)){ box.innerHTML='<div class="empty">Não conseguimos carregar suas remessas agora.</div>'; return; }
     if(!deals.length){ box.innerHTML='<div class="empty">Nenhuma remessa ainda.</div>'; return; }
-    box.innerHTML = deals.map(d=>
-      '<div class="deal" data-deal="'+d.id+'">'+
-        '<div class="hd"><span>#'+d.id+' · '+(d.expected_currency==='BRL'?'R$ ':'')+(d.expected_amount?Number(d.expected_amount).toFixed(2):'—')+
-        (d.expected_currency==='USDC'?' USDC':'')+'</span><span class="stt">'+(REM_ST[d.status]||_esc(d.status))+
-        // (09/09) botão só em aberta/financiada — nunca liquidada/encerrada/cancelada
-        (_remCancelavel(d.status)?'<button type="button" class="mini" data-cancel="'+_esc(d.id)+'">cancelar remessa</button>':'')+
+    box.innerHTML = deals.map(d=>{
+      // v0.24 (F5): badge = título humano do acompanhamento (vermelho em atenção, verde concluída); deal da mesa = só leitura;
+      // cancelar só quando o servidor disser pode_cancelar (sem o campo: regra de antes)
+      const ac=(d.acompanhamento&&typeof d.acompanhamento==='object')?d.acompanhamento:null;
+      const badge = (ac&&ac.atual_titulo) ? _esc(ac.atual_titulo) : (REM_ST[d.status]||_esc(d.status));
+      const cls = ac ? (ac.cancelada?'':(ac.concluida?' pos':(_arr(ac.etapas).some(e=>e&&e.estado==='atencao')?' att':''))) : '';
+      const podeCancelar = d.pode_cancelar===true || (d.pode_cancelar===undefined && !d.somente_leitura && _remCancelavel(d.status));
+      return '<div class="deal" data-deal="'+d.id+'">'+
+        '<div class="hd"><span>#'+d.id+' · '+(d.expected_amount==null?'—':(d.expected_currency==='USDC'?fmtMoeda(d.expected_amount,'USDC'):(d.expected_currency==='BRL'?brl(d.expected_amount):Number(d.expected_amount).toFixed(2))))+
+        '</span><span class="stt'+cls+'">'+badge+(d.somente_leitura?' <span class="muted">· criada pela equipe</span>':'')+
+        (podeCancelar?'<button type="button" class="mini" data-cancel="'+_esc(d.id)+'">cancelar remessa</button>':'')+
         '</span></div>'+
         // (09/09) boleto anexado (quando o DVP manda d.boleto no listar)
         (d.boleto&&d.boleto.id!=null?'<div class="bol">'+_remBoletoLinha(d.boleto)+'</div>':'')+
         '<div class="det"></div>'+
-      '</div>').join('');
+      '</div>'; }).join('');
     box.querySelectorAll('[data-cancel]').forEach(b=>{ b.onclick=rem2Cancelar; });
-  }catch(e){ box.innerHTML='<div class="empty">'+_esc(e.message)+'</div>'; }
+  }catch(e){ box.innerHTML='<div class="empty">'+_esc(_erroHumano(e))+'</div>'; }
 }
 // (09/09) cancelamento self-service: confirm + motivo opcional → POST /remessas/deals/:id/cancelar.
 // O DVP só cancela sem dinheiro recebido (422 senão) e retira o payout draft da fila da mesa.
@@ -1996,21 +2160,27 @@ async function rem2Cancelar(ev){
 }
 document.addEventListener('click', async (ev)=>{
   if(ev.target.closest('[data-cancel]')) return; // (09/09) cinto extra: o botão já para a propagação
+  if(ev.target.closest('.det')) return;          // v0.24: copiar/chips/links dentro do detalhe não abrem nem fecham o card
   const card = ev.target.closest('[data-deal]'); if(!card) return;
   const det = card.querySelector('.det');
   if(det.style.display==='block'){ det.style.display='none'; return; }
   det.style.display='block'; det.textContent='carregando…';
   try{
     const d = await rf('/remessas/deals/'+card.dataset.deal);
+    // v0.24 (F5): com `acompanhamento` o detalhe vira as 5 etapas humanas (+ pagamento + boleto); sem ele, desenho de antes
+    if(d&&d.acompanhamento&&typeof d.acompanhamento==='object'){
+      det.innerHTML = rem2EtapasHtml(d.acompanhamento, d) + ((d.boleto&&d.boleto.id!=null)?'<div class="muted" style="margin-top:6px">'+_remBoletoLinha(d.boleto)+'</div>':'');
+      return;
+    }
     /* _esc em TUDO que vem da API (revisão 26/08): beneficiary_name é texto
        livre do cliente — sem escape aqui era XSS armazenado no card */
-    const dep = (d.deposits||[]).map(x=>'depósito '+_esc(x.bridge_transfer_id?x.bridge_transfer_id.slice(0,8)+'…':x.id)+': '+_esc(x.state)).join('<br>')||'sem depósitos';
-    const off = (d.offramps||[]).map(x=>'rota '+_esc(x.adapter)+': '+_esc(x.status)+(x.brl_net_expected?' · ~R$ '+Number(x.brl_net_expected).toFixed(2):'')).join('<br>')||'sem offramp';
-    const pay = (d.payouts||[]).map(x=>'payout R$ '+Number(x.amount_brl).toFixed(2)+' → '+_esc(x.beneficiary_name||'?')+': '+_esc(x.status)+(x.receipt_ref?' · '+_esc(x.receipt_ref):'')).join('<br>')||'payout ainda não criado (mesa)';
+    const dep = _arr(d.deposits).map(x=>'depósito '+_esc(x.bridge_transfer_id?x.bridge_transfer_id.slice(0,8)+'…':x.id)+': '+_esc(x.state)).join('<br>')||'sem depósitos';
+    const off = _arr(d.offramps).map(x=>'rota '+_esc(x.adapter)+': '+_esc(x.status)+(x.brl_net_expected?' · ~R$ '+Number(x.brl_net_expected).toFixed(2):'')).join('<br>')||'sem offramp';
+    const pay = _arr(d.payouts).map(x=>'payout R$ '+Number(x.amount_brl).toFixed(2)+' → '+_esc(x.beneficiary_name||'?')+': '+_esc(x.status)+(x.receipt_ref?' · '+_esc(x.receipt_ref):(x.comprovante_disponivel?' · comprovante disponível':''))).join('<br>')||'payout ainda não criado (mesa)';
     // (09/09) boleto anexado (mesmos campos do card), quando o DVP manda d.boleto no detalhe
     const bol = (d.boleto&&d.boleto.id!=null) ? '<br>'+_remBoletoLinha(d.boleto) : '';
     det.innerHTML = dep+'<br>'+off+'<br>'+pay+bol;
-  }catch(e){ det.textContent=e.message; }
+  }catch(e){ det.textContent=_erroHumano(e); }
 });
 
 let _web2 = null;
