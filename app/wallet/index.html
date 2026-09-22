@@ -262,6 +262,34 @@ tr.grp:first-child td{padding-top:6px}
 .mini.on{border-color:var(--ink);color:var(--ink)}
 .steps .stp .b.neg{border-color:var(--red);color:var(--red)}
 @media (max-width:480px){.rem-kv{grid-template-columns:1fr auto}.rem-kv .k{grid-column:1/-1}}
+/* F6 (22/09) wizard "Pagar um boleto no Brasil" — só tokens existentes; única cor literal #04130a (= .steps .stp.done .b) */
+.wz-wrap{max-width:720px}
+.wz-ind{display:flex;gap:6px;list-style:none;margin:8px 0 14px;padding:0}
+.wz-ind .wz-s{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 2px 0;border-top:2px solid var(--line-2);font-family:var(--font-m);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:center}
+.wz-ind .wz-s .t{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wz-ind .wz-s .b{width:22px;height:22px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:10px;background:var(--bg-panel)}
+.wz-ind .wz-s.run{border-top-color:var(--ink);color:var(--ink)} .wz-ind .wz-s.run .b{border-color:var(--ink);background:var(--ink);color:var(--bg-panel)}
+.wz-ind .wz-s.done{border-top-color:var(--green);color:var(--ink-2)} .wz-ind .wz-s.done .b{border-color:var(--green);background:var(--green);color:#04130a}
+.wz-ind .wz-s.go{cursor:pointer} .wz-ind .wz-s.go:hover .t{text-decoration:underline}
+.wz-h{font-family:var(--font-d);font-size:17px;letter-spacing:-.01em;margin:6px 0 4px}
+.wz-h.wz-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.wz-p{display:none}
+.wz-drop{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:96px;margin-top:12px;padding:18px 14px;border:1.5px dashed var(--line-2);border-radius:14px;background:var(--bg-raise);cursor:pointer;text-align:center}
+.wz-drop:hover,.wz-drop:focus-within{border-color:var(--ink)} .wz-drop b{font-weight:500;font-size:15px} .wz-drop .up{font-size:9px}
+.wz-vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.wz-link{display:inline-block;margin-top:14px;background:none;border:0;padding:0;color:var(--ink-2);font-size:12.5px;font-family:var(--font-d);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.wz-nota{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg-raise);font-size:12.5px;line-height:1.6;word-break:normal}
+.wz-nota:empty{display:none} .wz-nota .mini{margin:0 4px}
+.wz-fixo .fldl,.wz-fixo .fld{display:none}
+.wz-body .rem-big{font-size:clamp(22px,6vw,28px)}
+.wz-body .qd{word-break:normal}
+.wz-off .wz-body{opacity:.5;pointer-events:none}
+#wzMais{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
+#wzMais summary{cursor:pointer;list-style:none;font-family:var(--font-m);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+#wzMais summary::-webkit-details-marker{display:none} #wzMais summary::after{content:' ↓'} #wzMais[open] summary::after{content:' ↑'}
+.wz-mais-hint{text-transform:none;letter-spacing:0;color:var(--ink-3);font-size:10px}
+.wz-mais-blk{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+@media (max-width:480px){.wz-wrap .card{padding:16px 14px}.wz-ind{gap:4px}.wz-ind .wz-s{font-size:8.5px;letter-spacing:.04em}.wz-h{font-size:16px}}
 
 /* extrato consolidado (web2 + web3) */
 .crow{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -536,82 +564,141 @@ tr.grp:first-child td{padding-top:6px}
         </div>
       </section>
       <section class="view" id="view-remessas">
-        <div class="rem2col">
-          <div class="card" data-reveal>
-            <h2>Nova remessa <span class="up">boleto no Brasil · pague em € ou US$</span></h2>
-            <!-- 08/09: o lead dizia "envie USDC na rede Base" (herança do v0.3.0).
-                 O fund da wallet é HOUSE-FUNDED: o proxy não repassa from_address,
-                 o DVP arma a rota Bridge com BRIDGE_FROM_ADDRESS (carteira operacional
-                 da EFIX) e o AUTOFUND financia. USDC que o cliente mande ao to_address
-                 da Bridge NÃO casa (fica órfão) — nunca instruir depósito aqui. -->
-            <p class="rem-lead">Envie o boleto (PDF, foto ou os 47 números), veja quanto transferir em euros ou dólares e crie a remessa. Depois, transfira da sua conta bancária para a conta EFIX em seu nome — nós convertemos e pagamos o boleto. Acompanhe cada etapa em "Minhas remessas".</p>
-            <div id="rem-form">
-              <label class="fldl">Quem recebe <span class="up">(o nome impresso no boleto)</span></label>
-              <select id="remFav" class="fld"><option value="">carregando…</option></select>
-              <!-- M-BOLETO-UPLOAD (08/09): o cliente sobe o PDF do boleto; o proxy
-                   (/remessas/boletos) repassa ao DVP, que lê a linha digitável e devolve
-                   valor/vencimento/beneficiário/cotação. Self-service ⇒ a mesa confere
-                   antes de pagar; o favorecido vem do boleto, nunca de digitação livre. -->
-              <!-- F1/F2 (21/09): PDF ou FOTO (reduzida no navegador) ate 5 MB, ou a LINHA DIGITAVEL digitada.
-                   O cliente manda o que tem; o servidor decide pelo conteudo, nunca pela extensao. -->
-              <label class="fldl">Boleto a quitar <span class="up">(PDF ou foto, opcional)</span></label>
-              <input id="remBoleto" class="fld" type="file" accept="application/pdf,image/jpeg,image/png">
-              <div class="rem-ou">ou digite os 47 números do boleto</div>
-              <div class="rem-linha-row">
-                <input id="remLinha" class="fld mono" type="text" inputmode="numeric" autocomplete="off" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000" maxlength="100">
-                <button type="button" class="mini" id="remBtnLinha">Usar a linha</button>
+        <div class="wz-wrap">
+          <div class="card" id="wzCard" data-reveal>
+            <h2>Pagar um boleto no Brasil <span class="up">em euros ou dólares</span></h2>
+            <!-- F6 (22/09): 4 passos sobre os IDs/funções existentes (nenhum ID mudou de nome, só de lugar). .run = atual · .done = feito ·
+                 .go = clicável (JS). Só wzRender() decide visibilidade; as rem2* seguem donas dos dados. Sem JS, o passo 1 já aparece (display inline). -->
+            <ol class="wz-ind" id="wzInd" aria-label="Etapas">
+              <li class="wz-s run" data-s="1" aria-current="step"><span class="b">1</span><span class="t">Boleto</span></li>
+              <li class="wz-s" data-s="2"><span class="b">2</span><span class="t">Confira</span></li>
+              <li class="wz-s" data-s="3"><span class="b">3</span><span class="t">Transfira</span></li>
+              <li class="wz-s" data-s="4"><span class="b">4</span><span class="t">Acompanhe</span></li>
+            </ol>
+
+            <!-- painel da conta em €/US$ (onboarding v0.21). Fica no TOPO para a auto-abertura do rem2FiatAuto ser visível em
+                 qualquer passo (sem conta, é a 1ª coisa a resolver). Visível só com remFiatBox aberto (controlado por _fiatToggle). -->
+            <div id="wzFiatBlk" style="display:none;margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+                <span class="up">Minha conta em euros / dólares</span>
+                <button type="button" class="mini" id="remBtnFiat">Fechar ↑</button>
               </div>
-              <div id="remBoletoBox" class="qd" style="display:none"></div>
-              <label class="fldl">Valor a quitar (R$)</label>
-              <input id="remAmount" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
-              <div id="remCreditoBox" class="muted" style="display:none;margin-top:6px;font-size:12px;line-height:1.6"></div>
-              <button class="cta" id="remBtnQuote">Cotar</button>
-              <div id="remQuoteBox" style="display:none">
-                <div id="remQuoteDetails" class="qd"></div>
-                <button class="cta pri" id="remBtnCreate">Criar remessa</button>
-              </div>
-            </div>
-            <div id="rem-instr" style="display:none">
-              <div class="qd" id="remInstrDetails"></div>
-              <div class="qd" id="remParaOnde" data-paraonde-box style="display:none"></div>
-              <button class="cta" id="remBtnNova">Nova remessa</button>
-            </div>
-            <div id="remMsg" class="rem-msg"></div>
-            <div style="margin-top:14px;border-top:1px solid var(--ln,#e5e5e0);padding-top:10px">
-              <button class="mini" id="remBtnFiat">Dados para depósito fiat (IBAN) →</button>
               <div id="remFiatBox" class="qd" style="display:none;margin-top:8px"></div>
-              <button class="mini" id="remBtnFavNew" style="margin-top:8px">Cadastrar favorecido →</button>
-              <div id="remFavForm" style="display:none;margin-top:8px">
-                <label class="fldl">Nome / razão social <span class="up">(como consta no banco)</span></label>
-                <input id="favNome" class="fld" placeholder="nome completo do favorecido">
-                <label class="fldl">CPF ou CNPJ</label>
-                <input id="favDoc" class="fld mono" placeholder="somente números">
-                <label class="fldl">Chave PIX</label>
-                <input id="favPix" class="fld mono" placeholder="e-mail, telefone, CPF/CNPJ ou chave aleatória">
-                <button class="cta" id="favBtnSend">Enviar para aprovação</button>
-                <div id="favMsg" class="rem-msg"></div>
+            </div>
+
+            <div class="wz-body">
+              <!-- ══ PASSO 1 · Envie o boleto ══ -->
+              <div class="wz-p" id="wzP1" style="display:block">
+                <div class="wz-h">1 · Envie o boleto</div>
+                <div id="wzAviso" class="wz-nota"></div>
+                <p class="rem-lead">Mande o PDF ou uma foto do boleto. Lemos o valor e quem recebe na hora.</p>
+                <!-- HOUSE-FUNDED (08/09): nunca instruir depósito de USDC aqui — o fund é da casa; o cliente transfere € / US$ no passo 3.
+                     M-BOLETO-UPLOAD (08/09): o favorecido vem do boleto, nunca de digitação livre; a mesa confere antes de pagar.
+                     F1/F2 (21/09): PDF ou FOTO (reduzida no navegador) até 5 MB, ou a LINHA DIGITÁVEL. O servidor decide pelo conteúdo. -->
+                <label class="wz-drop" for="remBoleto" id="wzDrop">
+                  <b>Enviar PDF ou foto</b>
+                  <span class="up">toque ou clique para escolher · até 5 MB</span>
+                  <input id="remBoleto" class="wz-vh" type="file" accept="application/pdf,image/jpeg,image/png">
+                </label>
+                <div class="rem-ou" style="margin-top:12px">ou digite os 47 números do topo do boleto</div>
+                <div class="rem-linha-row">
+                  <input id="remLinha" class="fld mono" type="text" inputmode="numeric" autocomplete="off" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000" maxlength="100">
+                  <button type="button" class="mini" id="remBtnLinha">Usar a linha</button>
+                </div>
+                <div id="wzP1nota" class="wz-nota"></div>
+                <button type="button" class="wz-link" id="wzSemBoleto">Não tenho o boleto agora — quero informar só o valor →</button>
               </div>
-              <div id="favPend" style="margin-top:6px"></div>
+
+              <!-- ══ PASSO 2 · Confira e veja quanto enviar ══ -->
+              <div class="wz-p" id="wzP2">
+                <div class="wz-h">2 · Confira e veja quanto enviar</div>
+                <div id="remBoletoBox" class="qd" style="display:none;margin-top:10px"></div>
+                <div id="wzSemBoletoNota" class="wz-nota" style="display:none">Sem boleto por enquanto: informe o valor em reais e, se souber, quem recebe. Nossa equipe combina o pagamento com você.</div>
+                <!-- F7(f): quem recebe. Escondido (wzRender) quando o boleto trouxe allowlist_id; senão, select + busca pelo nome impresso. -->
+                <div id="wzFavBox">
+                  <label class="fldl" for="remFav">Quem recebe <span class="up">(o nome impresso no boleto)</span></label>
+                  <select id="remFav" class="fld"><option value="">carregando…</option></select>
+                  <div class="rem-ou" style="margin-top:8px">Não está na lista? Digite o nome impresso no boleto</div>
+                  <div class="rem-linha-row">
+                    <input id="wzFavBusca" class="fld" type="text" autocomplete="off" maxlength="60" placeholder="nome de quem recebe">
+                    <button type="button" class="mini" id="wzFavBuscaBtn">Buscar</button>
+                  </div>
+                  <div id="wzFavBuscaMsg" class="muted" style="font-size:12px;margin-top:4px;line-height:1.6"></div>
+                </div>
+                <!-- valor: com boleto lido COM valor, .wz-fixo esconde rótulo+campo (o valor já está grande no resumo) -->
+                <div id="wzValorBox">
+                  <label class="fldl" for="remAmount">Valor a pagar (R$)</label>
+                  <input id="remAmount" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
+                </div>
+                <div id="remCreditoBox" class="muted" style="display:none;margin-top:6px;font-size:12px;line-height:1.6"></div>
+                <button class="cta pri" id="remBtnQuote">Ver quanto enviar →</button>
+                <div id="remQuoteBox" style="display:none">
+                  <div id="remQuoteDetails" class="qd"></div>
+                  <button class="cta pri" id="remBtnCreate">Criar remessa →</button>
+                </div>
+                <button type="button" class="wz-link" id="wzVoltar1">← Trocar boleto</button>
+              </div>
+
+              <!-- ══ PASSO 3 · Transfira do seu banco ══ -->
+              <div class="wz-p" id="wzP3">
+                <div class="wz-h">3 · Transfira do seu banco</div>
+                <div id="rem-instr">
+                  <div class="qd" id="remInstrDetails"></div>
+                  <div class="qd" id="remParaOnde" data-paraonde-box style="display:none"></div>
+                </div>
+                <button class="cta pri" id="wzBtnAcompanhar">Acompanhar esta remessa →</button>
+                <button type="button" class="wz-link" id="remBtnNova">Pagar outro boleto</button>
+              </div>
+
+              <!-- ══ PASSO 4 · Acompanhe ══ -->
+              <div class="wz-p" id="wzP4">
+                <div class="wz-h wz-row">4 · Acompanhe <button type="button" class="mini" id="remBtnRef">atualizar</button></div>
+                <p class="rem-lead">Toque em uma remessa para ver as etapas.</p>
+                <div id="remDeals"><div class="empty">—</div></div>
+                <button class="cta pri" id="wzBtnNovo">Pagar um boleto →</button>
+              </div>
             </div>
-          </div>
-          <div class="card" data-reveal style="animation-delay:.08s">
-            <h2>Minhas remessas <button class="mini" id="remBtnRef">atualizar</button></h2>
-            <div id="remDeals"><div class="empty">—</div></div>
-          </div>
-          <!-- Operação programada (26/08): pedido do cliente nasce 'solicitada';
-               a mesa aprova antes de ligar as fatias automáticas (regulatório) -->
-          <div class="card" data-reveal style="animation-delay:.12s">
-            <h2>Operação programada <span class="up">alvo único · fatias automáticas</span></h2>
-            <div id="opBox"><div class="empty">—</div></div>
-            <div id="opForm" style="display:none">
-              <p class="rem-lead">Para valores maiores: defina o alvo total em reais e, após a aprovação da mesa, cada depósito seu na sua conta fiat vira uma fatia diária automática até completar o alvo — sem criar remessa a remessa.</p>
-              <label class="fldl">Alvo total (R$)</label>
-              <input id="opAlvo" class="fld mono" type="number" min="100" step="0.01" placeholder="0,00">
-              <label class="fldl">Favorecido (opcional — pode definir depois)</label>
-              <select id="opFav" class="fld"><option value="">— definir depois —</option></select>
-              <button class="cta pri" id="opBtnCriar">Solicitar operação</button>
-              <div id="opMsg" class="rem-msg"></div>
-            </div>
+
+            <div id="remMsg" class="rem-msg" aria-live="polite"></div>
+
+            <!-- ══ MAIS OPÇÕES (recolhido) ══ -->
+            <details id="wzMais">
+              <summary>Mais opções <span class="wz-mais-hint">conta em euros/dólares · cadastrar quem recebe · operação programada</span></summary>
+              <div class="wz-mais-blk">
+                <div class="up">Minha conta em euros / dólares</div>
+                <div class="rem-txt muted" style="margin:4px 0 8px">Dados da conta EFIX em seu nome para transferir (IBAN, conta, banco) e o que falta para ativá-la.</div>
+                <button type="button" class="mini" id="wzBtnFiatMais">Ver dados da conta →</button>
+              </div>
+              <div class="wz-mais-blk">
+                <div class="up">Cadastrar quem recebe</div>
+                <button type="button" class="mini" id="remBtnFavNew" style="margin-top:8px">Cadastrar favorecido →</button>
+                <div id="remFavForm" style="display:none;margin-top:8px">
+                  <label class="fldl">Nome / razão social <span class="up">(como consta no banco)</span></label>
+                  <input id="favNome" class="fld" placeholder="nome completo do favorecido">
+                  <label class="fldl">CPF ou CNPJ</label>
+                  <input id="favDoc" class="fld mono" placeholder="somente números">
+                  <label class="fldl">Chave PIX</label>
+                  <input id="favPix" class="fld mono" placeholder="e-mail, telefone, CPF/CNPJ ou chave aleatória">
+                  <button class="cta" id="favBtnSend">Enviar para aprovação</button>
+                  <div id="favMsg" class="rem-msg"></div>
+                </div>
+                <div id="favPend" style="margin-top:6px"></div>
+              </div>
+              <!-- Operação programada (26/08): pedido nasce 'solicitada'; a mesa aprova antes de ligar as fatias (regulatório) -->
+              <div class="wz-mais-blk">
+                <div class="up">Operação programada <span style="letter-spacing:.06em">· valores maiores · fatias automáticas</span></div>
+                <div id="opBox" style="margin-top:8px"><div class="empty">—</div></div>
+                <div id="opForm" style="display:none">
+                  <p class="rem-lead">Para valores maiores: defina o alvo total em reais e, após a aprovação da mesa, cada depósito seu na sua conta fiat vira uma fatia diária automática até completar o alvo — sem criar remessa a remessa.</p>
+                  <label class="fldl">Alvo total (R$)</label>
+                  <input id="opAlvo" class="fld mono" type="number" min="100" step="0.01" placeholder="0,00">
+                  <label class="fldl">Favorecido (opcional — pode definir depois)</label>
+                  <select id="opFav" class="fld"><option value="">— definir depois —</option></select>
+                  <button class="cta pri" id="opBtnCriar">Solicitar operação</button>
+                  <div id="opMsg" class="rem-msg"></div>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
       </section>
@@ -1475,6 +1562,10 @@ async function renderActivity(elId, n, chipsId){
 
 /* ═══ REMESSAS NATIVA (BRL-first via /remessas/* do backend; browser nunca fala com o DVP) ═══ */
 let _rem2Init=false, _rem2Quote=null, _rem2Boleto=null; // _rem2Boleto (08/09): {id, valor_brl} do PDF lido
+// F6 (22/09) wizard — estado só de DESENHO; os dados continuam em _rem2Boleto/_rem2Quote/_rem2Arq
+let _wzPasso=1, _wzSemBoleto=false, _wzFavCasado=null /* {id,name} */, _wzBen=null /* {nome,doc} do boleto */, _wzDealId=null, _wzTemDeals=false;
+const WZ_TXT_SEM_BOLETO='Não tenho o boleto agora — quero informar só o valor →';
+const WZ_TXT_SEM_BOLETO_FOTO='Não consigo digitar os números — informar só o valor →';
 async function rf(path, opts={}){
   // opts.tolerar (08/09): lista de status HTTP cujo corpo volta em vez de virar erro.
   // (O DVP devolve boleto duplicado com 200 + duplicado:true; 409 fica tolerado por compatibilidade.)
@@ -1494,13 +1585,19 @@ async function initRemessas2(){
   $('remBoleto').onchange=rem2Boleto; // M-BOLETO-UPLOAD (08/09)
   $('remBtnLinha').onclick=rem2Linha;  // F2 (21/09): linha digitável como alternativa ao arquivo
   $('remLinha').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); rem2Linha(); } });
-  $('remBtnNova').onclick=()=>{ _rem2Quote=null; _rem2Boleto=null; _rem2Arq=null;
-    $('remAmount').value=''; $('remQuoteBox').style.display='none';
-    $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
-    $('rem-instr').style.display='none'; $('rem-form').style.display='block'; _msg('');
-    if($('remParaOnde')){ $('remParaOnde').innerHTML=''; $('remParaOnde').style.display='none'; } };
+  $('remBtnNova').onclick=wzReset;   // F6 (22/09): "Pagar outro boleto" volta ao passo 1 zerando tudo
+  // F6 (22/09) wizard: botões dos passos + busca de favorecido pelo nome (F7f) + valor editado invalida a cotação
+  $('wzBtnNovo').onclick=wzReset; $('wzBtnAcompanhar').onclick=()=>wzIr(4,{abrir:_wzDealId}); $('wzSemBoleto').onclick=wzSemBoleto; $('wzVoltar1').onclick=wzVoltar1;
+  $('wzFavBuscaBtn').onclick=()=>wzFavBuscar(); $('wzFavBusca').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); wzFavBuscar(); } });
+  $('remAmount').addEventListener('input',wzValorMudou); $('wzBtnFiatMais').onclick=wzFiatAbrir;
   // v0.24 (F4): chips de moeda e "tentar de novo / ver dados" do painel "para onde" (delegado; registrado uma vez)
   document.addEventListener('click', (ev)=>{
+    // F6 (22/09): navegação do wizard (delegado: os botões nascem dentro de HTML redesenhado — aviso, nota, busca, "para onde")
+    const g=ev.target.closest('[data-wz-go]'); if(g){ wzIr(+g.dataset.wzGo); return; }
+    const pil=ev.target.closest('#wzInd .wz-s.go'); if(pil){ if(pil.dataset.s==='4') wzIr(4); else if(pil.dataset.s==='1') wzVoltar1(); return; }
+    if(ev.target.closest('[data-wz-fiat]')){ wzFiatAbrir(); return; }
+    const mo=ev.target.closest('[data-wz-mais]'); if(mo){ $('wzMais').open=true;
+      if(mo.dataset.wzMais==='fav'){ $('remFavForm').style.display='block'; if(_wzBen){ if(!$('favNome').value) $('favNome').value=_wzBen.nome; if(!$('favDoc').value) $('favDoc').value=String(_wzBen.doc||'').replace(/\D/g,''); } $('favNome').focus(); } return; }
     const ch=ev.target.closest('[data-moeda]');
     if(ch){ const box=ch.closest('[data-paraonde-box]'); if(!box||!box._dados) return; try{ localStorage.setItem('efix_rem_moeda',ch.dataset.moeda); }catch(_e){}
       box.innerHTML=rem2ParaOndeHtml(box._dados, box._dealId, ch.dataset.moeda); return; }
@@ -1513,16 +1610,20 @@ async function initRemessas2(){
     f.style.display=f.style.display==='none'?'block':'none'; };
   $('favBtnSend').onclick=rem2FavRequest;
   $('opBtnCriar').onclick=rem2OpCriar;
-  if(!EfixAuth.isLoggedIn()){ $('remMsg').textContent='Entre com sua conta para usar remessas.'; return; }
+  if(!EfixAuth.isLoggedIn()){ $('remMsg').textContent='Entre com sua conta para pagar um boleto.'; $('wzCard').classList.add('wz-off'); return; }
   try{
-    const favs = await rf('/remessas/allowlist');
-    const favOpts = favs.map(f=>'<option value="'+f.id+'" data-name="'+_esc(f.name)+'">'+_esc(f.name)+' ('+_esc(f.doc_root)+')</option>').join('');
-    $('remFav').innerHTML = '<option value="">— selecionar —</option>'+favOpts;
+    // F7 (22/09): DVP novo devolve só os favorecidos DO cliente (+ origem 'meu'); DVP/proxy antigos, a lista de sempre — mesmo desenho
+    const favs = _arr(await rf('/remessas/allowlist'));
+    const favOpts = favs.map(f=>'<option value="'+_esc(f.id)+'" data-name="'+_esc(f.name)+'" data-origem="'+_esc(f.origem||'meu')+'">'+_esc(f.name)+(f.doc_root?' ('+_esc(f.doc_root)+')':'')+'</option>').join('');
+    $('remFav').innerHTML = '<option value="">'+(favs.length?'— escolher —':'— busque pelo nome abaixo —')+'</option>'+favOpts;
     $('opFav').innerHTML = '<option value="">— definir depois —</option>'+favOpts;
+    // boleto casado ANTES da lista chegar: a opção pré-selecionada não pode sumir com o redesenho do select
+    if(_wzFavCasado){ wzFavGarantirOpcao(_wzFavCasado.id,_wzFavCasado.name,'','meu'); $('remFav').value=_wzFavCasado.id; }
+    wzRender();
     rem2Refresh(); rem2FavPend(); rem2Ops();
     rem2FiatAuto(); // v0.21: sem conta fiat, o painel abre sozinho mostrando o que falta
     rem2Credito();  // v0.24 (F3): crédito de remessas anteriores ao entrar na aba (silencioso em erro/404)
-  }catch(e){ _msg(_erroHumano(e),true); }
+  }catch(e){ _msg(_erroHumano(e),true); if(e&&(e.status===401||e.status===403)) $('wzCard').classList.add('wz-off'); } // só sessão/beta travam a aba; erro de rede não
 }
 const _esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let _fiatPoll=null, _fiatGen=0;
@@ -1542,7 +1643,8 @@ const _urlHttps=u=>/^https:\/\/\S+$/i.test(String(u||''));
 const _fiatEmAnalise=d=>!d.tem_conta&&(d.onboarding?d.onboarding.estado==='em_analise':!!d.em_analise);
 // v0.21: o painel pode abrir sozinho — o rótulo do toggle diz o que o clique faz (aberto ⇒ fecha), senão o cliente
 // que voltou do Persona não acha "fechar" em lugar nenhum (revisão 14/09)
-const _fiatToggle=aberto=>{ const b=$('remBtnFiat'); if(b) b.textContent=aberto?'Fechar painel ↑':'Dados para depósito fiat (IBAN) →'; };
+// F6 (22/09): o painel vive no topo do card (#wzFiatBlk) e só aparece aberto — rem2Fiat/rem2FiatAuto já chamam _fiatToggle(true/false)
+const _fiatToggle=aberto=>{ const b=$('remBtnFiat'); if(b) b.textContent=aberto?'Fechar ↑':'Ver dados da conta →'; const blk=$('wzFiatBlk'); if(blk) blk.style.display=aberto?'block':'none'; };
 async function rem2Fiat(){
   const box=$('remFiatBox');
   if(box.style.display==='block'){ box.style.display='none'; clearTimeout(_fiatPoll); _fiatGen++; _fiatToggle(false); return; }
@@ -1733,7 +1835,7 @@ async function rem2Ops(){
       (ativa.status==='solicitada'
         ? '<div class="muted">Recebemos seu pedido. A mesa revisa e libera — você não precisa fazer nada agora.</div>'
         : '<div style="height:8px;border-radius:5px;background:var(--line,#e5e5e0);overflow:hidden;margin:6px 0"><i style="display:block;height:100%;width:'+pct.toFixed(1)+'%;background:var(--green,#178a4c)"></i></div>'+
-          '<div class="muted">R$ '+feito.toFixed(2)+' convertidos ('+pct.toFixed(1)+'%) · '+(ativa.fatias||0)+' fatia(s). Cada depósito seu na conta fiat vira fatia automática — acompanhe em "Minhas remessas".</div>');
+          '<div class="muted">R$ '+feito.toFixed(2)+' convertidos ('+pct.toFixed(1)+'%) · '+(ativa.fatias||0)+' fatia(s). Cada depósito seu na conta fiat vira fatia automática — acompanhe no passo "4 · Acompanhe".</div>');
   }catch(e){ box.innerHTML='<div class="empty">'+_esc(e.message)+'</div>'; }
 }
 async function rem2OpCriar(){
@@ -1763,19 +1865,19 @@ async function rem2Boleto(){
   _rem2Arq=null;
   // arquivo novo: nada do boleto anterior (valor preenchido, cotação) pode sobrar
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
-  _rem2Boleto=null; box.style.display='none'; box.innerHTML='';
-  if(!f) return;
+  _rem2Boleto=null; box.style.display='none'; box.innerHTML=''; $('wzP1nota').innerHTML=''; wzLimparFav(); _wzSemBoleto=false;
+  if(!f){ wzRender(); return; }
   const ehPdf = f.type==='application/pdf' || /\.pdf$/i.test(f.name);
   const ehFoto = /^image\/(jpeg|png)$/.test(f.type) || /\.(jpe?g|png)$/i.test(f.name);
   if(!ehPdf && !ehFoto){ $('remMsg').textContent='Envie o boleto em PDF ou uma foto (JPG/PNG).'; inp.value=''; return; }
   $('remMsg').textContent='';
-  box.style.display='block'; box.textContent=ehFoto?'preparando a foto…':'lendo o boleto…';
+  $('wzP1nota').textContent=ehFoto?'Preparando a foto…':'Lendo o boleto…';   // F6: progresso na nota do passo 1
   try{
     // F1 (21/09): foto do celular pode ter 4-12 MB — reduzimos no navegador (lado maior 1800 px, JPEG 0,85)
     // ANTES de mandar; PDF vai como esta. Teto do servidor: 5 MB.
     const blob = ehFoto ? await _rem2ReduzirFoto(f) : f;
-    if(blob.size>5*1024*1024){ $('remMsg').textContent=ehPdf?'PDF grande demais (máx. 5 MB). Digite a linha digitável abaixo.':'Foto grande demais mesmo reduzida (máx. 5 MB). Tente outra foto ou digite a linha digitável.'; inp.value=''; box.style.display='none'; return; }
-    box.textContent='lendo o boleto…';
+    if(blob.size>5*1024*1024){ $('remMsg').textContent=ehPdf?'PDF grande demais (máx. 5 MB). Digite a linha digitável abaixo.':'Foto grande demais mesmo reduzida (máx. 5 MB). Tente outra foto ou digite a linha digitável.'; inp.value=''; $('wzP1nota').innerHTML=''; return; }
+    $('wzP1nota').textContent='Lendo o boleto…';
     const b64 = await new Promise((res,rej)=>{ const rd=new FileReader();
       rd.onload=()=>res(String(rd.result).replace(/^data:[^,]*,/,''));
       rd.onerror=()=>rej(new Error('Não consegui ler o arquivo.'));
@@ -1792,37 +1894,33 @@ async function rem2Boleto(){
     if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
     if(d.duplicado && d.deal_id!=null){
       inp.value='';
-      box.innerHTML='Este boleto já está ligado à remessa <span class="pos">#'+_esc(d.deal_id)+'</span> — acompanhe em "Minhas remessas". Para outra remessa, escolha outro arquivo.';
+      $('wzP1nota').innerHTML='Este boleto já está na remessa <b>#'+_esc(d.deal_id)+'</b>. <button type="button" class="mini" data-wz-go="4">Acompanhar →</button> Para pagar outro boleto, envie outro arquivo.';
       return;
     }
-    const ben = d.beneficiario||{};
     const avisos = (Array.isArray(d.avisos)?d.avisos:[]).map(a=>'<div style="color:var(--warn,#b45309)">⚠ '+_esc(a)+'</div>').join('');
     const dup = d.duplicado?'<div style="color:var(--ink-3)">este arquivo já havia sido enviado — reaproveitado (boleto #'+_esc(d.id)+')</div>':'';
+    // F6 (22/09): resumo humano no passo 2 (número grande + vence/quem recebe/banco); a cotação completa vem logo abaixo por rem2Quote
+    // (saiu a cotação compacta do box). F7(d)/(f): allowlist_id ⇒ pré-seleciona e esconde "Quem recebe"; sem id ⇒ select + busca pelo nome.
     if(d.status==='lido' && d.valor_brl!=null){
       _rem2Boleto={id:d.id, valor_brl:Number(d.valor_brl)};
-      box.innerHTML =
-        '<span class="pos">Boleto lido ✓</span> · '+brl(d.valor_brl)+
-        ' · vence '+_esc(_venc(d.vencimento))+
-        (ben.nome?' · beneficiário: '+_esc(ben.nome)+(ben.doc?' ('+_esc(_docFmt(ben.doc))+')':''):'')+
-        (d.referencia?' · '+_esc(d.referencia):'')+
-        (d.banco?'<br><span style="color:var(--ink-3)">banco: '+_esc(d.banco)+'</span>':'')+
-        (ben.na_allowlist===false?'<div style="color:var(--warn,#b45309)">quem recebe será confirmado pela nossa equipe antes do pagamento</div>':'')+
-        (d.cotacao&&d.cotacao.usdc_needed!=null?rem2CotacaoHtml(d.cotacao,{compacto:true}):'')+
-        avisos+dup;
+      box.innerHTML=wzBoletoResumoHtml(d,false); $('wzP1nota').innerHTML=''; wzBoletoCasado(d);
       $('remAmount').value = Number(d.valor_brl).toFixed(2);
-      rem2Quote();
+      wzIr(2); rem2Quote();
     } else {
       _rem2Boleto={id:d.id};
       const foto = d.mime && /^image\//.test(d.mime);
-      box.innerHTML = (d.status==='lido_valor_aberto'
-        ? 'Boleto lido, mas com <b>valor em aberto</b>. Digite o valor a pagar em R$; nossa equipe confere.'
-        : (foto ? 'Foto recebida ✓. Agora <b>digite os 47 números do topo do boleto</b> no campo acima e clique em "Usar a linha": lemos valor e vencimento na hora. A foto fica guardada para nossa equipe conferir.'
-                : 'Não consegui ler o boleto automaticamente. <b>Digite os 47 números do topo do boleto</b> no campo acima e clique em "Usar a linha": lemos valor e vencimento na hora. O arquivo fica guardado para nossa equipe conferir.'))+avisos+dup;
-      if(!foto && d.status!=='lido_valor_aberto') $('remLinha').focus(); else $('remAmount').focus();
+      if(d.status==='lido_valor_aberto'){
+        box.innerHTML=wzBoletoResumoHtml(d,false); $('wzP1nota').innerHTML=''; wzBoletoCasado(d); wzIr(2); $('remAmount').focus();
+      } else {
+        // foto/ilegível: fica no passo 1 — a linha digitável (campo acima) vira o MESMO boleto no servidor (revisão 21/09);
+        // "Não consigo digitar os números — informar só o valor →" (wzRender) leva ao passo 2 com o arquivo guardado
+        $('wzP1nota').innerHTML=(foto
+          ? 'Foto guardada ✓ (boleto #'+_esc(d.id)+'). Agora digite os <b>47 números do topo do boleto</b> no campo acima e toque em “Usar a linha” — lemos valor e vencimento na hora. A foto fica com a nossa equipe para conferir.'
+          : 'Arquivo guardado ✓ (boleto #'+_esc(d.id)+'), mas não conseguimos ler o boleto automaticamente. Digite os <b>47 números do topo do boleto</b> no campo acima e toque em “Usar a linha”. O arquivo fica com a nossa equipe para conferir.')+avisos+dup;
+        wzRender(); $('remLinha').focus();
+      }
     }
-    box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover arquivo</button></div>';
-    $('remBoletoRm').onclick=rem2BoletoRm;
-  }catch(e){ box.style.display='none'; box.innerHTML=''; inp.value=''; $('remMsg').textContent=e.message; }
+  }catch(e){ $('wzP1nota').innerHTML=''; box.style.display='none'; box.innerHTML=''; inp.value=''; $('remMsg').textContent=e.message; }
 }
 // revisão 21/09: o arquivo recém-enviado fica em memória para a linha digitada ir JUNTO (mesmo boleto no servidor,
 // foto preservada) em vez de criar um segundo boleto e deixar a foto órfã. Zera ao remover/nova remessa.
@@ -1849,8 +1947,8 @@ async function rem2Linha(){
   const raw=($('remLinha').value||''), dig=raw.replace(/\D/g,''), box=$('remBoletoBox');
   if(dig.length!==47){ $('remMsg').textContent=dig.length?('A linha digitável tem 47 números (você digitou '+dig.length+').'):'Digite os 47 números do topo do boleto.'; $('remLinha').focus(); return; }
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
-  _rem2Boleto=null; $('remMsg').textContent='';
-  box.style.display='block'; box.textContent='conferindo a linha digitável…';
+  _rem2Boleto=null; $('remMsg').textContent=''; box.style.display='none'; box.innerHTML=''; wzLimparFav(); _wzSemBoleto=false;
+  $('wzP1nota').textContent='Conferindo a linha digitável…';   // F6: progresso na nota do passo 1
   b.disabled=true; _rem2Enviando=true;
   try{
     // arquivo recém-enviado vai junto: no servidor vira o MESMO boleto (linha anexada à foto/PDF), nunca um segundo
@@ -1859,27 +1957,21 @@ async function rem2Linha(){
     const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify(corpo)});
     if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
     if(d.duplicado && d.deal_id!=null){
-      box.innerHTML='Este boleto já está ligado à remessa <span class="pos">#'+_esc(d.deal_id)+'</span> — acompanhe em "Minhas remessas".';
+      $('wzP1nota').innerHTML='Este boleto já está na remessa <b>#'+_esc(d.deal_id)+'</b>. <button type="button" class="mini" data-wz-go="4">Acompanhar →</button> Para pagar outro boleto, digite outra linha.';
       return;
     }
-    const avisos = (Array.isArray(d.avisos)?d.avisos:[]).map(a=>'<div style="color:var(--warn,#b45309)">⚠ '+_esc(a)+'</div>').join('');
+    // F6 (22/09): resumo humano no passo 2 (número grande + vence/quem recebe/banco) e favorecido casado (F7d/f);
+    // a cotação completa vem por rem2Quote logo abaixo — saíram a cotação compacta e o "Selecione acima quem recebe".
     if(d.status==='lido' && d.valor_brl!=null){
       _rem2Boleto={id:d.id, valor_brl:Number(d.valor_brl)};
-      box.innerHTML='<span class="pos">Linha digitável conferida ✓</span> · '+brl(d.valor_brl)+' · vence '+_esc(_venc(d.vencimento))+
-        (d.banco?' · '+_esc(d.banco):'')+
-        (d.linha_anexada?'<div style="color:var(--ink-3)">arquivo enviado antes ficou guardado neste mesmo boleto ✓</div>':'')+
-        '<div style="color:var(--ink-3)">Selecione acima <b>quem recebe</b> este boleto (o nome impresso nele). Se não estiver na lista, cadastre o favorecido. Nossa equipe confirma no banco antes de pagar.</div>'+
-        (d.cotacao&&d.cotacao.usdc_needed!=null?rem2CotacaoHtml(d.cotacao,{compacto:true}):'')+avisos;
+      box.innerHTML=wzBoletoResumoHtml(d,true); $('wzP1nota').innerHTML=''; wzBoletoCasado(d);
       $('remAmount').value = Number(d.valor_brl).toFixed(2);
-      rem2Quote();
+      wzIr(2); rem2Quote();
     } else {
       _rem2Boleto={id:d.id};
-      box.innerHTML='Linha conferida, mas o boleto está com <b>valor em aberto</b>. Digite o valor a pagar em R$; nossa equipe confere.'+avisos;
-      $('remAmount').focus();
+      box.innerHTML=wzBoletoResumoHtml(d,true); $('wzP1nota').innerHTML=''; wzBoletoCasado(d); wzIr(2); $('remAmount').focus();
     }
-    box.innerHTML += '<div style="margin-top:6px"><button type="button" class="mini" id="remBoletoRm">remover boleto</button></div>';
-    $('remBoletoRm').onclick=rem2BoletoRm;
-  }catch(e){ box.style.display='none'; box.innerHTML=''; $('remMsg').textContent=_rem2ErroLinha(e.message); }
+  }catch(e){ $('wzP1nota').innerHTML=''; box.style.display='none'; box.innerHTML=''; $('remMsg').textContent=_rem2ErroLinha(e.message); }
   finally{ b.disabled=false; _rem2Enviando=false; }
 }
 // erro do validador em linguagem de gente: "DV do campo 2 nao confere" => qual bloco conferir
@@ -1894,6 +1986,110 @@ function _rem2ErroLinha(msg){
 function rem2BoletoRm(){
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null){ $('remAmount').value=''; _rem2Quote=null; $('remQuoteBox').style.display='none'; }
   _rem2Boleto=null; _rem2Arq=null; $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
+  $('wzP1nota').innerHTML='';
+}
+// ═══ F6 (22/09) — WIZARD "Pagar um boleto no Brasil": 4 passos sobre os IDs/funções existentes.
+// Só wzRender decide o que está visível; as rem2* seguem donas dos dados (_rem2Boleto/_rem2Quote/_rem2Arq) e do conteúdo dos
+// blocos. Zero POST novo: o único fetch novo é GET /remessas/allowlist?q= (F7f). Prefixo wz em IDs/classes/funções/estado. ═══
+function wzRender(){
+  const p=_wzPasso, temDeal=_wzDealId!=null;
+  for(let i=1;i<=4;i++){ const el=$('wzP'+i); if(el) el.style.display=(i===p)?'block':'none'; }
+  document.querySelectorAll('#wzInd .wz-s').forEach(el=>{ const n=+el.dataset.s;
+    el.classList.toggle('run', n===p); if(n===p) el.setAttribute('aria-current','step'); else el.removeAttribute('aria-current');
+    el.classList.toggle('done', n<p && (p<4 || temDeal));   // quem só veio acompanhar não vê 1-3 "feitos"
+    el.classList.toggle('go', (n===4 && p!==4 && _wzTemDeals) || (n===1 && p===2)); });   // 2 e 3 nunca são clicáveis
+  const fixo=!!(_rem2Boleto && _rem2Boleto.valor_brl!=null), cotado=!!(_rem2Quote && _rem2Quote.usdc_needed!=null);
+  const vb=$('wzValorBox'); if(vb) vb.classList.toggle('wz-fixo', fixo);   // o valor do boleto já está grande no resumo
+  const fb=$('wzFavBox'); if(fb) fb.style.display=_wzFavCasado?'none':'block';   // F7: boleto casou ⇒ "Quem recebe" some
+  const box=$('remBoletoBox'); if(box) box.style.display=(_rem2Boleto && box.innerHTML.trim())?'block':'none';
+  const sn=$('wzSemBoletoNota'); if(sn) sn.style.display=(_wzSemBoleto && !_rem2Boleto)?'block':'none';
+  const bq=$('remBtnQuote'); if(bq) bq.style.display=cotado?'none':'block';   // UMA ação: "Ver quanto enviar" OU "Criar remessa"
+  const v1=$('wzVoltar1'); if(v1) v1.textContent=_rem2Boleto?'← Trocar boleto':'← Voltar';
+  const sb=$('wzSemBoleto'); if(sb) sb.textContent=(_rem2Boleto && !fixo)?WZ_TXT_SEM_BOLETO_FOTO:WZ_TXT_SEM_BOLETO;
+}
+async function wzIr(n, opt){
+  opt=opt||{}; _wzPasso=Math.min(4,Math.max(1,n|0)); wzRender();
+  const card=$('wzCard'); if(card && card.getBoundingClientRect().top<0) card.scrollIntoView({behavior:'smooth',block:'start'});
+  if(_wzPasso===4){ await rem2Refresh();
+    // abre as etapas da remessa pedida pelo handler global do card (clique simulado); se a lista falhou, nada abre (sem erro)
+    if(opt.abrir!=null){ const c=document.querySelector('#remDeals [data-deal="'+String(opt.abrir).replace(/[^\w-]/g,'')+'"]');
+      if(c){ const det=c.querySelector('.det'); if(det && det.style.display!=='block') c.click(); } } }
+}
+function wzLimparFav(){ _wzFavCasado=null; _wzBen=null; const s=$('remFav'); if(s) s.value='';
+  const q=$('wzFavBusca'); if(q) q.value=''; const m=$('wzFavBuscaMsg'); if(m) m.textContent=''; }
+// "← Trocar boleto" / "← Voltar": tira o boleto e tudo que veio dele (valor, cotação, favorecido, modo sem boleto)
+function wzVoltar1(){ rem2BoletoRm(); _rem2Quote=null; $('remQuoteBox').style.display='none'; $('remAmount').value='';
+  _wzSemBoleto=false; wzLimparFav(); $('wzP1nota').innerHTML=''; _msg(''); wzIr(1); }
+// "Pagar outro boleto" / "Pagar um boleto →": zera tudo (corpo do antigo handler de #remBtnNova + estado do wizard)
+function wzReset(){
+  _rem2Quote=null; _rem2Boleto=null; _rem2Arq=null; _wzDealId=null; _wzSemBoleto=false; wzLimparFav();
+  $('remAmount').value=''; $('remQuoteBox').style.display='none'; $('remBtnCreate').style.display='block';
+  $('remBoleto').value=''; $('remLinha').value=''; $('remBoletoBox').style.display='none'; $('remBoletoBox').innerHTML='';
+  $('remInstrDetails').innerHTML=''; $('remParaOnde').innerHTML=''; $('remParaOnde').style.display='none';
+  $('wzP1nota').innerHTML=''; _msg(''); wzIr(1);
+}
+// "Não tenho o boleto agora": passo 2 sem boleto. Um arquivo já guardado (foto/ilegível) fica e vai como boleto_id.
+function wzSemBoleto(){
+  _wzSemBoleto=true; _rem2Quote=null; $('wzP1nota').innerHTML=''; $('remAmount').value=''; $('remQuoteBox').style.display='none';
+  if(_rem2Boleto) $('remBoletoBox').innerHTML='<div class="up">Arquivo guardado ✓ · boleto #'+_esc(_rem2Boleto.id)+'</div><div class="rem-txt">Nossa equipe lê o boleto. Digite abaixo o valor a pagar.</div>';
+  wzIr(2); $('remAmount').focus();
+}
+// editar o valor invalida a cotação — nunca criar com a cotação de outro valor. Set programático (.value=) não dispara 'input'.
+function wzValorMudou(){ if(_rem2Quote){ _rem2Quote=null; $('remQuoteBox').style.display='none'; wzRender(); } }
+// abre o painel da conta em €/US$ (topo do card) se estiver fechado e rola até ele
+function wzFiatAbrir(){ if($('remFiatBox').style.display!=='block') rem2Fiat(); const blk=$('wzFiatBlk'); if(blk){ blk.style.display='block'; blk.scrollIntoView({behavior:'smooth',block:'start'}); } }
+const _wzNorm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+// resumo do boleto lido (passo 2). d = respostaBoleto do DVP. Tudo do servidor passa por _esc.
+function wzBoletoResumoHtml(d, origemLinha){
+  const ben=(d.beneficiario&&typeof d.beneficiario==='object')?d.beneficiario:{}, casado=d.allowlist_id!=null;
+  const kv=(k,v)=> v?'<div class="k">'+k+'</div><div class="v">'+v+'</div><div></div>':'';
+  const avisos=(Array.isArray(d.avisos)?d.avisos:[]).map(a=>'<div style="color:var(--warn,#b45309)">⚠ '+_esc(a)+'</div>').join('');
+  const quem=ben.nome?_esc(ben.nome)+(ben.doc?' <span class="muted">'+_esc(_docFmt(ben.doc))+'</span>':'')+(casado?' <span class="pos">· já cadastrado ✓</span>':''):'';
+  return '<div class="up">'+(origemLinha?'Linha digitável conferida ✓':'Boleto lido ✓')+'</div>'+
+    (d.valor_brl!=null?'<div class="rem-big">'+_esc(brl(d.valor_brl))+'</div>':'')+
+    '<div class="rem-kv">'+kv('Vence',d.vencimento?_esc(_venc(d.vencimento)):'')+kv('Quem recebe',quem)+kv('Banco',d.banco?_esc(d.banco):'')+'</div>'+
+    ((d.status==='lido_valor_aberto'||d.valor_brl==null)?'<div class="rem-txt" style="margin-top:6px">Este boleto está com <b>valor em aberto</b>. Digite abaixo o valor a pagar — nossa equipe confere.</div>':'')+
+    (d.linha_anexada?'<div class="muted rem-txt">O arquivo enviado antes ficou guardado neste boleto ✓</div>':'')+
+    (d.duplicado?'<div class="muted rem-txt">Este arquivo já havia sido enviado — reaproveitado (boleto #'+_esc(d.id)+').</div>':'')+
+    (!casado && ben.nome ? '<div class="muted rem-txt">Confirmamos quem recebe no banco antes de pagar.</div>':'')+avisos;
+}
+// F7(d)/(f): garante a <option> no select (dedupe por value) — textContent, nunca innerHTML. As opções ficam até o reload.
+function wzFavGarantirOpcao(id, name, docRoot, origem){
+  const s=$('remFav'); if(!s||id==null) return null; const v=String(id);
+  let o=Array.from(s.options).find(x=>x.value===v);
+  if(!o){ o=document.createElement('option'); o.value=v; o.dataset.name=name||''; o.dataset.origem=origem||'busca';
+    o.textContent=(name||('favorecido #'+v))+(docRoot?' ('+docRoot+')':''); s.appendChild(o); }
+  return o;
+}
+// allowlist_id numérico ⇒ pré-seleciona e esconde o bloco "Quem recebe"; sem id (DVP < 0.25 ou não casou) ⇒ select visível +
+// UMA busca automática pelo nome impresso (o cliente não digita nada). Nunca esconde o select sem id explícito (homônimos).
+function wzBoletoCasado(d){
+  const ben=(d.beneficiario&&typeof d.beneficiario==='object')?d.beneficiario:{}; _wzBen={nome:ben.nome||'',doc:ben.doc||''};
+  const sel=$('remFav'), q=$('wzFavBusca'), m=$('wzFavBuscaMsg'); if(sel) sel.value=''; if(q) q.value=''; if(m) m.textContent='';
+  if(d.allowlist_id!=null && /^\d+$/.test(String(d.allowlist_id))){
+    _wzFavCasado={id:String(d.allowlist_id), name:ben.nome||''};
+    wzFavGarantirOpcao(d.allowlist_id, ben.nome, ben.doc?_docFmt(ben.doc):'', 'meu'); if(sel) sel.value=String(d.allowlist_id); return; }
+  _wzFavCasado=null;
+  if(q && ben.nome && _wzNorm(ben.nome).replace(/[^a-z0-9]/g,'').length>=3){ q.value=String(ben.nome).slice(0,60); wzFavBuscar({auto:true}); }
+}
+// F7(f) — busca pelo nome (>= 3 letras/dígitos, <= 60 chars, sem acentos). Teto 8. Servidor novo marca origem:'busca';
+// proxy/DVP antigos ignoram ?q e devolvem a lista toda ⇒ filtra pelo nome aqui também (inofensivo quando o servidor já filtrou).
+// Nomes do servidor só em textContent (o único innerHTML da busca não leva dado do servidor).
+async function wzFavBuscar(opt){
+  opt=opt||{}; const inp=$('wzFavBusca'), btn=$('wzFavBuscaBtn'), msg=$('wzFavBuscaMsg'), sel=$('remFav'); if(!inp||!btn||!msg||!sel) return;
+  const q=_wzNorm(inp.value).slice(0,60);
+  if(q.replace(/[^a-z0-9]/g,'').length<3){ msg.textContent='Digite pelo menos 3 letras do nome.'; if(!opt.auto) inp.focus(); return; }
+  btn.disabled=true; btn.textContent='Buscando…'; msg.textContent='';
+  try{
+    const r=_arr(await rf('/remessas/allowlist?q='+encodeURIComponent(q)));
+    const casam=r.filter(f=>f&&f.id!=null&&(f.origem==='busca'||_wzNorm(f.name).includes(q))).slice(0,8);
+    casam.forEach(f=>wzFavGarantirOpcao(f.id,f.name,f.doc_root,f.origem||'busca'));
+    if(casam.length===1){ sel.value=String(casam[0].id); msg.textContent='✓ Encontramos: '+(casam[0].name||'')+' — já escolhido acima. Confira se é o nome do boleto.'; }
+    else if(casam.length>1) msg.textContent='Encontramos '+casam.length+' nomes — escolha acima o que está impresso no boleto.';
+    else if(opt.auto) msg.textContent='O nome do boleto ('+inp.value+') ainda não está na sua lista — pode continuar; nossa equipe confirma quem recebe antes de pagar.';
+    else msg.innerHTML='Não encontramos este nome. Pode continuar sem escolher — nossa equipe confirma quem recebe antes de pagar. <button type="button" class="mini" data-wz-mais="fav">Cadastrar quem recebe →</button>';
+  }catch(e){ msg.textContent=_erroHumano(e); }
+  finally{ btn.disabled=false; btn.textContent='Buscar'; }
 }
 // ═══ v0.24 (F3+F4+F5, 21/09) — passo a passo do cliente: cotação em €/US$ com crédito, "para onde transferir", etapas ═══
 // Todas as funções de render devolvem HTML string (o wizard F6 as reaproveita). Toda string do servidor passa por _esc — no
@@ -1959,7 +2155,7 @@ function _remOutrasHtml(d){
     '<div class="muted rem-txt" style="margin:6px 0">Prefira a conta principal acima. Estas ainda funcionam.</div>'+
     out.map(o=>'<div class="muted" style="font-size:11px;margin-top:6px">'+_esc(o.currency||'')+(o.criada_em?' · criada em '+_esc(_venc(o.criada_em)):'')+'</div>'+rem2ContaHtml(o,{})).join('')+'</details>';
 }
-// painel manual "Dados para depósito fiat": principal por moeda + outras colapsadas (sem valor/referência: não há remessa)
+// painel manual da conta em euros/dólares (#remFiatBox): principal por moeda + outras colapsadas (sem valor/referência: não há remessa)
 function rem2ContasPainelHtml(d){
   const moedas=Object.keys(d.principal||{});
   return '<div class="muted rem-txt" style="margin-bottom:6px">Suas contas para transferir. Ao criar uma remessa, mostramos o valor e a referência dela.</div>'+
@@ -1971,10 +2167,10 @@ function rem2ParaOndeHtml(d, dealId, moeda){
   d=d||{}; const r=d.remessa&&typeof d.remessa==='object'?d.remessa:null;
   const ref=(r&&r.referencia)||('EFIX-'+dealId);
   if(r&&r.estado==='nao_transferir') return '<div class="neg rem-txt">'+_esc(r.motivo||'Esta remessa não precisa de transferência.')+'</div>';
-  if(d.tem_conta===false) return '<div class="rem-txt">Você ainda não tem conta em euros/dólares ativa. Complete o cadastro no painel "Dados para depósito fiat" abaixo — a conta nasce minutos após a aprovação. Guarde a referência <b class="mono">'+_esc(ref)+'</b>.</div>';
+  if(d.tem_conta===false) return '<div class="rem-txt">Você ainda não tem conta em euros/dólares ativa. <button type="button" class="mini" data-wz-fiat>Ver o que falta →</button> A conta nasce minutos após a aprovação. Guarde a referência <b class="mono">'+_esc(ref)+'</b>.</div>';
   const temEur=!!_remContaPorMoeda(d,'EUR'), temUsd=!!_remContaPorMoeda(d,'USD');
   moeda = (moeda&&_remContaPorMoeda(d,moeda))?moeda:_remMoedaPadrao(d);
-  if(!moeda) return '<div class="rem-txt">Nenhuma conta para transferir apareceu agora. Abra "Dados para depósito fiat (IBAN)" abaixo ou tente de novo.</div>';
+  if(!moeda) return '<div class="rem-txt">Nenhuma conta para transferir apareceu agora. <button type="button" class="mini" data-wz-fiat>Ver dados da conta →</button> ou tente de novo.</div>';
   const c=_remContaPorMoeda(d,moeda);
   const est=r&&r.valor_estimado&&typeof r.valor_estimado==='object'?r.valor_estimado:null;
   const q=(!r&&_rem2Quote&&_rem2Quote.fiat)?_rem2Quote.fiat:null;   // proxy antigo descarta deal_id: usa a cotação em memória
@@ -2000,7 +2196,7 @@ async function rem2ParaOnde(dealId, box){
   let d=null;
   try{ d = await rf('/remessas/deposit-instructions?deal_id='+encodeURIComponent(dealId)); }
   catch(e){
-    box.innerHTML='<div class="rem-txt">Não conseguimos carregar os dados da conta agora ('+_esc(_erroHumano(e))+'). <button type="button" class="mini" data-paraonde="'+_esc(dealId)+'">tentar de novo</button> ou abra "Dados para depósito fiat (IBAN)" abaixo. Referência da remessa: <b class="mono">EFIX-'+_esc(dealId)+'</b>.</div>';
+    box.innerHTML='<div class="rem-txt">Não conseguimos carregar os dados da conta agora ('+_esc(_erroHumano(e))+'). <button type="button" class="mini" data-paraonde="'+_esc(dealId)+'">tentar de novo</button> ou <button type="button" class="mini" data-wz-fiat>ver dados da conta</button>. Referência da remessa: <b class="mono">EFIX-'+_esc(dealId)+'</b>.</div>';
     return;
   }
   box._dados=d; box._dealId=dealId;
@@ -2028,7 +2224,7 @@ async function rem2Credito(){
   const disp=Number(c&&c.disponivel_usdc), aberto=Number(c&&c.em_aberto_usdc); let html='';
   if(c&&c.exibicao==='abatimento'&&disp>0) html='Você tem crédito de <b>'+_esc(fmtMoeda(disp,'USDC'))+'</b> de remessas anteriores. Ele é descontado automaticamente do valor a transferir.';
   else if(c&&c.exibicao==='consultar_mesa') html='Você tem crédito de remessas anteriores em conferência pela mesa.';
-  if(aberto>0) html+=(html?'<br>':'')+'Falta chegar <b>'+_esc(fmtMoeda(aberto,'USDC'))+'</b> de remessas já registradas — veja em "Minhas remessas".';
+  if(aberto>0) html+=(html?'<br>':'')+'Falta chegar <b>'+_esc(fmtMoeda(aberto,'USDC'))+'</b> de remessas já registradas — veja no passo "4 · Acompanhe".';
   box.innerHTML=html; box.style.display=html?'block':'none';
 }
 async function rem2Quote(){
@@ -2041,8 +2237,9 @@ async function rem2Quote(){
     $('remQuoteDetails').innerHTML = rem2CotacaoHtml(_rem2Quote);   // v0.24 (F3): €/US$ + crédito quando o servidor mandar
     $('remQuoteBox').style.display='block';
     $('remBtnCreate').style.display = ok?'block':'none';
+    wzRender();   // F6: com cotação, "Ver quanto enviar" sai e fica só "Criar remessa" (UMA ação por passo)
   }catch(e){ _msg(_erroHumano(e),true); }
-  finally{ b.disabled=false; b.textContent='Cotar'; }
+  finally{ b.disabled=false; b.textContent='Ver quanto enviar →'; }
 }
 async function rem2Criar(){
   const amount = parseFloat($('remAmount').value);
@@ -2052,7 +2249,7 @@ async function rem2Criar(){
   // M-BOLETO-UPLOAD (08/09): com boleto lido, o valor da remessa tem de ser o do boleto
   // (o payout nasce com amount_brl do boleto; deal com outro valor ficaria inconsistente)
   if(_rem2Boleto && _rem2Boleto.valor_brl!=null && Math.abs(amount-_rem2Boleto.valor_brl)>0.005){
-    $('remMsg').textContent='O valor difere do boleto ('+brl(_rem2Boleto.valor_brl)+'). Ajuste o valor e cote de novo, ou remova o boleto.'; return; }
+    $('remMsg').textContent='O valor difere do boleto ('+brl(_rem2Boleto.valor_brl)+'). Ajuste o valor e cote de novo, ou toque em “← Trocar boleto”.'; return; }
   const usdc = _rem2Quote.usdc_needed;
   const b=$('remBtnCreate'); b.disabled=true; b.textContent='Criando…';
   try{
@@ -2071,7 +2268,7 @@ async function rem2Criar(){
       ? '<div class="up rem-txt">Sua remessa foi registrada, mas a conversão ainda não foi armada — nossa equipe cuida disso. Você já pode transferir o valor abaixo.</div>'
       : (fund.deferred ? '<div class="muted rem-txt">Nossa equipe confere e paga o boleto após a conversão.</div>' : '');
     $('remInstrDetails').innerHTML =
-      'Remessa <span class="pos">#'+_esc(deal.id)+'</span> criada · '+_esc(brl(amount))+estado+
+      'Remessa <span class="pos">#'+_esc(deal.id)+'</span> criada ✓ · '+_esc(brl(amount))+estado+
       '<div class="rem-txt" style="margin-top:4px"><b>Próximo passo:</b> transferir o valor abaixo da sua conta bancária para a conta EFIX em seu nome.</div>';
     // M-BOLETO-UPLOAD (08/09): só afirma "anexado" se o DVP confirmou o vínculo (deal.boleto)
     if(_rem2Boleto){
@@ -2085,12 +2282,11 @@ async function rem2Criar(){
         $('remInstrDetails').innerHTML += '<br><span class="neg">Boleto #'+_esc(_rem2Boleto.id)+' NÃO foi vinculado a esta remessa</span> — avise a mesa ou anexe de novo em uma nova remessa.';
       }
     }
-    $('rem-form').style.display='none';
-    $('rem-instr').style.display='block';
+    _wzDealId=deal.id; wzIr(3);   // F6 (22/09): passo 3 "Transfira do seu banco" (o wizard controla a visibilidade de #rem-instr)
     rem2ParaOnde(deal.id, $('remParaOnde'));   // v0.24 (F4): conta principal + valor + referência + copiar
     rem2Refresh();
   }catch(e){ _msg(_erroHumano(e),true); }
-  finally{ b.disabled=false; b.textContent='Criar remessa'; }
+  finally{ b.disabled=false; b.textContent='Criar remessa →'; }
 }
 const REM_ST = {open:'aberta',funded:'financiada',settled:'liquidada',closed:'encerrada',cancelado:'cancelada'}; // cancelado (09/09): decisão explícita da mesa/cliente
 // (09/09) boleto ligado à remessa — status legível p/ o cliente (o cru é vocabulário do DVP).
@@ -2114,10 +2310,13 @@ function _remBoletoLinha(b){
 const _remCancelavel = st => ['open','aberta','funded'].includes(st);
 async function rem2Refresh(){
   const box = $('remDeals');
+  let ok=false, total=0, vivas=0;   // F6 (22/09): alimenta o aviso do passo 1 e a pílula 4 (só com resposta válida; erro de rede não apaga o aviso anterior)
   try{
     const deals = await rf('/remessas/deals');
     if(!Array.isArray(deals)){ box.innerHTML='<div class="empty">Não conseguimos carregar suas remessas agora.</div>'; return; }
+    ok=true; total=deals.length;
     if(!deals.length){ box.innerHTML='<div class="empty">Nenhuma remessa ainda.</div>'; return; }
+    vivas=deals.filter(d=>{ if(!d) return false; const ac=d.acompanhamento; return (ac&&typeof ac==='object') ? !(ac.concluida||ac.cancelada) : ['open','aberta','funded','settled'].includes(d.status); }).length;
     box.innerHTML = deals.map(d=>{
       // v0.24 (F5): badge = título humano do acompanhamento (vermelho em atenção, verde concluída); deal da mesa = só leitura;
       // cancelar só quando o servidor disser pode_cancelar (sem o campo: regra de antes)
@@ -2136,6 +2335,7 @@ async function rem2Refresh(){
       '</div>'; }).join('');
     box.querySelectorAll('[data-cancel]').forEach(b=>{ b.onclick=rem2Cancelar; });
   }catch(e){ box.innerHTML='<div class="empty">'+_esc(_erroHumano(e))+'</div>'; }
+  finally{ if(ok){ _wzTemDeals=total>0; const av=$('wzAviso'); if(av) av.innerHTML = vivas ? 'Você tem '+vivas+' remessa'+(vivas>1?'s':'')+' em andamento. <button type="button" class="mini" data-wz-go="4">Acompanhar →</button>' : ''; } wzRender(); }
 }
 // (09/09) cancelamento self-service: confirm + motivo opcional → POST /remessas/deals/:id/cancelar.
 // O DVP só cancela sem dinheiro recebido (422 senão) e retira o payout draft da fila da mesa.
