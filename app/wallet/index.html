@@ -277,7 +277,9 @@ tr.grp:first-child td{padding-top:6px}
 .wz-drop{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:96px;margin-top:12px;padding:18px 14px;border:1.5px dashed var(--line-2);border-radius:14px;background:var(--bg-raise);cursor:pointer;text-align:center}
 .wz-drop:hover,.wz-drop:focus-within{border-color:var(--ink)} .wz-drop b{font-weight:500;font-size:15px} .wz-drop .up{font-size:9px}
 .wz-vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
-.wz-link{display:inline-block;margin-top:14px;background:none;border:0;padding:0;color:var(--ink-2);font-size:12.5px;font-family:var(--font-d);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+/* UX-06 (22/09): alvo de toque ≥40px (padding no lugar da margem: o texto continua 14px abaixo do elemento anterior) */
+.wz-link{display:inline-block;box-sizing:border-box;min-height:40px;margin-top:2px;background:none;border:0;padding:12px 0;color:var(--ink-2);font-size:12.5px;font-family:var(--font-d);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#remBtnNova{margin-top:8px}   /* passo 3: "Pagar outro boleto" mais longe do CTA primário */
 .wz-nota{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg-raise);font-size:12.5px;line-height:1.6;word-break:normal}
 .wz-nota:empty{display:none} .wz-nota .mini{margin:0 4px}
 .wz-fixo .fldl,.wz-fixo .fld{display:none}
@@ -583,6 +585,7 @@ tr.grp:first-child td{padding-top:6px}
                 <span class="up">Minha conta em euros / dólares</span>
                 <button type="button" class="mini" id="remBtnFiat">Fechar ↑</button>
               </div>
+              <div id="wzFiatPre" class="muted rem-txt" style="display:none;margin-top:4px;font-size:12px;line-height:1.5">Antes de começar: ative sua conta em € / US$ — é para ela que você transfere no passo 3. Pode enviar o boleto enquanto isso.</div>
               <div id="remFiatBox" class="qd" style="display:none;margin-top:8px"></div>
             </div>
 
@@ -591,13 +594,13 @@ tr.grp:first-child td{padding-top:6px}
               <div class="wz-p" id="wzP1" style="display:block">
                 <div class="wz-h">1 · Envie o boleto</div>
                 <div id="wzAviso" class="wz-nota"></div>
-                <p class="rem-lead">Mande o PDF ou uma foto do boleto. Lemos o valor e quem recebe na hora.</p>
+                <p class="rem-lead">Mande o PDF do boleto — lemos o valor e quem recebe na hora. Tem só a foto? Guardamos para a equipe e você digita os 47 números do topo.</p>
                 <!-- HOUSE-FUNDED (08/09): nunca instruir depósito de USDC aqui — o fund é da casa; o cliente transfere € / US$ no passo 3.
                      M-BOLETO-UPLOAD (08/09): o favorecido vem do boleto, nunca de digitação livre; a mesa confere antes de pagar.
                      F1/F2 (21/09): PDF ou FOTO (reduzida no navegador) até 5 MB, ou a LINHA DIGITÁVEL. O servidor decide pelo conteúdo. -->
                 <label class="wz-drop" for="remBoleto" id="wzDrop">
                   <b>Enviar PDF ou foto</b>
-                  <span class="up">toque ou clique para escolher · até 5 MB</span>
+                  <span class="up">toque ou clique para escolher · até 5 MB<br>PDF: lemos na hora · foto: você digita os 47 números depois</span>
                   <input id="remBoleto" class="wz-vh" type="file" accept="application/pdf,image/jpeg,image/png">
                 </label>
                 <div class="rem-ou" style="margin-top:12px">ou digite os 47 números do topo do boleto</div>
@@ -1730,6 +1733,8 @@ function rem2FiatChecklist(d){
 function rem2FiatRender(d){
   const box=$('remFiatBox');
   try{
+    // UX-09 (22/09): sem conta, uma linha diz POR QUE este painel vem antes do passo 1 e que o boleto pode ser enviado enquanto isso
+    const pre=$('wzFiatPre'); if(pre) pre.style.display=(d&&d.tem_conta)?'none':'block';
     if(!d.tem_conta){
       // v0.21: DVP novo manda o checklist derivado — a carteira só desenha. Sem 'onboarding' (DVP velho) cai no bloco v0.19.1 abaixo.
       if(d.onboarding&&d.onboarding.estado!=='pronto'){ rem2FiatChecklist(d); return; }
@@ -1755,6 +1760,8 @@ function rem2FiatRender(d){
       if(d.em_analise) rem2FiatPoll();
       return;
     }
+    // UX-04 (22/09): a conta nasceu (poll/atualizar) enquanto o passo 3 ainda dizia "sem conta" — refaz o "Para onde" da remessa em tela (uma consulta, só nesse estado)
+    const po3=$('remParaOnde'); if(_wzPasso===3 && _wzDealId!=null && po3 && po3._dados && po3._dados.tem_conta===false) rem2ParaOnde(_wzDealId, po3);
     // v0.21 (revisão 14/09, P1): com conta, o checklist não aparece — mas um trilho ainda pode esperar o cliente
     // (conta USD pronta, SEPA sem comprovante: o DVP manda trilhos em 'acao' com o link dedicado). Sem esta linha o
     // cliente nunca saberia que falta algo para o IBAN EUR. Só a etapa trilhos, no mesmo desenho do checklist.
@@ -1877,7 +1884,7 @@ async function rem2Boleto(){
     // ANTES de mandar; PDF vai como esta. Teto do servidor: 5 MB.
     const blob = ehFoto ? await _rem2ReduzirFoto(f) : f;
     if(blob.size>5*1024*1024){ $('remMsg').textContent=ehPdf?'PDF grande demais (máx. 5 MB). Digite a linha digitável abaixo.':'Foto grande demais mesmo reduzida (máx. 5 MB). Tente outra foto ou digite a linha digitável.'; inp.value=''; $('wzP1nota').innerHTML=''; return; }
-    $('wzP1nota').textContent='Lendo o boleto…';
+    $('wzP1nota').textContent=ehFoto?'Guardando a foto…':'Lendo o boleto…';   // UX-01 (22/09): foto não é lida (sem OCR), só guardada
     const b64 = await new Promise((res,rej)=>{ const rd=new FileReader();
       rd.onload=()=>res(String(rd.result).replace(/^data:[^,]*,/,''));
       rd.onerror=()=>rej(new Error('Não consegui ler o arquivo.'));
@@ -2084,7 +2091,11 @@ async function wzFavBuscar(opt){
     const r=_arr(await rf('/remessas/allowlist?q='+encodeURIComponent(q)));
     const casam=r.filter(f=>f&&f.id!=null&&(f.origem==='busca'||_wzNorm(f.name).includes(q))).slice(0,8);
     casam.forEach(f=>wzFavGarantirOpcao(f.id,f.name,f.doc_root,f.origem||'busca'));
-    if(casam.length===1){ sel.value=String(casam[0].id); msg.textContent='✓ Encontramos: '+(casam[0].name||'')+' — já escolhido acima. Confira se é o nome do boleto.'; }
+    // RB-04 (22/09): na busca AUTOMÁTICA (nome impresso, sem o cliente digitar) só pré-seleciona favorecido que ele mesmo já usou (origem 'meu');
+    // 1 nome parecido de terceiro (casa por prefixo de palavra) fica só como opção — o cliente escolhe. No clique em "Buscar" pré-seleciona sempre, com aviso.
+    if(casam.length===1){ const f=casam[0], nome=f.name||'';
+      if(!opt.auto || f.origem==='meu'){ sel.value=String(f.id); msg.textContent='✓ Encontramos: '+nome+' — já escolhido acima. Confira se é o nome do boleto.'; }
+      else msg.textContent='Encontramos 1 nome: '+nome+' — se for quem recebe, escolha acima. Se não for, pode continuar sem escolher; nossa equipe confirma quem recebe antes de pagar.'; }
     else if(casam.length>1) msg.textContent='Encontramos '+casam.length+' nomes — escolha acima o que está impresso no boleto.';
     else if(opt.auto) msg.textContent='O nome do boleto ('+inp.value+') ainda não está na sua lista — pode continuar; nossa equipe confirma quem recebe antes de pagar.';
     else msg.innerHTML='Não encontramos este nome. Pode continuar sem escolher — nossa equipe confirma quem recebe antes de pagar. <button type="button" class="mini" data-wz-mais="fav">Cadastrar quem recebe →</button>';
@@ -2167,7 +2178,8 @@ function rem2ParaOndeHtml(d, dealId, moeda){
   d=d||{}; const r=d.remessa&&typeof d.remessa==='object'?d.remessa:null;
   const ref=(r&&r.referencia)||('EFIX-'+dealId);
   if(r&&r.estado==='nao_transferir') return '<div class="neg rem-txt">'+_esc(r.motivo||'Esta remessa não precisa de transferência.')+'</div>';
-  if(d.tem_conta===false) return '<div class="rem-txt">Você ainda não tem conta em euros/dólares ativa. <button type="button" class="mini" data-wz-fiat>Ver o que falta →</button> A conta nasce minutos após a aprovação. Guarde a referência <b class="mono">'+_esc(ref)+'</b>.</div>';
+  // UX-04 (22/09): depois de ativar a conta, o cliente recarrega este bloco aqui mesmo (handler delegado data-paraonde já existe) — antes só o passo 4 levava aos dados
+  if(d.tem_conta===false) return '<div class="rem-txt">Você ainda não tem conta em euros/dólares ativa. <button type="button" class="mini" data-wz-fiat>Ver o que falta →</button> Ative a conta pelo painel acima — ela nasce minutos após a aprovação. Depois toque em <button type="button" class="mini" data-paraonde="'+_esc(dealId)+'">Já ativei a conta — atualizar →</button> para ver valor, conta e referência juntos. Guarde a referência <b class="mono">'+_esc(ref)+'</b>.</div>';
   const temEur=!!_remContaPorMoeda(d,'EUR'), temUsd=!!_remContaPorMoeda(d,'USD');
   moeda = (moeda&&_remContaPorMoeda(d,moeda))?moeda:_remMoedaPadrao(d);
   if(!moeda) return '<div class="rem-txt">Nenhuma conta para transferir apareceu agora. <button type="button" class="mini" data-wz-fiat>Ver dados da conta →</button> ou tente de novo.</div>';
