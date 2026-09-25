@@ -666,13 +666,13 @@ tr.grp:first-child td{padding-top:6px}
 
             <!-- ══ MAIS OPÇÕES (recolhido) ══ -->
             <details id="wzMais">
-              <summary>Mais opções <span class="wz-mais-hint">conta em euros/dólares · cadastrar quem recebe · operação programada</span></summary>
+              <summary>Mais opções <span class="wz-mais-hint" id="wzMaisHint">conta em euros/dólares · cadastrar quem recebe · operação programada</span></summary>
               <div class="wz-mais-blk">
                 <div class="up">Minha conta em euros / dólares</div>
                 <div class="rem-txt muted" style="margin:4px 0 8px">Dados da conta EFIX em seu nome para transferir (IBAN, conta, banco) e o que falta para ativá-la.</div>
                 <button type="button" class="mini" id="wzBtnFiatMais">Ver dados da conta →</button>
               </div>
-              <div class="wz-mais-blk">
+              <div class="wz-mais-blk" id="wzMaisFav">
                 <div class="up">Cadastrar quem recebe</div>
                 <button type="button" class="mini" id="remBtnFavNew" style="margin-top:8px">Cadastrar favorecido →</button>
                 <div id="remFavForm" style="display:none;margin-top:8px">
@@ -2010,6 +2010,8 @@ function wzRender(){
   const fixo=!!(_rem2Boleto && _rem2Boleto.valor_brl!=null), cotado=!!(_rem2Quote && _rem2Quote.usdc_needed!=null);
   const vb=$('wzValorBox'); if(vb) vb.classList.toggle('wz-fixo', fixo);   // o valor do boleto já está grande no resumo
   const fb=$('wzFavBox'); if(fb) fb.style.display=(_wzFavCasado||_rem2Boleto)?'none':'block';   // 25/09: boleto anexado (casado ou não) ⇒ "Quem recebe" some
+  const mf=$('wzMaisFav'); if(mf) mf.style.display=_rem2Boleto?'none':'';   // 25/09: com boleto, "Mais opções" não oferece cadastrar quem recebe
+  const mh=$('wzMaisHint'); if(mh) mh.textContent=_rem2Boleto?'conta em euros/dólares · operação programada':'conta em euros/dólares · cadastrar quem recebe · operação programada';
   const box=$('remBoletoBox'); if(box) box.style.display=(_rem2Boleto && box.innerHTML.trim())?'block':'none';
   const sn=$('wzSemBoletoNota'); if(sn) sn.style.display=(_wzSemBoleto && !_rem2Boleto)?'block':'none';
   const bq=$('remBtnQuote'); if(bq) bq.style.display=cotado?'none':'block';   // UMA ação: "Ver quanto enviar" OU "Criar remessa"
@@ -2290,7 +2292,7 @@ async function rem2Criar(){
     if(_rem2Boleto){
       const bl = deal.boleto;
       if(bl && bl.id){
-        const st = bl.status==='com_payout' ? 'pagamento preparado — a mesa confere o favorecido no banco e libera após a liquidação'
+        const st = bl.status==='com_payout' ? 'pagamento preparado — conferimos no banco quem recebe e pagamos depois que seu dinheiro chegar'
                  : bl.status==='aguardando_favorecido' ? 'quem recebe será confirmado pela nossa equipe antes do pagamento'
                  : 'a mesa lê o PDF antes de pagar';
         $('remInstrDetails').innerHTML += '<br>Boleto <span class="pos">#'+_esc(bl.id)+'</span> anexado — '+_esc(st)+'.';
