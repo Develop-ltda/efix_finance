@@ -617,7 +617,7 @@ tr.grp:first-child td{padding-top:6px}
                 <div class="wz-h">2 · Confira e veja quanto enviar</div>
                 <div id="remBoletoBox" class="qd" style="display:none;margin-top:10px"></div>
                 <div id="wzSemBoletoNota" class="wz-nota" style="display:none">Sem boleto por enquanto: informe o valor em reais e, se souber, quem recebe. Nossa equipe combina o pagamento com você.</div>
-                <!-- F7(f): quem recebe. Escondido (wzRender) quando o boleto trouxe allowlist_id; senão, select + busca pelo nome impresso. -->
+                <!-- F7(f): quem recebe. 25/09: com QUALQUER boleto anexado some (wzRender) — a mesa confere no banco; só no modo sem boleto: select + busca. -->
                 <div id="wzFavBox">
                   <label class="fldl" for="remFav">Quem recebe <span class="up">(o nome impresso no boleto)</span></label>
                   <select id="remFav" class="fld"><option value="">carregando…</option></select>
@@ -1569,6 +1569,8 @@ let _rem2Init=false, _rem2Quote=null, _rem2Boleto=null; // _rem2Boleto (08/09): 
 let _wzPasso=1, _wzSemBoleto=false, _wzFavCasado=null /* {id,name} */, _wzBen=null /* {nome,doc} do boleto */, _wzDealId=null, _wzTemDeals=false;
 const WZ_TXT_SEM_BOLETO='Não tenho o boleto agora — quero informar só o valor →';
 const WZ_TXT_SEM_BOLETO_FOTO='Não consigo digitar os números — informar só o valor →';
+// 25/09: boleto anexado e não casado — o cliente não escolhe quem recebe (a mesa confere no banco antes de pagar)
+const WZ_HTML_QUEM_BANCO='<div class="rem-txt" style="margin-top:6px"><b>Quem recebe:</b> conferimos no banco antes de pagar — você não precisa escolher.</div>';
 async function rf(path, opts={}){
   // opts.tolerar (08/09): lista de status HTTP cujo corpo volta em vez de virar erro.
   // (O DVP devolve boleto duplicado com 200 + duplicado:true; 409 fica tolerado por compatibilidade.)
@@ -2007,7 +2009,7 @@ function wzRender(){
     el.classList.toggle('go', (n===4 && p!==4 && _wzTemDeals) || (n===1 && p===2)); });   // 2 e 3 nunca são clicáveis
   const fixo=!!(_rem2Boleto && _rem2Boleto.valor_brl!=null), cotado=!!(_rem2Quote && _rem2Quote.usdc_needed!=null);
   const vb=$('wzValorBox'); if(vb) vb.classList.toggle('wz-fixo', fixo);   // o valor do boleto já está grande no resumo
-  const fb=$('wzFavBox'); if(fb) fb.style.display=_wzFavCasado?'none':'block';   // F7: boleto casou ⇒ "Quem recebe" some
+  const fb=$('wzFavBox'); if(fb) fb.style.display=(_wzFavCasado||_rem2Boleto)?'none':'block';   // 25/09: boleto anexado (casado ou não) ⇒ "Quem recebe" some
   const box=$('remBoletoBox'); if(box) box.style.display=(_rem2Boleto && box.innerHTML.trim())?'block':'none';
   const sn=$('wzSemBoletoNota'); if(sn) sn.style.display=(_wzSemBoleto && !_rem2Boleto)?'block':'none';
   const bq=$('remBtnQuote'); if(bq) bq.style.display=cotado?'none':'block';   // UMA ação: "Ver quanto enviar" OU "Criar remessa"
@@ -2038,7 +2040,7 @@ function wzReset(){
 // "Não tenho o boleto agora": passo 2 sem boleto. Um arquivo já guardado (foto/ilegível) fica e vai como boleto_id.
 function wzSemBoleto(){
   _wzSemBoleto=true; _rem2Quote=null; $('wzP1nota').innerHTML=''; $('remAmount').value=''; $('remQuoteBox').style.display='none';
-  if(_rem2Boleto) $('remBoletoBox').innerHTML='<div class="up">Arquivo guardado ✓ · boleto #'+_esc(_rem2Boleto.id)+'</div><div class="rem-txt">Nossa equipe lê o boleto. Digite abaixo o valor a pagar.</div>';
+  if(_rem2Boleto) $('remBoletoBox').innerHTML='<div class="up">Arquivo guardado ✓ · boleto #'+_esc(_rem2Boleto.id)+'</div><div class="rem-txt">Nossa equipe lê o boleto. Digite abaixo o valor a pagar.</div>'+WZ_HTML_QUEM_BANCO;
   wzIr(2); $('remAmount').focus();
 }
 // editar o valor invalida a cotação — nunca criar com a cotação de outro valor. Set programático (.value=) não dispara 'input'.
@@ -2048,7 +2050,7 @@ function wzFiatAbrir(){ if($('remFiatBox').style.display!=='block') rem2Fiat(); 
 const _wzNorm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 // resumo do boleto lido (passo 2). d = respostaBoleto do DVP. Tudo do servidor passa por _esc.
 function wzBoletoResumoHtml(d, origemLinha){
-  const ben=(d.beneficiario&&typeof d.beneficiario==='object')?d.beneficiario:{}, casado=d.allowlist_id!=null;
+  const ben=(d.beneficiario&&typeof d.beneficiario==='object')?d.beneficiario:{}, casado=d.allowlist_id!=null && /^\d+$/.test(String(d.allowlist_id));
   const kv=(k,v)=> v?'<div class="k">'+k+'</div><div class="v">'+v+'</div><div></div>':'';
   const avisos=(Array.isArray(d.avisos)?d.avisos:[]).map(a=>'<div style="color:var(--warn,#b45309)">⚠ '+_esc(a)+'</div>').join('');
   const quem=ben.nome?_esc(ben.nome)+(ben.doc?' <span class="muted">'+_esc(_docFmt(ben.doc))+'</span>':'')+(casado?' <span class="pos">· já cadastrado ✓</span>':''):'';
@@ -2058,7 +2060,7 @@ function wzBoletoResumoHtml(d, origemLinha){
     ((d.status==='lido_valor_aberto'||d.valor_brl==null)?'<div class="rem-txt" style="margin-top:6px">Este boleto está com <b>valor em aberto</b>. Digite abaixo o valor a pagar — nossa equipe confere.</div>':'')+
     (d.linha_anexada?'<div class="muted rem-txt">O arquivo enviado antes ficou guardado neste boleto ✓</div>':'')+
     (d.duplicado?'<div class="muted rem-txt">Este arquivo já havia sido enviado — reaproveitado (boleto #'+_esc(d.id)+').</div>':'')+
-    (!casado && ben.nome ? '<div class="muted rem-txt">Confirmamos quem recebe no banco antes de pagar.</div>':'')+avisos;
+    (!casado ? WZ_HTML_QUEM_BANCO : '')+avisos;   // 25/09: não casou ⇒ o cliente não escolhe; a mesa confere quem recebe no banco
 }
 // F7(d)/(f): garante a <option> no select (dedupe por value) — textContent, nunca innerHTML. As opções ficam até o reload.
 function wzFavGarantirOpcao(id, name, docRoot, origem){
@@ -2068,8 +2070,8 @@ function wzFavGarantirOpcao(id, name, docRoot, origem){
     o.textContent=(name||('favorecido #'+v))+(docRoot?' ('+docRoot+')':''); s.appendChild(o); }
   return o;
 }
-// allowlist_id numérico ⇒ pré-seleciona e esconde o bloco "Quem recebe"; sem id (DVP < 0.25 ou não casou) ⇒ select visível +
-// UMA busca automática pelo nome impresso (o cliente não digita nada). Nunca esconde o select sem id explícito (homônimos).
+// allowlist_id numérico ⇒ pré-seleciona (vai como favorecido_id); sem id (DVP < 0.25 ou não casou) ⇒ nada selecionado e SEM busca
+// automática (25/09): com boleto anexado o bloco "Quem recebe" não aparece — a mesa confere no banco (CIP) e resolve no DVP.
 function wzBoletoCasado(d){
   const ben=(d.beneficiario&&typeof d.beneficiario==='object')?d.beneficiario:{}; _wzBen={nome:ben.nome||'',doc:ben.doc||''};
   const sel=$('remFav'), q=$('wzFavBusca'), m=$('wzFavBuscaMsg'); if(sel) sel.value=''; if(q) q.value=''; if(m) m.textContent='';
@@ -2077,7 +2079,6 @@ function wzBoletoCasado(d){
     _wzFavCasado={id:String(d.allowlist_id), name:ben.nome||''};
     wzFavGarantirOpcao(d.allowlist_id, ben.nome, ben.doc?_docFmt(ben.doc):'', 'meu'); if(sel) sel.value=String(d.allowlist_id); return; }
   _wzFavCasado=null;
-  if(q && ben.nome && _wzNorm(ben.nome).replace(/[^a-z0-9]/g,'').length>=3){ q.value=String(ben.nome).slice(0,60); wzFavBuscar({auto:true}); }
 }
 // F7(f) — busca pelo nome (>= 3 letras/dígitos, <= 60 chars, sem acentos). Teto 8. Servidor novo marca origem:'busca';
 // proxy/DVP antigos ignoram ?q e devolvem a lista toda ⇒ filtra pelo nome aqui também (inofensivo quando o servidor já filtrou).
@@ -2256,7 +2257,10 @@ async function rem2Quote(){
 async function rem2Criar(){
   const amount = parseFloat($('remAmount').value);
   const sel = $('remFav');
-  const favName = sel.selectedOptions[0] ? (sel.selectedOptions[0].dataset.name||'') : '';
+  // 25/09: com boleto anexado quem recebe sai do boleto (a mesa confere no banco) — favorecido_id só se o boleto casou (allowlist_id)
+  const favId = _rem2Boleto ? (_wzFavCasado ? String(_wzFavCasado.id) : '') : sel.value;
+  const favOpt = favId ? Array.from(sel.options).find(o=>o.value===favId) : null;
+  const favName = favOpt ? (favOpt.dataset.name||'') : '';
   if(!amount || !_rem2Quote || _rem2Quote.usdc_needed==null){ _msg('Cote antes de criar.',true); return; }
   // M-BOLETO-UPLOAD (08/09): com boleto lido, o valor da remessa tem de ser o do boleto
   // (o payout nasce com amount_brl do boleto; deal com outro valor ficaria inconsistente)
@@ -2267,7 +2271,7 @@ async function rem2Criar(){
   try{
     const deal = await rf('/remessas/deals',{method:'POST',body:JSON.stringify({
       expected_amount:amount, expected_currency:'BRL',
-      favorecido_id: sel.value||undefined,
+      favorecido_id: favId||undefined,
       boleto_id: _rem2Boleto ? _rem2Boleto.id : undefined, // M-BOLETO-UPLOAD (08/09)
       notes:(favName?('favorecido pretendido: '+favName+' · '):'')+'alvo R$ '+amount.toFixed(2)+' · envia '+usdc.toFixed(2)+' USDC @ '+Number(_rem2Quote.rate_efetiva).toFixed(4)+(_rem2Boleto?' · boleto #'+_rem2Boleto.id:''),
     })});
