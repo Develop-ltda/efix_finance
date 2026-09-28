@@ -37,8 +37,9 @@ const ProtocolLogic = {
   baseContracts: [
     ['EfixDITokenBase', '0xF5cA...5608', 'Bridged token'],
     ['MinterBurner', '0x400a...B9a3', 'LZ mint/burn'],
-    ['EfixBRLOracleV2', '0xFC6a...Ea86', 'Price feed (4h)'],
-    ['Morpho Vault V2', '0xf4A3...CBd5', 'USDC lending'],
+    ['EfixDIEulerOracle', '0x9CD2...7788', 'NAV × BRL/USD (production)'],
+    ['EfixDINAVOracle', '0x77E3...67AC', 'NAV feed'],
+    ['Morpho Vault V2', '0xf4A3...CBd5', 'legacy pilot (retired)'],
     ['Morpho Blue', '0xBBBB...FFCb', 'efixDI/USDC market'],
   ],
 
@@ -184,7 +185,7 @@ const ProtocolLogic = {
       lines.push({ cls: 't-green', txt: '  health_factor: 1.475' });
       lines.push({ cls: 't-white', txt: '  borrow_rate: 0.67% APR' });
       lines.push({ cls: 't-green', txt: '  net_yield: ~25.4% APY (at target LTV)' });
-      lines.push({ cls: 't-dim', txt: '  vault_v2: 0xf4A3...CBd5 (listing PR #936 pending)' });
+      lines.push({ cls: 't-dim', txt: '  vault_v2: 0xf4A3...CBd5 (legacy pilot, retired)' });
     }
     return lines;
   }

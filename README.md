@@ -66,7 +66,7 @@ EFIX é uma securitizadora registrada na CVM que conecta fundos DI brasileiros a
 │  ┌─────────────────┐  ┌─────────────────┐  ┌───────────────┐  │
 │  │ Polygon (137)   │  │ Base (8453)     │  │ LayerZero V2  │  │
 │  │ efixDI + Vault  │  │ Morpho Blue    │  │ OFT Bridge    │  │
-│  │ Uniswap V3     │  │ Oracle V2      │  │ Polygon ↔ Base│  │
+│  │ Uniswap V3     │  │ NAV x FX oracle│  │ Polygon ↔ Base│  │
 │  │ OFT Adapter    │  │ efixDI bridged │  │               │  │
 │  └─────────────────┘  └─────────────────┘  └───────────────┘  │
 │                                                                 │
@@ -183,9 +183,11 @@ Todas as bibliotecas são carregadas via CDN — não há `node_modules` ou `pac
 |----------|---------|--------|
 | **efixDI (Bridged)** | `0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608` | Token bridged via LZ |
 | **MinterBurner** | `0x400a8DE2bF8fc4A63000A7E77103eDAE897CB9a3` | Lógica de bridge |
-| **Oracle V2 (4h)** | `0xFC6a6Af4B7F398F70103F2f4b76E81afefc6Ea86` | Preço atualizado a cada 4h |
-| **Oracle V1** | `0xF4e20ff5a1a3B6251b2c460c6b221a52bED85aA9` | Oracle legado |
-| **Morpho Vault V2** | `0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5` | Vault de lending |
+| **EfixDIEulerOracle** | `0x9CD219A773d94BBECdD1bb0ae413c45f72737788` | Oráculo de produção: NAV × Chainlink BRL/USD (usado pelo mercado Euler) |
+| **EfixDINAVOracle** | `0x77E395a5f4d0ADf5BaF166797240722c79cC67AC` | NAV do fundo, atualizado pelo keeper |
+| **Oracle V1** | `0xF4e20ff5a1a3B6251b2c460c6b221a52bED85aA9` | Legado: oráculo do mercado Morpho antigo (só BRL/USD, push do backend) |
+| **Oracle V2** | `0xFC6a6Af4B7F398F70103F2f4b76E81afefc6Ea86` | Aposentado: parado desde 28/05/2026, nenhum mercado usa |
+| **Morpho Vault V2** | `0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5` | Piloto legado, aposentado |
 | **Morpho Blue Core** | `0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb` | Protocolo de lending |
 | **USDC** | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` | Stablecoin, 6 decimais |
 
@@ -669,7 +671,9 @@ Por ser um site estático sem build system, algumas chaves ficam visíveis no cl
 
 ### Oracles
 
-- **Oracle V2**: Atualização autônoma a cada 4h via keeper no Railway
+- **EfixDIEulerOracle**: NAV × Chainlink BRL/USD (preço de produção)
+- **EfixDINAVOracle**: NAV do fundo, atualizado pelo keeper
+- **Oracle V2**: aposentado (parado desde 28/05/2026)
 - **Chainlink BRL/USD**: Feed on-chain no Polygon
 - **Proteção**: D+0 redemption das cotas DI como backstop
 

@@ -389,7 +389,7 @@ async function copyText(value, btn) {
             <div class="listing-icon base">B</div>
             <div class="listing-body">
                 <h3>BaseScan</h3>
-                <div class="listing-desc">Block explorer — EfixDI Token, Oracle V2, and MinterBurner bridge contracts on Base.</div>
+                <div class="listing-desc">Block explorer — EfixDI Token, NAV and Euler oracles, and MinterBurner bridge contracts on Base.</div>
                 <div class="listing-items">
                     <div class="listing-item">
                         <div class="listing-item-left"><span class="item-label">EfixDI Token verified</span></div>
@@ -399,10 +399,10 @@ async function copyText(value, btn) {
                         </div>
                     </div>
                     <div class="listing-item">
-                        <div class="listing-item-left"><span class="item-label">Oracle V2 verified</span></div>
+                        <div class="listing-item-left"><span class="item-label">efixDI Oracle (NAV × BRL/USD, used by Euler) — source verified on Sourcify</span></div>
                         <div class="listing-item-right">
                             <span class="status live">VERIFIED</span>
-                            <a href="https://basescan.org/address/0xFC6a6Af4B7F398F70103F2f4b76E81afefc6Ea86#code" target="_blank" class="link-btn">View ↗</a>
+                            <a href="https://basescan.org/address/0x9CD219A773d94BBECdD1bb0ae413c45f72737788" target="_blank" class="link-btn">View ↗</a>
                         </div>
                     </div>
                     <div class="listing-item">
@@ -468,9 +468,9 @@ async function copyText(value, btn) {
                         </div>
                     </div>
                     <div class="listing-item">
-                        <div class="listing-item-left"><span class="item-label">Vault V2 deployed</span></div>
+                        <div class="listing-item-left"><span class="item-label">Vault V2 (legacy pilot, retired)</span></div>
                         <div class="listing-item-right">
-                            <span class="status live">LIVE</span>
+                            <span class="status planned">RETIRED</span>
                             <a href="https://basescan.org/address/0xf4A3FaDcEf350B2F168F97Cdbaa2221FF29ACBd5" target="_blank" class="link-btn">Vault ↗</a>
                         </div>
                     </div>
@@ -554,7 +554,7 @@ async function copyText(value, btn) {
             <div class="listing-icon oracle">◎</div>
             <div class="listing-body">
                 <h3>Oracle Infrastructure</h3>
-                <div class="listing-desc">Automated BRL/USD price feed — Chainlink source on Polygon, Oracle V1+V2 on Base. Autonomous keeper with 15min heartbeat.</div>
+                <div class="listing-desc">Production pricing is NAV × Chainlink BRL/USD (efixDI Oracle on Base, used by the Euler market). The legacy Morpho market reads Oracle V1 (BRL/USD only, pushed by our backend several times a day). Oracle V2 is retired (stale since 2026-05-28).</div>
                 <div class="listing-items">
                     <div class="listing-item">
                         <div class="listing-item-left"><span class="item-label">Chainlink BRL/USD (Polygon)</span></div>
@@ -564,16 +564,16 @@ async function copyText(value, btn) {
                         </div>
                     </div>
                     <div class="listing-item">
-                        <div class="listing-item-left"><span class="item-label">Oracle V1 (Base)</span></div>
+                        <div class="listing-item-left"><span class="item-label">Oracle V1 (Base) — legacy Morpho market, BRL/USD only</span></div>
                         <div class="listing-item-right">
                             <span class="status live">LIVE</span>
                             <a href="https://basescan.org/address/0xF4e20ff5a1a3B6251b2c460c6b221a52bED85aA9" target="_blank" class="link-btn">BaseScan ↗</a>
                         </div>
                     </div>
                     <div class="listing-item">
-                        <div class="listing-item-left"><span class="item-label">Oracle V2 (Base)</span></div>
+                        <div class="listing-item-left"><span class="item-label">Oracle V2 (Base) — retired, stale since 2026-05-28</span></div>
                         <div class="listing-item-right">
-                            <span class="status live">LIVE</span>
+                            <span class="status planned">RETIRED</span>
                             <a href="https://basescan.org/address/0xFC6a6Af4B7F398F70103F2f4b76E81afefc6Ea86" target="_blank" class="link-btn">BaseScan ↗</a>
                         </div>
                     </div>
