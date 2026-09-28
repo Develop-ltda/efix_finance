@@ -13,3 +13,4 @@ contracts/
 scripts/deploy-collateral-vault.js
 app/wallet/build/package-lock.json
 brle/build/package-lock.json
+CLAUDE.md

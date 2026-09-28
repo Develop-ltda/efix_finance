@@ -299,7 +299,7 @@
     asOf: null, supply: 5340, navUsd: 0.194915, navBrl: 1.014474, fxUsdPerBrl: 0.192134,
     tvlUsd: 1040.83, tvlBrl: 5417.21, psmSwapFeeBps: 30,
     backing: { fund:"BTG Pactual Tesouro Selic FIRF Ref DI", cnpj:"09.215.250/0001-13",
-      mandate:">=95% federal Treasury (LFTs)", aum:"R$33.7bn (~US$6.6bn, CVM 31 Aug 2026)", redemption:"D+0", rating:"Ba1 / BB / BB (stable)" },
+      mandate:">=95% federal Treasury (LFTs)", aum:"R$33.3bn (~US$6.4bn, CVM 24 Sep 2026)", redemption:"D+0", rating:"Ba1 / BB / BB (stable)" },
     audit: "OpenZeppelin 15/15",
     status: { oracle:"live", pixRail:"live", keeper:"active", contract:"active" }
   };
@@ -312,8 +312,8 @@
     $("st-dot").className = "dot" + (live ? "" : " snap");
     set("st-as", live && d.asOf ? "Live · " + new Date(d.asOf).toISOString().slice(11, 16) + " UTC" : "Snapshot");
     const b = d.backing || {};
-    const aum = (b.aum || "R$33.7bn").replace(/\s*\(.*\)\s*/, "");
-    const aumSub = (b.aum && b.aum.match(/\((.*)\)/)) ? b.aum.match(/\((.*)\)/)[1] : "~US$5.5bn";
+    const aum = (b.aum || "R$33.3bn").replace(/\s*\(.*\)\s*/, "");
+    const aumSub = (b.aum && b.aum.match(/\((.*)\)/)) ? b.aum.match(/\((.*)\)/)[1] : "~US$6.4bn";
     $("hero").innerHTML =
       `<div class="hcol"><div class="hk">Underlying yield · p.a.</div><div class="hv">${FUND_YIELD}</div><div class="hs">&#8776;100% CDI · gross · BRL</div></div>`
     + `<div class="hcol"><div class="hk">Fund net assets</div><div class="hv mid">${aum}</div><div class="hs">${aumSub} · sovereign DI fund</div></div>`
