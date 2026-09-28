@@ -301,10 +301,11 @@
     liquidation horizon, with the portal redemption bounding the tail. This is the parameter we want the curator's risk team to own
     and size, next to the IRM curve and the deleverage trigger.</p>
     <div class="callout warn"><div class="ct">Two scope honesties</div>
-      <p><strong>1. Audit scope.</strong> OpenZeppelin audited the efixDI token (15/15 resolved, including one high-severity finding
-      fixed with a custody redesign). The collateral vault as a whole and the off-chain backing sat outside that scope. A dedicated
-      vault audit is being scoped to the curator's go-live. Backing is reconciled internally against the fund administrator's
-      settled statements of units; a fail-closed issuance gate, checked against the recorded backing ledger before each
+      <p><strong>1. Audit scope.</strong> OpenZeppelin audited the Polygon efixDI token contract (15/15 resolved in the repository, including one high-severity finding
+      fixed with a custody redesign; the deployed Polygon token is immutable and paused, so those fixes are not in it). The Base
+      contracts (token, PSM, oracles), the collateral vault as a whole and the off-chain backing sat outside that scope. A dedicated
+      vault audit is being scoped to the curator's go-live. Backing is reconciled internally against the BTG Pactual account
+      statements of fund units; a fail-closed issuance gate, checked against the recorded backing ledger before each
       treasury mint, provides the continuous check, and on-chain the only minter is a single MPC vault. There is no third-party
       attestation of efixDI backing today. A zero-knowledge proof-of-backing pilot on the administrator statement series is on
       the roadmap.</p>
