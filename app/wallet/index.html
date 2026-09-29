@@ -1982,7 +1982,8 @@ async function rem2FiatKyc(){
   const b=$('fiatBtnKyc'); b.disabled=true; $('fiatKycMsg').textContent='criando sua verificação…';
   try{
     const r = await rf('/remessas/kyc-link',{method:'POST',body:JSON.stringify({full_name:$('fiatNome').value})});
-    if(r.ja_verificado){ $('fiatKycMsg').textContent='Sua verificação já está aprovada — feche e abra este painel de novo.'; return; }
+    // 29/09: aprovada => redesenha o painel com UMA consulta (antes pedia "feche e abra este painel de novo")
+    if(r.ja_verificado){ $('fiatKycMsg').textContent='Sua verificação já está aprovada — atualizando…'; rem2FiatReload(); return; }
     const url = _urlHttps(r.kyc_link) ? r.kyc_link : (_urlHttps(r.tos_link) ? r.tos_link : null);
     if(url){ window.open(url,'_blank','noopener');
       $('fiatKycMsg').textContent='Complete a verificação na aba que abriu'+((r.faltando&&r.faltando.length)?' ('+r.faltando.join(', ')+')':'')+'. Quando terminar, volte aqui e abra este painel de novo.'; }
@@ -1990,7 +1991,7 @@ async function rem2FiatKyc(){
     // R3: motivo da Bridge (ex.: cadastro duplicado com outro e-mail) em vez da frase genérica
     else if(r.bloqueado) $('fiatKycMsg').textContent=(Array.isArray(r.motivo_rejeicao)&&r.motivo_rejeicao[0])?('Sua verificação não foi aprovada: '+r.motivo_rejeicao[0]+'.'):'Sua verificação não foi aprovada — fale com a mesa.';
     else $('fiatKycMsg').textContent=r.aviso||'Não conseguimos abrir o link de verificação agora. Abra o painel de novo em instantes; se persistir, fale com a mesa.';
-  }catch(e){ $('fiatKycMsg').textContent=e.message; }
+  }catch(e){ $('fiatKycMsg').textContent=_erroHumano(e); }   // 29/09: texto humano (429 muitas tentativas, 5xx sanitizado)
   finally{ b.disabled=false; }
 }
 async function rem2FavRequest(){
