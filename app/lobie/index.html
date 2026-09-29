@@ -286,6 +286,10 @@ tr.grp:first-child td{padding-top:6px}
 .wz-body .rem-big{font-size:clamp(22px,6vw,28px)}
 .wz-body .qd{word-break:normal}
 .wz-off .wz-body{opacity:.5;pointer-events:none}
+/* 29/09 (Remessas liberado por KYC): quem o gate NÃO deixa passar vê só #remBarreira; o #wzCard some inteiro */
+#remBarreira .rem-lead{font-size:13px}
+#remBarreira .wz-nota{font-family:var(--font-d)}
+#remBarreira .rb-ok{color:var(--green)}
 #wzMais{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
 #wzMais summary{cursor:pointer;list-style:none;font-family:var(--font-m);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
 #wzMais summary::-webkit-details-marker{display:none} #wzMais summary::after{content:' ↓'} #wzMais[open] summary::after{content:' ↑'}
@@ -567,6 +571,25 @@ tr.grp:first-child td{padding-top:6px}
       </section>
       <section class="view" id="view-remessas">
         <div class="wz-wrap">
+          <!-- 29/09 (decisão Ernesto: Remessas liberado pelo KYC da Bridge): quem o gate do backend NÃO deixa passar vê SÓ este
+               cartão — o #wzCard some inteiro (display:none; o .wz-off só esmaecia o corpo e deixava "Mais opções" clicável).
+               Daqui só saem POST /remessas/kyc-link e GET /remessas/kyc-status — nunca deposit-instructions (exige KYC e cria conta).
+               Modo (remBarreira): kyc · email · bloqueado · negado · sessao. Todo texto entra por textContent. -->
+          <div class="card" id="remBarreira" style="display:none" data-reveal>
+            <h2>Remessas <span class="up" id="rbTag">verificação de identidade</span></h2>
+            <div class="wz-h" id="rbTitulo"></div>
+            <p class="rem-lead" id="rbLead"></p>
+            <div id="rbEstado" class="wz-nota" aria-live="polite"></div>
+            <div id="rbNomeBox" style="display:none">
+              <label class="fldl" for="rbNome">Nome completo <span class="up">(como no documento)</span></label>
+              <input id="rbNome" class="fld" type="text" autocomplete="name" maxlength="120" placeholder="nome e sobrenome">
+              <div class="muted rem-txt" style="font-size:12px;margin-top:4px">Já tem cadastro EFIX ou Lobie com outro e-mail? Entre com ele em vez de criar um novo.</div>
+            </div>
+            <button type="button" class="cta pri" id="rbBtnAcao" style="display:none"></button>
+            <button type="button" class="cta" id="rbBtnAbrir" style="display:none">Abrir a verificação →</button>
+            <button type="button" class="wz-link" id="rbBtnAtualizar" style="display:none">Já concluí — atualizar</button>
+            <div id="rbMsg" class="rem-msg" aria-live="polite"></div>
+          </div>
           <div class="card" id="wzCard" data-reveal>
             <h2>Pagar um boleto no Brasil <span class="up">em euros ou dólares</span></h2>
             <!-- F6 (22/09): 4 passos sobre os IDs/funções existentes (nenhum ID mudou de nome, só de lugar). .run = atual · .done = feito ·
@@ -1035,6 +1058,11 @@ function _erroHumano(e){
   const m=String((e&&e.message)||'');
   if(!e||(e instanceof TypeError)||/failed to fetch|networkerror|load failed/i.test(m)) return 'Sem conexão com o servidor — verifique sua internet e tente de novo.';
   if(e.status===401) return 'Sua sessão expirou — entre de novo.';
+  // 29/09 (gate por KYC): o backend manda .code no 403/429 — o texto é da carteira, nunca o cru do servidor
+  if(e.status===403&&e.code==='bloqueado') return 'Remessas está bloqueado para a sua conta — fale com a mesa.';
+  if(e.status===403&&e.code==='verificar_email') return 'Por segurança, saia e entre de novo com o código que enviamos para o seu e-mail.';
+  if(e.status===403&&e.code==='kyc_pendente') return 'Falta concluir a verificação de identidade para usar Remessas.';
+  if(e.status===429) return 'Muitas tentativas seguidas — espere alguns minutos e tente de novo.';
   if(e.status===403&&/beta/i.test(m)) return 'Remessas ainda não está liberado para a sua conta — fale com a mesa.';
   if(e.status===422&&/teto/i.test(m)) return 'Este valor passa do limite por remessa. Fale com a mesa para valores maiores.';
   if((e.status&&e.status>=500)||/^HTTP 5/.test(m)) return 'Nosso sistema não respondeu — tente de novo em instantes.';
@@ -1578,8 +1606,163 @@ async function rf(path, opts={}){
   const r = await fetch(BACKEND+path,{...init,headers:{'Content-Type':'application/json',...EfixAuth.headers(),...(init.headers||{})}});
   const d = await r.json().catch(()=>({}));
   // (09/09) o erro carrega .status: quem chama distingue 422 (regra de negócio) de rede/5xx
-  if(!r.ok && !tolerar.includes(r.status)){ const e=new Error(d.error||('HTTP '+r.status)); e.status=r.status; throw e; }
+  // 29/09: e .code (403 kyc_pendente/verificar_email/bloqueado, 429 muitas_tentativas). Em 5xx o backend apaga o code
+  // (sanitizador global) — 503 se trata só pelo status.
+  if(!r.ok && !tolerar.includes(r.status)){ const b=(d&&typeof d==='object')?d:{};
+    const e=new Error(b.error||('HTTP '+r.status)); e.status=r.status; if(typeof b.code==='string') e.code=b.code;
+    // o gate negou no MEIO da sessão (KYC caiu, a mesa bloqueou, token sem prova de e-mail): a aba troca para o cartão certo
+    if(r.status===403&&REM_BARREIRA[e.code]) remBarreira(REM_BARREIRA[e.code]);
+    throw e; }
   return d;
+}
+/* ═══ 29/09 · GATE DE REMESSAS POR KYC (decisão Ernesto: "pode liberar automático cliente mediante KYC" · "vale o da Bridge") ═══
+   O backend libera quem está na allowlist OU tem o customer da Bridge 'active'. Quem não passa recebe 403 com code e vê
+   SÓ o cartão #remBarreira — nada de cotação, remessa, depósito, boletos, favorecidos ou crédito. A carteira só DESENHA:
+   quem decide é o backend (fail-closed). Daqui só saem POST /remessas/kyc-link e GET /remessas/kyc-status. */
+const REM_BARREIRA={kyc_pendente:'kyc',verificar_email:'email',bloqueado:'bloqueado'};
+let _rbModo=null, _rbUrl=null, _rbAcao=null, _rbOcupado=false;
+const _RB_ANALISE=['under_review','in_review'], _RB_RESTRICAO=['paused','deposits_restricted'], _RB_REJEITADO=['rejected','offboarded'];
+// resposta de GET /remessas/kyc-status (contrato 1 do DVP) — só vale com contrato===1 e verificado booleano estrito
+const _rbStatusOk=s=>!!(s&&typeof s==='object'&&s.contrato===1&&typeof s.verificado==='boolean');
+function _rbMostra(id,on){ const el=$(id); if(el) el.style.display=on?'':'none'; }
+function _rbTxt(id,t){ const el=$(id); if(el) el.textContent=t||''; }
+// modo do cartão: kyc (verificação) · email (entrar de novo com código) · bloqueado (mesa) · negado (403 antigo/"beta") · sessao
+// Uma vez fora de 'kyc', não volta sozinho para 'kyc' (só recarregando); o mesmo modo duas vezes não redesenha
+// (nunca vira laço de consultas se uma rota do passo de verificação responder o mesmo 403).
+function remBarreira(modo, texto){
+  if(_rbModo===modo) return;
+  if(_rbModo&&_rbModo!=='kyc'&&modo==='kyc') return;
+  _rbModo=modo; _rbUrl=null;
+  _fiatGen++; clearTimeout(_fiatPoll);   // painel da conta fiat em voo morre junto (nunca redesenha atrás do cartão)
+  const card=$('wzCard'); if(card) card.style.display='none';
+  const bar=$('remBarreira'); if(!bar) return; bar.style.display='';
+  ['rbNomeBox','rbBtnAcao','rbBtnAbrir','rbBtnAtualizar'].forEach(id=>_rbMostra(id,false));
+  _rbTxt('rbEstado',''); _rbTxt('rbMsg',''); $('rbEstado').classList.remove('rb-ok');
+  $('rbBtnAcao').onclick=_rbAcaoClique; $('rbBtnAbrir').onclick=_rbAbrir; $('rbBtnAtualizar').onclick=()=>remKycAtualizar();
+  if(modo==='kyc'){
+    _rbTxt('rbTag','verificação de identidade');
+    _rbTxt('rbTitulo','Confirme sua identidade para usar Remessas');
+    _rbTxt('rbLead','Para pagar boletos no Brasil em euros ou dólares, precisamos confirmar quem você é — uma vez só. '+
+      'A verificação é feita pela Bridge, nossa parceira de pagamentos: você envia um documento com foto, faz uma selfie e aceita os termos. Leva poucos minutos.');
+    _rbTxt('rbEstado','Consultando sua verificação…');
+    remKycConsultar();
+  }else if(modo==='email'){
+    _rbTxt('rbTag','confirme seu e-mail');
+    _rbTxt('rbTitulo','Entre de novo com o código do e-mail');
+    _rbTxt('rbLead','Por segurança, Remessas só abre quando você entrou com o código que enviamos para o seu e-mail. '+
+      'Saia e entre de novo com o código de 6 dígitos — é rápido, e nada da sua conta muda.');
+    _rbBotao('Sair e entrar com o código →','sair');
+  }else if(modo==='bloqueado'){
+    _rbTxt('rbTag','fale com a mesa');
+    _rbTxt('rbTitulo','Remessas está bloqueado para a sua conta');
+    _rbTxt('rbLead','Por enquanto não dá para usar Remessas por aqui. Fale com a mesa para entender o motivo e, se for o caso, liberar.');
+  }else if(modo==='sessao'){
+    _rbTxt('rbTag','sessão');
+    _rbTxt('rbTitulo',texto||'Sua sessão expirou');
+    _rbTxt('rbLead',texto?'Entre com sua conta para pagar um boleto.':'Entre de novo com sua conta para pagar um boleto.');
+    _rbBotao(texto?'Entrar →':'Entrar de novo →','sair');
+  }else{ // negado: 403 sem code (backend antigo, "beta fechado") ou outro 403
+    _rbTxt('rbTag','fale com a mesa');
+    _rbTxt('rbTitulo','Remessas ainda não está liberado para a sua conta');
+    _rbTxt('rbLead',texto||'Fale com a mesa para liberar o acesso.');
+  }
+  if(bar.getBoundingClientRect().top<0) bar.scrollIntoView({block:'start'});
+}
+function _rbBotao(rotulo,acao){ const b=$('rbBtnAcao'); b.textContent=rotulo; b.disabled=false; _rbAcao=acao; _rbMostra('rbBtnAcao',!!rotulo); }
+function _rbAcaoClique(){
+  if(_rbAcao==='sair') return sair();
+  if(_rbAcao==='abrir_remessas') return location.reload();   // o hash #remessas reabre a aba (initRemessas2 roda do zero)
+  if(_rbAcao==='kyc') return remKycLink();
+}
+// "Abrir a verificação" — a url fica na memória (nunca no DOM), só https, noopener
+function _rbAbrir(){ if(_urlHttps(_rbUrl)) window.open(_rbUrl,'_blank','noopener'); }
+// Desenha o estado da verificação a partir da resposta do kyc-status (C1). null/ilegível => caminho padrão (nome + começar):
+// o kyc-link decide sozinho se precisa do nome.
+function _rbDesenharKyc(s){
+  _rbMostra('rbBtnAbrir',!!_rbUrl);
+  $('rbEstado').classList.toggle('rb-ok',_rbStatusOk(s)&&s.verificado===true);
+  if(!_rbStatusOk(s)){
+    _rbTxt('rbEstado','Não conseguimos consultar sua verificação agora. Se ainda não começou, informe seu nome completo e toque em Começar.');
+    _rbMostra('rbNomeBox',true); _rbBotao('Começar verificação →','kyc'); _rbMostra('rbBtnAtualizar',true); return;
+  }
+  if(s.verificado){
+    _rbTxt('rbEstado','✓ Sua identidade já foi verificada. Toque em Abrir Remessas — se ainda aparecer este cartão, espere um minuto e toque de novo.');
+    _rbMostra('rbNomeBox',false); _rbBotao('Abrir Remessas →','abrir_remessas'); _rbMostra('rbBtnAbrir',false); _rbMostra('rbBtnAtualizar',false); return;
+  }
+  const st=String(s.status||'').toLowerCase();
+  let txt, nome=false, botao=null, atualizar=true;
+  if(s.motivo==='sem_cadastro'){ txt='Comece informando seu nome completo, como está no documento. A verificação abre em outra aba.'; nome=true; botao='Começar verificação →'; }
+  else if(s.motivo==='ambiguo'){ txt='Encontramos mais de um cadastro de verificação para este e-mail. Fale com a mesa para resolver — não comece uma verificação nova.'; }
+  else if(s.motivo==='casa'){ txt='Este e-mail é de uma conta operacional da EFIX, que não usa Remessas como cliente. Entre com o seu e-mail pessoal ou fale com a mesa.'; atualizar=false; }
+  else if(s.motivo==='nao_ativo'&&_RB_ANALISE.includes(st)){ txt='Sua verificação está em análise. Quando for aprovada, toque em “Já concluí — atualizar”.'; }
+  else if(s.motivo==='nao_ativo'&&_RB_RESTRICAO.includes(st)){ txt='Sua conta de pagamento está com restrição — fale com a mesa.'; }
+  else if(s.motivo==='nao_ativo'&&_RB_REJEITADO.includes(st)){ txt='Sua verificação não foi aprovada — fale com a mesa.'; botao='Ver o motivo →'; }
+  else if(s.motivo==='nao_ativo'){ txt='Sua verificação ainda não foi concluída. Toque em Continuar para abrir de onde parou — é lá também que você aceita os termos.'; botao='Continuar verificação →'; }
+  else { txt='Não conseguimos ler o estado da sua verificação agora. Se ainda não começou, informe seu nome completo e toque em Começar.'; nome=true; botao='Começar verificação →'; }
+  _rbTxt('rbEstado',txt); _rbMostra('rbNomeBox',nome);
+  if(botao) _rbBotao(botao,'kyc'); else _rbMostra('rbBtnAcao',false);
+  _rbMostra('rbBtnAtualizar',atualizar);
+}
+function _rbErro(e){
+  if(e&&e.status===429) return _erroHumano(e);
+  return 'Não conseguimos consultar agora — tente de novo em instantes. Se continuar, fale com a mesa.';
+}
+// Consulta ao abrir o cartão: decide se pede o nome (sem cadastro) ou só "continuar". Nunca recarrega sozinha
+// (sem laço de reload se o gate ainda disser kyc_pendente por alguns segundos).
+async function remKycConsultar(){
+  let s=null;
+  try{ s=await rf('/remessas/kyc-status'); }
+  catch(e){ s=null; if(_rbModo==='kyc'&&e&&e.status===429) _rbTxt('rbMsg',_erroHumano(e)); }
+  if(_rbModo!=='kyc') return;   // um 403 no meio do caminho já trocou o cartão
+  _rbDesenharKyc(s);
+}
+// "Já concluí — atualizar" (e depois de um ja_verificado do kyc-link): UMA consulta; verificado => recarrega a aba
+async function remKycAtualizar(opts={}){
+  if(_rbOcupado||_rbModo!=='kyc') return; _rbOcupado=true;
+  const b=$('rbBtnAtualizar'); if(b) b.disabled=true; _rbTxt('rbMsg','consultando…');
+  try{
+    const s=await rf('/remessas/kyc-status');
+    if(_rbModo!=='kyc') return;
+    if(!_rbStatusOk(s)){ _rbTxt('rbMsg',_rbErro(null)); return; }
+    if(s.verificado){ _rbTxt('rbMsg',''); _rbTxt('rbEstado','✓ Verificação aprovada — abrindo Remessas…'); $('rbEstado').classList.add('rb-ok'); location.reload(); return; }
+    _rbDesenharKyc(s);
+    _rbTxt('rbMsg', opts.depoisDoLink ? 'A verificação ainda não aparece como aprovada para Remessas.' : 'Ainda não aparece como aprovada.');
+  }catch(e){ if(_rbModo==='kyc') _rbTxt('rbMsg',_rbErro(e)); }
+  finally{ _rbOcupado=false; if(b) b.disabled=false; }
+}
+// Começar/continuar: POST /remessas/kyc-link (o DVP acha o cadastro pelo e-mail do login; cria só se não existir — aí o nome é obrigatório)
+async function remKycLink(){
+  if(_rbOcupado||_rbModo!=='kyc') return;
+  const pedeNome=$('rbNomeBox').style.display!=='none', nome=String($('rbNome').value||'').trim().replace(/\s+/g,' ');
+  if(pedeNome&&nome.split(' ').filter(Boolean).length<2){ _rbTxt('rbMsg','Informe nome e sobrenome, como no documento.'); $('rbNome').focus(); return; }
+  _rbOcupado=true; const b=$('rbBtnAcao'); b.disabled=true; _rbTxt('rbMsg','abrindo sua verificação…');
+  let r;
+  try{ r=await rf('/remessas/kyc-link',{method:'POST',body:JSON.stringify(pedeNome?{full_name:nome}:{})}); }
+  catch(e){
+    _rbOcupado=false; b.disabled=false; if(_rbModo!=='kyc') return;
+    if(e&&e.status===400){ _rbMostra('rbNomeBox',true); _rbTxt('rbMsg','Informe nome e sobrenome, como no documento.'); return; }
+    _rbTxt('rbMsg', (e&&e.status===429) ? _erroHumano(e) : 'Não conseguimos abrir a verificação agora — tente de novo em instantes. Se continuar, fale com a mesa.');
+    return;
+  }
+  _rbOcupado=false; b.disabled=false; if(_rbModo!=='kyc') return;
+  r=(r&&typeof r==='object')?r:{};
+  // o kyc-link usa uma régua mais frouxa (1º cadastro da lista): quem decide é o kyc-status. Ambíguo/casa viram "fale com a mesa".
+  if(r.ja_verificado){ _rbTxt('rbMsg','conferindo…'); return remKycAtualizar({depoisDoLink:true}); }
+  const url=_urlHttps(r.kyc_link)?r.kyc_link:(_urlHttps(r.tos_link)?r.tos_link:null);
+  if(url){
+    _rbUrl=url; window.open(url,'_blank','noopener');
+    const falta=(Array.isArray(r.faltando)&&r.faltando.length)?' Falta: '+r.faltando.slice(0,6).map(String).join(', ')+'.':'';
+    _rbTxt('rbEstado','Abrimos a verificação da Bridge em outra aba.'+falta+' Quando terminar, volte aqui e toque em “Já concluí — atualizar”. Se a aba não abriu, toque em “Abrir a verificação”.');
+    $('rbEstado').classList.remove('rb-ok');
+    _rbMostra('rbNomeBox',false); _rbMostra('rbBtnAcao',false); _rbMostra('rbBtnAbrir',true); _rbMostra('rbBtnAtualizar',true); _rbTxt('rbMsg','');
+    return;
+  }
+  if(r.em_analise){ _rbTxt('rbEstado','Sua verificação está em análise. Quando for aprovada, toque em “Já concluí — atualizar”.');
+    _rbMostra('rbNomeBox',false); _rbMostra('rbBtnAcao',false); _rbMostra('rbBtnAtualizar',true); _rbTxt('rbMsg',''); return; }
+  if(r.bloqueado){ const mot=(Array.isArray(r.motivo_rejeicao)&&r.motivo_rejeicao[0])?String(r.motivo_rejeicao[0]):'';
+    _rbTxt('rbEstado', mot ? 'Sua verificação não foi aprovada: '+mot+(/mesa/i.test(mot)?'.':' — fale com a mesa.') : 'Sua verificação não foi aprovada — fale com a mesa.');
+    _rbMostra('rbNomeBox',false); _rbMostra('rbBtnAcao',false); _rbMostra('rbBtnAtualizar',true); _rbTxt('rbMsg',''); return; }
+  _rbTxt('rbMsg','Não conseguimos abrir a verificação agora — tente de novo em instantes. Se continuar, fale com a mesa.');
 }
 async function initRemessas2(){
   if(_rem2Init){ return; }
@@ -1615,7 +1798,7 @@ async function initRemessas2(){
     f.style.display=f.style.display==='none'?'block':'none'; };
   $('favBtnSend').onclick=rem2FavRequest;
   $('opBtnCriar').onclick=rem2OpCriar;
-  if(!EfixAuth.isLoggedIn()){ $('remMsg').textContent='Entre com sua conta para pagar um boleto.'; $('wzCard').classList.add('wz-off'); return; }
+  if(!EfixAuth.isLoggedIn()){ remBarreira('sessao','Entre com sua conta'); return; }
   try{
     // F7 (22/09): DVP novo devolve só os favorecidos DO cliente (+ origem 'meu'); DVP/proxy antigos, a lista de sempre — mesmo desenho
     const favs = _arr(await rf('/remessas/allowlist'));
@@ -1628,7 +1811,14 @@ async function initRemessas2(){
     rem2Refresh(); rem2FavPend(); rem2Ops();
     rem2FiatAuto(); // v0.21: sem conta fiat, o painel abre sozinho mostrando o que falta
     rem2Credito();  // v0.24 (F3): crédito de remessas anteriores ao entrar na aba (silencioso em erro/404)
-  }catch(e){ _msg(_erroHumano(e),true); if(e&&(e.status===401||e.status===403)) $('wzCard').classList.add('wz-off'); } // só sessão/beta travam a aba; erro de rede não
+  }catch(e){
+    // 29/09: sessão/gate travam a aba INTEIRA (só o cartão #remBarreira); erro de rede/5xx não trava (como antes).
+    // 403 com code (kyc_pendente/verificar_email/bloqueado) o rf() já trocou; 403 sem code = backend antigo ("beta fechado").
+    if(e&&e.status===403&&REM_BARREIRA[e.code]) return;
+    if(e&&e.status===401){ remBarreira('sessao'); return; }
+    if(e&&e.status===403){ remBarreira('negado', /beta/i.test(String(e.message||''))?'':_erroHumano(e)); return; }
+    _msg(_erroHumano(e),true);
+  }
 }
 const _esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let _fiatPoll=null, _fiatGen=0;
