@@ -1062,7 +1062,10 @@ function _erroHumano(e){
   if(e.status===403&&e.code==='bloqueado') return 'Remessas está bloqueado para a sua conta — fale com a mesa.';
   if(e.status===403&&e.code==='verificar_email') return 'Por segurança, saia e entre de novo com o código que enviamos para o seu e-mail.';
   if(e.status===403&&e.code==='kyc_pendente') return 'Falta concluir a verificação de identidade para usar Remessas.';
-  if(e.status===429) return 'Muitas tentativas seguidas — espere alguns minutos e tente de novo.';
+  if(e.status===403&&e.code==='nao_liberado') return 'Remessas ainda não está liberado para a sua conta — fale com a mesa.';
+  // 29/09 (cético): só o 429 do GATE (code) vira "muitas tentativas"; o 429 de regra do DVP (ex.: teto diário de remessas
+  // sem transferência) já vem com texto próprio e "fale com a mesa" — cai no `return m` como antes
+  if(e.status===429&&e.code==='muitas_tentativas') return 'Muitas tentativas seguidas — espere alguns minutos e tente de novo.';
   if(e.status===403&&/beta/i.test(m)) return 'Remessas ainda não está liberado para a sua conta — fale com a mesa.';
   if(e.status===422&&/teto/i.test(m)) return 'Este valor passa do limite por remessa. Fale com a mesa para valores maiores.';
   if((e.status&&e.status>=500)||/^HTTP 5/.test(m)) return 'Nosso sistema não respondeu — tente de novo em instantes.';
@@ -1619,7 +1622,7 @@ async function rf(path, opts={}){
    O backend libera quem está na allowlist OU tem o customer da Bridge 'active'. Quem não passa recebe 403 com code e vê
    SÓ o cartão #remBarreira — nada de cotação, remessa, depósito, boletos, favorecidos ou crédito. A carteira só DESENHA:
    quem decide é o backend (fail-closed). Daqui só saem POST /remessas/kyc-link e GET /remessas/kyc-status. */
-const REM_BARREIRA={kyc_pendente:'kyc',verificar_email:'email',bloqueado:'bloqueado'};
+const REM_BARREIRA={kyc_pendente:'kyc',verificar_email:'email',bloqueado:'bloqueado',nao_liberado:'negado'};
 let _rbModo=null, _rbUrl=null, _rbAcao=null, _rbOcupado=false;
 const _RB_ANALISE=['under_review','in_review'], _RB_RESTRICAO=['paused','deposits_restricted'], _RB_REJEITADO=['rejected','offboarded'];
 // resposta de GET /remessas/kyc-status (contrato 1 do DVP) — só vale com contrato===1 e verificado booleano estrito
@@ -1694,6 +1697,7 @@ function _rbDesenharKyc(s){
   if(s.motivo==='sem_cadastro'){ txt='Comece informando seu nome completo, como está no documento. A verificação abre em outra aba.'; nome=true; botao='Começar verificação →'; }
   else if(s.motivo==='ambiguo'){ txt='Encontramos mais de um cadastro de verificação para este e-mail. Fale com a mesa para resolver — não comece uma verificação nova.'; }
   else if(s.motivo==='casa'){ txt='Este e-mail é de uma conta operacional da EFIX, que não usa Remessas como cliente. Entre com o seu e-mail pessoal ou fale com a mesa.'; atualizar=false; }
+  else if(s.motivo==='nao_ativo'&&st==='active'){ txt='Seu cadastro de verificação precisa de conferência — fale com a mesa.'; }
   else if(s.motivo==='nao_ativo'&&_RB_ANALISE.includes(st)){ txt='Sua verificação está em análise. Quando for aprovada, toque em “Já concluí — atualizar”.'; }
   else if(s.motivo==='nao_ativo'&&_RB_RESTRICAO.includes(st)){ txt='Sua conta de pagamento está com restrição — fale com a mesa.'; }
   else if(s.motivo==='nao_ativo'&&_RB_REJEITADO.includes(st)){ txt='Sua verificação não foi aprovada — fale com a mesa.'; botao='Ver o motivo →'; }
@@ -1726,7 +1730,12 @@ async function remKycAtualizar(opts={}){
     if(!_rbStatusOk(s)){ _rbTxt('rbMsg',_rbErro(null)); return; }
     if(s.verificado){ _rbTxt('rbMsg',''); _rbTxt('rbEstado','✓ Verificação aprovada — abrindo Remessas…'); $('rbEstado').classList.add('rb-ok'); location.reload(); return; }
     _rbDesenharKyc(s);
-    _rbTxt('rbMsg', opts.depoisDoLink ? 'A verificação ainda não aparece como aprovada para Remessas.' : 'Ainda não aparece como aprovada.');
+    if(opts.depoisDoLink){
+      // o kyc-link disse "já verificado" e o kyc-status (quem libera) não: cadastro para a mesa conferir — sem "Continuar"
+      // (clicar de novo só repetiria o mesmo par de respostas e queimaria a cota do kyc-link)
+      _rbMostra('rbBtnAcao',false); _rbMostra('rbNomeBox',false);
+      _rbTxt('rbMsg','Seu cadastro de verificação precisa de conferência — fale com a mesa.');
+    } else _rbTxt('rbMsg','Ainda não aparece como aprovada.');
   }catch(e){ if(_rbModo==='kyc') _rbTxt('rbMsg',_rbErro(e)); }
   finally{ _rbOcupado=false; if(b) b.disabled=false; }
 }
@@ -1741,6 +1750,9 @@ async function remKycLink(){
   catch(e){
     _rbOcupado=false; b.disabled=false; if(_rbModo!=='kyc') return;
     if(e&&e.status===400){ _rbMostra('rbNomeBox',true); _rbTxt('rbMsg','Informe nome e sobrenome, como no documento.'); return; }
+    if(e&&e.status===409){   // 29/09: o DVP achou 2+ cadastros, conta da casa ou cadastro para conferir — só a mesa resolve
+      const t=String(e.message||''); _rbTxt('rbEstado', /mesa/i.test(t) ? t.replace(/\.?$/,'.') : 'Seu cadastro de verificação precisa de conferência — fale com a mesa.');
+      _rbMostra('rbNomeBox',false); _rbMostra('rbBtnAcao',false); _rbTxt('rbMsg',''); return; }
     _rbTxt('rbMsg', (e&&e.status===429) ? _erroHumano(e) : 'Não conseguimos abrir a verificação agora — tente de novo em instantes. Se continuar, fale com a mesa.');
     return;
   }
