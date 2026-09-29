@@ -91,17 +91,17 @@ SMTP_PORT       = 587
 SMTP_USER       = ernesto.otero@hausbank.com.br
 SMTP_PASS       = (Gmail App Password 16 chars)
 SMTP_FROM       = ernesto.otero@hausbank.com.br
-ADMIN_API_KEY   = hyeUBN7esKD2rIw7ENVoqPeeSQW3XHPMwiv9SWgt   # ⚠ VAZADA — ROTACIONAR (Sprint A)
+ADMIN_API_KEY   = <redigido: chave antiga, já rotacionada>   # ⚠ VAZADA — ROTACIONAR (Sprint A)
 ADMIN_EMAILS    = ernesto.otero@efix.finance,ernesto.o…
-ADMIN_JWT_SECRET= efixdi-jwt-2026-change-to-random-…
+ADMIN_JWT_SECRET= <redigido>
 ADMIN_TOKEN     = (definida)
 ```
 
 Alchemy (frontend bundle real ativo):
 
 ```
-apiKey          = 5QrXWREEtmi4gITNoJsJf
-gasPolicyId     = 7b22b464-38cd-4e6f-bccb-00f1280ac14c   # Polygon — NÃO existe ainda Base
+apiKey          = <ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>
+gasPolicyId     = <GAS_POLICY_ID>   # Polygon — NÃO existe ainda Base
 ```
 
 ---

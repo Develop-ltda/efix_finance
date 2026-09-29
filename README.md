@@ -236,8 +236,8 @@ EfixWallet.disconnect()              // Logout + limpa sessão
 ### Configuração Alchemy
 
 ```javascript
-const ALCHEMY_API_KEY = "5QrXWREEtmi4gITNoJsJf";
-const GAS_POLICY_ID = "7b22b464-38cd-4e6f-bccb-00f1280ac14c";
+const ALCHEMY_API_KEY = "<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>";
+const GAS_POLICY_ID = "<GAS_POLICY_ID>";
 // Gas sponsorship via policy — usuário não paga gas
 ```
 
@@ -644,8 +644,8 @@ Por ser um site estático sem build system, algumas chaves ficam visíveis no cl
 
 | Credencial | Arquivo(s) | Risco se não houver scoping |
 |---|---|---|
-| **Alchemy API Key** `5QrXWREEtmi4gITNoJsJf` | `shared/js/config.js`, `app/wallet/efix-wallet-sdk.js` | RPC calls, smart wallet ops, custo na conta Alchemy |
-| **Gas Policy ID** `7b22b464-38cd-4e6f-bccb-00f1280ac14c` | `app/wallet/efix-wallet-sdk.js` | Patrocínio de gas — pode ser abusado para esgotar budget |
+| **Alchemy API Key** `<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>` | `shared/js/config.js`, `app/wallet/efix-wallet-sdk.js` | RPC calls, smart wallet ops, custo na conta Alchemy |
+| **Gas Policy ID** `<GAS_POLICY_ID>` | `app/wallet/efix-wallet-sdk.js` | Patrocínio de gas — pode ser abusado para esgotar budget |
 
 **Mitigação recomendada**: configurar na dashboard Alchemy — domain allowlist (`efix.finance`), rate limits por IP, e gas budget cap na policy.
 

@@ -31,7 +31,7 @@ pegadinhas e definição de pronto.
 
 ### Item 1 · Rotacionar `ADMIN_API_KEY`
 
-**Por que.** A `ADMIN_API_KEY` atual (`hyeUBN7esKD2rIw7ENVoqPeeSQW3XHPMwiv9SWgt`)
+**Por que.** A `ADMIN_API_KEY` atual (`<redigido: chave antiga, já rotacionada>`)
 foi exposta em transcript de chat na sessão de 2026-05-08. Qualquer pessoa com
 acesso a esse transcript pode chamar endpoints `adminAuth` no efixdi-backend,
 incluindo `POST /api/tdic/email/send-cr-notification` e `POST /api/admin/deposit`.
@@ -176,17 +176,17 @@ module.exports = {
   },
   networks: {
     baseSepolia: {
-      url: "https://base-sepolia.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf",
+      url: "https://base-sepolia.g.alchemy.com/v2/<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>",
       accounts: [process.env.DEPLOYER_PK],
       chainId: 84532,
     },
     base: {
-      url: "https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf",
+      url: "https://base-mainnet.g.alchemy.com/v2/<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>",
       accounts: [process.env.DEPLOYER_PK],
       chainId: 8453,
     },
   },
-  etherscan: { apiKey: "GJ81QTB1DN4IZTQDQ2BDD326MUMAWEMVYY" },
+  etherscan: { apiKey: "<ETHERSCAN_KEY>" },
 };
 ```
 
@@ -519,7 +519,7 @@ Base precisa de paymaster específico, senão usuários pagam gas.
 **Como.**
 
 1. Acessar `https://dashboard.alchemy.com/gas-manager` → criar policy:
-   - App: cte3livah2bhnfwx (já existe)
+   - App: <ALCHEMY_APP_ID> (já existe)
    - Chain: Base mainnet (e Base Sepolia para testes)
    - Allowlist de contratos: TDICRegistry endereço
    - Spending limit: começa baixo (R$ 500/mês equivalente em ETH)
@@ -529,8 +529,8 @@ Base precisa de paymaster específico, senão usuários pagam gas.
 3. Atualizar `efix_finance/app/wallet/efix-wallet-sdk.js`:
    ```js
    const EFIX_CONFIG = {
-     apiKey: "5QrXWREEtmi4gITNoJsJf",
-     gasPolicyId: "7b22b464-…",          // Polygon (efixDI)
+     apiKey: "<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>",
+     gasPolicyId: "<GAS_POLICY_ID>",          // Polygon (efixDI)
      gasPolicyIdBase: "BASE_POLICY_ID",  // Base TDIC ← preencher
      chain: polygon,
      ...
@@ -1242,16 +1242,16 @@ Ou usar Service Worker com `cache: 'no-cache'` para scripts críticos.
 - Comando: `cd C:\Users\ernes\efixdi-backend && railway variables --kv`
 
 ### Alchemy
-- App ID: `cte3livah2bhnfwx`
-- API key: `5QrXWREEtmi4gITNoJsJf`
-- RPC Polygon: `https://polygon-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf`
-- RPC Base: `https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf`
-- RPC Base Sepolia: `https://base-sepolia.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf`
-- Gas policy Polygon: `7b22b464-38cd-4e6f-bccb-00f1280ac14c`
+- App ID: `<ALCHEMY_APP_ID>`
+- API key: `<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>`
+- RPC Polygon: `https://polygon-mainnet.g.alchemy.com/v2/<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>`
+- RPC Base: `https://base-mainnet.g.alchemy.com/v2/<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>`
+- RPC Base Sepolia: `https://base-sepolia.g.alchemy.com/v2/<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>`
+- Gas policy Polygon: `<GAS_POLICY_ID>`
 - Gas policy Base: **a criar (item 6)**
 
 ### Basescan
-- API key: `GJ81QTB1DN4IZTQDQ2BDD326MUMAWEMVYY`
+- API key: `<ETHERSCAN_KEY>`
 
 ### Deployer wallet
 - Endereço: `0x0AFE6E08d8e7Ebac1e6663174a2F2c663f07f589`

@@ -27,7 +27,7 @@ All three contracts were probed via `cast` against Alchemy Base mainnet RPC.
 Re-run the pre-flight any time:
 
 ```powershell
-$RPC = "https://base-mainnet.g.alchemy.com/v2/5QrXWREEtmi4gITNoJsJf"
+$RPC = "https://base-mainnet.g.alchemy.com/v2/<ALCHEMY_KEY: ver env/Secret Manager — nunca em arquivo público>"
 $cast = "$env:USERPROFILE\.foundry\bin\cast.exe"
 foreach ($addr in @(
   "0x7D12a82E335EB2Be0789A33CE2EBF7Eb2bA782F6",
