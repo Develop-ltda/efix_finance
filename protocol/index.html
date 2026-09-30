@@ -400,7 +400,7 @@ function renderStress(){
   });
   html+='</tbody></table>';
   if(st.s<=-20)html+=`<div class="info-box green"><div class="info-title">🛡️ D+0 Redemption Protection</div>
-    <div class="info-text">Underlying DI fund shares redeem instantly (D+0). BRL capital is 100% preserved regardless of USD exchange rate. Auto-deleverage triggers at HF < 1.15, reducing exposure before liquidation.</div></div>`;
+    <div class="info-text">Underlying DI fund shares redeem instantly (D+0). The BRL value follows the fund-backed NAV regardless of the USD exchange rate; this is not a guarantee. Auto-deleverage triggers at HF < 1.15, reducing exposure before liquidation.</div></div>`;
   document.getElementById('stressTable').innerHTML=html;
 }
 renderStress();

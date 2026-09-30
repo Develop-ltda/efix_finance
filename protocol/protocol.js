@@ -177,14 +177,14 @@ const ProtocolLogic = {
       lines.push({ cls: 't-green', txt: '  hausbank: ' + (r.services.hausbank.authenticated ? 'authenticated' : 'disconnected') + ' (circuit: ' + r.services.hausbank.circuit.state + ')' });
       lines.push({ cls: 't-green', txt: '  risky_positions: ' + r.services.keeper.risky_positions });
     } else if (cmd === 'morpho') {
-      lines.push({ cls: 't-dim', txt: 'Morpho Blue Position (Base Mainnet)' });
+      lines.push({ cls: 't-dim', txt: 'Morpho Blue Position (legacy market, Base — illustrative)' });
       lines.push({ cls: 't-white', txt: '  market: efixDI/USDC | id: 0x31d65c...345a' });
       lines.push({ cls: 't-green', txt: '  collateral: 25 efixDI (~$4.79)' });
       lines.push({ cls: 't-white', txt: '  borrowed: 2.5 USDC' });
       lines.push({ cls: 't-white', txt: '  ltv: 52.2% / 77% LLTV' });
       lines.push({ cls: 't-green', txt: '  health_factor: 1.475' });
       lines.push({ cls: 't-white', txt: '  borrow_rate: 0.67% APR' });
-      lines.push({ cls: 't-green', txt: '  net_yield: ~25.4% APY (at target LTV)' });
+      lines.push({ cls: 't-green', txt: '  net_yield: CDI-linked; depends on borrow rate and LTV (not guaranteed)' });
       lines.push({ cls: 't-dim', txt: '  vault_v2: 0xf4A3...CBd5 (legacy pilot, retired)' });
     }
     return lines;

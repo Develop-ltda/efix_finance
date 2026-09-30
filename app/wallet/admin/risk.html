@@ -1104,7 +1104,7 @@ body::before {
         <div class="rc-icon ok">✓</div>
         <div>
           <div class="rc-name">D+0 Redemption Live</div>
-          <div class="rc-desc">Same-day DI fund redemption. No FX hedge cost. Full NAV liquidation guarantee.</div>
+          <div class="rc-desc">Same-day DI fund redemption (D+0). No FX hedge cost. Not a guarantee.</div>
         </div>
       </div>
       <div class="rc-item">
@@ -1331,7 +1331,7 @@ body::before {
         <div class="panel-title" style="font-size:10px">D+0 Redemption — Core Moat</div>
       </div>
       <div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.6">
-        Same-day redemption of DI fund shares at <span class="moat-highlight">full NAV</span> eliminates FX hedge costs (~2–3% annually). Serves as the liquidation guarantee for Morpho positions. No crypto collateral can match this: DI fund is backed by Brazilian sovereign debt, not market price.
+        Same-day redemption of DI fund shares at <span class="moat-highlight">full NAV</span> eliminates FX hedge costs (~2–3% annually). It supports the exit path for liquidations; it is not a guarantee. The fund holds Brazilian federal government securities (LFT).
       </div>
     </div>
     <div class="panel">
@@ -1340,7 +1340,7 @@ body::before {
         <div class="panel-title" style="font-size:10px">Regulatory Infrastructure</div>
       </div>
       <div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.6">
-        CVM Act 23.635/2025 under Resolution 88/2022. HausBank provides PIX infrastructure (Central Bank regulated). Genial IAAS for DI fund custody. <span class="moat-highlight">Institutional-grade regulatory stack</span> — not a DeFi workaround.
+        CVM Act 23.635/2025 under Resolution 88/2022. HausBank provides PIX infrastructure (Central Bank regulated). Fund units held at BTG Pactual by Develop Participações, an EFIX group affiliate. <span class="moat-highlight">Institutional-grade regulatory stack</span> — not a DeFi workaround.
       </div>
     </div>
     <div class="panel">
@@ -1349,7 +1349,7 @@ body::before {
         <div class="panel-title" style="font-size:10px">Yield Architecture</div>
       </div>
       <div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.6">
-        CDI ~14.9% APY base. Leverage via Morpho Blue at 50% LTV, USDC borrow at ~5%. <span class="moat-highlight">Target 25–35% net APY</span>. Spread widens as CDI rises. No impermanent loss, no liquidation via oracle manipulation — liquidation is fund redemption.
+        CDI-linked base yield (~14–15% p.a. gross in 2026, not guaranteed). Leverage runs on the Euler market on Base at a conservative LTV; the net result depends on the USDC borrow rate and BRL/USD, and <span class="moat-highlight">no APY is promised</span>. No impermanent loss. Liquidations clear through the PSM or a DEX; D+0 fund redemption replenishes reserves.
       </div>
     </div>
   </div>
@@ -1904,7 +1904,7 @@ async function loadReserve() {
     set('reserveRatio', '—');
     set('reserveSurplus', '—');
     set('mReserve', 'N/A');
-    set('mReserveSub', 'Genial API pending');
+    set('mReserveSub', 'BTG Pactual statement (manual)');
     set('reserveTs', 'iHold credentials required');
     const badge = document.getElementById('reserveStatusBadge');
     if (badge) {
