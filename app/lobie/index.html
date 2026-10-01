@@ -296,6 +296,8 @@ tr.grp:first-child td{padding-top:6px}
 .wz-mais-hint{text-transform:none;letter-spacing:0;color:var(--ink-3);font-size:10px}
 .wz-mais-blk{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
 @media (max-width:480px){.wz-wrap .card{padding:16px 14px}.wz-ind{gap:4px}.wz-ind .wz-s{font-size:8.5px;letter-spacing:.04em}.wz-h{font-size:16px}}
+/* F1b (01/10) Parcelas (só leitura): calendário do plano — só tokens existentes; o resto reaproveita .rem-kv .rem-big .wz-h .wz-nota .wz-mais-blk */
+.parc-tab td,.parc-tab th{padding:8px 8px 8px 0;font-size:11.5px;vertical-align:top} .parc-tab td:last-child,.parc-tab th:last-child{text-align:left;font-family:var(--font-d);padding-right:0} .parc-tab td:nth-child(3),.parc-tab th:nth-child(3){display:table-cell} .parc-tab td:nth-child(2),.parc-tab td:nth-child(3){white-space:nowrap} #parcBox .wz-h,#parcBox .rem-txt,.parc-tab td:last-child{overflow-wrap:anywhere}   /* o @media 920px esconde a 3ª coluna das tabelas (ativos); aqui ela é o valor */
 
 /* extrato consolidado (web2 + web3) */
 .crow{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -589,6 +591,15 @@ tr.grp:first-child td{padding-top:6px}
             <button type="button" class="cta" id="rbBtnAbrir" style="display:none">Abrir a verificação →</button>
             <button type="button" class="wz-link" id="rbBtnAtualizar" style="display:none">Já concluí — atualizar</button>
             <div id="rbMsg" class="rem-msg" aria-live="polite"></div>
+          </div>
+          <!-- F1b (01/10, DVP v0.28.0) PARCELAS — plano de parcelas recorrentes (ex.: apartamento na planta), SÓ LEITURA.
+               Fica oculto até GET /remessas/planos devolver ≥ 1 plano: 404 (DVP com PLANOS_ENABLED=0 ou antigo), 5xx, rede e
+               lista vazia = some em silêncio e o resto da aba não muda. Nenhum POST sai daqui. Todo texto do servidor por _esc.
+               Lobie: Remessas está em LOBIE_OCULTAS, então esta seção nunca carrega lá. -->
+          <div class="card" id="parcelasCard" style="display:none" data-reveal>
+            <h2>Parcelas <span class="up">plano de pagamentos</span></h2>
+            <p class="rem-lead">Nossa equipe confere cada boleto no banco e paga a parcela com o seu saldo. Aqui você acompanha o calendário e quanto transferir.</p>
+            <div id="parcBox"></div>
           </div>
           <div class="card" id="wzCard" data-reveal>
             <h2>Pagar um boleto no Brasil <span class="up">em euros ou dólares</span></h2>
@@ -1596,6 +1607,8 @@ async function renderActivity(elId, n, chipsId){
 
 /* ═══ REMESSAS NATIVA (BRL-first via /remessas/* do backend; browser nunca fala com o DVP) ═══ */
 let _rem2Init=false, _rem2Quote=null, _rem2Boleto=null; // _rem2Boleto (08/09): {id, valor_brl} do PDF lido
+// F1b (01/10) Parcelas: último GET /remessas/planos desenhado, última resposta de deposit-instructions e token de geração
+let _remPlanos=null, _remFiatUltimo=null, _parcGen=0;
 // F6 (22/09) wizard — estado só de DESENHO; os dados continuam em _rem2Boleto/_rem2Quote/_rem2Arq
 let _wzPasso=1, _wzSemBoleto=false, _wzFavCasado=null /* {id,name} */, _wzBen=null /* {nome,doc} do boleto */, _wzDealId=null, _wzTemDeals=false;
 const WZ_TXT_SEM_BOLETO='Não tenho o boleto agora — quero informar só o valor →';
@@ -1638,6 +1651,7 @@ function remBarreira(modo, texto){
   _rbModo=modo; _rbUrl=null;
   _fiatGen++; clearTimeout(_fiatPoll);   // painel da conta fiat em voo morre junto (nunca redesenha atrás do cartão)
   const card=$('wzCard'); if(card) card.style.display='none';
+  _parcGen++; const pc=$('parcelasCard'); if(pc) pc.style.display='none';   // F1b (01/10): Parcelas some junto (resposta em voo morre)
   const bar=$('remBarreira'); if(!bar) return; bar.style.display='';
   ['rbNomeBox','rbBtnAcao','rbBtnAbrir','rbBtnAtualizar'].forEach(id=>_rbMostra(id,false));
   _rbTxt('rbEstado',''); _rbTxt('rbMsg',''); $('rbEstado').classList.remove('rb-ok');
@@ -1781,7 +1795,7 @@ async function initRemessas2(){
   _rem2Init=true;
   $('remBtnQuote').onclick=rem2Quote;
   $('remBtnCreate').onclick=rem2Criar;
-  $('remBtnRef').onclick=()=>{ rem2Refresh(); rem2Ops(); };
+  $('remBtnRef').onclick=()=>{ rem2Refresh(); rem2Ops(); rem2Planos(); };   // F1b (01/10): "atualizar" também refaz Parcelas
   $('remBoleto').onchange=rem2Boleto; // M-BOLETO-UPLOAD (08/09)
   $('remBtnLinha').onclick=rem2Linha;  // F2 (21/09): linha digitável como alternativa ao arquivo
   $('remLinha').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); rem2Linha(); } });
@@ -1823,6 +1837,7 @@ async function initRemessas2(){
     rem2Refresh(); rem2FavPend(); rem2Ops();
     rem2FiatAuto(); // v0.21: sem conta fiat, o painel abre sozinho mostrando o que falta
     rem2Credito();  // v0.24 (F3): crédito de remessas anteriores ao entrar na aba (silencioso em erro/404)
+    rem2Planos();   // F1b (01/10, DVP v0.28.0): seção Parcelas (silenciosa em 404/5xx/rede; só aparece com plano)
   }catch(e){
     // 29/09: sessão/gate travam a aba INTEIRA (só o cartão #remBarreira); erro de rede/5xx não trava (como antes).
     // 403 com code (kyc_pendente/verificar_email/bloqueado) o rf() já trocou; 403 sem code = backend antigo ("beta fechado").
@@ -1878,6 +1893,7 @@ async function rem2FiatAuto(){
   const box=$('remFiatBox'); if(!box||box.style.display==='block') return;
   const g=_fiatGen; // fechar ou abrir à mão durante a consulta incrementa o token: esta auto-abertura morre (não reabre painel fechado)
   let d; try{ d=await rf('/remessas/deposit-instructions'); }catch(_e){ return; }
+  if(d&&typeof d==='object') _remFiatUltimo=d;   // F1b (01/10): guardada mesmo quando o painel fica fechado (conta pronta = caso comum)
   if(g!==_fiatGen||box.style.display==='block') return;
   const tr=_fiatTrilhos(d), trilhoAcao=!!(tr&&tr.estado==='acao');
   const falta = d.onboarding ? (d.onboarding.estado!=='pronto'||trilhoAcao)
@@ -1936,6 +1952,7 @@ function rem2FiatChecklist(d){
 // Desenha o painel a partir da resposta de /remessas/deposit-instructions — usado pelo clique, pela auto-abertura e pelo poll
 function rem2FiatRender(d){
   const box=$('remFiatBox');
+  if(d&&typeof d==='object') _remFiatUltimo=d;   // F1b (01/10): Parcelas mostra a conta principal daqui (nunca refaz a consulta)
   try{
     // UX-09 (22/09): sem conta, uma linha diz POR QUE este painel vem antes do passo 1 e que o boleto pode ser enviado enquanto isso
     const pre=$('wzFiatPre'); if(pre) pre.style.display=(d&&d.tem_conta)?'none':'block';
@@ -2104,6 +2121,7 @@ async function rem2Boleto(){
     _rem2Enviando=true;
     const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify(corpo)}).finally(()=>{ _rem2Enviando=false; });
     if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
+    if(wzBoletoParcela(d)) return;   // F1b (01/10): boleto de parcela do plano — a mesa conduz; o wizard não avança
     if(d.duplicado && d.deal_id!=null){
       inp.value='';
       $('wzP1nota').innerHTML='Este boleto já está na remessa <b>#'+_esc(d.deal_id)+'</b>. <button type="button" class="mini" data-wz-go="4">Acompanhar →</button> Para pagar outro boleto, envie outro arquivo.';
@@ -2168,6 +2186,7 @@ async function rem2Linha(){
     if(_rem2Arq){ corpo.filename=_rem2Arq.filename; corpo.arquivo_base64=_rem2Arq.b64; }
     const d = await rf('/remessas/boletos',{method:'POST',tolerar:[409],body:JSON.stringify(corpo)});
     if(!d || d.id==null) throw new Error(d&&d.error||'Boleto não foi salvo.');
+    if(wzBoletoParcela(d)) return;   // F1b (01/10): idem pela linha digitável
     if(d.duplicado && d.deal_id!=null){
       $('wzP1nota').innerHTML='Este boleto já está na remessa <b>#'+_esc(d.deal_id)+'</b>. <button type="button" class="mini" data-wz-go="4">Acompanhar →</button> Para pagar outro boleto, digite outra linha.';
       return;
@@ -2445,6 +2464,143 @@ async function rem2Credito(){
   if(aberto>0) html+=(html?'<br>':'')+'Falta chegar <b>'+_esc(fmtMoeda(aberto,'USDC'))+'</b> de remessas já registradas — veja no passo "4 · Acompanhe".';
   box.innerHTML=html; box.style.display=html?'block':'none';
 }
+/* ═══ F1b (01/10, DVP v0.28.0) · PARCELAS — plano de parcelas recorrentes (ex.: apartamento na planta), SÓ LEITURA ═══
+   GET /remessas/planos (proxy → DVP GET /wallet/planos; o DVP projeta por allowlist de campos: nunca customer id, taxa/spread,
+   câmbio de mercado, margem, linha digitável, pagador nem ids de deal/payout/boleto). #parcelasCard só aparece com ≥ 1 plano:
+   404 (DVP com PLANOS_ENABLED=0 ou antigo), 5xx, rede, contrato desconhecido e lista vazia escondem em silêncio — o resto da aba
+   não muda. O 403 com code do gate o rf() já trata (troca a aba para o #remBarreira, que também esconde este card). Nenhum POST
+   sai daqui. Os dados para transferir vêm da ÚLTIMA resposta de /remessas/deposit-instructions que a aba já carregou
+   (_remFiatUltimo); sem ela o botão abre o painel da conta (wzFiatAbrir: UMA consulta por clique) — nunca chamamos
+   deposit-instructions em laço (o GET pode criar conta virtual). O front não recalcula nada: saldo, "quanto transferir" e câmbio
+   são do DVP. Todo texto do servidor por _esc; vencimento AAAA-MM-DD por split (_venc, sem fuso); carimbos ISO no fuso de SP (_dt). */
+const PARC_SIT={aguardando_boleto:'aguardando boleto',cip_pendente:'boleto recebido — em conferência',aguardando_financiamento:'boleto recebido — em conferência',
+  em_conversao:'convertendo',aguardando_aprovacao:'pronta para pagar',aprovada:'pagamento aprovado',paga:'paga',conciliada:'paga',cancelada:'cancelada'};
+const _parcN=n=>(Number.isInteger(n)&&n>0)?String(n):'';
+const _parcNum=v=>(v!=null&&v!==''&&Number.isFinite(Number(v)))?Number(v):null;
+const _parcVenc=v=>(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v))?_venc(v):'—';   // só AAAA-MM-DD vira data; o resto, traço
+const _parcF4=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:4,maximumFractionDigits:4});
+const _parcHora=iso=>{ const t=Date.parse(iso||''); return Number.isFinite(t)?new Date(t).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):''; };
+const _parcKv=(k,v,mono)=>'<div class="k">'+k+'</div><div class="v'+(mono===false?'':' mono')+'">'+v+'</div><div></div>';
+const _remDealDeParcela=d=>!!(d&&d.parcela&&typeof d.parcela==='object');
+// situação humana (o código cru é vocabulário do DVP); desconhecida ou 'inconsistente' => "em conferência pela equipe"
+function _parcSitTxt(p){
+  const s=(p&&Object.prototype.hasOwnProperty.call(PARC_SIT,p.situacao))?PARC_SIT[p.situacao]:'em conferência pela equipe';
+  if(s!=='paga') return s;
+  const em=_dt(p.pago_em); return em?'paga em '+em.slice(0,5):'paga';
+}
+const _parcAtraso=p=>(p&&p.atrasada===true)?' · <b class="neg">atrasada</b>':'';
+function _parcSaldoHtml(s){
+  s=(s&&typeof s==='object')?s:{};
+  const disp=_parcNum(s.disponivel_usdc), aberto=_parcNum(s.em_aberto_usdc), em=_parcHora(s.atualizado_em);
+  // saldo negativo (débito de remessa anterior sem a entrada atribuída) não vira número para o cliente: a mesa confere
+  const v = (s.exibicao==='valor'&&disp!=null&&disp>=0) ? _esc(fmtMoeda(disp,'USDC'))
+    : (s.exibicao==='valor'||s.exibicao==='consultar_mesa') ? 'em conferência pela mesa'
+    : s.exibicao==='sem_cadastro' ? 'sua conta em euros/dólares ainda não está ativa'
+    : 'não foi possível consultar agora';
+  return '<div class="rem-kv">'+_parcKv('Disponível',v,s.exibicao==='valor'&&disp!=null&&disp>=0)+
+    (aberto!=null&&aberto>0?_parcKv('A caminho',_esc(fmtMoeda(aberto,'USDC'))+' <span class="muted">transferências que ainda não identificamos</span>'):'')+
+    (em?_parcKv('Atualizado',_esc(em)):'')+'</div>';
+}
+function _parcProximaHtml(px){
+  if(!px||typeof px!=='object') return '<div class="muted rem-txt">Nenhuma parcela em aberto.</div>';
+  const n=_parcN(px.n), valor=_parcNum(px.valor_brl), usdc=_parcNum(px.necessario_usdc), rate=_parcNum(px.rate_efetiva);
+  const vTxt = valor!=null ? _esc(brl(valor))+(px.valor_estimado===true?' <span class="muted">estimado — o boleto ainda não chegou</span>':'') : '<span class="muted">a definir — aguardando o boleto</span>';
+  const eq = (usdc!=null&&usdc>0) ? '≈ '+_esc(fmtMoeda(usdc,'USDC'))+(rate!=null&&rate>0?' <span class="muted">(câmbio efetivo R$ '+_esc(_parcF4(rate))+' por USDC, tudo incluído)</span>':'') : '<span class="muted">cotação indisponível agora</span>';
+  return '<div class="rem-kv">'+_parcKv('Parcela',(n?_esc(n)+' · ':'')+'vence '+_esc(_parcVenc(px.vencimento)))+_parcKv('Valor',vTxt)+_parcKv('Equivale a',eq)+
+    _parcKv('Situação',_esc(_parcSitTxt(px))+_parcAtraso(px),false)+'</div>';
+}
+function _parcQuantoHtml(q, p, i){
+  if(!q||typeof q!=='object') return '';
+  const prox=q.base==='proxima', ns=_arr(q.parcelas).map(_parcN).filter(Boolean);
+  const titulo='<div class="up" style="margin-top:14px">Quanto transferir · '+(prox?'para a próxima parcela':'para as 2 próximas parcelas')+(ns.length?' ('+ns.map(_esc).join(' e ')+')':'')+'</div>';
+  const pd=(q.pedido&&typeof q.pedido==='object')?q.pedido:null, pdV=pd?_parcNum(pd.valor):null, pdEm=pd?_dt(pd.enviado_em):'';
+  const pedido = (pd&&pdV!=null) ? '<div class="rem-txt">Pedido enviado'+(pdEm?' em '+_esc(pdEm.slice(0,5)):'')+': <b>'+_esc(fmtMoeda(pdV,pd.moeda==='EUR'?'EUR':'USD'))+'</b></div>' : '';
+  const falta=_parcNum(q.a_transferir_usdc);
+  if(falta!=null&&falta<=0) return titulo+'<div class="rem-big">'+(prox?'Seu saldo cobre a próxima parcela.':'Seu saldo cobre as próximas parcelas.')+'</div>'+pedido;
+  if(falta==null) return titulo+'<div class="muted rem-txt">Não conseguimos calcular agora — veja de novo em instantes.</div>'+pedido;
+  const m=(q.moeda==='EUR'||q.moeda==='USD')?q.moeda:(p.moeda_funding==='EUR'?'EUR':'USD');
+  const eur=_parcNum(q.eur), usd=_parcNum(q.usd);
+  let big, nota='';
+  if(m==='EUR'&&eur!=null) big=fmtMoeda(eur,'EUR');
+  else if(m==='EUR'){ big=fmtMoeda(usd!=null?usd:falta,'USD'); nota='<div class="muted rem-txt">€ — · '+_esc(q.eur_motivo||'câmbio EUR indisponível agora')+' — use o valor em dólares ou veja de novo em instantes.</div>'; }
+  else big=fmtMoeda(usd!=null?usd:falta,'USD');   // USDC ↔ US$ 1:1 (o DVP manda usd; falta é o mesmo número)
+  const tx=(q.taxa&&typeof q.taxa==='object')?_parcNum(q.taxa.valor):null;
+  return titulo+'<span class="rem-txt">Você transfere aproximadamente</span><div class="rem-big">'+_esc(big)+'</div>'+nota+
+    '<div class="muted rem-txt">= '+_esc(fmtMoeda(falta,'USDC'))+(m==='EUR'&&eur!=null&&tx!=null?' · câmbio EUR/USD '+_esc(_parcF4(tx)):'')+'</div>'+
+    (typeof q.aviso==='string'&&q.aviso?'<div class="muted rem-txt">'+_esc(q.aviso)+'</div>':'')+pedido+
+    '<div style="margin-top:8px"><button type="button" class="mini" data-parc-conta="'+(i|0)+'">ver dados para transferir →</button>'+
+    '<div class="qd" data-parc-conta-box style="display:none;word-break:normal;line-height:1.7"></div></div>';
+}
+function _parcCalHtml(lista){
+  const ps=_arr(lista).filter(x=>x&&typeof x==='object'); if(!ps.length) return '';
+  return '<div class="up" style="margin-top:14px">Calendário</div><table class="parc-tab"><thead><tr><th>Nº</th><th>Vencimento</th><th>Valor</th><th>Situação</th></tr></thead><tbody>'+
+    ps.map(x=>{ const v=_parcNum(x.valor_brl), pg=(x.situacao==='paga'||x.situacao==='conciliada');
+      return '<tr><td>'+_esc(_parcN(x.n)||'—')+'</td><td>'+_esc(_parcVenc(x.vencimento))+'</td><td>'+(v!=null?_esc(brl(v)):'<span class="muted">a definir</span>')+'</td><td>'+
+        _esc(_parcSitTxt(x))+_parcAtraso(x)+(pg&&x.comprovante_disponivel===true?'<div class="muted" style="font-size:10.5px">comprovante com a nossa equipe — peça por e-mail</div>':'')+'</td></tr>'; }).join('')+
+    '</tbody></table>';
+}
+function _parcPlanoHtml(p, i){
+  const fav=p.favorecido_nome?_esc(p.favorecido_nome):'', pausado=p.status==='pausado';
+  return '<div'+(i>0?' class="wz-mais-blk"':'')+'>'+
+    '<div class="wz-h" style="margin-top:6px">'+_esc(p.unidade||'Plano de parcelas')+'</div>'+
+    ((fav||pausado)?'<div class="muted rem-txt">'+fav+(pausado?(fav?' · ':'')+'<b class="neg">Pausado</b> — nossa equipe fala com você':'')+'</div>':'')+
+    '<div class="up" style="margin-top:12px">Saldo</div>'+_parcSaldoHtml(p.saldo)+
+    '<div class="up" style="margin-top:14px">Próxima parcela</div>'+_parcProximaHtml(p.proxima)+
+    _parcQuantoHtml(p.quanto_mandar, p, i)+_parcCalHtml(p.parcelas)+'</div>';
+}
+// conta principal da moeda do plano, tirada da última resposta de deposit-instructions; null = abrir o painel da conta
+function _parcContaHtml(p){
+  const d=_remFiatUltimo; if(!d||typeof d!=='object'||d.tem_conta===false) return null;
+  const m=p.moeda_funding==='EUR'?'EUR':'USD', c=_remContaPorMoeda(d,m); if(!c) return null;
+  const q=(p.quanto_mandar&&typeof p.quanto_mandar==='object')?p.quanto_mandar:{}, val=_parcNum(m==='EUR'?q.eur:q.usd), ok=val!=null&&val>0;
+  return '<div class="up">'+(m==='EUR'?'Euros · SEPA':'Dólares · wire')+' — conta principal</div>'+
+    rem2ContaHtml(c,{valorTxt:ok?fmtMoeda(val,m):null, valorCopia:ok?val.toFixed(2):null})+
+    '<div class="rem-txt" style="margin-top:8px">Transfira de uma conta bancária <b>em seu próprio nome</b> — de outra pessoa, o banco devolve. O valor entra no seu saldo; o que sobrar fica para as parcelas seguintes.</div>';
+}
+function _parcEsconder(){ _remPlanos=null; const c=$('parcelasCard'), b=$('parcBox'); if(c) c.style.display='none'; if(b) b.innerHTML=''; }
+function _parcDesenhar(d){
+  const planos=(d&&typeof d==='object'&&d.contrato===1)?_arr(d.planos).filter(p=>p&&typeof p==='object'):[];
+  if(!planos.length||_rbModo){ _parcEsconder(); return; }
+  try{ $('parcBox').innerHTML=planos.map(_parcPlanoHtml).join(''); _remPlanos=planos; $('parcelasCard').style.display=''; }
+  catch(_e){ _parcEsconder(); }   // desenho quebrado nunca derruba a aba
+}
+// carrega e desenha; o token de geração descarta resposta velha (atualizar duas vezes seguidas nunca desenha fora de ordem)
+async function rem2Planos(){
+  if(!$('parcelasCard')) return;
+  const g=++_parcGen; let d=null;
+  try{ d=await rf('/remessas/planos'); }catch(_e){ if(g===_parcGen) _parcEsconder(); return; }
+  if(g===_parcGen) _parcDesenhar(d);
+}
+// F1b (01/10, DVP v0.28.0): boleto que o DVP casou com uma parcela do plano do cliente. Devolve true quando cuidou da tela.
+//  casou/ja_vinculado: a mesa conduz o pagamento — o wizard NÃO avança (sem cotação nem "criar remessa"; o DVP recusaria a
+//    remessa com 422 boleto_de_parcela);
+//  ambiguo/mesa: o boleto parece de uma parcela e a equipe associa à certa — idem (virar remessa avulsa seria pagar 2 vezes);
+//  sem o campo (DVP sem planos, PLANOS_ENABLED=0) ou 'nenhum': false, e o fluxo de hoje segue intocado.
+function wzBoletoParcela(d){
+  const c=(d&&d.casamento&&typeof d.casamento==='object')?String(d.casamento.resultado||''):'';
+  const pc=(d&&d.parcela&&typeof d.parcela==='object')?d.parcela:null;
+  const ligado=c==='casou'||c==='ja_vinculado'||(!c&&!!pc), fila=c==='ambiguo'||c==='mesa';
+  if(!ligado&&!fila) return false;
+  let txt='Recebemos. Nossa equipe vai associar este boleto à parcela certa do seu plano.';
+  if(ligado){
+    const n=_parcN(pc&&pc.n), pl=pc?_arr(_remPlanos).find(x=>x.id===pc.plano_id):null, un=(pl&&pl.unidade)?String(pl.unidade):'';
+    txt='Boleto ligado à parcela '+(n?_esc(n)+' ':'')+'do seu plano'+(un?' ('+_esc(un)+')':'')+'. Não precisa criar remessa — nossa equipe confere no banco e paga com o seu saldo.';
+  }
+  _rem2Boleto=null; _rem2Arq=null; $('remBoleto').value=''; $('remLinha').value='';
+  const box=$('remBoletoBox'); box.style.display='none'; box.innerHTML='';
+  _msg(''); $('wzP1nota').innerHTML=txt+' <button type="button" class="mini" data-parc-ver>ver parcelas ↑</button>';
+  wzRender(); rem2Planos();
+  return true;
+}
+document.addEventListener('click', (ev)=>{
+  if(ev.target.closest('[data-parc-ver]')){ const c=$('parcelasCard'); if(c&&c.style.display!=='none') c.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+  const b=ev.target.closest('[data-parc-conta]'); if(!b) return;
+  const box=b.parentElement&&b.parentElement.querySelector('[data-parc-conta-box]'); if(!box) return;
+  if(box.style.display==='block'){ box.style.display='none'; b.textContent='ver dados para transferir →'; return; }
+  const p=_arr(_remPlanos)[+b.dataset.parcConta], html=p?_parcContaHtml(p):null;
+  if(!html){ wzFiatAbrir(); return; }   // sem resposta guardada (ou sem conta na moeda do plano): o painel da conta, UMA consulta
+  box.innerHTML=html; box.style.display='block'; b.textContent='fechar ↑';
+});
 async function rem2Quote(){
   const amount = parseFloat($('remAmount').value);
   if(!amount || amount<=0){ _msg('Informe o valor em R$.',true); return; }
@@ -2533,12 +2689,16 @@ async function rem2Refresh(){
   const box = $('remDeals');
   let ok=false, total=0, vivas=0;   // F6 (22/09): alimenta o aviso do passo 1 e a pílula 4 (só com resposta válida; erro de rede não apaga o aviso anterior)
   try{
-    const deals = await rf('/remessas/deals');
-    if(!Array.isArray(deals)){ box.innerHTML='<div class="empty">Não conseguimos carregar suas remessas agora.</div>'; return; }
+    const todos = await rf('/remessas/deals');
+    if(!Array.isArray(todos)){ box.innerHTML='<div class="empty">Não conseguimos carregar suas remessas agora.</div>'; return; }
+    // F1b (01/10, DVP v0.28.0): pagamento de PARCELA (o DVP manda `parcela` só em deal de plano) sai daqui — aparece em Parcelas.
+    // Sem o campo (DVP sem planos / PLANOS_ENABLED=0) a lista e o HTML são os de antes.
+    const nParc=todos.filter(_remDealDeParcela).length, deals=nParc?todos.filter(d=>!_remDealDeParcela(d)):todos;
+    const notaParc=nParc?'<div class="muted rem-txt" style="margin-bottom:8px">'+nParc+(nParc>1?' pagamentos de parcelas estão':' pagamento de parcela está')+' em Parcelas. <button type="button" class="mini" data-parc-ver>ver ↑</button></div>':'';
     ok=true; total=deals.length;
-    if(!deals.length){ box.innerHTML='<div class="empty">Nenhuma remessa ainda.</div>'; return; }
+    if(!deals.length){ box.innerHTML=notaParc+'<div class="empty">'+(nParc?'Nenhuma outra remessa.':'Nenhuma remessa ainda.')+'</div>'; return; }
     vivas=deals.filter(d=>{ if(!d) return false; const ac=d.acompanhamento; return (ac&&typeof ac==='object') ? !(ac.concluida||ac.cancelada) : ['open','aberta','funded','settled'].includes(d.status); }).length;
-    box.innerHTML = deals.map(d=>{
+    box.innerHTML = notaParc + deals.map(d=>{
       // v0.24 (F5): badge = título humano do acompanhamento (vermelho em atenção, verde concluída); deal da mesa = só leitura;
       // cancelar só quando o servidor disser pode_cancelar (sem o campo: regra de antes)
       const ac=(d.acompanhamento&&typeof d.acompanhamento==='object')?d.acompanhamento:null;
