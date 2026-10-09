@@ -148,8 +148,6 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 .confirm-list .k{color:#737373;font-family:'Space Mono',monospace;font-size:0.74rem;text-transform:uppercase;letter-spacing:0.06em}
 .confirm-list .v{font-family:'Space Mono',monospace;font-weight:700;color:#0a0a0a}
 
-#alchemy-signer-iframe-container{position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden}
-
 /* Mobile */
 @media(max-width:780px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
@@ -236,8 +234,6 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 </head>
 <body>
 
-<div id="alchemy-signer-iframe-container"></div>
-
 <div class="shell">
 
   <!-- TOPBAR -->
@@ -287,8 +283,8 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 
       <p class="foot-note">
         Ao prosseguir você concorda com os termos da
-        <a href="/tdic/" target="_blank">EFIX TDIC</a>. Smart wallet criada via Alchemy
-        Account Kit. Gas custeado pela EFIX (gasless).
+        <a href="/tdic/" target="_blank">EFIX TDIC</a>. O acesso é por código enviado
+        ao seu e-mail, sem senha.
       </p>
     </div>
   </div>
@@ -583,7 +579,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
     <div class="page-head">
       <div>
         <h2 id="dashGreeting">Olá</h2>
-        <p class="sub" id="dashSub">Smart wallet pronta · Gasless via paymaster Alchemy</p>
+        <p class="sub" id="dashSub">Acesso verificado por código no e-mail</p>
       </div>
       <div class="page-head-actions">
         <button class="btn btn-ghost" id="importCreditosBtn" type="button">📥 Importar planilha / PDF</button>
@@ -592,7 +588,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
     </div>
 
     <div class="kpi-row">
-      <div class="kpi"><div class="lbl">Smart wallet</div><div class="val mono" id="kpiWallet">—</div></div>
+      <div class="kpi"><div class="lbl">Carteira</div><div class="val mono" id="kpiWallet">—</div></div>
       <div class="kpi"><div class="lbl">Créditos ativos</div><div class="val" id="kpiCreditos">0</div></div>
       <div class="kpi"><div class="lbl">Tokens TDIC</div><div class="val brand" id="kpiTokens">0</div></div>
       <div class="kpi"><div class="lbl">Despesa gerada</div><div class="val mono" id="kpiDespesa">R$ 0</div></div>
@@ -630,7 +626,7 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
     <div class="tab-panel" data-panel="tokens">
       <div class="card">
         <div class="card-head">
-          <h3>Tokens TDIC na smart wallet</h3>
+          <h3>Tokens TDIC da cedente</h3>
           <span class="meta">ERC-1155 · Base mainnet</span>
         </div>
         <div id="tokensBody"></div>
@@ -772,8 +768,8 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
     </div>
     <div class="modal-body">
       <p style="font-size:0.85rem;color:#525252;line-height:1.7;margin-bottom:1rem">
-        Esta ação dispara o mint do token ERC-1155 na sua smart wallet em Base mainnet.
-        Gas custeado pela EFIX (gasless via paymaster). A operação é irreversível.
+        Esta ação dispara o mint do token ERC-1155 em nome da cedente em Base mainnet.
+        Gas custeado pela EFIX. A operação é irreversível.
       </p>
       <div class="confirm-list" id="mintConfirmList"></div>
       <div class="error-msg" id="mintErr" style="display:none"></div>
@@ -941,80 +937,12 @@ tr.row-hover:hover td{background:#fafafa;cursor:pointer}
 <script src="/tdic/tdic-mock.js?v=20260508l"></script>
 <script src="/tdic/app/sign-providers.js?v=20260508l"></script>
 
-<!-- Alchemy Account Kit — bundle real.
-     Define window.EfixWallet (signer + smart wallet client) e window.EfixAuth
-     (JWT no efixdi-backend). O EfixWalletStub abaixo só ativa se ambos
-     falharem ao carregar (cache miss / bloqueio third-party). -->
-<script src="/app/wallet/efix-wallet-bundle.js"></script>
+<!-- Login = OTP do efixdi-backend (EfixAuth.sendOTP/verifyOTP), mesmo token da /app/wallet/.
+     09/10: saiu o bundle do signer antigo (v3 não cria conta nova) e o stub de fallback,
+     que sobrescrevia o EfixAuth com um OTP falso (aceitava qualquer código). -->
 <script src="/app/efix-auth.js?v=20260820"></script>
-<!-- Container exigido pelo Alchemy iframe (signer.alchemy.com). -->
-<div id="alchemy-signer-iframe-container" style="position:fixed;bottom:0;right:0;width:0;height:0;overflow:hidden"></div>
 
-<script>
-/**
- * EfixWalletStub — Fallback para sessões offline / desenvolvimento.
- * Mimica window.EfixWallet com valores mockados em localStorage.
- *
- * Em produção (com efix-wallet-bundle.js carregado), este stub não é usado:
- * o IIFE detecta window.EfixWallet existente e não sobrescreve.
- */
-(function () {
-  if (window.EfixWallet) return;
-  const KEY = 'tdic_stub_session_v1';
-  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
-  function save(o) { localStorage.setItem(KEY, JSON.stringify(o)); }
-
-  const fakeAddrFor = (email) => {
-    let h = 0;
-    for (let i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) >>> 0;
-    return '0x' + h.toString(16).padStart(40, '0').slice(0, 40);
-  };
-
-  let state = load();
-
-  window.EfixWallet = {
-    config: { apiKey: 'STUB', gasPolicyIdBase: 'TODO' },
-    init() { return true; },
-    async sendOTP(email) { state = { email, pending: true }; save(state); await new Promise(r => setTimeout(r, 400)); return { ok: true }; },
-    async verifyOTP(_code) {
-      if (!state.email) throw new Error('Send OTP first');
-      const address = fakeAddrFor(state.email);
-      state = { email: state.email, address, ts: Date.now() };
-      save(state);
-      await new Promise(r => setTimeout(r, 600));
-      return { address };
-    },
-    async checkSession() { return state.address || null; },
-    async getAddress() { return state.address || null; },
-    async getBaseClient() { return { sendUserOperation: async () => ({ hash: '0x' + Math.random().toString(16).slice(2) }) }; },
-    async disconnect() { state = {}; save({}); }
-  };
-
-  // Stub de auth: encadeia OTP do Alchemy + perfil local
-  window.EfixAuth = {
-    _user: null,
-    async restore() {
-      const addr = await window.EfixWallet.checkSession();
-      if (!addr) return null;
-      const raw = localStorage.getItem('tdic_stub_user_v1');
-      this._user = raw ? JSON.parse(raw) : { address: addr, email: state.email };
-      return { token: 'stub', user: this._user };
-    },
-    async sendOTP(email) { return window.EfixWallet.sendOTP(email); },
-    async verifyOTP(email, code) {
-      const r = await window.EfixWallet.verifyOTP(code);
-      this._user = { email, address: r.address };
-      localStorage.setItem('tdic_stub_user_v1', JSON.stringify(this._user));
-      return { token: 'stub', user: this._user };
-    },
-    async logout() { localStorage.removeItem('tdic_stub_user_v1'); await window.EfixWallet.disconnect(); this._user = null; },
-    getUser() { return this._user; },
-    isLoggedIn() { return !!this._user; }
-  };
-})();
-</script>
-
-<script src="./app.js?v=20260508l" defer></script>
+<script src="./app.js?v=20261009a" defer></script>
 
 </body>
 </html>

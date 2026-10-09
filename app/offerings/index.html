@@ -171,6 +171,10 @@ main{max-width:960px;margin:0 auto;padding:7rem 2rem 5rem}
 
 .muted{color:#a3a3a3}
 .hidden{display:none !important}
+/* 09/10: oferta fechada/inexistente ou sem resposta — só o card de estado fica na tela */
+body.off-closed #offering-card,body.off-closed #auth-card,body.off-closed #form-card,body.off-closed #kyc-card,body.off-closed #pi-card,body.off-closed .page-sub,
+/* 09/10: 5xx/rede (ex.: RPC da chain fora) não trava o fluxo — o POST de reserva não depende da chain */
+body.off-retry #offering-card{display:none !important}
 
 /* Footer */
 footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
@@ -214,7 +218,7 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
 
 <main>
   <div class="page-head">
-    <div class="crumb"><a href="/salrio/">← Back to SALRIO</a></div>
+    <div class="crumb"><a href="/salrio/" id="crumb-back">← Back to SALRIO</a></div>
     <h1 class="page-title">Allocate into <span id="pg-offering-name">SALRIO</span></h1>
     <p class="page-sub">One page. Log in with email, pick your rail, get payment instructions. Treasury delivers your SALRIO on Base once the deposit clears.</p>
   </div>
@@ -235,6 +239,23 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
       <div><div class="stat-k">Dividends paid</div><div class="stat-v" id="off-div">—</div></div>
       <div><div class="stat-k">Distributions</div><div class="stat-v" id="off-dists">—</div></div>
     </div>
+  </div>
+
+  <!-- 09/10: ?intent= sem oferta aberta no backend (ex.: a landing FIRST antes de
+       abrir) — estado amigável no lugar do login e do formulário -->
+  <div class="alloc-card hidden" id="closed-card" style="margin-top:0">
+    <div class="alloc-step-head">
+      <span class="alloc-step-num">Not open yet</span>
+      <span class="alloc-step-title">This offering isn't open for allocation yet</span>
+    </div>
+    <p style="color:#525252;font-size:0.95rem">There's nothing to allocate into on this page right now. Head back to the offering page for the latest updates.</p>
+    <a class="btn btn-primary" id="closed-back" href="/btr/" style="margin-top:1.25rem">← Back to the offering</a>
+  </div>
+
+  <!-- 09/10: rede/5xx ao carregar a oferta: não é "fechada" — tentar de novo -->
+  <div class="alloc-card hidden" id="offretry-card" style="margin-top:0">
+    <div class="alert alert-err" style="margin-top:0">We couldn’t load this offering’s details right now. You can still log in and reserve — or try again.</div>
+    <button class="btn btn-ghost" style="margin-top:1rem;width:100%" onclick="loadOffering()" id="btn-offretry">Try again</button>
   </div>
 
   <!-- Step 1: Email + OTP -->
@@ -433,6 +454,7 @@ const INVESTIDOR_ANTIGO_SHA256 = new Set([
 
 let USER_EMAIL = null;     // e-mail verificado pelo OTP do efixdi (getUser().email)
 let USER_ADDRESS = null;   // users.wallet_address do efixdi; investidor antigo do offerings: o do investor-lookup
+let ADDRESS_FROM_LOOKUP = false;   // 09/10: true = carteira do investidor antigo (sem vínculo na conta efixdi)
 let OTP_EMAIL = null;      // e-mail que recebeu o código — o verify do backend precisa dele
 let CURRENT_ALLOC_ID = null;
 let POLL_TIMER = null;
@@ -457,14 +479,8 @@ if (GATE_EMAIL.length > 254 || !EMAIL_RE.test(GATE_EMAIL)) GATE_EMAIL = '';
 async function bootstrap() {
   if (GATE_EMAIL) document.getElementById('f-email').value = GATE_EMAIL;
 
-  // Fetch offering in parallel
-  fetch(`${API_BASE}/v1/offerings/${encodeURIComponent(OFFERING_ID)}`)
-    .then(r => r.ok ? r.json() : Promise.reject(r))
-    .then(renderOffering)
-    .catch(err => {
-      document.getElementById('off-name').textContent = 'Offering unavailable';
-      document.getElementById('off-symbol').textContent = String(err.statusText || err.message || err);
-    });
+  // Fetch offering in parallel (fechada/sem rede: a classe no <body> esconde login e formulário)
+  loadOffering();
 
   // A sessão do efixdi é da origem inteira: quem já entrou na /app/wallet/ chega logado.
   let user = null;
@@ -476,8 +492,10 @@ async function bootstrap() {
   }
   if (user && user.email) {
     USER_EMAIL = user.email;
+    await tokenComCarteiraAtual(user);
     await resolveAddress();
-    if (GATE_EMAIL && GATE_EMAIL.toLowerCase() !== String(USER_EMAIL).toLowerCase()) {
+    // USER_EMAIL nulo aqui = o lookup deu 401 e já voltou ao passo do e-mail
+    if (USER_EMAIL && GATE_EMAIL && GATE_EMAIL.toLowerCase() !== String(USER_EMAIL).toLowerCase()) {
       showAlert('auth-alert', 'info', `You're logged in as ${USER_EMAIL}, not ${GATE_EMAIL}. Use Log out to switch accounts.`);
     }
   } else {
@@ -485,12 +503,61 @@ async function bootstrap() {
   }
 }
 
+// 09/10: ?intent= sem oferta aberta (ex.: a landing FIRST antes de abrir) virava
+// "Offering unavailable" com login e formulário na tela. 4xx = "ainda não abriu"
+// com volta à landing; rede/5xx = tentar de novo (não afirmar que está fechada).
+async function loadOffering() {
+  const btn = document.getElementById('btn-offretry');
+  btn.disabled = true;
+  let r = null, off = null;
+  try {
+    r = await fetch(`${API_BASE}/v1/offerings/${encodeURIComponent(OFFERING_ID)}`);
+    if (r.ok) off = await r.json();
+  } catch (e) {
+    console.warn('offering load failed:', e.message);
+  }
+  btn.disabled = false;
+  const fechada = r && r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429;
+  const estado = off ? 'ok' : (fechada ? 'closed' : 'retry');
+  document.body.classList.toggle('off-closed', estado === 'closed');
+  document.body.classList.toggle('off-retry', estado === 'retry');
+  document.getElementById('closed-card').classList.toggle('hidden', estado !== 'closed');
+  document.getElementById('offretry-card').classList.toggle('hidden', estado !== 'retry');
+  if (estado === 'ok') { renderOffering(off); return; }
+  if (estado === 'closed') {
+    // volta para a landing da própria oferta só com id de caminho simples; senão /btr/
+    const id = /^[a-z0-9-]{1,40}$/.test(OFFERING_ID) ? OFFERING_ID : null;
+    const back = id ? '/' + id + '/' : '/btr/';
+    const label = '← Back to ' + (id ? id.toUpperCase() : 'BTR');
+    document.getElementById('closed-back').href = back;
+    document.getElementById('closed-back').textContent = label;
+    document.getElementById('crumb-back').href = back;
+    document.getElementById('crumb-back').textContent = label;
+    document.getElementById('pg-offering-name').textContent = id ? id.toUpperCase() : 'this offering';
+  }
+}
+
 // 09/10: endereço = users.wallet_address da conta efixdi (getUser, vindo do
 // /users/me ou do verify-otp). Sem ele, o investor-lookup cobre o investidor
 // antigo do offerings (carteira registrada aqui, sem conta no efixdi). Nenhum
 // dos dois: estado sem carteira, e a ativação acontece na /app/wallet/.
+// 09/10: o backend confere a carteira pelo claim `address` do JWT (fixado na
+// emissão); getUser() vem do /users/me (banco). Carteira vinculada depois ⇒
+// re-emite o token com a sessão viva (o efixdi devolve o address do banco).
+async function tokenComCarteiraAtual(user) {
+  try {
+    if (!user || !user.address || !user.email) return;
+    const t = String((EfixAuth.getToken && EfixAuth.getToken()) || '').split('.')[1] || '';
+    const b = t.replace(/-/g, '+').replace(/_/g, '/');
+    const claim = JSON.parse(atob(b + '='.repeat((4 - b.length % 4) % 4)));
+    if (String(claim.address || '').toLowerCase() === String(user.address).toLowerCase()) return;
+    await EfixAuth.login(user.email, user.address);
+  } catch (e) {}
+}
+
 async function resolveAddress() {
   USER_ADDRESS = null;
+  ADDRESS_FROM_LOOKUP = false;
   clearAlert('auth-alert');
   document.querySelectorAll('.nowallet-email').forEach(el => { el.textContent = USER_EMAIL || ''; });
   const u = EfixAuth.getUser() || {};
@@ -501,8 +568,11 @@ async function resolveAddress() {
   }
   let l = null;
   try {
-    const r = await fetch(`${API_BASE}/v1/investor-lookup?email=` + encodeURIComponent(USER_EMAIL));
-    if (r.ok) l = await r.json();
+    // 09/10: Bearer junto — o offerings passa a tirar o e-mail da sessão, não da URL
+    const r = await fetch(`${API_BASE}/v1/investor-lookup?email=` + encodeURIComponent(USER_EMAIL), { headers: EfixAuth.headers() });
+    const d = await r.json().catch(() => null);
+    if (authFail(r, d)) return;   // 401 = sessão vencida: volta ao e-mail (não é "retry")
+    if (r.ok) l = d;
   } catch (e) {
     console.warn('investor-lookup falhou:', e.message);
   }
@@ -518,6 +588,7 @@ async function resolveAddress() {
     if (antigo === null) { setAuthState('retry'); return; }   // sem WebCrypto não decidimos às cegas
     if (antigo) {
       USER_ADDRESS = l.walletAddress;
+      ADDRESS_FROM_LOOKUP = true;
       showAuthenticated();
       return resumeAllocation();
     }
@@ -657,10 +728,11 @@ async function precheckWallet() {
   try {
     const r = await fetch(`${API_BASE}/v1/investors/precheck`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: EfixAuth.headers(),
       body: JSON.stringify({ email: USER_EMAIL, wallet_address: USER_ADDRESS }),
     });
     const p = await r.json();
+    if (authFail(r, p)) return;
     if (p.registered && p.hasWalletOnRecord && p.walletMatches === false) {
       showAlert(
         'auth-alert',
@@ -684,6 +756,57 @@ async function logoutWallet() {
   location.reload();   // sem token, o boot volta ao passo do e-mail com timers e cards zerados
 }
 
+// 09/10: o offerings passa a exigir o Bearer do efixdi (lookup, precheck, KYC e
+// reserva). 401 = sessão vencida/recusada; 403 só com estes códigos = conta ou
+// carteira não batem. Outros 403 (ex.: us_person_not_allowed) seguem o fluxo normal.
+const AUTH_403 = ['wallet_required', 'wallet_not_owned', 'email_mismatch'];
+function authFail(r, data) {
+  if (r.status === 401) { sessionExpired(); return true; }
+  if (r.status === 403 && data && AUTH_403.includes(data.error)) { walletForbidden(data.error); return true; }
+  return false;
+}
+
+// Volta ao passo do e-mail sem apagar a sessão do navegador: o código novo a substitui.
+// A reserva salva (LS_KEY) fica — o mesmo e-mail a retoma depois do login.
+function sessionExpired() {
+  stopKycPoll();
+  if (POLL_TIMER) { clearInterval(POLL_TIMER); POLL_TIMER = null; }
+  const email = USER_EMAIL;
+  USER_EMAIL = null;
+  USER_ADDRESS = null;
+  ADDRESS_FROM_LOOKUP = false;
+  OTP_EMAIL = null;
+  CURRENT_ALLOC_ID = null;
+  PENDING_ALLOC_BODY = null;
+  ['kyc-card', 'pi-card'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  setAuthState('email');   // também esconde o form-card
+  if (email) document.getElementById('f-email').value = email;
+  showAlert('auth-alert', 'err', 'Your session has expired. Enter your email to get a new code and continue.');
+  document.getElementById('auth-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function walletForbidden(code) {
+  stopKycPoll();
+  PENDING_ALLOC_BODY = null;
+  document.getElementById('kyc-card').classList.add('hidden');
+  document.getElementById('form-card').classList.add('hidden');
+  const tokenAddr = ADDR_RE.test((EfixAuth.getUser() || {}).address || '');
+  const w = USER_ADDRESS ? `${USER_ADDRESS.slice(0, 6)}…${USER_ADDRESS.slice(-4)}` : '';
+  if (code === 'wallet_required' && !tokenAddr && !ADDRESS_FROM_LOOKUP) {
+    // conta sem carteira: a ativação mora na /app/wallet/ (ativarCarteira)
+    setAuthState('nowallet');
+    showAlert('auth-alert', 'info', 'This allocation needs a wallet linked to your EFIX account.');
+  } else if (code === 'wallet_required' && ADDRESS_FROM_LOOKUP) {
+    // investidor antigo: ativar criaria uma SEGUNDA carteira — o vínculo é com o suporte
+    showAlert('auth-alert', 'err', `Your investment wallet ${w} isn't linked to your EFIX account yet, so we can't take this allocation here. Please contact contato@efix.finance — don't activate a new wallet.`);
+  } else if (code === 'email_mismatch') {
+    showAlert('auth-alert', 'err', 'This page is signed in with a different account than your current EFIX session (did you switch accounts in another tab?). Reload the page to continue.');
+  } else {
+    showAlert('auth-alert', 'err', `Wallet ${w || 'on this page'} doesn't match your EFIX account. Reload the page; if this persists, contact contato@efix.finance.`);
+  }
+  document.getElementById('auth-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // ─────────────────────────────────────────────────────────
 // Rail selector
 // ─────────────────────────────────────────────────────────
@@ -705,10 +828,7 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
     return;
   }
   // 09/10: o token vence (7 dias) com a página aberta; reserva só com sessão viva.
-  if (!EfixAuth.isLoggedIn()) {
-    showAlert('f-alert', 'err', 'Your session expired. Reload the page and log in again (Step 1).');
-    return;
-  }
+  if (!EfixAuth.isLoggedIn()) { sessionExpired(); return; }
   const btn = document.getElementById('f-submit');
   const label = document.getElementById('f-submit-label');
   const alertBox = document.getElementById('f-alert');
@@ -734,6 +854,7 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
     if (OFFERING_KYC_REQUIRED) {
       label.innerHTML = '<span class="loading"></span> Checking identity…';
       const k = await requestKycLink();
+      if (k && k.blocked) return;   // 401/403 já tratado (sessão vencida / carteira)
       if (k && !k.alreadyApproved && k.url) {
         PENDING_ALLOC_BODY = body;
         showKycLink(k.url);
@@ -760,6 +881,7 @@ async function createAllocation(body) {
     body: JSON.stringify(body),
   });
   const data = await r.json();
+  if (authFail(r, data)) return;
   if (r.status === 409 && data.error === 'wallet_mismatch') {
     const onRecord = data.on_record || '—';
     showAlert(
@@ -782,10 +904,12 @@ async function requestKycLink() {
   try {
     const r = await fetch(`${API_BASE}/v1/kyc/sumsub/link`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: EfixAuth.headers(),
       body: JSON.stringify({ email: USER_EMAIL }),
     });
-    return await r.json();
+    const d = await r.json();
+    if (authFail(r, d)) return { blocked: true };
+    return d;
   } catch (e) {
     console.warn('KYC link request failed (fail-open):', e.message);
     return null;
@@ -812,8 +936,9 @@ function startKycPoll() {
   stopKycPoll();
   KYC_POLL_TIMER = setInterval(async () => {
     try {
-      const r = await fetch(`${API_BASE}/v1/kyc/status?email=${encodeURIComponent(USER_EMAIL)}`);
-      const s = await r.json();
+      const r = await fetch(`${API_BASE}/v1/kyc/status?email=${encodeURIComponent(USER_EMAIL)}`, { headers: EfixAuth.headers() });
+      const s = await r.json().catch(() => ({}));
+      if (authFail(r, s)) return;   // já para o polling
       if (s.kycStatus === 'approved') onKycApproved();
     } catch {}
   }, 5000);
@@ -852,11 +977,13 @@ async function showPaymentInstructions(allocId) {
   body.innerHTML = '<div class="alert alert-info"><span class="loading"></span> Loading payment instructions…</div>';
 
   try {
+    // 09/10: Bearer também aqui (hoje público por UUID; pronto para quando fechar)
     const [allocRes, piRes] = await Promise.all([
-      fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}`).then(r => r.json()),
-      fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}/payment-instructions`),
+      fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}`, { headers: EfixAuth.headers() }).then(r => r.json()),
+      fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}/payment-instructions`, { headers: EfixAuth.headers() }),
     ]);
     const piData = await piRes.json();
+    if (CURRENT_ALLOC_ID !== allocId) return;   // sessão vencida/nova reserva no meio do caminho
     renderPaymentInstructions(allocRes, piRes.status, piData);
     startPolling();
   } catch (err) {
@@ -1117,7 +1244,7 @@ function startPollingFast() {
     if (!CURRENT_ALLOC_ID) return;
     attempts++;
     try {
-      const r = await fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(CURRENT_ALLOC_ID)}`);
+      const r = await fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(CURRENT_ALLOC_ID)}`, { headers: EfixAuth.headers() });
       if (!r.ok) return;
       const data = await r.json();
       const st = data.allocation.status;

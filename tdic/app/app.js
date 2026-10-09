@@ -1,10 +1,10 @@
 /**
  * TDIC App — Cedente flow
  * ─────────────────────────
- * Login OTP (Alchemy) → KYB → Dashboard com Mint TDIC.
+ * Login por código no e-mail (OTP do efixdi-backend) → KYB → Dashboard com Mint TDIC.
  *
  * Backend mockado em localStorage via TdicMock (vide /tdic/tdic-mock.js).
- * Auth via window.EfixAuth (real bundle ou stub local).
+ * Auth via EfixAuth (/app/efix-auth.js): mesmo token da /app/wallet/.
  */
 
 (function () {
@@ -45,6 +45,7 @@
   const state = {
     user: null,
     cedente: null,
+    cedenteKey: null,
     creditos: [],
     crs: [],
     txs: [],
@@ -71,48 +72,47 @@
     bindImportModal();
     bindContractModal();
 
-    // Inicializa signer Alchemy (real ou stub).
-    const isStubSigner = window.EfixWallet?.config?.apiKey === "STUB";
-    console.log(
-      "[TDIC] signer:",
-      isStubSigner ? "STUB (e-mail simulado, OTP não chega)" : "Alchemy (real)",
-      "apiKey:",
-      window.EfixWallet?.config?.apiKey || "missing"
-    );
+    // 09/10: resíduo do stub antigo (OTP falso) — só chaves da própria página.
     try {
-      if (window.EfixWallet?.init) window.EfixWallet.init();
-    } catch (e) {
-      console.warn("[TDIC] EfixWallet.init failed:", e);
+      ["tdic_stub_session_v1", "tdic_stub_user_v1"].forEach((k) => localStorage.removeItem(k));
+    } catch (_) {}
+
+    const A = auth();
+    if (!A) {
+      showLogin();
+      showAuthUnavailable();
+      return;
     }
 
-    // 1) Tenta restaurar JWT no backend efixdi (caminho normal).
+    // Sessão = JWT do efixdi (o mesmo da /app/wallet/). 09/10: cliente novo
+    // não tem carteira (address null) e entra assim mesmo — o mock usa o
+    // e-mail como chave (ver cedenteKeyFor).
     let session = null;
     try {
-      session = await window.EfixAuth.restore();
+      session = await A.restore();
     } catch (e) {
       console.warn("[TDIC] EfixAuth.restore failed:", e);
     }
-    if (session?.user?.address) {
-      state.user = session.user;
+    if (session?.user?.email && A.isLoggedIn()) {
+      state.user = { ...session.user, address: session.user.address || null };
       return loadCedenteAndRoute();
     }
 
-    // 2) Sem JWT: se o Alchemy ainda tem sessão local (signer cookie), usa o
-    //    smart account address e segue sem precisar de novo OTP.
-    try {
-      const signerAddr = await window.EfixWallet?.checkSession?.();
-      if (signerAddr) {
-        const address = await getSmartAccountAddress();
-        const cached = JSON.parse(localStorage.getItem("efix_user_data") || "null");
-        const email = cached?.email || (window.EfixAuth?.getUser?.()?.email) || "";
-        state.user = { email, address };
-        return loadCedenteAndRoute();
-      }
-    } catch (e) {
-      console.warn("[TDIC] signer session check failed:", e);
-    }
-
     showLogin();
+  }
+
+  // 09/10: efix-auth.js declara `const EfixAuth` (global léxico, não vira
+  // window.EfixAuth) — por isso o nome nu, com guarda se o script não carregou.
+  function auth() {
+    return typeof EfixAuth !== "undefined" ? EfixAuth : null;
+  }
+
+  function showAuthUnavailable() {
+    const err = document.getElementById("emailErr");
+    if (err) {
+      err.textContent = "Não foi possível carregar o login. Recarregue a página.";
+      err.style.display = "block";
+    }
   }
 
   // Triggers (depois da declaração de _initDone para evitar TDZ).
@@ -132,9 +132,26 @@
     document.getElementById("userPill").style.display = "none";
   }
 
+  // Chave do cedente no mock. 09/10: cliente do OTP novo pode não ter
+  // carteira — usa o e-mail. O mint é simulado: NÃO criar carteira aqui.
+  function cedenteKeyFor(user) {
+    return user.address || "email:" + String(user.email || "").toLowerCase();
+  }
+
   async function loadCedenteAndRoute() {
-    const addr = state.user.address;
-    state.cedente = await window.TdicMock.getCedente(addr);
+    let key = cedenteKeyFor(state.user);
+    state.cedente = await window.TdicMock.getCedente(key);
+    // 09/10: quem cadastrou sem carteira e depois vinculou uma segue achando o
+    // cadastro pela chave de e-mail.
+    if (!state.cedente && state.user.address && state.user.email) {
+      const emailKey = "email:" + String(state.user.email).toLowerCase();
+      const byEmail = await window.TdicMock.getCedente(emailKey);
+      if (byEmail) {
+        key = emailKey;
+        state.cedente = byEmail;
+      }
+    }
+    state.cedenteKey = key;
 
     document.getElementById("userPill").style.display = "inline-flex";
     document.getElementById("userEmail").textContent = state.user.email;
@@ -151,67 +168,42 @@
   }
 
   // ── Login ───────────────────────────────────────────────
-  // Flow padrão efix.finance (idêntico a /app/wallet/index.html):
-  //   1. EfixWallet.sendOTP(email)        → Alchemy envia o e-mail
-  //   2. EfixWallet.verifyOTP(code)       → assina sessão
-  //   3. getSmartAccountAddress()         → obtem endereço ERC-4337
-  //   4. EfixAuth.login(email, address)   → backend cria/restaura JWT
-  // Se EfixWallet for o stub local (apiKey === 'STUB'), usamos o caminho
-  // legacy EfixAuth.sendOTP/verifyOTP que persiste em localStorage.
-  function isStub() {
-    return window.EfixWallet?.config?.apiKey === "STUB";
-  }
+  // Flow padrão efix.finance (o mesmo da /app/wallet/ e /app/offerings/):
+  //   1. EfixAuth.sendOTP(email)          → efixdi-backend envia o código
+  //   2. EfixAuth.verifyOTP(email, code)  → backend confere e devolve o JWT
+  // 09/10: sem bundle/signer (o v3 não cria conta nova) e sem carteira aqui.
 
-  // Converte erros do Alchemy/Turnkey em mensagens em PT-BR.
+  // Converte erros do /auth/send-otp e /auth/verify-otp em mensagens em PT-BR.
   function humanizeAuthError(e) {
     const raw = String(e?.message || e || "").trim();
-    // O Turnkey costuma vir como JSON dentro do message.
-    let payload = null;
-    try {
-      const m = raw.match(/\{[\s\S]*\}$/);
-      if (m) payload = JSON.parse(m[0]);
-      if (payload?.error) {
-        try {
-          payload = JSON.parse(payload.error);
-        } catch (_) {}
-      }
-    } catch (_) {}
-
-    const code = payload?.turnkeyErrorCode || payload?.code || "";
-    const msg = payload?.message || raw;
-
-    if (/MAX_OTP_INITIATED/i.test(raw) || code === "MAX_OTP_INITIATED") {
-      return "Limite de envios de OTP atingido para este e-mail. Aguarde ~15-30 min e tente novamente, ou use outro e-mail.";
+    if (/invalid or expired code/i.test(raw)) {
+      return "Código inválido ou expirado. Peça um novo código.";
     }
-    if (/INVALID_OTP_CODE|otp.*invalid|otp.*expired/i.test(raw)) {
-      return "Código inválido ou expirado. Solicite um novo OTP.";
+    if (/too many requests/i.test(raw)) {   // limite por IP (rede compartilhada), não do e-mail
+      return "Muitas tentativas a partir desta rede. Aguarde alguns minutos e tente novamente.";
     }
-    if (/timeout/i.test(raw)) {
-      return "Tempo esgotado. Verifique se cookies de signer.alchemy.com estão liberados (extensions/incognito podem bloquear).";
+    if (/too many/i.test(raw)) {
+      return "Muitas tentativas para este e-mail. Aguarde alguns minutos e tente novamente.";
+    }
+    if (/under review/i.test(raw)) {
+      return "Este acesso está em análise. Fale com a EFIX.";
+    }
+    if (/6-digit/i.test(raw)) {
+      return "O código tem 6 dígitos.";
+    }
+    if (/valid email/i.test(raw)) {
+      return "E-mail inválido.";
     }
     if (/network|fetch|failed to load/i.test(raw)) {
       return "Falha de rede. Verifique sua conexão e tente novamente.";
     }
-    return msg || "Não foi possível concluir a autenticação. Tente novamente.";
-  }
-
-  async function getSmartAccountAddress() {
-    // Stub expõe getAddress() direto; o bundle real expõe getSmartClient().
-    if (isStub()) return window.EfixWallet.getAddress?.() || null;
-    const client = await window.EfixWallet.getSmartClient();
-    if (typeof client.requestAccount === "function") {
-      const acct = await client.requestAccount();
-      return acct.address;
-    }
-    if (client.account?.address) return client.account.address;
-    throw new Error("Não foi possível resolver o endereço do smart account");
+    return "Não foi possível concluir a autenticação. Tente novamente.";
   }
 
   function bindLoginForm() {
     const emailForm = $("#emailForm");
     const codeForm = $("#codeForm");
     let _email = "";
-    let _sendOtpPromise = null;
 
     emailForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -219,60 +211,31 @@
       const err = $("#emailErr");
       const email = $("#emailInput").value.trim().toLowerCase();
       err.style.display = "none";
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      const A = auth();
+      if (!A) return showAuthUnavailable();
+      if (email.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
         err.textContent = "E-mail inválido.";
         err.style.display = "block";
         return;
       }
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Enviando…';
-      console.log("[TDIC] sendOTP: disparando para", email);
-
-      // Mecânica do AlchemyWebSigner: `authenticate({type:"email"})` envia
-      // o e-mail mas só RESOLVE quando `authenticate({type:"otp"})` (chamado
-      // pelo verifyOTP) completar. Logo NÃO podemos `await` aqui.
-      _sendOtpPromise = window.EfixWallet.sendOTP(email);
-
-      // 500ms de proteção contra erro síncrono/imediato (rede, rate limit,
-      // email recusado). Se rejeitar dentro disso, mostra erro e fica no
-      // form de email. Se demorar mais, avança pro form de código e o
-      // .catch() abaixo reverte caso rejeite tarde.
-      let earlyError = null;
-      const earlyHandler = (err) => {
-        earlyError = err;
-      };
-      _sendOtpPromise.catch(earlyHandler);
-      await new Promise((r) => setTimeout(r, 500));
-      if (earlyError) {
-        console.error("[TDIC] sendOTP early rejection:", earlyError);
-        err.textContent = humanizeAuthError(earlyError);
+      try {
+        await A.sendOTP(email);
+        _email = email;
+        $("#codeEmail").textContent = email;
+        $("#codeInput").value = "";
+        emailForm.style.display = "none";
+        codeForm.style.display = "flex";
+        $("#codeInput").focus();
+      } catch (e2) {
+        console.error("[TDIC] sendOTP error:", e2?.message || e2);
+        err.textContent = humanizeAuthError(e2);
         err.style.display = "block";
+      } finally {
         btn.disabled = false;
         btn.textContent = "Enviar código";
-        return;
       }
-
-      // Avança e instala handler tardio: se rejeitar enquanto o user está
-      // no form de código, volta pra tela de email com erro.
-      _sendOtpPromise.catch((errLate) => {
-        console.warn("[TDIC] sendOTP late rejection:", errLate?.message || errLate);
-        if (codeForm.style.display === "flex") {
-          const errEl = $("#emailErr");
-          errEl.textContent = humanizeAuthError(errLate);
-          errEl.style.display = "block";
-          codeForm.style.display = "none";
-          emailForm.style.display = "flex";
-        }
-      });
-
-      _email = email;
-      $("#codeEmail").textContent = email;
-      emailForm.style.display = "none";
-      codeForm.style.display = "flex";
-      $("#codeInput").focus();
-      btn.disabled = false;
-      btn.textContent = "Enviar código";
-      console.log("[TDIC] UI avançou pro form de código");
     });
 
     codeForm.addEventListener("submit", async (e) => {
@@ -281,7 +244,15 @@
       const err = $("#codeErr");
       const code = $("#codeInput").value.trim();
       err.style.display = "none";
-      if (!/^\d{4,8}$/.test(code)) {
+      const A = auth();
+      if (!A || !_email) {
+        codeForm.style.display = "none";
+        emailForm.style.display = "flex";
+        if (!A) showAuthUnavailable();
+        return;
+      }
+      // O backend só aceita 6 dígitos.
+      if (!/^\d{6}$/.test(code)) {
         err.textContent = "Código deve ter 6 dígitos.";
         err.style.display = "block";
         return;
@@ -289,22 +260,15 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Verificando…';
       try {
-        await window.EfixWallet.verifyOTP(code);
-        const address = await getSmartAccountAddress();
-
-        // Backend efixdi guarda perfil + JWT (não-bloqueante).
-        let user = { email: _email, address };
-        try {
-          const session = await window.EfixAuth.login(_email, address);
-          if (session?.user) user = session.user;
-        } catch (be) {
-          console.warn("[TDIC] backend login falhou (continuando local):", be.message);
-        }
-        state.user = user;
+        const session = await A.verifyOTP(_email, code);
+        const u = session?.user || A.getUser() || {};
+        // address = users.wallet_address do efixdi (null p/ quem não tem carteira).
+        state.user = { ...u, email: u.email || _email, address: u.address || null };
+        _email = "";
         await loadCedenteAndRoute();
-      } catch (e) {
-        console.error("[TDIC] verifyOTP error:", e);
-        err.textContent = humanizeAuthError(e);
+      } catch (e2) {
+        console.error("[TDIC] verifyOTP error:", e2?.message || e2);
+        err.textContent = humanizeAuthError(e2);
         err.style.display = "block";
       } finally {
         btn.disabled = false;
@@ -313,12 +277,10 @@
     });
 
     $("#resendBtn").addEventListener("click", () => {
-      // Reset completo: derruba sessão Alchemy local + stub residual.
-      try {
-        Object.keys(localStorage)
-          .filter((k) => k.startsWith("alchemy-signer-session") || k.startsWith("tdic_stub_"))
-          .forEach((k) => localStorage.removeItem(k));
-      } catch (_) {}
+      // 09/10: só volta ao form de e-mail — não mexe em chaves de outras
+      // páginas (antes apagava a sessão da wallet clássica no mesmo navegador).
+      _email = "";
+      $("#codeErr").style.display = "none";
       codeForm.style.display = "none";
       emailForm.style.display = "flex";
       $("#emailInput").focus();
@@ -421,10 +383,10 @@
           signedContract,
         };
 
-        state.cedente = await window.TdicMock.submitKyb(state.user.address, payload);
+        state.cedente = await window.TdicMock.submitKyb(state.cedenteKey, payload);
         try {
           localStorage.setItem(
-            "tdic_signed_contract_" + state.user.address.toLowerCase(),
+            "tdic_signed_contract_" + state.cedenteKey.toLowerCase(),
             JSON.stringify(signedContract)
           );
         } catch (_) {}
@@ -648,7 +610,7 @@
       name: $("#kybSignName")?.value || state.cedente?.signedContract?.signatory?.name || "—",
       cpf: $("#kybSignCpf")?.value || state.cedente?.signedContract?.signatory?.cpf || "—",
       email: state.user?.email || "—",
-      address: state.user?.address || "—",
+      address: state.user?.address || "não vinculada",
     };
     const docBodyEl = document.getElementById("contractDocBody");
     const body = docBodyEl?.innerHTML || "";
@@ -686,7 +648,7 @@ ${body}
   <div class="row"><span>Cedente</span><strong>${cedente.razaoSocial} · CNPJ ${cedente.cnpj}</strong></div>
   <div class="row"><span>Signatário</span><strong>${sig.name} · CPF ${sig.cpf}</strong></div>
   <div class="row"><span>E-mail validado</span><strong>${sig.email}</strong></div>
-  <div class="row"><span>Smart wallet</span><strong class="hash">${sig.address}</strong></div>
+  <div class="row"><span>Carteira</span><strong class="hash">${sig.address}</strong></div>
   <div class="row"><span>Data e hora</span><strong>${ts.toLocaleString("pt-BR")} (${ts.toISOString()})</strong></div>
   <div class="row"><span>Dispositivo</span><strong style="font-family:monospace;font-size:11px;text-align:right">${navigator.userAgent}</strong></div>
 </div>
@@ -719,14 +681,14 @@ ${body}
       btn.disabled = true;
       const old = btn.textContent;
       btn.innerHTML = '<span class="spinner" style="border-color:#0a0a0a;border-top-color:transparent"></span>Atualizando…';
-      state.cedente = await window.TdicMock.getCedente(state.user.address);
+      state.cedente = await window.TdicMock.getCedente(state.cedenteKey);
       btn.disabled = false;
       btn.textContent = old;
       if (state.cedente?.kybStatus === "approved") loadDashboard();
     });
     $("#simulateApproveKybBtn").addEventListener("click", async () => {
-      await window.TdicMock.approveKyb(state.user.address);
-      state.cedente = await window.TdicMock.getCedente(state.user.address);
+      await window.TdicMock.approveKyb(state.cedenteKey);
+      state.cedente = await window.TdicMock.getCedente(state.cedenteKey);
       loadDashboard();
     });
   }
@@ -734,7 +696,7 @@ ${body}
   // ── Dashboard ───────────────────────────────────────────
   async function loadDashboard() {
     show("dashView");
-    const addr = state.user.address;
+    const addr = state.cedenteKey;
     [state.creditos, state.crs, state.txs] = await Promise.all([
       window.TdicMock.listCreditos(addr),
       window.TdicMock.listCRs(addr),
@@ -771,7 +733,7 @@ ${body}
     const greet =
       "Olá, " + (state.cedente?.contato?.nome?.split(" ")[0] || state.cedente?.razaoSocial || "");
     $("#dashGreeting").textContent = greet;
-    $("#kpiWallet").textContent = shortAddr(state.user.address);
+    $("#kpiWallet").textContent = state.user.address ? shortAddr(state.user.address) : "Não vinculada";
   }
 
   function totalDespesa() {
@@ -1591,7 +1553,7 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Enviando…';
       try {
-        await window.TdicMock.cadastrarCredito(state.user.address, payload);
+        await window.TdicMock.cadastrarCredito(state.cedenteKey, payload);
         state.pendingPdfDoc = null;
         closeCreditoModal();
         await loadDashboard();
@@ -1650,7 +1612,7 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
       <div class="row"><span class="k">Valor face</span><span class="v">${fmtBRL(c.faceValue)}</span></div>
       <div class="row"><span class="k">Deságio</span><span class="v">${(c.discountBps / 100).toFixed(0)}% · ${fmtBRL(desc)}</span></div>
       <div class="row"><span class="k">Vencimento</span><span class="v">${fmtDate(c.maturityDate)}</span></div>
-      <div class="row"><span class="k">Destinatário</span><span class="v">${shortAddr(state.user.address)}</span></div>
+      <div class="row"><span class="k">Destinatário</span><span class="v">${state.user.address ? shortAddr(state.user.address) : escapeHtml(state.user.email || "—")}</span></div>
       <div class="row"><span class="k">Rede</span><span class="v">Base mainnet</span></div>
     `;
     $("#mintErr").style.display = "none";
@@ -1989,7 +1951,7 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
 
     for (const item of selected) {
       try {
-        await window.TdicMock.cadastrarCredito(state.user.address, item.payload);
+        await window.TdicMock.cadastrarCredito(state.cedenteKey, item.payload);
         done++;
       } catch (e) {
         console.error("[TDIC] cadastrarCredito falhou:", e);
@@ -2092,9 +2054,15 @@ th{background:#fafafa;font-size:10px;text-transform:uppercase;letter-spacing:0.0
 
   // ── Logout ──────────────────────────────────────────────
   async function logout() {
-    await window.EfixAuth.logout();
+    // 09/10: era window.EfixAuth (undefined com o const do efix-auth.js) — o Sair quebrava.
+    try {
+      await auth()?.logout();
+    } catch (e) {
+      console.warn("[TDIC] logout falhou:", e);
+    }
     state.user = null;
     state.cedente = null;
+    state.cedenteKey = null;
     showLogin();
     document.getElementById("emailForm").style.display = "flex";
     document.getElementById("codeForm").style.display = "none";

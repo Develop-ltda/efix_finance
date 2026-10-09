@@ -1235,6 +1235,7 @@ async function balanceOf(token, addr){
     return;
   }
   const user = (EfixAuth.getUser && EfixAuth.getUser()) || {};
+  await tokenComCarteiraAtual(user);
   // 09/10: volta à oferta que mandou ativar a carteira. Só no boot (carregar()
   // também é o refresh pós-operação), só caminho da lista branca (o storage não
   // escolhe destino) e só com carteira já vinculada — sem ela a chave espera o
@@ -1258,6 +1259,20 @@ async function balanceOf(token, addr){
   const h0 = (_hash0||location.hash||'').replace('#','');
   if(h0 && h0!=='inicio' && document.getElementById('view-'+h0)) go(h0);
 })();
+
+// 09/10: o offerings confere a carteira pelo claim `address` do JWT, fixado na
+// emissão; o getUser() vem do /users/me (banco). Carteira vinculada depois (outro
+// aparelho, religada pela mesa) ⇒ re-emite o token com sessão viva (o backend
+// ignora o address do corpo quando já há vínculo e devolve o do banco).
+async function tokenComCarteiraAtual(user){
+  try{
+    if(!user || !user.address || !user.email) return;
+    const t = String((EfixAuth.getToken && EfixAuth.getToken()) || '').split('.')[1] || '';
+    const b = t.replace(/-/g,'+').replace(/_/g,'/'); const claim = JSON.parse(atob(b + '='.repeat((4 - b.length % 4) % 4)));
+    if(String(claim.address||'').toLowerCase() === String(user.address).toLowerCase()) return;
+    await EfixAuth.login(user.email, user.address);
+  }catch(e){}
+}
 
 async function gateSend(){
   const email = $('g-email').value.trim();
@@ -1330,6 +1345,27 @@ async function isLegacyEmail(email){
     return false;
   }
 }
+// 09/10: investidores antigos do offerings (carteira registrada lá + reserva, sem
+// carteira na conta efixdi; SQL só leitura 09/10). MESMA lista da /app/offerings/:
+// só para eles a carteira do investor-lookup conta — para qualquer outro e-mail
+// ela pode ter sido gravada por terceiro (o POST de reserva não tinha auth).
+const INVESTIDOR_ANTIGO_SHA256 = new Set([
+  '1a14e119b7d4c2cde9d530b27e59759aad05bcf28cdf38e4c0f12eb3efc58a76',
+  '1f34d1d76e57ec08665c0b6dd7a287e08a5e91e9c207284b7c821acce9575dd4',
+  '25fc20bb59db96f949df2328abcc06000a5c86ebcaaffb4ef78d9e6ba5e846c4',
+  '5a617fab4986c27b183f73f4dd1dd07d26490789084b33270f3eb3d7b8b8b8e7',
+  '8087a864d5ccb99104aae1d81be0d62feef201f3fd6847d9503af147e3dd0b8e',
+  '8b1830a61fa7cd847d4863231a5e7078727b14334c7100bee3193e2f9a4e5a27',
+  'ead437fb86a35b84665a46dd95626c06a6a01bb294ef5f20d3eaff95486bb251',
+]);
+async function isInvestidorAntigo(email){
+  try{
+    const buf = await crypto.subtle.digest('SHA-256',
+      new TextEncoder().encode(String(email||'').trim().toLowerCase()));
+    return INVESTIDOR_ANTIGO_SHA256.has([...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join(''));
+  }catch(e){ return null; }   // sem resposta: não decidir às cegas (nem ativar, nem adotar)
+}
+let CARTEIRA_NAO_CONFIRMADA = false;   // lookup de investidor antigo falhou: não oferecer ativação
 async function abrirAtivar(){
   if(!EfixAuth.isLoggedIn()){ location.reload(); return; }
   const email = ((EfixAuth.getUser()||{}).email||'').toLowerCase();
@@ -1342,6 +1378,21 @@ async function abrirAtivar(){
     const m=$('atvMsg'); m.className='mmsg err';
     m.innerHTML='Sua carteira está na fila da migração de assinatura e será migrada em breve — o endereço e o saldo não mudam. Até lá, para movimentar use o <a href="/app/wallet/classic.html" style="color:var(--mag);text-decoration:underline">acesso clássico</a>.';
   }
+}
+// 09/10: sem carteira NA CONTA ≠ sem carteira. O investidor antigo do offerings
+// tem a registrada (WALLETS, vinda do lookup) sem vínculo no efixdi: ativar
+// criaria uma SEGUNDA carteira. Ele recebe o aviso; só quem não tem nenhuma ativa.
+function semCarteiraNaConta(){
+  if(CARTEIRA_NAO_CONFIRMADA){
+    alert('Não consegui confirmar sua carteira de investimentos agora — recarregue a página em instantes.');
+    return;
+  }
+  if(WALLETS.length){
+    alert('Sua carteira de investimentos ('+short(WALLETS[0])+') ainda não está ligada à sua conta'+
+      (IS_LOBIE?'':' EFIX')+' — fale com o suporte para movimentar por aqui.');
+    return;
+  }
+  abrirAtivar();
 }
 async function ativarEnviarCodigo(){
   const b=$('atvSend'), m=$('atvMsg');
@@ -1423,17 +1474,28 @@ async function carregarView(addr){ await carregarCore(null, [addr.toLowerCase()]
 async function carregar(email, sessAddr){
   // carteiras: registrada (offerings) + sessão
   let registered = null;
-  try{
-    const l = await fetch(OFFERINGS + '/v1/investor-lookup?email=' + encodeURIComponent(email)).then(r=>r.json());
-    registered = l && l.walletAddress;
-  }catch(e){}
+  CARTEIRA_NAO_CONFIRMADA = false;
+  // 09/10: a carteira registrada no offerings só conta para a lista fechada de
+  // investidores antigos (sem carteira na conta). Com Bearer: o lookup passa a
+  // exigir a sessão e só responde o próprio e-mail.
+  if(!sessAddr){
+    const antigo = await isInvestidorAntigo(email);
+    if(antigo !== false){
+      try{
+        const r = await fetch(OFFERINGS + '/v1/investor-lookup?email=' + encodeURIComponent(email),
+          {headers:EfixAuth.headers()});
+        const l = r.ok ? await r.json() : null;
+        if(l && antigo) registered = l.walletAddress || null; else CARTEIRA_NAO_CONFIRMADA = true;
+      }catch(e){ CARTEIRA_NAO_CONFIRMADA = true; }
+    }
+  }
   const wallets = [...new Set([registered, sessAddr].filter(Boolean).map(a=>a.toLowerCase()))];
   $('sb-wallet').textContent = registered ? short(registered) : (sessAddr ? short(sessAddr) : '—');
-  // sem carteira on-chain nenhuma: oferece a ativação (smart account Alchemy)
-  $('sb-ativar').style.display = wallets.length ? 'none' : 'inline-block';
+  // sem carteira on-chain nenhuma (e sem dúvida sobre a registrada): oferece a ativação
+  $('sb-ativar').style.display = (wallets.length || CARTEIRA_NAO_CONFIRMADA) ? 'none' : 'inline-block';
   // classic ou offerings mandam ativar: só sem carteira NENHUMA (o investidor
   // antigo do offerings tem a do lookup e não pode ganhar uma segunda)
-  if(!wallets.length){ try{
+  if(!wallets.length && !CARTEIRA_NAO_CONFIRMADA){ try{
     if(sessionStorage.getItem('efix_ativar_carteira')){
       sessionStorage.removeItem('efix_ativar_carteira'); setTimeout(abrirAtivar, 400);
     }
@@ -1479,6 +1541,8 @@ async function carregarCore(email, wallets){
       ? '<tr><td colspan="5"><div class="empty">'+(IS_LOBIE
           ? 'Nenhum saldo ainda — seus repasses aparecem aqui assim que forem pagos.'
           : 'Nenhum ativo ainda — faça seu primeiro depósito.')+'</div></td></tr>'
+      : CARTEIRA_NAO_CONFIRMADA
+      ? '<tr><td colspan="5"><div class="empty">Não consegui confirmar sua carteira de investimentos agora — recarregue a página em instantes.</div></td></tr>'
       : '<tr><td colspan="5"><div class="empty">Sua conta ainda não tem carteira on-chain. <a href="#" onclick="abrirAtivar();return false" style="color:var(--mag);text-decoration:underline">Ativar carteira →</a></div></td></tr>';
   }
   else {
@@ -3465,9 +3529,9 @@ const INV_STATUS = {
 };
 
 async function carregarInvestir(){
-  // ofertas: rota pública
+  // ofertas: rota pública (09/10: Bearer vai em toda chamada ao offerings, por padrão)
   try{
-    const d = await fetch(OFFERINGS+'/v1/offerings').then(r=>r.json());
+    const d = await fetch(OFFERINGS+'/v1/offerings',{headers:EfixAuth.headers()}).then(r=>r.json());
     _ofertas = d.items || [];
     $('ofertas-list').innerHTML = _ofertas.length ? _ofertas.map(ofertaCard).join('')
       : '<div class="empty">Nenhuma oferta aberta agora.</div>';
@@ -3518,7 +3582,7 @@ async function abrirInvestir(ofertaId){
   if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para reservar cotas.'); return; }
   const u = EfixAuth.getUser()||{};
   // o backend RECUSA reserva sem carteira (a liquidação não teria destino)
-  if(!u.address){ abrirAtivar(); return; }
+  if(!u.address){ semCarteiraNaConta(); return; }
   _invOferta = _ofertas.find(o=>o.id===ofertaId); if(!_invOferta) return;
   _invAlloc = null;
   $('invTitulo').textContent = 'Reservar · '+(_invOferta.symbol||'');
@@ -3537,9 +3601,12 @@ async function abrirInvestir(ofertaId){
   // avisa AGORA se o e-mail já está preso a outra carteira (o backend só diria
   // isso no submit, com a reserva já digitada)
   try{
-    const p = await fetch(OFFERINGS+'/v1/investors/precheck',{method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:u.email, wallet_address:u.address})}).then(r=>r.json());
+    const r = await fetch(OFFERINGS+'/v1/investors/precheck',{method:'POST',
+      headers:{'Content-Type':'application/json',...EfixAuth.headers()},
+      body:JSON.stringify({email:u.email, wallet_address:u.address})});
+    const p = await investirJson(r);
+    const ea = investirErroAuth(r, p);
+    if(ea){ $('invMsg').className='mmsg err'; $('invMsg').textContent=ea; return; }   // botão segue travado
     if(p.registered && p.walletMatches === false){
       $('invMsg').className='mmsg err';
       $('invMsg').innerHTML='Sua conta já tem reservas em outra carteira ('+_esc(p.walletOnRecordMasked||'')+'). Fale com a gente para religar antes de reservar.';
@@ -3568,9 +3635,12 @@ async function investirReservar(){
     // anual do investidor (CVM 88) e nada expira sozinho no backend — então
     // quem abandonasse o KYC ficaria com o limite preso pelo resto do ano.
     if(_invOferta.kycRequired){
-      const k = await fetch(OFFERINGS+'/v1/kyc/sumsub/link',{method:'POST',
-        headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:u.email})})
-        .then(r=>r.json()).catch(()=>({}));
+      const rk = await fetch(OFFERINGS+'/v1/kyc/sumsub/link',{method:'POST',
+        headers:{'Content-Type':'application/json',...EfixAuth.headers()}, body:JSON.stringify({email:u.email})})
+        .catch(()=>null);
+      const k = rk ? await investirJson(rk) : {};
+      const ek = rk && investirErroAuth(rk, k);
+      if(ek){ m.className='mmsg err'; m.textContent=ek; return; }
       if(!k.alreadyApproved){
         _invPendente = { amount, rail:'pix' };     // retoma a reserva após aprovar
         $('inv-form').style.display='none'; $('inv-kyc').style.display='block';
@@ -3593,7 +3663,7 @@ async function investirReservar(){
                             country:'BR', is_us_person: !$('invNaoUS').checked })});
     if(!r.ok){
       const d = await investirJson(r);
-      m.className='mmsg err'; m.textContent = investirErro(d, amount); return;
+      m.className='mmsg err'; m.textContent = investirErroAuth(r, d) || investirErro(d, amount); return;
     }
     const d = await investirJson(r);
     _invAlloc = d.allocation;
@@ -3624,9 +3694,21 @@ async function investirJson(r){
   catch(e){ return { error:'resposta_invalida', message:'o servidor respondeu de forma inesperada (HTTP '+r.status+')' }; }
 }
 
+// 09/10: o offerings passa a exigir o Bearer do efixdi nas rotas do Investir.
+// 401 = sessão vencida/recusada lá (qualquer código); 403 só com estes códigos
+// (o us_person_not_allowed também é 403 e segue no investirErro de sempre).
+function investirErroAuth(r, d){
+  if(r.status===401) return investirErro({error:'login_required'});
+  if(r.status===403 && d && /^(wallet_required|wallet_not_owned|email_mismatch)$/.test(String(d.error||''))) return investirErro(d);
+  return null;
+}
+
 // traduz os códigos do backend para linguagem de gente
 function investirErro(d, amount){
   const cod = String(d.error||'');
+  if(cod==='login_required' || cod==='unauthorized') return 'Sua sessão expirou — clique em sair e entre de novo para continuar.';
+  if(cod==='email_mismatch')    return 'Esta tela está com outra conta (troca em outra aba?) — recarregue a página.';
+  if(cod==='wallet_not_owned')  return 'A carteira desta tela não é a da sua conta — recarregue a página; se continuar, fale com a gente.';
   if(cod==='over_investor_cap') return 'Isso passa do seu limite anual (R$ '+Number(d.cap_brl||0).toLocaleString('pt-BR')+
     '; você já usou R$ '+Number(d.used_brl||0).toLocaleString('pt-BR')+'). Reserve um valor menor.';
   if(cod==='over_issuer_cap')   return 'A oferta atingiu o limite anual de captação. Fale com a gente.';
@@ -3642,8 +3724,11 @@ async function investirAbrirKyc(){
   const u = EfixAuth.getUser()||{};
   b.disabled=true; m.className='mmsg'; m.textContent='preparando sua verificação…';
   try{
-    const d = await fetch(OFFERINGS+'/v1/kyc/sumsub/link',{method:'POST',
-      headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:u.email})}).then(r=>r.json());
+    const r = await fetch(OFFERINGS+'/v1/kyc/sumsub/link',{method:'POST',
+      headers:{'Content-Type':'application/json',...EfixAuth.headers()}, body:JSON.stringify({email:u.email})});
+    const d = await investirJson(r);
+    const ea = investirErroAuth(r, d);
+    if(ea){ m.className='mmsg err'; m.textContent=ea; return; }
     if(d.alreadyApproved){ m.textContent=''; await investirChecarKyc(); return; }
     if(d.url){ window.open(d.url,'_blank');
       $('invKycTxt').textContent='Complete a verificação na aba que abriu. Quando aprovar, voltamos aqui sozinhos.';
@@ -3659,8 +3744,10 @@ async function investirAbrirKyc(){
 async function investirChecarKyc(){
   const u = EfixAuth.getUser()||{}, m=$('invMsg');
   try{
-    const r = await fetch(OFFERINGS+'/v1/kyc/status?email='+encodeURIComponent(u.email||''));
+    const r = await fetch(OFFERINGS+'/v1/kyc/status?email='+encodeURIComponent(u.email||''),{headers:EfixAuth.headers()});
     const d = await investirJson(r);
+    const ea = investirErroAuth(r, d);
+    if(ea){ clearInterval(_invKycTimer); _invKycTimer=null; m.className='mmsg err'; m.textContent=ea; return; }
     if(d.kycStatus==='approved'){
       clearInterval(_invKycTimer); _invKycTimer=null;
       m.className='mmsg ok'; m.textContent='identidade verificada ✓';
@@ -3683,7 +3770,7 @@ async function investirInstrucoes(allocId){
   const m=$('invMsg');
   m.className='mmsg'; m.textContent='gerando as instruções de pagamento…';
   try{
-    const r = await fetch(OFFERINGS+'/v1/allocations/'+allocId+'/payment-instructions');
+    const r = await fetch(OFFERINGS+'/v1/allocations/'+allocId+'/payment-instructions',{headers:EfixAuth.headers()});
     const d = await r.json();
     if(r.status===202 && d.error==='kyc_required'){
       $('inv-kyc').style.display='block'; $('inv-pgto').style.display='none';
@@ -3692,9 +3779,9 @@ async function investirInstrucoes(allocId){
     }
     if(!r.ok){
       m.className='mmsg err';
-      m.textContent = d.error==='provider_not_configured'
+      m.textContent = investirErroAuth(r, d) || (d.error==='provider_not_configured'
         ? 'O meio de pagamento escolhido está indisponível agora. Sua reserva está salva — fale com a gente.'
-        : (d.message || 'não consegui gerar as instruções agora. Sua reserva está salva.');
+        : (d.message || 'não consegui gerar as instruções agora. Sua reserva está salva.'));
       return;
     }
     $('inv-kyc').style.display='none'; $('inv-pgto').style.display='block';
@@ -3755,7 +3842,7 @@ function investirVigiarPagamento(allocId){
       clearInterval(meu); if(_invPagoTimer===meu) _invPagoTimer=null; return;
     }
     try{
-      const d = await fetch(OFFERINGS+'/v1/allocations/'+allocId).then(r=>r.json());
+      const d = await fetch(OFFERINGS+'/v1/allocations/'+allocId,{headers:EfixAuth.headers()}).then(r=>r.json());
       if(_invPagoTimer !== meu) { clearInterval(meu); return; }   // revalida pós-await
       const st = d.allocation && d.allocation.status;
       if(!st || st==='awaiting_deposit' || st==='kyc_approved' || st==='pending') return;
@@ -3801,7 +3888,7 @@ async function investirPagar(allocId){
   // busca a reserva completa: sem isso o prazo de arrependimento não aparece
   // para quem volta por "Como pagar"
   try{
-    const d = await fetch(OFFERINGS+'/v1/allocations/'+allocId).then(r=>r.json());
+    const d = await fetch(OFFERINGS+'/v1/allocations/'+allocId,{headers:EfixAuth.headers()}).then(r=>r.json());
     if(d.allocation) _invAlloc = d.allocation;
     if(_invAlloc.amountBrl) $('invLead').textContent = 'Reserva de R$ '+
       Number(_invAlloc.amountBrl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'.';
@@ -3853,7 +3940,7 @@ function sacarLimpaPreview(){
 async function abrirSacar(){
   if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para sacar.'); return; }
   const u = EfixAuth.getUser()||{};
-  if(!u.address){ abrirAtivar(); return; }   // sem carteira on-chain não há o que queimar
+  if(!u.address){ semCarteiraNaConta(); return; }   // sem carteira on-chain não há o que queimar
   if(!walletPodeAssinar()){
     alert('O saque queima tokens da conta criada no app. Carteira externa (MetaMask) precisa queimar pela própria carteira.');
     return;
@@ -4523,7 +4610,7 @@ function abrirDepositar(){
   if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para depositar.'); return; }
   // o depósito minta tokens PARA a carteira — sem ela, o backend recusa (e
   // antes do fix 18/08 mintaria para um placeholder). Ativa primeiro.
-  if(!((EfixAuth.getUser()||{}).address)){ abrirAtivar(); return; }
+  if(!((EfixAuth.getUser()||{}).address)){ semCarteiraNaConta(); return; }
   _depRef=null; _depTries=0; if(_depTimer){clearTimeout(_depTimer);_depTimer=null;}
   $('dep-form').style.display='block'; $('dep-qr').style.display='none';
   $('depAmt').value=''; $('depMsg').textContent=''; $('depMsg').className='mmsg';

@@ -1260,7 +1260,7 @@
         async function checkWalletBinding(email, smartAddr) {
             detectGhostFunds(); // fire-and-forget: varre a carteira DERIVADA por fundos-fantasma (resolve sozinha)
             try {
-                const res = await fetch(`${OFFERINGS_API}/v1/investor-lookup?email=${encodeURIComponent(email)}`);
+                const res = await fetch(`${OFFERINGS_API}/v1/investor-lookup?email=${encodeURIComponent(email)}`, { headers: EfixAuth.headers() });   // 09/10: o offerings exige a sessão
                 if (!res.ok) return;
                 const data = await res.json();
                 const onRecord = data && data.walletAddress;
