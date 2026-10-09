@@ -799,10 +799,38 @@ tr.grp:first-child td{padding-top:6px}
 </div>
 
 <!-- modais on-chain (v2 nativo) -->
-<div class="modal" id="mDep"><div class="mbox" style="position:relative">
+<!-- 09/10 (Ernesto: "wire and ach and sepa enabled"): abas USD · ACH/Wire e EUR · SEPA. Só aparecem se
+     GET /onramp/status disser enabled (flag + piloto no backend); senão o modal fica só PIX, como antes.
+     O dinheiro vira USDC na carteira DO PRÓPRIO cliente (a EFIX não custodia) — nunca efixDI.
+     Daqui só saem GET /onramp/status, POST /onramp/conta e o KYC de Remessas (POST /remessas/kyc-link,
+     GET /remessas/kyc-status) — NUNCA /remessas/deposit-instructions (cria conta que entrega no cofre).
+     Lobie: o atalho Depositar é oculto (aplicarMarca) e as abas nem consultam o backend lá. -->
+<div class="modal" id="mDep"><div class="mbox" style="position:relative;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto">
   <button class="x" onclick="fecharModal('mDep')">&times;</button>
-  <h3>Depositar via PIX</h3>
-  <p class="lead">Pague o PIX e seus tokens são emitidos automaticamente.</p>
+  <h3 id="depTitulo">Depositar via PIX</h3>
+  <p class="lead" id="depLead">Pague o PIX e seus tokens são emitidos automaticamente.</p>
+  <div id="depAbas" role="tablist" style="display:none;margin:-6px 0 12px;gap:6px;flex-wrap:wrap">
+    <button type="button" class="mini on" role="tab" aria-selected="true" data-dep-aba="pix" style="padding:6px 12px" onclick="depAba('pix')">PIX</button>
+    <button type="button" class="mini" role="tab" aria-selected="false" data-dep-aba="usd" style="padding:6px 12px;display:none" onclick="depAba('usd')">USD · ACH/Wire</button>
+    <button type="button" class="mini" role="tab" aria-selected="false" data-dep-aba="eur" style="padding:6px 12px;display:none" onclick="depAba('eur')">EUR · SEPA</button>
+  </div>
+  <div id="dep-fiat" style="display:none">
+    <div class="refbox" style="display:block;text-align:left">
+      <div class="up">para onde vai · where it goes</div>
+      <div class="rem-txt" id="onrDestino"></div>
+    </div>
+    <div id="onrEstado" class="wz-nota rem-txt" aria-live="polite"></div>
+    <div id="onrNomeBox" style="display:none">
+      <label class="fldl" for="onrNome">Nome completo, como no documento · Full legal name</label>
+      <input id="onrNome" class="fld" type="text" autocomplete="name" maxlength="120" placeholder="nome e sobrenome · first and last name">
+    </div>
+    <button type="button" class="cta pri" id="onrBtnAcao" style="display:none" onclick="_onrAcaoClique()"></button>
+    <button type="button" class="cta" id="onrBtnAbrir" style="display:none" onclick="_onrAbrir()">Abrir a verificação → · Open verification</button>
+    <button type="button" class="wz-link" id="onrBtnAtualizar" style="display:none" onclick="onrAtualizar()">Já concluí — atualizar · Done — refresh</button>
+    <div id="onrConta"></div>
+    <div class="mmsg" id="onrMsg" aria-live="polite" style="word-break:normal"></div>
+  </div>
+  <div id="dep-pix">
   <div id="dep-form">
     <label class="fldl">Valor (R$) — mínimo 10,00</label>
     <input id="depAmt" class="fld mono" type="number" min="10" step="0.01" placeholder="0,00">
@@ -827,7 +855,9 @@ tr.grp:first-child td{padding-top:6px}
       <div class="stp" data-s="4"><span class="b">4</span>Creditado na carteira</div>
     </div>
     <button class="cta pri" id="depPaid" onclick="depJaPaguei()">Já paguei o PIX</button>
-    <div class="mmsg" id="depMsg"></div>
+  </div>
+  <!-- 09/10: fora do #dep-qr — dentro dele o erro do formulário ("mínimo R$ 10,00", falha ao gerar) ficava invisível -->
+  <div class="mmsg" id="depMsg"></div>
   </div>
 </div></div>
 
@@ -872,6 +902,9 @@ tr.grp:first-child td{padding-top:6px}
          ainda faria QRs antigos de investidores diferentes colidirem -->
     <input id="invAmt" class="fld mono" type="number" min="1" step="0.01" placeholder="0,00">
     <div class="muted" id="invCaps" style="margin:4px 0 10px"></div>
+    <!-- 09/10 (D3): Investir segue SÓ PIX. A nota só aparece quando o depósito em US$/€ está liberado para a conta
+         (mesmo GET /onramp/status do Depositar) — sem isso apontaria para uma aba que o cliente não tem. -->
+    <div class="muted rem-txt" id="invNotaOnramp" style="display:none;font-size:12px;margin:0 0 10px">Pagando em <span data-onr-nota="sim">US$/€</span>? Esta reserva é paga só por PIX. <span data-onr-nota="quem">Dólares e euros</span> entram por <button type="button" class="mini" onclick="fecharModal('mInvestir');abrirDepositar(_onrNotaAba)">Depositar <span data-onr-nota="sim">US$/€</span></button> e chegam como USDC na sua carteira — não como cotas.<br><span style="color:var(--ink-3)">Paying in <span data-onr-nota="cod">USD/EUR</span>? Deposit to your wallet (arrives as USDC); this reservation is PIX only.</span></div>
     <!-- Só PIX: os trilhos em dólar/euro criam uma conta virtual nova a cada
          consulta e sem identificador da reserva, então o depósito não tem como
          ser conciliado. Enquanto isso não mudar no backend, a mesa atende. -->
@@ -3593,6 +3626,10 @@ async function abrirInvestir(ofertaId){
   $('invAmt').value=''; $('invNaoUS').checked=false;
   $('invMsg').className='mmsg'; $('invMsg').textContent='';
   $('invCaps').textContent='';
+  // 09/10: nota "pagando em US$/€?" só com o onramp liberado (status em cache de 60 s; erro/desligado = some)
+  $('invNotaOnramp').style.display='none';
+  // 09/10: o texto e o botão da nota seguem as moedas liberadas (habilitado:false some daqui também)
+  onrStatus(false).then(r=>{ const ms=r.ok?_onrMoedas(r.d):[]; if(ms.length&&$('mInvestir').classList.contains('on')&&$('inv-form').style.display!=='none'){ _onrNotaInvestir(ms); $('invNotaOnramp').style.display=''; } });
   _invPendente = null;
   // trava o botão até o precheck responder, senão dá para reservar antes do
   // aviso de carteira divergente chegar (justamente o que ele evita)
@@ -4606,15 +4643,21 @@ function depCopiar(srcId, btnId, rotulo){
   navigator.clipboard.writeText(v).then(()=>{ $(btnId).textContent='copiado ✓';
     setTimeout(()=>{ $(btnId).textContent=rotulo; },1800); });
 }
-function abrirDepositar(){
+// aba: 'usd'|'eur' abre direto nela SE o backend liberar (vem da nota do Investir); sem isso, PIX
+function abrirDepositar(aba){
   if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para depositar.'); return; }
   // o depósito minta tokens PARA a carteira — sem ela, o backend recusa (e
   // antes do fix 18/08 mintaria para um placeholder). Ativa primeiro.
+  // 09/10: vale também para USD/EUR (o USDC precisa de destino) — mesma guarda
   if(!((EfixAuth.getUser()||{}).address)){ semCarteiraNaConta(); return; }
   _depRef=null; _depTries=0; if(_depTimer){clearTimeout(_depTimer);_depTimer=null;}
   $('dep-form').style.display='block'; $('dep-qr').style.display='none';
   $('depAmt').value=''; $('depMsg').textContent=''; $('depMsg').className='mmsg';
+  // 09/10: abre sempre em PIX com as abas ocultas; elas só aparecem se o /onramp/status liberar
+  $('depAbas').style.display='none';
+  depAba('pix');
   $('mDep').classList.add('on');
+  depAbasCarregar(aba);
 }
 async function depGerar(){
   const amount = parseFloat($('depAmt').value);
@@ -4683,6 +4726,509 @@ async function depJaPaguei(){
     $('depMsg').className='mmsg err'; $('depMsg').textContent=e.message;
     b.disabled=false; b.textContent='Já paguei o PIX';
   }
+}
+
+/* ═══ 09/10 · DEPOSITAR EM US$/€ — onramp Bridge → USDC na carteira do PRÓPRIO cliente ═══
+   Decisão Ernesto 09/10 ("wire and ach and sepa enabled"): uma conta virtual USD (ACH/Wire/FedNow) e uma EUR (SEPA)
+   em nome do cliente, entregando USDC na Base na carteira dele (users.wallet_address, lida no backend — nunca o que
+   a tela manda). A EFIX não custodia (regra SPSAV) e nada vira efixDI. A carteira só DESENHA: flag ONRAMP_ENABLED +
+   piloto, KYC, endorsements, destino e reuso da conta são decididos no efixdi-backend (fail-closed).
+   09/10 (correção): contrato = o REAL do efixdi-backend lib/onramp.js (o teste de contrato roda a lib de verdade).
+     GET  /onramp/status → 200 {enabled:false, motivo} | {enabled:true, carteira:{ok:true,address}|{ok:false,motivo},
+            kyc:{cadastro:'sem_cadastro'|'ambiguo'|'casa'|'unico', proximo_passo:'kyc'|'mesa'|'aguardar'|'pronto'},
+            trilhos:{usd|eur:{habilitado?, pronto, falta[], requisitos[], pendentes?[], conta|null, avisos?}}, avisos?}
+            QUALQUER resposta ≠ 200 (403/409/410/429/5xx, rede) = abas USD/EUR ocultas, modal só PIX.
+            09/10 (aditivo): habilitado===false (moeda fora de ONRAMP_MOEDAS no backend; ausente = true) = aba da moeda
+            oculta. pendentes = o que a Bridge está analisando (requirements.pending + etapas como 'post_processing').
+     POST /onramp/conta {currency} → 200 {ok, currency, conta:{contaFiat + dest_address}, dest_address, avisos?}
+     erros lidos pelo CODE (body.code; senão body.error quando é token) — nunca pela mensagem:
+       kyc_required → KYC de Remessas · kyc_incompleto: falta[] com cadastro/kyc_ativo/termos → KYC; só endorsement_* →
+       endosso (kyc_link_sepa; sem requisito e com pendentes[] = em análise) · moeda_indisponivel → aba some, volta ao PIX ·
+       kyc_ambiguo, conta_da_casa, bridge_recusou, conta_alterada → mesa ·
+       carteira_divergente, sessao_divergente, sem_conta, sem_carteira → sair e entrar de novo ·
+       verificar_email → entrar com o código · bloqueado, onramp_desligado, fora_do_piloto → mesa · 429 · 5xx (sem code)
+     avisos: [{code, pt, en}] por moeda (campo novo, pode faltar); code conhecido = linha fixa da tela, não repete.
+   KYC = o MESMO fluxo de Remessas (POST /remessas/kyc-link, GET /remessas/kyc-status → DVP /wallet/kyc-link).
+   Nunca usa rf() (um 403 lá troca o cartão de Remessas) nem rem2Fiat/rem2FiatAuto/deposit-instructions de Remessas. */
+const _ONR_MOEDAS=['usd','eur'];
+const _ONR_ROT={usd:'dólares (USD)',eur:'euros (EUR)'};
+const _ONR_TRILHO={ach_push:'ACH',ach:'ACH',wire:'Wire',fednow:'FedNow',sepa:'SEPA'};
+const _ONR_GERAR='Gerar dados bancários · Get bank details';
+const _ONR_KYC_INTRO=['Antes, a Bridge (nossa parceira de pagamentos) confirma sua identidade uma vez: documento com foto, selfie e aceite dos termos. É a mesma verificação de Remessas.',
+  'One-time ID check by Bridge, our payments partner (photo ID, selfie, terms).'];
+const _DEP_LEAD={pix:'Pague o PIX e seus tokens são emitidos automaticamente.',
+  usd:'Dados bancários nos EUA em seu nome (ACH, wire, FedNow). Os dólares viram USDC na sua carteira. · US bank details in your name; dollars become USDC in your wallet.',
+  eur:'Um IBAN em seu nome (SEPA). Os euros viram USDC na sua carteira. · An IBAN in your name; euros become USDC in your wallet.'};
+// 09/10: falta[] do backend que manda para o KYC (antes de qualquer endorsement) e codes de "sair e entrar de novo"
+const _ONR_FALTA_KYC=['cadastro','kyc_ativo','termos'];
+const _ONR_SAIR=['carteira_divergente','sessao_divergente','sem_conta','sem_carteira'];
+// requisitos[] do endorsement (tokens [a-z0-9_] da Bridge); desconhecido sai como veio, sem '_'
+const _ONR_REQ={proof_of_address:'comprovante de endereço · proof of address',address:'endereço · address',
+  residential_address:'endereço · address',tax_identification_number:'número fiscal · tax ID',source_of_funds:'origem dos recursos · source of funds'};
+// 09/10: etapas internas da Bridge que chegam em requirements.missing mas não são ação do cliente (= ETAPA_BRIDGE do DVP)
+const _ONR_ETAPA_BRIDGE=['post_processing'];
+// mesa: textos por motivo (PT + linha curta em EN). 'atualizar' some só onde esperar não muda nada
+const _ONR_MESA={
+  ambiguo:['Encontramos mais de um cadastro de verificação para este e-mail — fale com a mesa. Não comece uma verificação nova.','More than one verification record for this e-mail — contact the desk.'],
+  casa:['Este e-mail é de uma conta operacional da EFIX. Entre com o seu e-mail pessoal ou fale com a mesa.','This is an EFIX operational account — use your personal e-mail.'],
+  restricao:['Sua conta de pagamento na Bridge está com restrição ou não foi aprovada — fale com a mesa.','Your Bridge account is restricted or not approved — contact the desk.'],
+  bridge_recusou:['O parceiro bancário recusou abrir a conta agora — fale com a mesa. Nada foi criado.','Our banking partner declined to open the account now — contact the desk.'],
+  conta_alterada:['A conta anterior deste trilho foi desativada ou alterada — fale com a mesa antes de depositar.','Your previous account for this rail was changed — contact the desk before depositing.'],
+  bloqueado:['Esta operação está bloqueada para a sua conta — fale com a mesa.','Blocked for your account — contact the desk.'],
+  nao_liberado:['Depósito em US$/€ ainda não está liberado para a sua conta — fale com a mesa.','USD/EUR deposits are not enabled for your account yet.'],
+  outro:['Não conseguimos gerar os dados agora — fale com a mesa.','Could not get your bank details — contact the desk.'],
+};
+let _onrSt=null, _onrStEm=0, _onrStProm=null;   // último /onramp/status ({ok,d}|{ok:false,e}) e quando chegou
+let _onrGen=0, _onrOcupado=false, _onrAcao=null, _onrUrl=null, _onrModo=null, _onrPosLink=false, _depAbaAtual='pix';
+const _onrContas={};   // 'carteira|moeda' → {c, avisos} já desenhada nesta página (o reuso de verdade é do backend)
+const _onrAvSt={usd:[],eur:[]};   // avisos da moeda no último status (o POST soma os dele)
+const _onrObj=x=>(x&&typeof x==='object'&&!Array.isArray(x))?x:{};
+const _onrTxt=v=>(typeof v==='string'||typeof v==='number')?String(v).trim():'';
+const _onrAddr=v=>{ const s=(typeof v==='string'?v:'').trim().toLowerCase(); return /^0x[0-9a-f]{40}$/.test(s)?s:null; };
+const _onrLista=v=>Array.isArray(v)?v.filter(x=>typeof x==='string').map(x=>x.trim().toLowerCase()).filter(Boolean):[];
+const _onrTrilho=(d,cur)=>_onrObj(_onrObj(_onrObj(d).trilhos)[cur]);
+// link de verificação/endorsement: só https (nunca vai para o DOM; abre com noopener)
+const _onrLink=o=>{ o=_onrObj(o); return [o.kyc_link_sepa,o.endorsement_link,o.kyc_link,o.link,o.url].find(_urlHttps)||null; };
+// code estável do erro: body.code; senão body.error quando é token (rotas antigas mandavam {error:'replaced_by_onramp'})
+const _onrCodigo=e=>{ const b=_onrObj(e&&e.body);
+  const c=(e&&typeof e.code==='string'&&e.code)||(typeof b.code==='string'&&b.code)||(typeof b.error==='string'&&/^[a-z0-9_]{1,48}$/.test(b.error)?b.error:'');
+  return String(c||'').toLowerCase(); };
+const _onrErro=(st,code)=>{ const e=new Error(code||('HTTP '+st)); e.status=st; e.code=code||''; e.body={}; return e; };
+
+// fetch próprio: o rf() de Remessas chama remBarreira num 403 — daqui isso trocaria a aba Remessas sem o cliente estar nela
+// so200: o /onramp/status só vale com 200 exato (qualquer outro = erro = abas ocultas)
+async function _onrReq(path, init, so200){
+  init=init||{};
+  const r=await fetch(BACKEND+path,{...init,cache:'no-store',headers:{'Content-Type':'application/json',...EfixAuth.headers()}});
+  const d=await r.json().catch(()=>({}));
+  const b=_onrObj(d);
+  if(so200?r.status!==200:!r.ok){ const e=new Error(typeof b.error==='string'?b.error:('HTTP '+r.status)); e.status=r.status;
+    e.body=b; e.code=_onrCodigo({body:b}); throw e; }
+  return b;
+}
+// {ok:true,d} | {ok:false,e}. 200 e 4xx ficam 60 s em cache (abrir/fechar o modal não martela a Bridge); rede/5xx não
+function onrStatus(forcar){
+  if(IS_LOBIE) return Promise.resolve({ok:false,e:null});   // white-label: sem onramp
+  if(!forcar&&_onrSt&&Date.now()-_onrStEm<60000) return Promise.resolve(_onrSt);
+  if(!forcar&&_onrStProm) return _onrStProm;
+  const p=_onrReq('/onramp/status',null,true).then(d=>({ok:true,d}),e=>({ok:false,e})).then(r=>{
+    if(r.ok||(r.e&&r.e.status>=400&&r.e.status<500)){ _onrSt=r; _onrStEm=Date.now(); }
+    if(_onrStProm===p) _onrStProm=null;
+    return r; });
+  _onrStProm=p; return p;
+}
+// moedas com aba para ESTA conta: só 200 com enabled===true E trilhos.<moeda> (desligado, fora do piloto, forma estranha = [])
+// 09/10: trilhos.<moeda>.habilitado===false (moeda fora de ONRAMP_MOEDAS) = sem aba; campo ausente = habilitada
+function _onrMoedas(d){
+  d=_onrObj(d); if(d.enabled!==true) return [];
+  return _ONR_MOEDAS.filter(m=>{ const t=_onrTrilho(d,m); return Object.keys(t).length>0&&t.habilitado!==false; });
+}
+// 09/10: requisitos do endosso = só o que o CLIENTE faz; pendentes = o que a Bridge analisa (pending + etapas tiradas de
+// missing). Nada a fazer e algo pendente = em análise (régua do resumoOnboarding do DVP: mandar completar de novo seria errado)
+function _onrEndosso(o,extra){
+  o=_onrObj(o); const req=_onrLista(o.requisitos);
+  const requisitos=req.filter(x=>!_ONR_ETAPA_BRIDGE.includes(x));
+  const pendentes=[...new Set([..._onrLista(o.pendentes),...req.filter(x=>_ONR_ETAPA_BRIDGE.includes(x))])];
+  if(!requisitos.length&&pendentes.length) return {tipo:'analise',endosso:true};
+  return {tipo:'endosso',link:_onrLink(o),requisitos,...(extra||{})};
+}
+// estado da moeda pelo status: carteira · kyc · mesa · analise · endosso(+link) · gerar(+conta). KYC ANTES do endorsement.
+function _onrEstado(d,cur,addr){
+  d=_onrObj(d); const c=_onrObj(d.carteira), k=_onrObj(d.kyc), t=_onrTrilho(d,cur), falta=_onrLista(t.falta);
+  if(c.ok!==true) return {tipo:'carteira',motivo:_ONR_SAIR.includes(c.motivo)?c.motivo:'carteira_divergente'};
+  if(!addr||_onrAddr(c.address)!==addr) return {tipo:'carteira',motivo:'carteira_divergente'};   // a do banco tem de ser a da sessão
+  if(t.pronto===true) return {tipo:'gerar',conta:Object.keys(_onrObj(t.conta)).length?t.conta:null};
+  const cad=String(k.cadastro||''), pp=String(k.proximo_passo||'');
+  if(cad==='ambiguo'||cad==='casa') return {tipo:'mesa',motivo:cad};
+  if(pp==='mesa') return {tipo:'mesa',motivo:'restricao'};
+  if(pp==='aguardar') return {tipo:'analise'};
+  if(cad==='sem_cadastro'||pp==='kyc'||falta.some(f=>_ONR_FALTA_KYC.includes(f))) return {tipo:'kyc'};
+  if(falta.length&&falta.every(f=>/^endorsement_/.test(f))) return _onrEndosso(t);
+  return {tipo:'gerar'};   // forma desconhecida: o POST confere tudo de novo e responde com code
+}
+// avisos do backend por moeda ([{code,pt,en}] ou texto). Aviso usd_*/eur_* da outra moeda fica de fora; sem repetir code
+function _onrAvisos(cur,...fontes){
+  const out=[], vistos=new Set();
+  for(const f of fontes){ if(!Array.isArray(f)) continue;
+    for(const a of f){
+      const o=typeof a==='string'?{pt:a}:_onrObj(a);
+      const code=typeof o.code==='string'?o.code.trim().toLowerCase().slice(0,48):'';
+      if(/^(usd|eur)_/.test(code)&&code.slice(0,3)!==cur) continue;
+      const pt=_onrTxt(o.pt).slice(0,300), en=_onrTxt(o.en).slice(0,300);
+      if(!pt&&!en) continue;
+      const k=code||pt.toLowerCase(); if(vistos.has(k)) continue; vistos.add(k);
+      out.push({code,pt:pt||en,en:pt?en:''});
+    } }
+  return out.slice(0,10);
+}
+const _onrReqTxt=l=>{ const r=_onrLista(l).filter(x=>!_ONR_ETAPA_BRIDGE.includes(x)).slice(0,6).map(x=>_ONR_REQ[x]||x.replace(/_/g,' ')); return r.length?' Falta: '+r.join(', ')+'.':''; };
+
+function _onrMostra(id,on){ const el=$(id); if(el) el.style.display=on?'':'none'; }
+function _onrMsg(t,err){ const el=$('onrMsg'); if(!el) return; el.textContent=t||''; el.className='mmsg'+(err?' err':''); }
+// estado em PT + linha curta em EN. Só textContent (textos do servidor, como o motivo de rejeição, nunca viram HTML)
+function _onrEstadoTxt(pt,en,ok){
+  const el=$('onrEstado'); if(!el) return; el.textContent=pt||'';
+  if(en){ el.appendChild(document.createElement('br')); const s=document.createElement('span'); s.style.color='var(--ink-3)'; s.textContent=en; el.appendChild(s); }
+  el.style.borderColor=ok?'var(--green)':'';
+}
+function _onrBotao(rotulo,acao){ const b=$('onrBtnAcao'); b.textContent=rotulo; b.disabled=false; _onrAcao=acao; _onrMostra('onrBtnAcao',!!rotulo); }
+// sem ação primária: some o botão E a ação (o finally do Gerar só reabilita o botão se a ação ainda for 'gerar')
+function _onrSemAcao(){ _onrMostra('onrBtnAcao',false); _onrAcao=null; }
+function _onrLimpar(){
+  ['onrNomeBox','onrBtnAcao','onrBtnAbrir','onrBtnAtualizar'].forEach(id=>_onrMostra(id,false));
+  _onrEstadoTxt(''); _onrMsg(''); $('onrConta').innerHTML=''; _onrUrl=null; _onrAcao=null; _onrModo=null;
+}
+function _onrAcaoClique(){
+  if(_onrAcao==='gerar') return onrGerar();
+  if(_onrAcao==='kyc') return onrKycLink();
+  if(_onrAcao==='abrir') return _onrAbrir();
+  if(_onrAcao==='sair') return sair();
+}
+function _onrAbrir(){ if(_urlHttps(_onrUrl)) window.open(_onrUrl,'_blank','noopener'); }
+// 09/10: sessão/conta que não bate com a carteira do banco → sair e entrar de novo (nada foi criado)
+function _onrSair(motivo){
+  _onrModo='carteira'; $('onrConta').innerHTML='';
+  if(motivo==='sem_carteira'||motivo==='sem_conta') _onrEstadoTxt('Não encontramos a carteira da sua conta para receber o USDC. Saia e entre de novo; se continuar, fale com o suporte. Nada foi criado.',
+    'Your account wallet was not found — sign out and back in. Nothing was created.');
+  else _onrEstadoTxt('Esta sessão está numa carteira diferente da cadastrada na sua conta. Para o dinheiro não ir para a carteira errada, saia e entre de novo. Nada foi criado.',
+    'Wallet mismatch between this session and your account — sign out and back in. Nothing was created.');
+  _onrBotao('Sair e entrar de novo → · Sign in again','sair');
+}
+function _onrMesa(motivo){
+  const t=_ONR_MESA[motivo]||_ONR_MESA.outro;
+  _onrModo='mesa'; _onrSemAcao(); _onrEstadoTxt(t[0],t[1]); $('onrConta').innerHTML='';
+  _onrMostra('onrBtnAtualizar',motivo!=='casa'&&motivo!=='bloqueado');
+}
+// lista curta de avisos do servidor (texto só via _esc). sem = codes que a tela já diz noutro lugar
+function _onrAvisosHtml(avisos,sem){
+  const l=(avisos||[]).filter(a=>!(sem||[]).includes(a.code));
+  return l.length?'<ul class="rem-txt" style="margin:10px 0 0;padding-left:18px">'+l.map(a=>'<li style="margin:4px 0">'+_esc(a.pt)+(a.en?'<br><span style="color:var(--ink-3)">'+_esc(a.en)+'</span>':'')+'</li>').join('')+'</ul>':'';
+}
+
+// abas do modal: PIX segue intocado; USD/EUR desenham o onramp
+function depAba(aba){
+  if(aba!=='usd'&&aba!=='eur') aba='pix';
+  _depAbaAtual=aba; _onrGen++; _onrPosLink=false;
+  document.querySelectorAll('#depAbas [data-dep-aba]').forEach(b=>{ const on=b.dataset.depAba===aba; b.classList.toggle('on',on); b.setAttribute('aria-selected',on?'true':'false'); });
+  const pix=aba==='pix';
+  _onrMostra('dep-pix',pix); _onrMostra('dep-fiat',!pix);
+  $('depTitulo').textContent=$('depAbas').style.display==='none'?'Depositar via PIX':'Depositar';
+  $('depLead').textContent=_DEP_LEAD[aba];
+  if(!pix) onrMostrar(aba,false);
+}
+// mostra só as abas das moedas liberadas (nenhuma = sem barra de abas, modal só PIX)
+function _depAbasAplicar(ms){
+  document.querySelectorAll('#depAbas [data-dep-aba]').forEach(b=>{ const c=b.dataset.depAba; if(c!=='pix') b.style.display=ms.includes(c)?'':'none'; });
+  $('depAbas').style.display=ms.length?'flex':'none';
+  if(_depAbaAtual==='pix') $('depTitulo').textContent=ms.length?'Depositar':'Depositar via PIX';
+}
+// ao abrir o modal: as abas USD/EUR só aparecem com 200 + enabled===true (sem resposta, erro, 404, 410 = modal só PIX)
+async function depAbasCarregar(aba){
+  if(IS_LOBIE) return;   // 09/10: white-label sem Depositar (qk-dep oculto em aplicarMarca) — nem consulta
+  const g=_onrGen;
+  const r=await onrStatus(false);
+  if(!$('mDep').classList.contains('on')) return;
+  const ms=r.ok?_onrMoedas(r.d):[];
+  _depAbasAplicar(ms);
+  // vindo da nota do Investir: abre direto na moeda, se o cliente ainda não mexeu em nada
+  if(ms.includes(aba)&&g===_onrGen&&_depAbaAtual==='pix'&&!_depRef&&!$('depAmt').value) depAba(aba);
+}
+// 09/10: status ≠ 200 (ou a moeda saiu) com a aba US$/€ aberta: as abas somem e o modal volta ao PIX, com o motivo em 1 linha
+function _onrStatusFora(r,cur){
+  const ms=r&&r.ok?_onrMoedas(r.d):[], e=r&&!r.ok?r.e:null, st=e&&e.status, code=_onrCodigo(e);
+  _depAbasAplicar(ms); depAba('pix');
+  $('depMsg').className='mmsg err';
+  $('depMsg').textContent=st===401?'Sua sessão expirou — entre de novo para depositar em US$/€. · Session expired — sign in again.'
+    :code==='verificar_email'?'Para depositar em US$/€, saia e entre de novo com o código enviado ao seu e-mail. · Sign in again with the e-mail code.'
+    :st===429?'Muitas consultas seguidas — tente o depósito em US$/€ em alguns minutos. O PIX segue normal. · Too many requests — try again in a few minutes.'
+    :(ms.length&&_ONR_ROT[cur])?_onrTxtMoedaFora(cur)   // 09/10: só esta moeda saiu (habilitado:false); a outra segue
+    :'Depósito em US$/€ indisponível para a sua conta agora. O PIX segue normal. · USD/EUR deposits are unavailable right now.';
+}
+const _onrTxtMoedaFora=cur=>'Depósito em '+_ONR_ROT[cur]+' indisponível no momento. O PIX segue normal. · '+cur.toUpperCase()+' deposits are unavailable right now.';
+// 09/10: POST 409 moeda_indisponivel (moeda fora de ONRAMP_MOEDAS; o status em cache estava velho): a aba da moeda some,
+// o modal volta ao PIX com o motivo e o próximo status vem fresco. Nada foi criado (o backend recusa antes da Bridge).
+function _onrMoedaFora(cur){
+  const ms=(_onrSt&&_onrSt.ok?_onrMoedas(_onrSt.d):[]).filter(m=>m!==cur);
+  _onrSt=null; _onrLimpar();
+  _depAbasAplicar(ms); depAba('pix');
+  $('depMsg').className='mmsg err'; $('depMsg').textContent=_onrTxtMoedaFora(cur);
+}
+// 09/10: nota "pagando em US$/€?" do Investir com as moedas liberadas de fato (ONRAMP_MOEDAS pode ser só USD)
+let _onrNotaAba='usd';
+function _onrNotaInvestir(ms){
+  const usd=ms.includes('usd'), eur=ms.includes('eur'), par=usd&&eur;
+  const txt={sim:par?'US$/€':usd?'US$':'€', cod:par?'USD/EUR':usd?'USD':'EUR', quem:par?'Dólares e euros':usd?'Dólares':'Euros'};
+  _onrNotaAba=usd?'usd':'eur';
+  document.querySelectorAll('#invNotaOnramp [data-onr-nota]').forEach(s=>{ const t=txt[s.dataset.onrNota]; if(t) s.textContent=t; });
+}
+async function onrMostrar(cur, forcar){
+  const g=++_onrGen;
+  // no "atualizar" (forcar) o link de verificação já aberto continua à mão — sem queimar outra ida ao kyc-link
+  const url0=forcar?_onrUrl:null; _onrLimpar(); _onrUrl=url0;
+  const u=EfixAuth.getUser()||{}, addr=_onrAddr(u.address);
+  if(!addr){ fecharModal('mDep'); semCarteiraNaConta(); return; }
+  $('onrDestino').innerHTML='Chega como <b>USDC na SUA carteira</b> <span class="mono">'+_esc(short(addr))+'</span> (rede Base) — <b>não</b> como efixDI. A EFIX não guarda esse dinheiro.'+
+    '<br><span style="color:var(--ink-3)">Arrives as USDC in YOUR wallet (Base network), not as efixDI.</span>';
+  // proteção de endereço: os saldos da tela são de WALLETS[0]; se a sessão estiver noutra, o USDC cairia fora da vista
+  const dona=_onrAddr(WALLETS[0]);
+  if(dona&&dona!==addr){ _onrSair('carteira_divergente'); return; }
+  const k=addr+'|'+cur;
+  if(!forcar&&_onrContas[k]){ _onrDesenharConta(_onrContas[k].c,cur,_onrContas[k].avisos); return; }
+  _onrEstadoTxt('Consultando… · Checking…');
+  const r=await onrStatus(!!forcar);
+  if(g!==_onrGen) return;
+  if(!(r.ok?_onrMoedas(r.d):[]).includes(cur)) return _onrStatusFora(r,cur);
+  _onrAvSt[cur]=[_onrTrilho(r.d,cur).avisos,_onrObj(r.d).avisos];
+  const est=_onrEstado(r.d,cur,addr); est.avisos=_onrAvisos(cur,..._onrAvSt[cur]);
+  return _onrAplicar(est,cur,g);
+}
+function _onrAplicar(est,cur,g){
+  if(g!==_onrGen) return;
+  _onrModo=est.tipo;
+  if(est.tipo!=='gerar') $('onrConta').innerHTML='';   // avisos do "Gerar" não ficam embaixo de outro passo
+  if(est.tipo==='kyc') return onrKyc(cur,g);
+  if(est.tipo==='carteira') return _onrSair(est.motivo);
+  if(est.tipo==='mesa') return _onrMesa(est.motivo);
+  if(est.tipo==='analise'){
+    _onrSemAcao();
+    // 09/10: endosso sem nada a fazer e com pendentes (ex.: post_processing) = a Bridge está processando — sem botão de ação
+    if(est.endosso) _onrEstadoTxt('Sua identidade está verificada e a liberação '+(cur==='eur'?'do SEPA (euros)':'dos depósitos em dólares')+' está em análise pela Bridge. Não precisa enviar nada de novo: quando for aprovada, toque em “Já concluí — atualizar”.','Bridge is reviewing this rail — nothing to send; tap refresh once approved.');
+    else _onrEstadoTxt('Sua verificação está em análise pela Bridge. Quando for aprovada, toque em “Já concluí — atualizar”.','Your verification is under review.');
+    _onrMostra('onrBtnAtualizar',true); return;
+  }
+  if(est.tipo==='endosso'){
+    _onrUrl=_urlHttps(est.link)?est.link:null;
+    const tr=cur==='eur'?'o SEPA (euros)':'os depósitos em dólares', falta=_onrReqTxt(est.requisitos);
+    if(_onrUrl){
+      _onrEstadoTxt('Sua identidade está verificada, mas falta liberar '+tr+' na Bridge.'+falta+' Abra o link, complete o que for pedido e volte para atualizar.','One more step at Bridge for this rail: open the link, finish it, then refresh.');
+      _onrBotao(cur==='eur'?'Completar para SEPA → · Complete':'Completar para dólares → · Complete','abrir');
+    } else if(cur==='eur'&&!est.doPost){   // o status não traz o link do SEPA: o POST (sem criar nada) devolve kyc_link_sepa
+      _onrEstadoTxt('Sua identidade está verificada, mas falta liberar o SEPA (euros) na Bridge.'+falta+' Toque em “Liberar o SEPA” para receber o link.','One more step at Bridge for SEPA — tap to get the link.');
+      _onrBotao('Liberar o SEPA → · Enable SEPA','gerar');
+    } else {
+      _onrEstadoTxt('Sua identidade está verificada, mas falta liberar '+tr+' na Bridge.'+falta+' Fale com a mesa para liberar.','This rail still needs approval at Bridge — contact the desk.');
+      _onrSemAcao();
+    }
+    _onrMostra('onrBtnAtualizar',true); return;
+  }
+  // pronto: a conta que o status já trouxe (entrega NESTA carteira) é desenhada direto; senão, "Gerar"
+  if(est.conta){
+    const addr=_onrAddr((EfixAuth.getUser()||{}).address);
+    try{ const c=_onrContaConfere(est.conta,cur,addr); _onrContas[addr+'|'+cur]={c,avisos:est.avisos||[]}; return _onrDesenharConta(c,cur,est.avisos); }
+    catch(e){ if(e.code==='carteira_divergente') return _onrSair(e.code); }
+  }
+  _onrEstadoTxt('Gere os dados bancários em '+_ONR_ROT[cur]+' em seu nome.','Get your '+cur.toUpperCase()+' bank details, in your name.');
+  $('onrConta').innerHTML=_onrAvisosHtml(est.avisos,['chega_usdc']);   // o "chega como USDC" já está no topo
+  _onrBotao(_ONR_GERAR,'gerar');
+}
+// erro do POST/status pelo CODE (o texto cru do servidor nunca vai para a tela)
+function _onrAplicarErro(e,cur){
+  const st=e&&e.status, code=_onrCodigo(e), b=_onrObj(e&&e.body), g=_onrGen;
+  const semBotao=()=>{ if(_onrAcao!=='gerar'&&_onrAcao!=='kyc') _onrMostra('onrBtnAtualizar',true); };
+  if(!st){ _onrMsg(_erroHumano(e),true); semBotao(); return; }   // rede
+  if(st===401){ _onrEstadoTxt('Sua sessão expirou — entre de novo.','Session expired — please sign in again.'); _onrBotao('Entrar de novo → · Sign in','sair'); return; }
+  if(code==='verificar_email'){ _onrEstadoTxt('Por segurança, saia e entre de novo com o código que enviamos para o seu e-mail.','For security, sign out and back in with the e-mail code.'); _onrBotao('Sair e entrar com o código → · Sign in again','sair'); return; }
+  if(code==='kyc_required') return onrKyc(cur,g);
+  if(code==='kyc_incompleto'){
+    const f=_onrLista(b.falta);
+    // 09/10: mesma régua do status — sem requisito do cliente e com pendentes[] = em análise (nunca "Liberar" de novo)
+    if(f.length&&f.every(x=>/^endorsement_/.test(x))) return _onrAplicar(_onrEndosso(b,{doPost:true}),cur,g);
+    return onrKyc(cur,g);   // kyc_ativo/termos (ou forma nova): o KYC de Remessas diz o passo certo
+  }
+  if(code==='moeda_indisponivel') return _onrMoedaFora(cur);
+  if(code==='kyc_ambiguo') return _onrMesa('ambiguo');
+  if(code==='conta_da_casa') return _onrMesa('casa');
+  if(code==='bridge_recusou'||code==='conta_alterada'||code==='bloqueado') return _onrMesa(code);
+  if(code==='onramp_desligado'||code==='fora_do_piloto') return _onrMesa('nao_liberado');
+  if(_ONR_SAIR.includes(code)) return _onrSair(code);
+  if(st===429){ _onrMsg('Muitas tentativas seguidas — espere alguns minutos e tente de novo. · Too many attempts — wait a few minutes.',true); semBotao(); return; }
+  if(st>=500){ _onrMsg('Nosso sistema não respondeu — tente de novo em instantes. · Server did not respond — try again shortly.',true); semBotao(); return; }
+  if(st===409) return _onrMesa('outro');   // 409 sem code conhecido: nunca "carteira divergente" por chute
+  _onrMsg('Não conseguimos gerar os dados agora — tente de novo em instantes. Se continuar, fale com a mesa. · Could not get your details now.',true); semBotao();
+}
+
+// "Gerar dados bancários": POST /onramp/conta — travado contra clique duplo (o backend reusa a conta; aqui não sai 2º POST)
+async function onrGerar(){
+  const cur=_depAbaAtual; if(cur!=='usd'&&cur!=='eur') return;
+  if(_onrOcupado){ _onrMsg('Aguarde a consulta anterior terminar. · Please wait.'); return; }
+  const u=EfixAuth.getUser()||{}, addr=_onrAddr(u.address), dona=_onrAddr(WALLETS[0]);
+  if(!addr){ fecharModal('mDep'); semCarteiraNaConta(); return; }
+  if(dona&&dona!==addr){ _onrLimpar(); _onrSair('carteira_divergente'); return; }
+  _onrOcupado=true; const g=_onrGen, b=$('onrBtnAcao'), rot=b.textContent; b.disabled=true; b.textContent='Gerando… · Working…'; _onrMsg('');
+  try{
+    const d=await _onrReq('/onramp/conta',{method:'POST',body:JSON.stringify({currency:cur})});
+    _onrSt=null;   // o próximo status já enxerga a conta
+    if(String(d.currency||'').toLowerCase()!==cur) throw _onrErro(502,'moeda_divergente');
+    const c=_onrContaConfere(d.conta,cur,addr,d.dest_address);
+    const avisos=_onrAvisos(cur,d.avisos,..._onrAvSt[cur]);
+    _onrContas[addr+'|'+cur]={c,avisos};
+    if(g===_onrGen) _onrDesenharConta(c,cur,avisos);
+  }catch(e){ if(g===_onrGen) _onrAplicarErro(e,cur); }
+  // 09/10: o rótulo capturado só volta se a aba/estado não mudou (g === _onrGen); senão fica o que o estado novo pôs
+  finally{ _onrOcupado=false; if(_onrAcao==='gerar'){ b.disabled=false; if(g===_onrGen) b.textContent=rot; } }
+}
+// defesa: só desenha conta completa, na moeda da aba, que entrega USDC NESTA carteira (o destino tem de vir e bater)
+function _onrContaConfere(conta,cur,addr,destFora){
+  const s=_onrObj(conta), dests=[s.dest_address,destFora].filter(x=>x!=null&&x!=='');
+  if(!dests.length) throw _onrErro(502,'sem_destino');
+  if(!addr||dests.some(x=>_onrAddr(x)!==addr)) throw _onrErro(409,'carteira_divergente');
+  if((s.dest_currency&&String(s.dest_currency).toLowerCase()!=='usdc')||(s.dest_rail&&String(s.dest_rail).toLowerCase()!=='base')) throw _onrErro(502,'destino_fora');
+  const c=_onrConta(s);
+  if(c.currency&&c.currency!==cur.toUpperCase()) throw _onrErro(502,'moeda_divergente');
+  if(!(cur==='eur'?c.iban:(c.account_number&&c.routing_number))) throw _onrErro(502,'dados_incompletos');
+  return c;
+}
+// conta no formato contaOnramp do backend (contaFiat do DVP + bank_address, beneficiary_address, deposit_message)
+function _onrConta(s){
+  s=_onrObj(s);
+  const rl=Array.isArray(s.payment_rails)?s.payment_rails.filter(x=>typeof x==='string'):[];
+  return {
+    currency:_onrTxt(s.currency).toUpperCase(),
+    beneficiary:_onrTxt(s.beneficiary),
+    beneficiary_address:_onrTxt(s.beneficiary_address),
+    iban:_onrTxt(s.iban).replace(/\s+/g,''),
+    account_number:_onrTxt(s.account_number),
+    routing_number:_onrTxt(s.routing_number),
+    bic:_onrTxt(s.bic),
+    bank_name:_onrTxt(s.bank_name),
+    bank_address:_onrTxt(s.bank_address),
+    deposit_message:_onrTxt(s.deposit_message),
+    rails:rl.length?rl.map(x=>_ONR_TRILHO[x.toLowerCase()]||x).join(', '):_onrTxt(s.rails),
+  };
+}
+// mesmo desenho do rem2ContaHtml (rótulo / valor / copiar; IBAN em blocos de 4) + o que wire pede: endereços e mensagem
+function _onrContaHtml(c){
+  const kv=(pt,en,v,copia)=> v ? '<div class="k">'+pt+(en&&en!==pt?'<br><span style="opacity:.75">'+en+'</span>':'')+'</div><div class="v mono">'+_esc(v)+'</div><div><button type="button" class="hmini" data-copy="'+_esc(copia===undefined?v:copia)+'" data-label="copiar">copiar</button></div>' : '';
+  return '<div class="rem-kv">'+
+    kv('Beneficiário','Beneficiary',c.beneficiary)+
+    kv('End. beneficiário','Beneficiary address',c.beneficiary_address)+
+    (c.iban?kv('IBAN','IBAN',c.iban.replace(/(.{4})/g,'$1 ').trim(),c.iban):'')+
+    kv('Conta','Account',c.account_number)+
+    kv('Routing (ABA)','Routing',c.routing_number)+
+    kv('BIC/SWIFT','BIC/SWIFT',c.bic)+
+    kv('Banco','Bank',c.bank_name)+
+    kv('End. do banco','Bank address',c.bank_address)+
+    kv('Mensagem','Memo / reference',c.deposit_message)+
+    '</div>'+(c.rails?'<div class="muted" style="font-size:11px">via '+_esc(c.rails)+'</div>':'');
+}
+function _onrDesenharConta(c,cur,avisos){
+  _onrLimpar(); _onrModo='conta';
+  const addr=_onrAddr((EfixAuth.getUser()||{}).address)||'';
+  const prazo=cur==='eur'?['SEPA: 1 dia útil.','SEPA: 1 business day.']
+    :['wire no mesmo dia útil, se enviado antes do horário de corte do seu banco; ACH em 1 a 3 dias úteis. Feriados bancários dos EUA não contam.','Wire: same business day (before cut-off). ACH: 1–3 business days.'];
+  const li=(pt,en)=>'<li style="margin:4px 0">'+pt+(en?'<br><span style="color:var(--ink-3)">'+en+'</span>':'')+'</li>';
+  // linhas fixas com o code do aviso equivalente do backend (o mesmo code vindo do servidor não repete)
+  const fixos=[
+    ['chega_usdc','Chega como <b>USDC</b> na sua carteira <span class="mono">'+_esc(short(addr))+'</span> (rede Base) — <b>não</b> como efixDI.','Arrives as USDC in your wallet, not as efixDI.'],
+    ['conta_no_seu_nome','Transfira de uma conta bancária <b>em seu próprio nome</b> — de terceiros, o banco devolve.','Send only from a bank account in your own name.'],
+    ['comece_pequeno','Comece com um <b>valor pequeno</b> para testar.','Start with a small test amount.'],
+    ['nao_e_remessas','Esta <b>não</b> é a conta de Remessas: não use estes dados para pagar boletos.','This is NOT the Remessas (bill payment) account.'],
+    cur==='usd'?['usd_conta_eua','Conta nos EUA: recebe ACH, wire doméstico (Fedwire) e FedNow. Wire internacional (SWIFT) pode não ser aceito.','US account: ACH, domestic wire and FedNow. International SWIFT may not be accepted.']
+      :['eur_sepa_cambio','SEPA em euros; convertido para USDC com câmbio.','SEPA in EUR; converted to USDC at the exchange rate.'],
+  ];
+  const conhecidos=fixos.map(x=>x[0]);
+  const extras=(avisos||[]).filter(a=>!conhecidos.includes(a.code));
+  $('onrConta').innerHTML='<div class="up" style="margin-top:12px">seus dados para transferir · your bank details · '+_esc(cur.toUpperCase())+'</div>'+
+    _onrContaHtml(c)+
+    (c.deposit_message?'<div class="rem-txt" style="margin-top:6px"><b>Escreva exatamente a Mensagem acima na referência/descrição da transferência.</b><br><span style="color:var(--ink-3)">Put the Memo above, exactly, in the transfer reference.</span></div>':'')+
+    '<ul class="rem-txt" style="margin:10px 0 0;padding-left:18px">'+
+      fixos.map(x=>li(x[1],x[2])).join('')+
+      extras.map(a=>li(_esc(a.pt),a.en?_esc(a.en):'')).join('')+
+      li('Prazo: '+prazo[0],prazo[1])+
+      li('Não precisa nos avisar: o USDC aparece no seu saldo quando chegar.','No need to notify us — the USDC shows in your balance on arrival.')+
+    '</ul>';
+}
+
+// KYC da Bridge = o fluxo de Remessas (mesmo customer, mesmo DVP). Consulta o kyc-status para saber se pede o nome.
+async function onrKyc(cur,g){
+  _onrModo='kyc'; _onrSemAcao(); $('onrConta').innerHTML='';   // o botão 'Gerando…' não volta a ser 'Gerar' enquanto o kyc-status não responde
+  _onrEstadoTxt('Consultando sua verificação… · Checking your verification…');
+  let s=null, err=null;
+  try{ s=await _onrReq('/remessas/kyc-status'); }catch(e){ err=e; }
+  if(g!==_onrGen) return;
+  if(err&&(err.status===401||(err.status===403&&err.code==='verificar_email'))) return _onrAplicarErro(err,cur);
+  if(err&&err.status===403){
+    _onrEstadoTxt(err.code==='bloqueado'?'A verificação está bloqueada para a sua conta — fale com a mesa.':'A verificação ainda não está liberada para a sua conta — fale com a mesa.',
+      'Verification is not available for your account — contact the desk.'); return;
+  }
+  if(err&&err.status===429) _onrMsg(_erroHumano(err),true);
+  _onrDesenharKyc(s);
+}
+function _onrDesenharKyc(s){
+  const posLink=_onrPosLink; _onrPosLink=false;
+  _onrModo='kyc'; _onrMostra('onrBtnAbrir',!!_onrUrl);
+  const I=_ONR_KYC_INTRO, ok=_rbStatusOk(s);
+  if(ok&&s.verificado){
+    _onrEstadoTxt('✓ Identidade verificada. A liberação para US$/€ pode levar um minuto — toque em “Já concluí — atualizar”. Se continuar aqui, fale com a mesa.','✓ Verified. Enabling USD/EUR may take a minute — tap refresh.',true);
+    _onrMostra('onrNomeBox',false); _onrMostra('onrBtnAcao',false); _onrMostra('onrBtnAtualizar',true); return;
+  }
+  if(posLink){   // o kyc-link disse "já verificado" e o kyc-status não: cadastro para a mesa (clicar de novo só queimaria a cota)
+    _onrEstadoTxt('Seu cadastro de verificação precisa de conferência — fale com a mesa.','Your verification needs a manual check — contact the desk.');
+    _onrMostra('onrNomeBox',false); _onrMostra('onrBtnAcao',false); _onrMostra('onrBtnAtualizar',true); return;
+  }
+  if(!ok){ _onrEstadoTxt(I[0]+' Não conseguimos consultar agora — se ainda não começou, informe seu nome completo e toque em Começar.',I[1]);
+    _onrMostra('onrNomeBox',true); _onrBotao('Começar verificação → · Start','kyc'); _onrMostra('onrBtnAtualizar',true); return; }
+  const st=String(s.status||'').toLowerCase();
+  let pt, en, nome=false, botao=null, atualizar=true;
+  if(s.motivo==='sem_cadastro'){ pt=I[0]+' Comece informando seu nome completo, como no documento. A verificação abre em outra aba.'; en=I[1]; nome=true; botao='Começar verificação → · Start'; }
+  else if(s.motivo==='ambiguo'){ pt='Encontramos mais de um cadastro de verificação para este e-mail. Fale com a mesa — não comece uma verificação nova.'; en='More than one verification record for this e-mail — contact the desk.'; }
+  else if(s.motivo==='casa'){ pt='Este e-mail é de uma conta operacional da EFIX. Entre com o seu e-mail pessoal ou fale com a mesa.'; en='This is an EFIX operational account — use your personal e-mail.'; atualizar=false; }
+  else if(s.motivo==='nao_ativo'&&st==='active'){ pt='Seu cadastro de verificação precisa de conferência — fale com a mesa.'; en='Your verification needs a manual check — contact the desk.'; }
+  else if(s.motivo==='nao_ativo'&&_RB_ANALISE.includes(st)){ pt='Sua verificação está em análise. Quando for aprovada, toque em “Já concluí — atualizar”.'; en='Your verification is under review.'; }
+  else if(s.motivo==='nao_ativo'&&_RB_RESTRICAO.includes(st)){ pt='Sua conta de pagamento está com restrição — fale com a mesa.'; en='Your payment account is restricted — contact the desk.'; }
+  else if(s.motivo==='nao_ativo'&&_RB_REJEITADO.includes(st)){ pt='Sua verificação não foi aprovada — fale com a mesa.'; en='Your verification was not approved — contact the desk.'; botao='Ver o motivo → · See why'; }
+  else if(s.motivo==='nao_ativo'){ pt='Sua verificação ainda não foi concluída. Toque em Continuar para abrir de onde parou — é lá também que você aceita os termos.'; en='Verification not finished — tap Continue to resume.'; botao='Continuar verificação → · Continue'; }
+  else { pt=I[0]+' Se ainda não começou, informe seu nome completo e toque em Começar.'; en=I[1]; nome=true; botao='Começar verificação → · Start'; }
+  _onrEstadoTxt(pt,en); _onrMostra('onrNomeBox',nome);
+  if(botao) _onrBotao(botao,'kyc'); else _onrMostra('onrBtnAcao',false);
+  _onrMostra('onrBtnAtualizar',atualizar);
+}
+// Começar/continuar: POST /remessas/kyc-link (o DVP acha o cadastro pelo e-mail do login; cria só sem cadastro — aí o nome é obrigatório)
+async function onrKycLink(){
+  if(_onrOcupado||_onrModo!=='kyc') return;
+  const pedeNome=$('onrNomeBox').style.display!=='none', nome=String($('onrNome').value||'').trim().replace(/\s+/g,' ');
+  if(pedeNome&&nome.split(' ').filter(Boolean).length<2){ _onrMsg('Informe nome e sobrenome, como no documento. · Enter your first and last name.',true); $('onrNome').focus(); return; }
+  _onrOcupado=true; const g=_onrGen, b=$('onrBtnAcao'); b.disabled=true; _onrMsg('abrindo sua verificação… · opening…');
+  let r;
+  try{ r=await _onrReq('/remessas/kyc-link',{method:'POST',body:JSON.stringify(pedeNome?{full_name:nome}:{})}); }
+  catch(e){
+    _onrOcupado=false; b.disabled=false; if(g!==_onrGen) return;
+    if(e&&e.status===400){ _onrMostra('onrNomeBox',true); _onrMsg('Informe nome e sobrenome, como no documento. · Enter your first and last name.',true); return; }
+    if(e&&(e.status===401||(e.status===403&&e.code==='verificar_email'))){ _onrMsg(''); return _onrAplicarErro(e,_depAbaAtual); }
+    if(e&&(e.status===403||e.status===409)){   // 409: 2+ cadastros, conta da casa ou cadastro para conferir — só a mesa resolve
+      _onrEstadoTxt(e.status===409?'Seu cadastro de verificação precisa de conferência — fale com a mesa.':'A verificação ainda não está liberada para a sua conta — fale com a mesa.',
+        'Your verification needs the desk — please contact us.');
+      _onrMostra('onrNomeBox',false); _onrMostra('onrBtnAcao',false); _onrMsg(''); return; }
+    _onrMsg((e&&e.status===429)?_erroHumano(e):'Não conseguimos abrir a verificação agora — tente de novo em instantes. Se continuar, fale com a mesa. · Could not open verification now.',true);
+    return;
+  }
+  _onrOcupado=false; b.disabled=false; if(g!==_onrGen) return;
+  r=_onrObj(r);
+  // o kyc-link usa régua mais frouxa (1º cadastro da lista): quem decide é o kyc-status / o /onramp/status
+  if(r.ja_verificado){ _onrPosLink=true; _onrMsg('conferindo… · checking…'); return onrAtualizar(); }
+  const url=_urlHttps(r.kyc_link)?r.kyc_link:(_urlHttps(r.tos_link)?r.tos_link:null);
+  if(url){
+    _onrUrl=url; window.open(url,'_blank','noopener');
+    const falta=(Array.isArray(r.faltando)&&r.faltando.length)?' Falta: '+r.faltando.slice(0,6).map(String).join(', ')+'.':'';
+    _onrEstadoTxt('Abrimos a verificação da Bridge em outra aba.'+falta+' Quando terminar, volte aqui e toque em “Já concluí — atualizar”. Se a aba não abriu, toque em “Abrir a verificação”.',
+      'We opened Bridge\'s check in a new tab. When done, come back and tap refresh.');
+    _onrMostra('onrNomeBox',false); _onrMostra('onrBtnAcao',false); _onrMostra('onrBtnAbrir',true); _onrMostra('onrBtnAtualizar',true); _onrMsg('');
+    return;
+  }
+  if(r.em_analise){ _onrEstadoTxt('Sua verificação está em análise. Quando for aprovada, toque em “Já concluí — atualizar”.','Your verification is under review.');
+    _onrMostra('onrNomeBox',false); _onrMostra('onrBtnAcao',false); _onrMostra('onrBtnAtualizar',true); _onrMsg(''); return; }
+  if(r.bloqueado){ const mot=(Array.isArray(r.motivo_rejeicao)&&r.motivo_rejeicao[0])?String(r.motivo_rejeicao[0]).slice(0,200):'';
+    _onrEstadoTxt(mot?'Sua verificação não foi aprovada: '+mot+(/mesa/i.test(mot)?'.':' — fale com a mesa.'):'Sua verificação não foi aprovada — fale com a mesa.','Your verification was not approved — contact the desk.');
+    _onrMostra('onrNomeBox',false); _onrMostra('onrBtnAcao',false); _onrMostra('onrBtnAtualizar',true); _onrMsg(''); return; }
+  _onrMsg('Não conseguimos abrir a verificação agora — tente de novo em instantes. Se continuar, fale com a mesa. · Could not open verification now.',true);
+}
+// "Já concluí — atualizar": status fresco (sem o cache de 60 s) e redesenha a moeda da aba
+async function onrAtualizar(){
+  const cur=_depAbaAtual; if(cur!=='usd'&&cur!=='eur') return;
+  if(_onrOcupado) return; _onrOcupado=true;
+  const b=$('onrBtnAtualizar'); b.disabled=true;
+  try{ await onrMostrar(cur,true); }
+  finally{ _onrOcupado=false; b.disabled=false; _onrPosLink=false; }
 }
 
 function conectarWeb2(){

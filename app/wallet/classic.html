@@ -462,7 +462,7 @@
                 <button class="tab active" onclick="switchTab('deposit', this)" data-i18n="tab_deposit">Depositar</button>
                 <button class="tab" onclick="switchTab('withdraw', this)" data-i18n="tab_withdraw">Sacar</button>
                 <button class="tab" onclick="switchTab('brle', this); initBrle();">BRLE</button>
-                <button class="tab" onclick="switchTab('send', this); initSendTab();">Deposit USD/EUR</button>
+                <button class="tab" onclick="switchTab('send', this)">Deposit USD/EUR</button>
                 <button class="tab" onclick="switchTab('invest', this); loadInvestPosition();">Invest</button>
                 <button class="tab" id="tabRemessas" style="display:none" onclick="switchTab('remessas', this); initRemessas();">Remessas</button>
                 <button class="tab" id="tabImoveis" style="display:none" onclick="switchTab('imoveis', this); loadOwnerProperties();">Lobie Units</button>
@@ -621,50 +621,19 @@
                 </div>
             </div>
 
-            <!-- Send Panel (Bridge.xyz onramp) -->
+            <!-- Send Panel: 09/10 — o "Send Money → USDC" daqui usava /bridge/kyc e /bridge/transfer, que passam a
+                 responder 410 (substituídas pelo /onramp da carteira nova, que só reusa conta que entrega na carteira ATUAL).
+                 Aviso PT/EN no lugar; handleStartKyc/handleSendTransfer/initSendTab ficam sem chamador. -->
             <div class="tab-panel" id="panel-send">
                 <div class="action-card">
-                    <h3>Send Money → USDC</h3>
-                    <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;line-height:1.5;">
-                        Send fiat from your bank via ACH, Wire, or SEPA.<br>Bridge converts it to USDC and sends to your wallet.
+                    <h3>Deposit USD/EUR</h3>
+                    <p style="font-size:13px;color:var(--gray-400);margin-bottom:8px;line-height:1.5;">
+                        O depósito em dólares (ACH/Wire) e euros (SEPA) mudou para a carteira nova: abra <strong>Depositar</strong> e escolha USD ou EUR. Chega como USDC na sua carteira. A opção está sendo liberada aos poucos — se ainda não aparecer para você, fale com a mesa.
                     </p>
-
-                    <!-- Rail selector -->
-                    <div class="send-rails" style="display:flex;gap:6px;margin-bottom:20px;">
-                        <button class="rail-btn active" onclick="selectRail('usd')" id="rail-usd" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">ACH / Wire<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">USD</span></button>
-                        <button class="rail-btn" onclick="selectRail('eur')" id="rail-eur" style="flex:1;padding:10px 8px;border-radius:10px;border:1px solid var(--gray-700);background:transparent;color:var(--gray-400);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">SEPA<br><span style="font-size:10px;font-weight:400;color:var(--gray-600);">EUR</span></button>
-                    </div>
-
-                    <!-- KYC required state -->
-                    <div id="send-kyc-required">
-                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;text-align:center;">
-                            Identity verification required before sending money.
-                        </p>
-                        <button class="btn btn-primary" onclick="handleStartKyc()" id="btnStartKyc">Complete Verification</button>
-                        <button class="btn btn-secondary" style="margin-top:8px;" onclick="handleCheckKyc()" id="btnCheckKyc" style="display:none;">Check Status</button>
-                        <div id="kycStatus" style="margin-top:8px;font-size:12px;font-family:var(--font-mono);text-align:center;color:var(--gray-500);min-height:18px;"></div>
-                    </div>
-
-                    <!-- Transfer form (shown after KYC approved) -->
-                    <div id="send-form" style="display:none;">
-                        <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;" id="sendFormDesc">
-                            Get your personal bank details. Send any amount — USDC will be sent to your wallet automatically.
-                        </p>
-                        <button class="btn btn-primary" style="background:var(--green);color:var(--black);" onclick="handleSendTransfer()" id="btnSendTransfer">Get Bank Details</button>
-                    </div>
-
-                    <!-- Deposit instructions (shown after transfer created) -->
-                    <div id="send-instructions" style="display:none;">
-                        <div style="background:var(--gray-800);border-radius:12px;padding:20px;margin-bottom:16px;">
-                            <p style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--white);" id="instrTitle">Send to:</p>
-                            <div id="instrDetails" style="font-family:var(--font-mono);font-size:12px;color:var(--gray-300);line-height:2;"></div>
-                        </div>
-                        <p style="margin-top:16px;font-size:12px;color:var(--gray-500);text-align:center;line-height:1.6;">
-                            Send any amount from your bank using the details above.<br>
-                            Bridge will auto-convert to USDC and send to your wallet on Base.<br>
-                            <span id="instrTimeline">ACH: ~1 business day &nbsp;|&nbsp; Wire: ~2 hours</span>
-                        </p>
-                    </div>
+                    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;line-height:1.5;">
+                        USD (ACH/Wire) and EUR (SEPA) deposits moved to the new wallet: open <strong>Deposit</strong> and pick USD or EUR. Funds arrive as USDC in your wallet. It is being enabled gradually — if you don't see it yet, contact the desk.
+                    </p>
+                    <a href="/app/wallet/" class="btn btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Ir para a carteira nova → · Open the new wallet</a>
                 </div>
             </div>
 
@@ -3051,6 +3020,7 @@
         }
 
         // ═══ SEND MONEY (Bridge.xyz) ═══
+        // 09/10: painel trocado por aviso (rotas /bridge/* antigas = 410) — estas funções ficaram sem chamador
         let _selectedRail = 'ach';
         let _currentTransferId = null;
 

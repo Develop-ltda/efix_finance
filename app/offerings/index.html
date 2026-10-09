@@ -341,12 +341,17 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
 
       <div class="field">
         <label>Payment rail</label>
+        <!-- 09/10: ACH/Wire/SEPA ocultos — o offerings devolve 409 rail_not_available
+             (OFFERINGS_NONPIX_ENABLED desligada): nada concilia esses depósitos e cada
+             abertura criava uma conta virtual nova na Bridge. Religar = tirar o .hidden. -->
         <div class="rail-grid" id="rail-grid">
           <label class="rail-opt selected" data-rail="pix"><input type="radio" name="rail" value="pix" checked style="display:none"><div class="rail-flag">🇧🇷</div><div class="rail-name">BRL · PIX</div></label>
-          <label class="rail-opt" data-rail="ach"><input type="radio" name="rail" value="ach" style="display:none"><div class="rail-flag">🇺🇸</div><div class="rail-name">USD · ACH</div></label>
-          <label class="rail-opt" data-rail="wire"><input type="radio" name="rail" value="wire" style="display:none"><div class="rail-flag">🇺🇸</div><div class="rail-name">USD · Wire</div></label>
-          <label class="rail-opt" data-rail="sepa"><input type="radio" name="rail" value="sepa" style="display:none"><div class="rail-flag">🇪🇺</div><div class="rail-name">EUR · SEPA</div></label>
+          <label class="rail-opt hidden" data-rail="ach" aria-hidden="true"><input type="radio" name="rail" value="ach" disabled style="display:none"><div class="rail-flag">🇺🇸</div><div class="rail-name">USD · ACH</div></label>
+          <label class="rail-opt hidden" data-rail="wire" aria-hidden="true"><input type="radio" name="rail" value="wire" disabled style="display:none"><div class="rail-flag">🇺🇸</div><div class="rail-name">USD · Wire</div></label>
+          <label class="rail-opt hidden" data-rail="sepa" aria-hidden="true"><input type="radio" name="rail" value="sepa" disabled style="display:none"><div class="rail-flag">🇪🇺</div><div class="rail-name">EUR · SEPA</div></label>
         </div>
+        <!-- 09/10: sem link para a wallet — USDC na carteira NÃO paga reserva (D3) e o depósito US$/€ lá é piloto -->
+        <div class="field-hint" id="rail-note">Allocations are paid via PIX only for now.</div>
       </div>
 
       <div class="checkbox-row">
@@ -463,6 +468,9 @@ let PENDING_ALLOC_BODY = null;     // allocation payload parked while KYC runs
 let KYC_POLL_TIMER = null;
 let KYC_DONE = false;              // guards double-fire (SDK event + status poll)
 let LAST_RENDERED_STATUS = null;   // triggers a full re-render when status advances
+// 09/10: 5xx do PIX volta a ser re-tentado pelo poll (LAST_RENDERED_STATUS = null), com o MESMO teto do poll, por reserva
+const POLL_MAX_ATTEMPTS = 60;
+let PI_5XX = { id: null, n: 0 };
 
 // 09/10: e-mail deixado pelas landings/classic (sessionStorage, nunca na URL).
 // Lido e apagado no boot em qualquer caminho; só pré-preenche, o código só sai no clique.
@@ -766,6 +774,29 @@ function authFail(r, data) {
   return false;
 }
 
+// 09/10: GET da reserva/instruções devolvem 403 allocation_not_owned quando a
+// reserva é de outra conta; o resto (401, 403 de carteira/e-mail) é o authFail.
+function accessFail(r, data) {
+  if (r.status === 403 && data && data.error === 'allocation_not_owned') { allocationNotOwned(); return true; }
+  return authFail(r, data);
+}
+// 09/10: no /payment-instructions, 401 só é sessão com o code do requireUser (login_required). O backend em produção
+// repassa o status do provedor (401 do HausBank = credencial do PROVEDOR, não do investidor): esse vai para o erro
+// de provedor — deslogar mandaria de volta ao e-mail e a retomada bateria no mesmo 401, em ciclo.
+function piAccessFail(r, data) {
+  if (r.status === 401 && !(data && data.error === 'login_required')) return false;
+  return accessFail(r, data);
+}
+
+function allocationNotOwned() {
+  if (POLL_TIMER) { clearInterval(POLL_TIMER); POLL_TIMER = null; }
+  CURRENT_ALLOC_ID = null;
+  LAST_RENDERED_STATUS = null;
+  try { localStorage.removeItem(LS_KEY); } catch {}   // a reserva salva não é desta conta
+  document.getElementById('pi-body').innerHTML =
+    '<div class="alert alert-err">This allocation belongs to a different EFIX account. Log in with the account that created it, or start a new allocation.</div>';
+}
+
 // Volta ao passo do e-mail sem apagar a sessão do navegador: o código novo a substitui.
 // A reserva salva (LS_KEY) fica — o mesmo e-mail a retoma depois do login.
 function sessionExpired() {
@@ -812,7 +843,7 @@ function walletForbidden(code) {
 // ─────────────────────────────────────────────────────────
 document.getElementById('rail-grid').addEventListener('click', (e) => {
   const opt = e.target.closest('.rail-opt');
-  if (!opt) return;
+  if (!opt || opt.classList.contains('hidden')) return;
   document.querySelectorAll('.rail-opt').forEach(x => x.classList.remove('selected'));
   opt.classList.add('selected');
   opt.querySelector('input').checked = true;
@@ -840,7 +871,7 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
     email: USER_EMAIL,
     wallet_address: USER_ADDRESS,
     amount_brl: parseFloat(document.getElementById('f-amount').value),
-    rail: document.querySelector('input[name="rail"]:checked').value,
+    rail: railSelecionado(),
     offering_id: OFFERING_ID,
     country: document.getElementById('f-country').value.trim().toUpperCase() || null,
     is_us_person: false,
@@ -873,6 +904,29 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
   }
 });
 
+// 09/10: só vale o trilho visível e habilitado (restauração de formulário do
+// navegador podia trazer um rádio oculto marcado); qualquer outro caso = PIX.
+function railSelecionado() {
+  const inp = document.querySelector('input[name="rail"]:checked');
+  const opt = inp && inp.closest('.rail-opt');
+  return inp && !inp.disabled && opt && !opt.classList.contains('hidden') ? inp.value : 'pix';
+}
+function voltarParaPix() {
+  document.querySelectorAll('.rail-opt').forEach(x => x.classList.toggle('selected', x.dataset.rail === 'pix'));
+  const pix = document.querySelector('input[name="rail"][value="pix"]');
+  if (pix) pix.checked = true;
+}
+// Textos dos códigos do backend (ele manda a mensagem em português; a página é em inglês).
+// 09/10: sem link para a wallet — USDC na carteira não paga a reserva.
+const RAIL_NA_HTML = 'Allocations are paid via PIX only for now — USD/EUR payment isn\'t available yet.';
+// 09/10: o fim da frase diz o que a página VAI fazer — nova tentativa armada (LAST_RENDERED_STATUS = null) ou não
+const PI_ERRO_EN = {
+  provider_error: 'The payment provider did not respond.',
+  provider_not_configured: 'Payment is temporarily unavailable.',
+};
+const PI_ERRO_RETRY = ' Your allocation is saved — we\'ll retry automatically in a few seconds.';
+const PI_ERRO_MANUAL = ' Your allocation is saved — try Refresh status in a few minutes.';
+
 async function createAllocation(body) {
   // 09/10: Authorization junto — seguro porque o API_BASE só é trocável em dev local.
   const r = await fetch(`${API_BASE}/v1/allocations`, {
@@ -882,6 +936,12 @@ async function createAllocation(body) {
   });
   const data = await r.json();
   if (authFail(r, data)) return;
+  if (r.status === 409 && data.error === 'rail_not_available') {
+    voltarParaPix();
+    document.getElementById('form-card').classList.remove('hidden');
+    document.getElementById('f-alert').innerHTML = `<div class="alert alert-err"><span>${RAIL_NA_HTML}</span></div>`;
+    return;
+  }
   if (r.status === 409 && data.error === 'wallet_mismatch') {
     const onRecord = data.on_record || '—';
     showAlert(
@@ -977,13 +1037,19 @@ async function showPaymentInstructions(allocId) {
   body.innerHTML = '<div class="alert alert-info"><span class="loading"></span> Loading payment instructions…</div>';
 
   try {
-    // 09/10: Bearer também aqui (hoje público por UUID; pronto para quando fechar)
-    const [allocRes, piRes] = await Promise.all([
-      fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}`, { headers: EfixAuth.headers() }).then(r => r.json()),
+    // 09/10: as duas rotas exigem o Bearer e o DONO da reserva (401/403) — o
+    // status de cada resposta é lido antes de desenhar qualquer coisa.
+    const [allocR, piRes] = await Promise.all([
+      fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}`, { headers: EfixAuth.headers() }),
       fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}/payment-instructions`, { headers: EfixAuth.headers() }),
     ]);
-    const piData = await piRes.json();
+    const allocRes = await allocR.json().catch(() => ({}));
+    const piData = await piRes.json().catch(() => ({}));
     if (CURRENT_ALLOC_ID !== allocId) return;   // sessão vencida/nova reserva no meio do caminho
+    if (accessFail(allocR, allocRes) || piAccessFail(piRes, piData)) return;
+    if (!allocR.ok || !allocRes.allocation) {
+      throw new Error(allocR.status === 404 ? 'This allocation was not found. Start a new allocation.' : (allocRes.message || 'Could not load this allocation — try Refresh status.'));
+    }
     renderPaymentInstructions(allocRes, piRes.status, piData);
     startPolling();
   } catch (err) {
@@ -993,6 +1059,10 @@ async function showPaymentInstructions(allocId) {
 
 function renderPaymentInstructions(allocRes, piStatus, pi) {
   const alloc = allocRes.allocation;
+  // 09/10: grava o status desenhado em TODOS os ramos (kyc_required, não-PIX e
+  // erro não gravavam: o poll de 5 s via "status mudou" e rechamava as
+  // instruções sem parar — cada volta criava uma VA nova na Bridge).
+  LAST_RENDERED_STATUS = alloc.status;
   const body = document.getElementById('pi-body');
   const statusPill = `<span class="status-pill ${pillClass(alloc.status)}">${escape(alloc.status)}</span>`;
   const amountStr = 'R$ ' + Number(alloc.amountBrl).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1029,10 +1099,26 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
     return;
   }
 
-  if (!piResOk(piStatus)) {
-    body.innerHTML = `<div class="alert alert-err">${escape(pi.message || pi.error || 'Provider error')}${pi.missing ? '<br><span class="muted">Missing: ' + escape([].concat(pi.missing).join(', ')) + '</span>' : ''}</div>${statusCol}`;
+  if (piStatus === 409 && pi.error === 'rail_not_available') {
+    body.innerHTML = `<div class="alert alert-err"><span>${RAIL_NA_HTML}</span></div>${statusCol}`;
     return;
   }
+
+  if (!piResOk(piStatus)) {
+    // 09/10: falha passageira do provedor no PIX se resolve sozinha — sem status gravado, o poll de 5 s rechama
+    // as instruções. Teto por reserva aqui (o startPolling zera o contador do poll a cada re-render).
+    if (piStatus >= 500 && alloc.rail === 'pix') {
+      if (PI_5XX.id !== alloc.id) PI_5XX = { id: alloc.id, n: 0 };
+      if (++PI_5XX.n < POLL_MAX_ATTEMPTS) LAST_RENDERED_STATUS = null;
+    }
+    // 09/10: texto pelo que acontece de fato: nova tentativa armada (status zerado acima) ou "Refresh status"
+    // (teto atingido, trilho não-PIX, 401 do provedor). 401 aqui nunca é sessão: esse já saiu no piAccessFail.
+    const base = PI_ERRO_EN[pi.error] || ((piStatus >= 500 || piStatus === 401) ? PI_ERRO_EN.provider_error : '');
+    const msg = base ? base + (LAST_RENDERED_STATUS === null ? PI_ERRO_RETRY : PI_ERRO_MANUAL) : (pi.message || pi.error || 'Provider error');
+    body.innerHTML = `<div class="alert alert-err">${escape(msg)}${pi.missing ? '<br><span class="muted">Missing: ' + escape([].concat(pi.missing).join(', ')) + '</span>' : ''}</div>${statusCol}`;
+    return;
+  }
+  if (PI_5XX.id === alloc.id) PI_5XX.n = 0;   // o provedor respondeu: o teto recomeça
 
   // PIX
   if (pi.rail === 'pix') {
@@ -1064,7 +1150,6 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
         Send <strong>exactly ${amountStr}</strong>. The HausBank poll worker matches by amount (±R$ 0.01) within 15 minutes. Click <em>Já paguei</em> to check now.
       </div>`;
     updateStepsFromStatus(alloc.status);
-    LAST_RENDERED_STATUS = alloc.status;
     return;
   }
 
@@ -1237,7 +1322,7 @@ function startPollingFast() {
   if (POLL_TIMER) clearInterval(POLL_TIMER);
   if (['settled', 'rejected', 'expired'].includes(LAST_RENDERED_STATUS)) return; // terminal — nothing to poll
   let attempts = 0;
-  const MAX_ATTEMPTS = 60; // ~5 minutes at 5s (pre-deposit only)
+  const MAX_ATTEMPTS = POLL_MAX_ATTEMPTS; // ~5 minutes at 5s (pre-deposit only)
   const concluded = ['deposit_received', 'ready_to_settle'].includes(LAST_RENDERED_STATUS);
   const interval = concluded ? 60000 : 5000;
   POLL_TIMER = setInterval(async () => {
@@ -1245,6 +1330,13 @@ function startPollingFast() {
     attempts++;
     try {
       const r = await fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(CURRENT_ALLOC_ID)}`, { headers: EfixAuth.headers() });
+      if (r.status === 401 || r.status === 403) {
+        // 09/10: sessão vencida ou reserva de outra conta — para de bater no backend
+        clearInterval(POLL_TIMER);
+        POLL_TIMER = null;
+        accessFail(r, await r.json().catch(() => null));
+        return;
+      }
       if (!r.ok) return;
       const data = await r.json();
       const st = data.allocation.status;
