@@ -1195,6 +1195,13 @@ async function balanceOf(token, addr){
 (async function boot(){
   // completa magic-link se voltamos com bundle na URL
   const _hash0 = location.hash||'';   // F1 (21/09): guardado ANTES do replaceState do bundle (link direto #remessas sobrevive ao magic link)
+  // 09/10: e-mail que landings/classic deixam para o gate (sessionStorage, nunca
+  // na URL — o GA4 manda a URL inteira). Lido e apagado já aqui, em qualquer
+  // caminho do boot; só pré-preenche, nunca dispara OTP.
+  let gateEmail = '';
+  try{ gateEmail = String(sessionStorage.getItem('efix_gate_email')||'').trim();
+    sessionStorage.removeItem('efix_gate_email'); }catch(e){}
+  if(gateEmail.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gateEmail)) gateEmail = '';
   const bundle = new URLSearchParams(location.search).get('bundle');
   // iframe órfão do Turnkey de sessão anterior colide no init ("already exists")
   try{ const c=document.getElementById('alchemy-signer-iframe-container');
@@ -1221,9 +1228,28 @@ async function balanceOf(token, addr){
   let sess = null;
   try{ sess = await EfixAuth.restore(); }catch(e){}
   const logged = (EfixAuth.isLoggedIn && EfixAuth.isLoggedIn());
-  if(!logged){ $('gate').style.display='grid'; return; }
-  $('app').style.display='grid';
+  if(!logged){
+    $('gate').style.display='grid';
+    if(gateEmail){ $('g-email').value = gateEmail;
+      $('g-msg').textContent = 'Sua conta é criada aqui: clique em Continuar para receber o código.'; }
+    return;
+  }
   const user = (EfixAuth.getUser && EfixAuth.getUser()) || {};
+  // 09/10: volta à oferta que mandou ativar a carteira. Só no boot (carregar()
+  // também é o refresh pós-operação), só caminho da lista branca (o storage não
+  // escolhe destino) e só com carteira já vinculada — sem ela a chave espera o
+  // reload do ativarConcluir. Lobie não tem offerings.
+  try{
+    const ret = sessionStorage.getItem('efix_retorno');
+    if(ret !== null){
+      if(IS_LOBIE || !/^\/app\/offerings\/\?intent=[a-z0-9-]{1,40}$/.test(ret)) sessionStorage.removeItem('efix_retorno');
+      else if(user.address){
+        sessionStorage.removeItem('efix_retorno'); sessionStorage.removeItem('efix_ativar_carteira');
+        location.replace(ret); return;
+      }
+    }
+  }catch(e){}
+  $('app').style.display='grid';
   const email = user.email || '—';
   $('chip-email').textContent = email;
   $('chip-init').textContent = (email[0]||'·').toUpperCase();
@@ -1258,7 +1284,8 @@ async function gateVerify(){
   }catch(e){ $('g-msg').textContent = e.message; $('g-verify').disabled=false; }
 }
 
-async function sair(){ try{ await EfixAuth.logout(); }catch(e){} try{ await EfixWallet.disconnect(); }catch(e){} location.reload(); }
+async function sair(){ try{ sessionStorage.removeItem('efix_retorno'); sessionStorage.removeItem('efix_ativar_carteira'); }catch(e){}
+  try{ await EfixAuth.logout(); }catch(e){} try{ await EfixWallet.disconnect(); }catch(e){} location.reload(); }
 
 /* ── ativação da carteira on-chain (smart account Alchemy) ──
    O gate do v2 autentica só no backend (OTP próprio) e NÃO provisiona conta
@@ -1365,7 +1392,27 @@ async function ativarConcluir(m){
     email = ((EfixAuth.getUser()||{}).email||'').toLowerCase();
     await EfixAuth.login(email, sca);   // vincula no backend + re-minta o JWT
   }catch(e){ _atvFeito = false; throw e; }  // libera a retentativa
-  m.className='mmsg ok'; m.textContent='Carteira ativada: '+short(sca)+' — recarregando…';
+  // 09/10: o vínculo é fill-once — se o e-mail já tinha carteira, o backend
+  // ignora a sca do corpo e devolve a do banco. Mostrar a que VOLTOU.
+  // Sem address de volta (corrida no UPDATE fill-once) não afirmar nada.
+  const vinc = (EfixAuth.getUser()||{}).address;
+  if(!vinc){
+    m.className='mmsg err'; m.textContent='Não consegui confirmar o vínculo da carteira — recarregando…';
+    setTimeout(()=>location.reload(), 2500);
+    return;
+  }
+  if(String(vinc).toLowerCase() !== String(sca).toLowerCase()){
+    // sem reload e sem voltar à oferta: o usuário precisa ler isto antes de depositar
+    try{ sessionStorage.removeItem('efix_retorno'); }catch(e){}
+    _atvFeito = false; $('atvVerify').disabled = false;   // reabrir o modal não trava em "verificando…"
+    $('sb-ativar').style.display='none';
+    const vazio = document.querySelector('#assets-tb .empty');
+    if(vazio) vazio.textContent = 'Este e-mail já tem outra carteira vinculada — recarregue a página ou fale com o suporte.';
+    m.className='mmsg err';
+    m.textContent='Este e-mail já tem outra carteira vinculada: '+short(vinc)+'. A que você acabou de criar ('+short(sca)+') NÃO foi vinculada. Se não reconhece '+short(vinc)+', não deposite e fale com o suporte.';
+    return;
+  }
+  m.className='mmsg ok'; m.textContent='Carteira ativada: '+short(vinc)+' — recarregando…';
   setTimeout(()=>location.reload(), 900);
 }
 
@@ -1384,7 +1431,8 @@ async function carregar(email, sessAddr){
   $('sb-wallet').textContent = registered ? short(registered) : (sessAddr ? short(sessAddr) : '—');
   // sem carteira on-chain nenhuma: oferece a ativação (smart account Alchemy)
   $('sb-ativar').style.display = wallets.length ? 'none' : 'inline-block';
-  // veio do classic, que não sabe vincular carteira: abre a ativação direto
+  // classic ou offerings mandam ativar: só sem carteira NENHUMA (o investidor
+  // antigo do offerings tem a do lookup e não pode ganhar uma segunda)
   if(!wallets.length){ try{
     if(sessionStorage.getItem('efix_ativar_carteira')){
       sessionStorage.removeItem('efix_ativar_carteira'); setTimeout(abrirAtivar, 400);
