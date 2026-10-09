@@ -417,7 +417,12 @@ tr.grp:first-child td{padding-top:6px}
       <button class="go" id="g-verify" onclick="gateVerify()">Entrar</button>
     </div>
     <div class="msg" id="g-msg"></div>
-    <div class="alt">Prefere a versão atual? <a href="/app/wallet/classic.html">Abrir wallet clássica</a></div>
+    <!-- 09/10: a clássica está deprecada (signer Alchemy não cria conta nova —
+         cliente novo clicou aqui e caiu em "New signer account creation is
+         disabled"). Os 7 legados chegam nela pelo aviso de migração em
+         abrirAtivar(). O div fica vazio: a marca Lobie escreve aqui o
+         "powered by EFIX" (aplicarMarca). -->
+    <div class="alt"></div>
   </div>
 </div>
 
@@ -750,8 +755,9 @@ tr.grp:first-child td{padding-top:6px}
       </div></section>
       <section class="view" id="view-cartao"><div class="card stub" data-reveal>
         <div class="big">EFIX Card</div>
-        <p>Seu colateral vira limite. O cartão continua disponível na wallet clássica durante a beta.</p>
-        <a href="/app/wallet/classic.html">Abrir Cartão →</a>
+        <!-- 09/10: o link levava à clássica (deprecada), onde o cartão era só
+             fila de espera e conta nova não entra. -->
+        <p>Seu colateral vira limite. O EFIX Card está em preparo.</p>
       </div></section>
 
       <!-- ═══ POSIÇÃO (gated às carteiras da casa — pedido Ernesto 02/08) ═══ -->
@@ -1119,7 +1125,7 @@ function aplicarMarca(){
   if(gb) gb.innerHTML = '<img src="/lobie/assets/lobie-logo-azul.png" alt="Lobie" style="height:28px;width:auto"><span class="tag">carteira</span>';
   const gl = document.querySelector('#gate .lead');
   if(gl) gl.textContent = 'Suas unidades e seus repasses mensais, direto na sua carteira.';
-  // classic é produto EFIX: no lugar, a assinatura do white-label
+  // o .alt fica vazio na EFIX (link da clássica saiu em 09/10); aqui recebe a assinatura do white-label
   const alt = document.querySelector('#gate .alt');
   if(alt) alt.innerHTML = '<span class="up" style="letter-spacing:.14em">powered by EFIX</span>';
   // logo OFICIAL no app (maçaneta + LOBIE); menu recolhido mostra só a maçaneta
