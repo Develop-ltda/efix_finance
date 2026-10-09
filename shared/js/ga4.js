@@ -178,17 +178,34 @@
     try { return readAttribution(); } catch (e) { return {}; }
   };
 
-  /* --- 3. efixTrack(name, params): wrapper seguro de gtag('event'). Uso nas paginas:
-         window.efixTrack && window.efixTrack('generate_lead', { offering: 'first' }) --- */
+  /* --- 3. efixTrack(name, params, done): wrapper seguro de gtag('event'). Uso nas paginas:
+         window.efixTrack && window.efixTrack('generate_lead', { offering: 'first' })
+         09/10: 'done' (3o argumento, opcional, funcao) roda UMA vez, sem argumentos, quando o GA despachou o hit
+         (event_callback do gtag) ou, no maximo, 800 ms depois (event_timeout); se o efixTrack nem chega a chamar o
+         gtag (nome invalido, excecao) ele chama o 'done' sozinho, entao quem espera nunca fica pendurado. Motivo
+         (achado em teste no navegador real): navegar logo depois do efixTrack MATA o hit ainda na fila (page_view e
+         form_start chegavam ao GA4, generate_lead nao); a pagina so deve navegar no 'done'. Todo evento sai com
+         transport_type 'beacon' (sendBeacon, que sobrevive a navegacao). --- */
   var EVENT_NAME = /^[A-Za-z][A-Za-z0-9_]{0,39}$/;
   // 09/10: PII_KEY = chaves de dado pessoal + chaves reservadas/sensiveis do GA4 (URL/referrer/path inteiros, destino e
   // medicao: send_to/transport_url/ip_override/debug_mode, identidade: user_id/user_properties). Casa por SUBSTRING e
   // sem diferenciar caixa, de proposito (conservador): 'rg' e 'cep' tambem derrubam chaves como 'target' e 'accept'.
-  var PII_KEY = /mail|phone|tel|cpf|cnpj|nome|name|doc|token|senha|pass|wallet|address|addr|page_location|page_referrer|page_path|send_to|transport_url|user_id|user_properties|ip_override|debug_mode|contact|fone|celular|cep|rg|birth|nasc|street|endereco/i;
+  // 09/10: + chaves de CONTROLE que so o efixTrack define (event_callback, event_timeout, transport_type): o chamador
+  // nao injeta nem sobrescreve (alem de elas serem gravadas depois do filtro).
+  var PII_KEY = /mail|phone|tel|cpf|cnpj|nome|name|doc|token|senha|pass|wallet|address|addr|page_location|page_referrer|page_path|send_to|transport_url|user_id|user_properties|ip_override|debug_mode|contact|fone|celular|cep|rg|birth|nasc|street|endereco|event_callback|event_timeout|transport_type/i;
 
-  window.efixTrack = function (name, params) {
+  window.efixTrack = function (name, params, done) {
+    // cb: 'done' embrulhado, uma vez so e nunca lanca; o gtag chama (event_callback) e o catch/nome invalido tambem.
+    var called = false, cb = null;
+    if (typeof done === 'function') {
+      cb = function () {
+        if (called) return;
+        called = true;
+        try { done(); } catch (e) {}
+      };
+    }
     try {
-      if (typeof name !== 'string' || !EVENT_NAME.test(name)) return;
+      if (typeof name !== 'string' || !EVENT_NAME.test(name)) { if (cb) cb(); return; }
       var out = {};
       if (params && typeof params === 'object') {
         for (var k in params) {
@@ -204,7 +221,10 @@
           } // null/undefined/objeto/array/funcao: descartados
         }
       }
+      // 09/10: so aqui, depois do filtro (nao vem de params): beacon sobrevive a navegacao; callback + timeout so com 'done'.
+      out.transport_type = 'beacon';
+      if (cb) { out.event_callback = cb; out.event_timeout = 800; }
       gtag('event', name, out);
-    } catch (e) {}
+    } catch (e) { if (cb) cb(); }
   };
 })();

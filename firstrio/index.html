@@ -843,9 +843,23 @@ function startAllocation(event){
     if (email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) sessionStorage.setItem('efix_gate_email', email);
   } catch (e) {}
   // 09/10: conversão GA4 (sem PII: só oferta e origem); efixTrack vem de /shared/js/ga4.js e o guard cobre a ausência.
-  // Uma vez por carregamento: duplo clique/Enter repetido antes de a página trocar não duplica o lead (o redirect fica fora do guard).
-  if (!window.__efixLeadSent) { window.__efixLeadSent = true; window.efixTrack && window.efixTrack('generate_lead', { offering: 'first', form_location: 'firstrio' }); }
-  window.location.href = '/app/offerings/?intent=first';
+  // Achado em teste no navegador real: navegar logo depois do efixTrack MATA o hit que o GA ainda tinha na fila (page_view e
+  // form_start apareciam no GA4 Realtime, generate_lead não). Por isso o redirect espera o gtag confirmar o envio (3º argumento
+  // do efixTrack) ou, no máximo, 800 ms: o timer é a rede de segurança p/ bloqueador de anúncios, onde o callback nunca vem.
+  // Uma vez por carregamento: submit repetido antes de a página trocar redireciona na hora, sem 2º lead.
+  var went = false;
+  function go() {
+    if (went) return;
+    went = true;
+    window.location.href = '/app/offerings/?intent=first';
+  }
+  if (!window.__efixLeadSent && window.efixTrack) {
+    window.__efixLeadSent = true;
+    setTimeout(go, 800); // antes do efixTrack: se ele lançar (override/stub), o redirect ainda sai
+    window.efixTrack('generate_lead', { offering: 'first', form_location: 'firstrio' }, go);
+    return;
+  }
+  go();
 }
 </script>
 
