@@ -1076,6 +1076,9 @@ function startAllocation(event) {
   try {
     if (email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) sessionStorage.setItem('efix_gate_email', email);
   } catch (e) {}
+  // 09/10: conversão GA4 (sem PII: só oferta e origem); efixTrack vem de /shared/js/ga4.js e o guard cobre a ausência.
+  // Uma vez por carregamento: duplo clique/Enter repetido antes de a página trocar não duplica o lead (o redirect fica fora do guard).
+  if (!window.__efixLeadSent) { window.__efixLeadSent = true; window.efixTrack && window.efixTrack('generate_lead', { offering: 'first', form_location: 'first' }); }
   window.location.href = '/app/offerings/?intent=first';
 }
 </script>

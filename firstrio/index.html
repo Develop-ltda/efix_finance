@@ -834,12 +834,18 @@ const io = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
+// 09/10: e-mail vai por sessionStorage (só pré-preenche o login), nunca na URL — o GA4 manda a URL inteira.
 function startAllocation(event){
   event.preventDefault();
   const email = document.getElementById('fld-email').value.trim();
   if(!email) return;
-  const params = new URLSearchParams({ intent: 'first', email });
-  window.location.href = `/app/offerings/?${params.toString()}`;
+  try {
+    if (email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) sessionStorage.setItem('efix_gate_email', email);
+  } catch (e) {}
+  // 09/10: conversão GA4 (sem PII: só oferta e origem); efixTrack vem de /shared/js/ga4.js e o guard cobre a ausência.
+  // Uma vez por carregamento: duplo clique/Enter repetido antes de a página trocar não duplica o lead (o redirect fica fora do guard).
+  if (!window.__efixLeadSent) { window.__efixLeadSent = true; window.efixTrack && window.efixTrack('generate_lead', { offering: 'first', form_location: 'firstrio' }); }
+  window.location.href = '/app/offerings/?intent=first';
 }
 </script>
 
