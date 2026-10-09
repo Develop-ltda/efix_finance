@@ -991,7 +991,7 @@ footer{padding:48px clamp(20px,4vw,48px) 32px;border-top:1px solid var(--gray-20
         </div>
       </div>
       <div class="flow">
-        <div class="flow__step"><div class="flow__step-t">Entrar com email</div><div class="flow__step-d">Alchemy Account Kit cria sua smart wallet ERC-4337 na Base.</div></div>
+        <div class="flow__step"><div class="flow__step-t">Entrar com email</div><div class="flow__step-d">Código de 6 dígitos no e-mail — sua smart wallet EFIX (ERC-4337) na Base, sem MetaMask.</div></div>
         <div class="flow__step"><div class="flow__step-t">Escolher rail</div><div class="flow__step-d">PIX exibe QR. ACH/Wire/SEPA exibe os dados bancários Bridge.xyz.</div></div>
         <div class="flow__step"><div class="flow__step-t">Carteira operadora recebe</div><div class="flow__step-d">EFIX Plataforma de Tokenização recebe BRL via PIX ou USDC via Bridge.</div></div>
         <div class="flow__step"><div class="flow__step-t">LATITUDE entregue</div><div class="flow__step-d">Tesouraria liquida LATITUDE ao par na sua smart wallet · negociável Uni V3 depois.</div></div>
@@ -1187,12 +1187,15 @@ const io = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
+// 09/10: e-mail vai por sessionStorage (só pré-preenche o login), nunca na URL — o GA4 manda a URL inteira.
 function startAllocation(event){
   event.preventDefault();
   const email = document.getElementById('fld-email').value.trim();
   if(!email) return;
-  const params = new URLSearchParams({ intent: 'latitude', email });
-  window.location.href = `/app/offerings/?${params.toString()}`;
+  try{
+    if(email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) sessionStorage.setItem('efix_gate_email', email);
+  }catch(e){}
+  window.location.href = '/app/offerings/?intent=latitude';
 }
 </script>
 

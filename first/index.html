@@ -870,7 +870,7 @@ footer{padding:3.5rem 2rem 2rem;border-top:1px solid #e5e5e5}
       <div class="flow-steps">
         <div class="flow-step-card">
           <div class="flow-step-title" data-i18n="fs1_t">Log in with email</div>
-          <div class="flow-step-desc" data-i18n="fs1_d">Alchemy Account Kit creates your ERC-4337 smart wallet on Base.</div>
+          <div class="flow-step-desc" data-i18n="fs1_d">6-digit email code — your EFIX smart wallet (ERC-4337) on Base, no MetaMask.</div>
         </div>
         <div class="flow-step-card">
           <div class="flow-step-title" data-i18n="fs2_t">Pick PIX, ACH/Wire or SEPA</div>
@@ -1068,12 +1068,15 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
+// 09/10: e-mail vai por sessionStorage (só pré-preenche o login), nunca na URL — o GA4 manda a URL inteira.
 function startAllocation(event) {
   event.preventDefault();
   const email = document.getElementById('fld-email').value.trim();
   if (!email) return;
-  const params = new URLSearchParams({ intent: 'first', email });
-  window.location.href = `/app/offerings/?${params.toString()}`;
+  try {
+    if (email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) sessionStorage.setItem('efix_gate_email', email);
+  } catch (e) {}
+  window.location.href = '/app/offerings/?intent=first';
 }
 </script>
 
@@ -1154,7 +1157,7 @@ const i18n = {
     rl_pix:'BRL · PIX', rl_pix_n:'Instant BRL', rl_pix_d:'Recommended for Brazilian accounts. QR code generated in-app; settles in minutes.',
     rl_ach:'USD · ACH / Wire', rl_ach_n:'Domestic US transfer', rl_ach_d:'Virtual bank details issued via Bridge.xyz. ACH: 1-2 business days. Wire: same-day.',
     rl_wire:'EUR · SEPA', rl_wire_n:'EU transfer', rl_wire_d:'SEPA details via Bridge.xyz. Typical settlement: 1 business day.',
-    fs1_t:'Log in with email', fs1_d:'Alchemy Account Kit creates your ERC-4337 smart wallet on Base.',
+    fs1_t:'Log in with email', fs1_d:'6-digit email code — your EFIX smart wallet (ERC-4337) on Base, no MetaMask.',
     fs2_t:'Pick PIX, ACH/Wire or SEPA', fs2_d:'PIX shows a QR. ACH/Wire/SEPA shows Bridge.xyz virtual bank details you own.',
     fs3_t:'Operator wallet receives', fs3_d:'EFIX Plataforma de Tokenização e Crowdfunding Ltda operator wallet receives your BRL/USD/EUR deposit.',
     fs4_t:'FIRST delivered', fs4_d:'Treasury transfers FIRST to your smart wallet at par on offering close. Tradable on Uniswap V3 thereafter.',
@@ -1267,7 +1270,7 @@ const i18n = {
     rl_pix:'BRL · PIX', rl_pix_n:'BRL instantâneo', rl_pix_d:'Recomendado para contas brasileiras. QR code gerado no app; compensa em minutos.',
     rl_ach:'USD · ACH / Wire', rl_ach_n:'Transferência US', rl_ach_d:'Conta bancária virtual emitida via Bridge.xyz. ACH: 1-2 dias úteis. Wire: D+0.',
     rl_wire:'EUR · SEPA', rl_wire_n:'Transferência EU', rl_wire_d:'Conta SEPA via Bridge.xyz. Compensação típica: 1 dia útil.',
-    fs1_t:'Entre com email', fs1_d:'Alchemy Account Kit cria sua smart wallet ERC-4337 na Base.',
+    fs1_t:'Entre com email', fs1_d:'Código de 6 dígitos no e-mail — sua smart wallet EFIX (ERC-4337) na Base, sem MetaMask.',
     fs2_t:'Escolha PIX, ACH/Wire ou SEPA', fs2_d:'PIX mostra um QR. ACH/Wire/SEPA mostra conta virtual Bridge.xyz em seu nome.',
     fs3_t:'Carteira operadora recebe', fs3_d:'A carteira operadora da EFIX Plataforma de Tokenização e Crowdfunding Ltda recebe seu depósito em BRL/USD/EUR.',
     fs4_t:'FIRST entregue', fs4_d:'A tesouraria transfere FIRST para sua smart wallet ao par no fechamento da oferta. Negociável na Uniswap V3 em seguida.',

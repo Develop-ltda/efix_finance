@@ -1,9 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8">
+<script>
+// 09/10: roda ANTES do GA4 (o gtag manda a URL inteira). ?email= vira só
+// pré-preenchimento em sessionStorage (nunca dispara OTP); ?api= só vale em dev local.
+(function () {
+  try {
+    var u = new URL(location.href), q = u.searchParams, mudou = false;
+    if (q.has('email')) {
+      var em = String(q.get('email') || '').trim();
+      if (em.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+        try { sessionStorage.setItem('efix_gate_email', em); } catch (e) {}
+      }
+      q.delete('email'); mudou = true;
+    }
+    if (q.has('api') && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) { q.delete('api'); mudou = true; }
+    if (mudou) {
+      var s = q.toString();
+      history.replaceState(history.state, '', u.pathname + (s ? '?' + s : '') + u.hash);
+    }
+  } catch (e) {}
+})();
+</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Y391HW7NT"></script>
 <script src="/shared/js/ga4.js"></script>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Allocate — EFIX Offerings</title>
 <meta name="description" content="Complete your allocation into SALRIO (Sal Rio Pool #1) or other EFIX public offerings. PIX / ACH / Wire / SEPA.">
@@ -87,7 +108,7 @@ main{max-width:960px;margin:0 auto;padding:7rem 2rem 5rem}
 .alert-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
 .alert-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
 
-/* Wallet identity box — shows after AA auth */
+/* Wallet identity box — shows after login */
 .wallet-id{background:#fef3c7;border:1px solid #f3d2a7;border-radius:10px;padding:1rem 1.25rem;display:grid;grid-template-columns:auto 1fr auto;gap:0.75rem;align-items:center}
 .wallet-id-icon{width:32px;height:32px;border-radius:50%;background:#d97706;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
 .wallet-id-body{font-size:0.8rem;line-height:1.4}
@@ -161,9 +182,6 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
 .footer-col a:hover{color:#0a0a0a}
 .footer-bottom{max-width:1100px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid #e5e5e5;font-family:'Space Mono',monospace;font-size:0.65rem;color:#a3a3a3;display:flex;justify-content:space-between}
 
-/* Hidden iframe container required by Alchemy signer */
-#alchemy-signer-iframe-container{position:absolute;width:0;height:0;overflow:hidden}
-
 @media (max-width: 768px) {
   main{padding:6rem 1.25rem 3rem}
   .nav-links{display:none}
@@ -232,14 +250,11 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
       <div class="field">
         <label for="f-email">Email</label>
         <input id="f-email" type="email" placeholder="you@example.com" required autocomplete="email">
-        <div class="field-hint">We'll send you a 6-digit code. Alchemy creates your smart wallet on Base — no MetaMask, no seed phrases. Same identity if you already use <a href="/app/wallet/" style="color:#d97706">efix.finance/app/wallet</a>.</div>
+        <div class="field-hint">We'll send you a 6-digit code. Same login as <a href="/app/wallet/" style="color:#d97706">efix.finance/app/wallet</a> — no MetaMask, no seed phrases.</div>
       </div>
       <button class="btn btn-primary" onclick="sendOtp()" id="btn-send">
         <span id="btn-send-label">Send verification code →</span>
       </button>
-      <div style="text-align:center;margin-top:0.75rem">
-        <button type="button" onclick="resetLoginState()" style="background:none;border:none;color:#a3a3a3;font-size:0.7rem;cursor:pointer;text-decoration:underline;font-family:'Space Mono',monospace">Reset login state</button>
-      </div>
     </div>
 
     <!-- OTP state -->
@@ -250,8 +265,22 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
         <div class="field-hint">Check <span id="otp-email" class="muted">your inbox</span>. <button class="btn-link" onclick="resetAuth()">Use a different email</button></div>
       </div>
       <button class="btn btn-primary" onclick="verifyOtp()" id="btn-verify">
-        <span id="btn-verify-label">Verify &amp; create wallet →</span>
+        <span id="btn-verify-label">Verify →</span>
       </button>
+    </div>
+
+    <!-- Sem carteira: e-mail verificado, mas a conta EFIX ainda não tem carteira vinculada -->
+    <div id="auth-nowallet" class="hidden">
+      <div class="alert alert-info" style="margin-top:0">To invest you need to activate your EFIX wallet (takes about a minute). You’ll come straight back to this offering.</div>
+      <button class="btn btn-primary" style="margin-top:1rem" onclick="ativarCarteira()">Activate wallet →</button>
+      <div class="field-hint" style="text-align:center;margin-top:0.75rem"><span class="nowallet-email"></span> · <button class="btn-link" onclick="logoutWallet()">Log out</button></div>
+    </div>
+
+    <!-- Consulta de carteira falhou: não mandamos para a ativação sem resposta -->
+    <div id="auth-retry" class="hidden">
+      <div class="alert alert-err" style="margin-top:0">We couldn’t check your wallet right now. Please try again in a moment.</div>
+      <button class="btn btn-ghost" style="margin-top:1rem;width:100%" onclick="resolveAddress()">Try again</button>
+      <div class="field-hint" style="text-align:center;margin-top:0.75rem"><span class="nowallet-email"></span> · <button class="btn-link" onclick="logoutWallet()">Log out</button></div>
     </div>
 
     <!-- Authenticated state -->
@@ -370,25 +399,41 @@ footer{padding:3rem 2rem 2rem;border-top:1px solid #e5e5e5;margin-top:4rem}
   </div>
 </footer>
 
-<!-- Hidden iframe container required by Alchemy signer bundle -->
-<div id="alchemy-signer-iframe-container"></div>
-
-<!-- Auto-prune removed: cleared :temporary mid-flow, wiping in-flight OTP id.
-     Manual "Reset login state" button remains for users with stuck state. -->
-<!-- Reuse the existing Alchemy Account Kit bundle from /app/wallet/ — same apiKey = unified user database -->
-<script src="/app/wallet/efix-wallet-bundle-v3.js"></script>
-<!-- EfixAuth = wallet canônica da tabela users do efixdi-backend (a MESMA que
-     o app /app/wallet/ mostra). Sem ela, requestAccount() deriva um endereço
-     novo que pode divergir da wallet registrada de usuários antigos. -->
+<!-- 09/10: login = OTP do efixdi-backend (o mesmo gate da /app/wallet/). Esta
+     página não assina nada on-chain: sem bundle de signer, sem Privy, sem iframe. -->
 <script src="/app/wallet/efix-auth.js?v=20260820"></script>
 <script>
-const API_BASE = (new URLSearchParams(location.search).get('api')) || 'https://efix-offerings-backend-production.up.railway.app';
+const OFFERINGS_PROD = 'https://efix-offerings-backend-production.up.railway.app';
+// 09/10: ?api= trocava o backend inteiro em prod (QR PIX e link de KYC de
+// terceiro dentro de efix.finance). Só em dev local; fora dele o <head> já o tirou da URL.
+const API_BASE = (() => {
+  if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return OFFERINGS_PROD;
+  const a = new URLSearchParams(location.search).get('api');
+  // o Bearer mandado na reserva é de PRODUÇÃO: nem em dev ele sai para host não-local
+  return a && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/.test(a) ? a.replace(/\/$/, '') : OFFERINGS_PROD;
+})();
 const OFFERING_ID = (new URLSearchParams(location.search).get('intent')) || 'salrio';
 const LS_KEY = 'efix.offerings.alloc.' + OFFERING_ID;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
+// 09/10: investidores antigos do offerings — carteira registrada aqui, COM reserva,
+// e sem conta no efixdi (SQL só leitura em 09/10; 7 e-mails, SHA-256 de trim+lowercase).
+// Só para eles o endereço do investor-lookup vale: o POST /v1/allocations não tem
+// auth e grava e-mail→carteira de quem chegar primeiro, então para qualquer outro
+// e-mail o lookup pode ser carteira de terceiro. Lista fechada: ninguém entra nela.
+const INVESTIDOR_ANTIGO_SHA256 = new Set([
+  '1a14e119b7d4c2cde9d530b27e59759aad05bcf28cdf38e4c0f12eb3efc58a76',
+  '1f34d1d76e57ec08665c0b6dd7a287e08a5e91e9c207284b7c821acce9575dd4',
+  '25fc20bb59db96f949df2328abcc06000a5c86ebcaaffb4ef78d9e6ba5e846c4',
+  '5a617fab4986c27b183f73f4dd1dd07d26490789084b33270f3eb3d7b8b8b8e7',
+  '8087a864d5ccb99104aae1d81be0d62feef201f3fd6847d9503af147e3dd0b8e',
+  '8b1830a61fa7cd847d4863231a5e7078727b14334c7100bee3193e2f9a4e5a27',
+  'ead437fb86a35b84665a46dd95626c06a6a01bb294ef5f20d3eaff95486bb251',
+]);
 
-let USER_EMAIL = null;
-let USER_ADDRESS = null;   // ERC-4337 smart account address — deterministic across EVM chains via Alchemy LightAccount v2.
-                           // Same address the user sees in /app/wallet/ (Polygon) and on Base — one identity, one address.
+let USER_EMAIL = null;     // e-mail verificado pelo OTP do efixdi (getUser().email)
+let USER_ADDRESS = null;   // users.wallet_address do efixdi; investidor antigo do offerings: o do investor-lookup
+let OTP_EMAIL = null;      // e-mail que recebeu o código — o verify do backend precisa dele
 let CURRENT_ALLOC_ID = null;
 let POLL_TIMER = null;
 let OFFERING_KYC_REQUIRED = true;  // set from GET /v1/offerings/:id (kycRequired)
@@ -397,70 +442,20 @@ let KYC_POLL_TIMER = null;
 let KYC_DONE = false;              // guards double-fire (SDK event + status poll)
 let LAST_RENDERED_STATUS = null;   // triggers a full re-render when status advances
 
-// Canonical wallet resolution — THE address the user sees in /app/wallet/.
-// Priority: (1) efixdi session (EfixAuth.restore), (2) EfixAuth.login — which is
-// link-on-first-use server-side: an EXISTING user gets their ORIGINAL wallet back
-// no matter what today's bundle derives — (3) fallback to the fresh derivation.
-// Fixes: legacy users (pre-v2 factory) got a DIFFERENT derived address here,
-// so allocations bound to a wallet the wallet app never shows.
-// SEC 2026-08-20: o /users/login era usado aqui como CONSULTA de endereço — e
-// ele deixou de emitir sessão sem prova de posse (raiz fechada). A fonte certa
-// para "onde as alocações deste e-mail estão amarradas" é o próprio
-// offerings-backend (/v1/investor-lookup, read-only). Se nem a sessão nem o
-// lookup responderem, NÃO seguimos calados com o endereço derivado: marcamos
-// CANONICAL_UNCONFIRMED e a reserva pede confirmação de e-mail antes — amarrar
-// cota num endereço que a wallet nunca mostra é o bug que esta função evita.
-let CANONICAL_UNCONFIRMED = false;
-async function resolveCanonicalAddress(email, derived) {
-  CANONICAL_UNCONFIRMED = false;
-  if (!email || !email.includes('@')) return derived;
-  try {
-    const s = await EfixAuth.restore();
-    if (s?.user?.address && (s.user.email || '').toLowerCase() === email.toLowerCase()) {
-      return s.user.address;
-    }
-  } catch {}
-  // investidor que JÁ tem registro: este é o endereço que evita wallet_mismatch
-  try {
-    const l = await fetch(`${API_BASE}/v1/investor-lookup?email=` + encodeURIComponent(email)).then(r => r.json());
-    if (l && l.walletAddress) return l.walletAddress;
-    if (l && l.walletAddress === null) return derived;   // sem registro: o derivado é o que será cadastrado
-  } catch (e) {
-    console.warn('investor-lookup falhou:', e.message);
-  }
-  try {
-    const sess = await EfixAuth.login(email, derived);
-    if (sess?.user?.address) return sess.user.address;
-  } catch (e) {
-    if (e && e.code === 'otp_required') CANONICAL_UNCONFIRMED = true;
-    console.warn('EfixAuth canonical lookup failed:', e.message);
-  }
-  return derived;
-}
-
-// Get the smart-account address (not the signer EOA). Works because Alchemy LightAccount v2
-// produces the same counterfactual address across all EVM chains for the same signer.
-// @account-kit/wallet-client exposes requestAccount() — NOT client.account.
-async function getSmartAccountAddress() {
-  if (!window.EfixWallet) throw new Error('Wallet bundle not loaded');
-  const client = await (window.EfixWallet.getSmartClient
-    ? window.EfixWallet.getSmartClient()
-    : window.EfixWallet.getClient());
-  if (typeof client.requestAccount === 'function') {
-    const acct = await client.requestAccount();
-    return acct.address;
-  }
-  if (client.account?.address) return client.account.address;
-  throw new Error('Could not resolve smart account address');
-}
+// 09/10: e-mail deixado pelas landings/classic (sessionStorage, nunca na URL).
+// Lido e apagado no boot em qualquer caminho; só pré-preenche, o código só sai no clique.
+let GATE_EMAIL = '';
+try {
+  GATE_EMAIL = String(sessionStorage.getItem('efix_gate_email') || '').trim();
+  sessionStorage.removeItem('efix_gate_email');
+} catch {}
+if (GATE_EMAIL.length > 254 || !EMAIL_RE.test(GATE_EMAIL)) GATE_EMAIL = '';
 
 // ─────────────────────────────────────────────────────────
-// Bootstrap: load offering, try session restore, handle deep link
+// Bootstrap: load offering, restore session, resume allocation
 // ─────────────────────────────────────────────────────────
 async function bootstrap() {
-  const qs = new URLSearchParams(location.search);
-  const email = qs.get('email');
-  if (email) document.getElementById('f-email').value = email;
+  if (GATE_EMAIL) document.getElementById('f-email').value = GATE_EMAIL;
 
   // Fetch offering in parallel
   fetch(`${API_BASE}/v1/offerings/${encodeURIComponent(OFFERING_ID)}`)
@@ -471,32 +466,77 @@ async function bootstrap() {
       document.getElementById('off-symbol').textContent = String(err.statusText || err.message || err);
     });
 
-  // Init Alchemy signer + try session restore
+  // A sessão do efixdi é da origem inteira: quem já entrou na /app/wallet/ chega logado.
+  let user = null;
   try {
-    if (!window.EfixWallet) throw new Error('Wallet bundle failed to load');
-    window.EfixWallet.init();
-    const signerAddr = await window.EfixWallet.checkSession();
-    if (signerAddr) {
-      USER_ADDRESS = await getSmartAccountAddress();
-      // Try to read email from signer details
-      try {
-        const det = await window.EfixWallet.getSigner().getAuthDetails();
-        USER_EMAIL = det?.email ?? email ?? 'your email';
-      } catch { USER_EMAIL = email ?? 'your email'; }
-      USER_ADDRESS = await resolveCanonicalAddress(USER_EMAIL, USER_ADDRESS);
-      showAuthenticated();
-    }
+    await EfixAuth.restore();
+    if (EfixAuth.isLoggedIn()) user = EfixAuth.getUser();
   } catch (e) {
     console.warn('Session restore skipped:', e.message);
   }
-
-  // Resume prior allocation (if any)
-  try {
-    const saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
-    if (saved?.id && USER_ADDRESS) {
-      await showPaymentInstructions(saved.id);
+  if (user && user.email) {
+    USER_EMAIL = user.email;
+    await resolveAddress();
+    if (GATE_EMAIL && GATE_EMAIL.toLowerCase() !== String(USER_EMAIL).toLowerCase()) {
+      showAlert('auth-alert', 'info', `You're logged in as ${USER_EMAIL}, not ${GATE_EMAIL}. Use Log out to switch accounts.`);
     }
-  } catch {}
+  } else {
+    setAuthState('email');
+  }
+}
+
+// 09/10: endereço = users.wallet_address da conta efixdi (getUser, vindo do
+// /users/me ou do verify-otp). Sem ele, o investor-lookup cobre o investidor
+// antigo do offerings (carteira registrada aqui, sem conta no efixdi). Nenhum
+// dos dois: estado sem carteira, e a ativação acontece na /app/wallet/.
+async function resolveAddress() {
+  USER_ADDRESS = null;
+  clearAlert('auth-alert');
+  document.querySelectorAll('.nowallet-email').forEach(el => { el.textContent = USER_EMAIL || ''; });
+  const u = EfixAuth.getUser() || {};
+  if (ADDR_RE.test(u.address || '')) {
+    USER_ADDRESS = u.address;
+    showAuthenticated();
+    return resumeAllocation();
+  }
+  let l = null;
+  try {
+    const r = await fetch(`${API_BASE}/v1/investor-lookup?email=` + encodeURIComponent(USER_EMAIL));
+    if (r.ok) l = await r.json();
+  } catch (e) {
+    console.warn('investor-lookup falhou:', e.message);
+  }
+  // Sem resposta do lookup não mandamos para a ativação: um investidor antigo
+  // ganharia uma segunda carteira e travaria em wallet_mismatch na reserva.
+  if (!l) { setAuthState('retry'); return; }
+  if (ADDR_RE.test(l.walletAddress || '')) {
+    let antigo = null;
+    try {
+      const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(USER_EMAIL).trim().toLowerCase()));
+      antigo = INVESTIDOR_ANTIGO_SHA256.has([...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join(''));
+    } catch (e) {}
+    if (antigo === null) { setAuthState('retry'); return; }   // sem WebCrypto não decidimos às cegas
+    if (antigo) {
+      USER_ADDRESS = l.walletAddress;
+      showAuthenticated();
+      return resumeAllocation();
+    }
+    // Fora da lista o lookup não vale. Ativar é seguro: sem reserva o backend
+    // regrava a carteira; com reserva de terceiro ele recusa (wallet_mismatch).
+  }
+  setAuthState('nowallet');
+}
+
+// Retomada só da reserva DESTE e-mail: em navegador compartilhado aparecia a de outra pessoa.
+async function resumeAllocation() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch {}
+  if (!saved || !USER_EMAIL || !USER_ADDRESS) return;
+  if (!saved.id || String(saved.email || '').toLowerCase() !== String(USER_EMAIL).toLowerCase()) {
+    try { localStorage.removeItem(LS_KEY); } catch {}
+    return;
+  }
+  await showPaymentInstructions(saved.id);
 }
 
 function renderOffering(off) {
@@ -515,35 +555,34 @@ function renderOffering(off) {
 }
 
 // ─────────────────────────────────────────────────────────
-// Alchemy email + OTP
+// Email + OTP (efixdi-backend)
 // ─────────────────────────────────────────────────────────
+function setAuthState(st) {
+  ['email', 'otp', 'ok', 'nowallet', 'retry'].forEach(s =>
+    document.getElementById('auth-' + s).classList.toggle('hidden', s !== st));
+  document.getElementById('auth-done').classList.toggle('hidden', st !== 'ok');
+  if (st !== 'ok') document.getElementById('form-card').classList.add('hidden');
+}
+
 async function sendOtp() {
+  const btn = document.getElementById('btn-send');
+  if (btn.disabled) return;
   const email = document.getElementById('f-email').value.trim();
-  if (!email.includes('@')) {
+  if (email.length > 254 || !EMAIL_RE.test(email)) {
     showAlert('auth-alert', 'err', 'Please enter a valid email.');
     return;
   }
-  USER_EMAIL = email;
-  const btn = document.getElementById('btn-send');
   const label = document.getElementById('btn-send-label');
   btn.disabled = true;
   label.innerHTML = '<span class="loading"></span> Sending…';
   clearAlert('auth-alert');
 
   try {
-    if (!window.EfixWallet?.sendOTP) throw new Error('Wallet bundle missing sendOTP');
-    // Race the SDK against a 15s timeout. If it hangs (known Alchemy SDK issue
-    // with broken stamper iframe state), surface an actionable error instead of
-    // letting the button spin forever.
-    await Promise.race([
-      window.EfixWallet.sendOTP(email),
-      new Promise((_, rej) => setTimeout(() => rej(new Error(
-        'OTP send timed out. Click "Reset login state" below, disable ad/tracker blockers on efix.finance, then retry.'
-      )), 15000)),
-    ]);
-    document.getElementById('auth-email').classList.add('hidden');
-    document.getElementById('auth-otp').classList.remove('hidden');
+    await EfixAuth.sendOTP(email);
+    OTP_EMAIL = email;
+    setAuthState('otp');
     document.getElementById('otp-email').textContent = email;
+    document.getElementById('f-otp').value = '';
     document.getElementById('f-otp').focus();
     showAlert('auth-alert', 'info', 'Code sent. Check your inbox.');
   } catch (err) {
@@ -554,57 +593,60 @@ async function sendOtp() {
   }
 }
 
-function resetLoginState() {
-  try {
-    Object.keys(localStorage).filter(k => k.startsWith('alchemy-signer-session')).forEach(k => localStorage.removeItem(k));
-  } catch {}
-  location.reload();
-}
-window.resetLoginState = resetLoginState;
-
 async function verifyOtp() {
+  const btn = document.getElementById('btn-verify');
+  if (btn.disabled) return;
   const code = document.getElementById('f-otp').value.trim();
-  if (code.length < 6) {
+  if (!/^\d{6}$/.test(code)) {
     showAlert('auth-alert', 'err', 'Enter the 6-digit code from your email.');
     return;
   }
-  const btn = document.getElementById('btn-verify');
+  if (!OTP_EMAIL) { resetAuth(); return; }
   const label = document.getElementById('btn-verify-label');
   btn.disabled = true;
   label.innerHTML = '<span class="loading"></span> Verifying…';
   clearAlert('auth-alert');
 
   try {
-    await window.EfixWallet.verifyOTP(code);
-    USER_ADDRESS = await getSmartAccountAddress();
-    USER_ADDRESS = await resolveCanonicalAddress(USER_EMAIL, USER_ADDRESS);
-    showAuthenticated();
+    await EfixAuth.verifyOTP(OTP_EMAIL, code);
+    USER_EMAIL = (EfixAuth.getUser() || {}).email || OTP_EMAIL.toLowerCase();
+    OTP_EMAIL = null;
+    await resolveAddress();
   } catch (err) {
     showAlert('auth-alert', 'err', err.message || 'Verification failed');
   } finally {
     btn.disabled = false;
-    label.textContent = 'Verify & create wallet →';
+    label.textContent = 'Verify →';
   }
 }
 
 function resetAuth() {
-  document.getElementById('auth-otp').classList.add('hidden');
-  document.getElementById('auth-email').classList.remove('hidden');
+  OTP_EMAIL = null;
   document.getElementById('f-otp').value = '';
+  setAuthState('email');
   clearAlert('auth-alert');
 }
 
 function showAuthenticated() {
-  document.getElementById('auth-email').classList.add('hidden');
-  document.getElementById('auth-otp').classList.add('hidden');
-  document.getElementById('auth-ok').classList.remove('hidden');
-  document.getElementById('auth-done').classList.remove('hidden');
+  setAuthState('ok');
   document.getElementById('auth-email-display').textContent = USER_EMAIL || '—';
   document.getElementById('auth-addr-display').textContent = USER_ADDRESS || '—';
   document.getElementById('form-card').classList.remove('hidden');
   document.getElementById('form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
   clearAlert('auth-alert');
   precheckWallet();
+}
+
+// 09/10: a ativação (Privy) mora só na /app/wallet/ — guarda de legado num
+// lugar só e zero signer aqui. A wallet consome a flag e, já com carteira,
+// volta para efix_retorno (lista branca /app/offerings/?intent=…).
+function ativarCarteira() {
+  const id = /^[a-z0-9-]{1,40}$/.test(OFFERING_ID) ? OFFERING_ID : 'salrio';
+  try {
+    sessionStorage.setItem('efix_ativar_carteira', '1');
+    sessionStorage.setItem('efix_retorno', '/app/offerings/?intent=' + id);
+  } catch {}
+  location.href = '/app/wallet/';
 }
 
 // Early warning at Step 1 (instead of a late 409 at submit): tells the investor
@@ -634,11 +676,12 @@ async function precheckWallet() {
 }
 
 async function logoutWallet() {
-  try { await window.EfixWallet?.disconnect?.(); } catch {}
+  try { await EfixAuth.logout(); } catch {}
   USER_EMAIL = null;
   USER_ADDRESS = null;
-  localStorage.removeItem(LS_KEY);
-  location.reload();
+  OTP_EMAIL = null;
+  try { localStorage.removeItem(LS_KEY); } catch {}
+  location.reload();   // sem token, o boot volta ao passo do e-mail com timers e cards zerados
 }
 
 // ─────────────────────────────────────────────────────────
@@ -661,13 +704,9 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
     showAlert('f-alert', 'err', 'Please log in first (Step 1).');
     return;
   }
-  // Endereço canônico não confirmado: reservar aqui amarraria a cota num
-  // endereço que a carteira do investidor pode nunca mostrar. Pedimos a
-  // confirmação de e-mail (gate da wallet) antes de comprometer capital.
-  if (CANONICAL_UNCONFIRMED) {
-    showAlert('f-alert', 'err',
-      'Confirme seu e-mail em efix.finance/app/wallet (código de 6 dígitos) e volte para reservar — ' +
-      'assim garantimos que as cotas vão para a carteira que você vê no app.');
+  // 09/10: o token vence (7 dias) com a página aberta; reserva só com sessão viva.
+  if (!EfixAuth.isLoggedIn()) {
+    showAlert('f-alert', 'err', 'Your session expired. Reload the page and log in again (Step 1).');
     return;
   }
   const btn = document.getElementById('f-submit');
@@ -714,9 +753,10 @@ document.getElementById('alloc-form').addEventListener('submit', async (e) => {
 });
 
 async function createAllocation(body) {
+  // 09/10: Authorization junto — seguro porque o API_BASE só é trocável em dev local.
   const r = await fetch(`${API_BASE}/v1/allocations`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: EfixAuth.headers(),
     body: JSON.stringify(body),
   });
   const data = await r.json();
@@ -761,7 +801,7 @@ function showKycLink(url) {
   card.classList.remove('hidden');
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const a = document.getElementById('kyc-open-link');
-  a.href = url;
+  a.href = httpsUrl(url) ? url : '#';
   a.onclick = () => {
     document.getElementById('kyc-waiting').classList.remove('hidden');
   };
@@ -813,8 +853,8 @@ async function showPaymentInstructions(allocId) {
 
   try {
     const [allocRes, piRes] = await Promise.all([
-      fetch(`${API_BASE}/v1/allocations/${allocId}`).then(r => r.json()),
-      fetch(`${API_BASE}/v1/allocations/${allocId}/payment-instructions`),
+      fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}`).then(r => r.json()),
+      fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(allocId)}/payment-instructions`),
     ]);
     const piData = await piRes.json();
     renderPaymentInstructions(allocRes, piRes.status, piData);
@@ -827,7 +867,7 @@ async function showPaymentInstructions(allocId) {
 function renderPaymentInstructions(allocRes, piStatus, pi) {
   const alloc = allocRes.allocation;
   const body = document.getElementById('pi-body');
-  const statusPill = `<span class="status-pill ${pillClass(alloc.status)}">${alloc.status}</span>`;
+  const statusPill = `<span class="status-pill ${pillClass(alloc.status)}">${escape(alloc.status)}</span>`;
   const amountStr = 'R$ ' + Number(alloc.amountBrl).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const statusCol = `
@@ -835,7 +875,7 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
       <div class="pi-status-head">Allocation</div>
       <div class="pi-status-row"><span class="k">Status</span><span class="v">${statusPill}</span></div>
       <div class="pi-status-row"><span class="k">Amount</span><span class="v">${amountStr}</span></div>
-      <div class="pi-status-row"><span class="k">Rail</span><span class="v">${escape(alloc.rail.toUpperCase())}</span></div>
+      <div class="pi-status-row"><span class="k">Rail</span><span class="v">${escape(String(alloc.rail).toUpperCase())}</span></div>
       <div class="pi-status-row"><span class="k">Reference</span><span class="v" style="font-size:0.7rem">${escape(alloc.id.slice(0,8))}…</span></div>
       <div class="pi-status-row"><span class="k">Next step</span><span class="v">${escape(alloc.nextStep || '—')}</span></div>
     </div>
@@ -854,8 +894,8 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
       <div class="pi-wrap">
         <div class="bridge-kyc-cta">
           <h3>🛂 Bridge KYC required</h3>
-          <p>Before your ${alloc.rail.toUpperCase()} deposit can be processed, complete Bridge.xyz's KYC in a new tab. It takes ~3 minutes.</p>
-          ${pi.kycLink ? `<a href="${escape(pi.kycLink)}" target="_blank" rel="noopener">Open Bridge KYC ↗</a>` : '<span class="muted">KYC link pending…</span>'}
+          <p>Before your ${escape(String(alloc.rail).toUpperCase())} deposit can be processed, complete Bridge.xyz's KYC in a new tab. It takes ~3 minutes.</p>
+          ${httpsUrl(pi.kycLink) ? `<a href="${escape(pi.kycLink)}" target="_blank" rel="noopener">Open Bridge KYC ↗</a>` : '<span class="muted">KYC link pending…</span>'}
         </div>
         ${statusCol}
       </div>`;
@@ -863,7 +903,7 @@ function renderPaymentInstructions(allocRes, piStatus, pi) {
   }
 
   if (!piResOk(piStatus)) {
-    body.innerHTML = `<div class="alert alert-err">${escape(pi.message || pi.error || 'Provider error')}${pi.missing ? '<br><span class="muted">Missing: ' + pi.missing.join(', ') + '</span>' : ''}</div>${statusCol}`;
+    body.innerHTML = `<div class="alert alert-err">${escape(pi.message || pi.error || 'Provider error')}${pi.missing ? '<br><span class="muted">Missing: ' + escape([].concat(pi.missing).join(', ')) + '</span>' : ''}</div>${statusCol}`;
     return;
   }
 
@@ -934,7 +974,7 @@ function renderConcluded(allocRes) {
   const investor = allocRes.investor || {};
   const settled = alloc.status === 'settled';
   const body = document.getElementById('pi-body');
-  const sym = OFFERING_ID.toUpperCase();
+  const sym = escape(OFFERING_ID.toUpperCase());   // vem do ?intent= e entra em innerHTML abaixo
   const amountStr = 'R$ ' + Number(alloc.amountBrl).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const wallet = investor.walletAddress || '';
   const wShort = wallet ? wallet.slice(0, 6) + '…' + wallet.slice(-4) : '—';
@@ -1077,7 +1117,7 @@ function startPollingFast() {
     if (!CURRENT_ALLOC_ID) return;
     attempts++;
     try {
-      const r = await fetch(`${API_BASE}/v1/allocations/${CURRENT_ALLOC_ID}`);
+      const r = await fetch(`${API_BASE}/v1/allocations/${encodeURIComponent(CURRENT_ALLOC_ID)}`);
       if (!r.ok) return;
       const data = await r.json();
       const st = data.allocation.status;
@@ -1137,6 +1177,8 @@ function escape(s) {
   if (s == null) return '';
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
+// escape() não barra javascript: em href — links de KYC só https
+function httpsUrl(u) { return typeof u === 'string' && /^https:\/\//i.test(u); }
 
 document.getElementById('f-otp')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyOtp(); });
 document.getElementById('f-email')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendOtp(); } });
