@@ -334,6 +334,22 @@ tr.grp:first-child td{padding-top:6px}
 .refbox{border:1px solid var(--line-2);border-left:3px solid var(--mag);border-radius:12px;padding:12px;margin-top:12px;text-align:center}
 .refbox .code{font-family:var(--font-m);font-size:20px;letter-spacing:.35em;margin:6px 0}
 .refbox .hint{font-size:11px;color:var(--ink-3)}
+/* 12/10: Receber — aviso "só USDC na Base", QR em SVG local, endereço em grupos (<wbr>: copiar à mão sai contínuo) */
+.rec-aviso{border:1px solid var(--line-2);border-left:3px solid #d99e17;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.55}
+.rec-aviso .en,.rec-dicas .en{color:var(--ink-3)}
+.rec-qr svg{display:block;width:200px;height:200px;margin:0 auto;border-radius:8px;background:#fff}
+.rec-end{font-family:var(--font-m);font-size:14px;line-height:1.9;text-align:center;color:var(--ink-2);word-break:normal;
+  padding:8px 6px;border:1px solid var(--line-2);border-radius:10px;background:var(--bg-raise);user-select:all;-webkit-user-select:all}
+.rec-end span{margin:0 .28em} .rec-end .fim{color:var(--ink);font-weight:700}
+.rec-dicas{margin:14px 0 0;padding-left:18px;font-size:12px;line-height:1.55;color:var(--ink-2)} .rec-dicas li{margin:6px 0}
+.sb .foot .rec-link{cursor:pointer} .sb .foot .rec-link:hover,.sb .foot .rec-link:focus-visible{color:var(--mag)}
+/* 12/10: no celular quem usa a Coinbase no MESMO aparelho não escaneia a própria tela —
+   endereço + Copiar vêm antes do QR (que encolhe) e cabem sem rolar */
+@media (max-width:560px){
+  #mReceber .mbox{display:flex;flex-direction:column}
+  #mReceber .qrbox{order:4;margin-top:14px} #mReceber .rec-dicas{order:5}
+  #mReceber .rec-qr svg{width:150px;height:150px}
+}
 .steps{margin-top:14px}
 .steps .stp{display:flex;align-items:center;gap:9px;font-family:var(--font-m);font-size:11px;color:var(--ink-3);padding:4px 0}
 .steps .stp .b{width:16px;height:16px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:9px}
@@ -499,6 +515,8 @@ tr.grp:first-child td{padding-top:6px}
           <button class="primary" id="qk-dep" onclick="abrirDepositar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14m-7-7h14"/></svg>Depositar</button>
           <button id="qk-rem" onclick="go('remessas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg>Nova remessa</button>
           <button class="oc" id="qk-sac" onclick="abrirSacar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14m0 0 5-5m-5 5-5-5"/></svg>Sacar PIX</button>
+          <!-- 12/10: Receber = endereço completo + QR + "só USDC na rede Base" (oculto na Lobie e no ?view=) -->
+          <button class="oc" id="qk-rec" onclick="abrirReceber()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5"/><path d="M5 19.5h14"/></svg>Receber</button>
           <button class="oc" id="qk-env" onclick="abrirEnviar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 19V6m0 0-5 5m5-5 5 5"/></svg>Enviar</button>
           <button class="oc" id="qk-tro" onclick="abrirTrocar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 8h11m0 0-3-3m3 3-3 3"/><path d="M17 16H6m0 0 3 3m-3-3 3-3"/></svg>Trocar</button>
           <button id="qk-ext" onclick="go('extrato')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v17l-2.5-1.7L14 21l-2-1.4L10 21l-2.5-1.7L5 21z"/><path d="M9 9h6m-6 4h6"/></svg>Extrato</button>
@@ -875,6 +893,23 @@ tr.grp:first-child td{padding-top:6px}
   <div class="mmsg" id="envMsg"></div>
 </div></div>
 
+<!-- 12/10: Receber — endereço da CONTA (getUser().address), QR gerado aqui mesmo (nada sai do navegador) -->
+<div class="modal" id="mReceber"><div class="mbox" style="position:relative;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto">
+  <button class="x" onclick="fecharModal('mReceber')">&times;</button>
+  <h3>Receber <span class="badge">USDC · Base</span></h3>
+  <p class="lead">Endereço da sua carteira na rede Base, para receber USDC de uma exchange ou de outra carteira.<br><span style="color:var(--ink-3)">Your wallet address on the Base network, to receive USDC from an exchange or another wallet.</span></p>
+  <div class="rec-aviso"><b>Envie SOMENTE USDC na rede Base.</b> Outra rede ou outro token pode ser perdido.<br><span class="en">Send ONLY USDC on the Base network. Other networks or tokens may be lost.</span></div>
+  <div class="qrbox"><div id="recQr" class="rec-qr"></div></div>
+  <label class="fldl">Endereço · Address</label>
+  <div id="recEnd" class="rec-end"></div>
+  <button type="button" class="cta pri" id="recCopiar" data-copy="" data-label="Copiar endereço · Copy address">Copiar endereço · Copy address</button>
+  <ul class="rec-dicas">
+    <li>Faça primeiro um envio pequeno de teste.<br><span class="en">Send a small test amount first.</span></li>
+    <li>Confira os primeiros e os últimos caracteres do endereço depois de colar.<br><span class="en">After pasting, check the first and last characters of the address.</span></li>
+    <li>Na Coinbase: Send → USDC → rede Base → cole este endereço.<br><span class="en">On Coinbase: Send → USDC → Base network → paste this address.</span></li>
+  </ul>
+</div></div>
+
 <div class="modal" id="mTrocar"><div class="mbox" style="position:relative">
   <button class="x" onclick="fecharModal('mTrocar')">&times;</button>
   <h3>Trocar <span class="badge">on-chain</span></h3>
@@ -1176,7 +1211,8 @@ function aplicarMarca(){
   // atalhos: Depositar/Sacar/Remessa são trilhos efixDI/EFIX. TROCAR fica: é a
   // peça do fluxo do proprietário Lobie (recebe BRLE do repasse e converte para
   // USDC quando quiser) — e o par BRLE↔USDC é exatamente o grupo CAIXA da marca.
-  ['qk-dep','qk-rem','qk-sac'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; });
+  // 12/10: Receber também sai — o aviso "só USDC na rede Base" não serve para a carteira Lobie (BRLE + USDC).
+  ['qk-dep','qk-rem','qk-sac','qk-rec'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; });
   // métricas efixDI do hero e teasers de conexão (Haus/Open Finance)
   ['m-nav','m-cdi'].forEach(id=>{ const el=$(id); const it=el&&el.closest('.it'); if(it) it.style.display='none'; });
   document.querySelectorAll('.cstrip .cs.off').forEach(el=>el.style.display='none');
@@ -4628,6 +4664,123 @@ async function trocarOnchain(){
     _sw=null; _swEnviado=false;
     if(b){ b.disabled=false; b.textContent='Continuar'; }
   }
+}
+
+/* ── 12/10: RECEBER — endereço COMPLETO + QR + "só USDC na rede Base" ──
+   Fonte única: getUser().address (users.wallet_address via /users/me) — NUNCA WALLETS[0] (lookup do offerings).
+   QR gerado AQUI (SVG): o endereço não vai a serviço externo nenhum. Fora da Lobie (aplicarMarca esconde o
+   qk-rec) e do modo ?view= (painel read-only de terceiro). */
+const _recModoView=()=>/^0x[0-9a-fA-F]{40}$/.test(new URLSearchParams(location.search).get('view')||'');
+// 0x + 40 hex em 10 grupos; o 1º e o último em destaque = o mesmo short() do menu lateral
+const _recGrupos=a=>{ const g=a.match(/^0x.{4}|.{4}/g); return g.map((x,i)=>'<span'+(i===0||i===g.length-1?' class="fim"':'')+'>'+x+'</span>').join('<wbr>'); };
+function abrirReceber(){
+  if(IS_LOBIE || _recModoView()) return;
+  if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para receber.'); return; }
+  const bruto=(EfixAuth.getUser()||{}).address;
+  if(!bruto){ semCarteiraNaConta(); return; }
+  const addr=_onrAddr(bruto);   // minúsculas: sem checksum para errar; qualquer exchange aceita
+  if(!addr){ alert('Não consegui ler o endereço da sua carteira — fale com o suporte.'); return; }
+  // mesma proteção do onramp: os saldos da tela são de WALLETS[0]; outra carteira = dinheiro fora da vista
+  const dona=_onrAddr(WALLETS[0]);
+  if(dona && dona!==addr){ alert('Esta sessão está numa carteira diferente da exibida na tela. Para o dinheiro não ir para a carteira errada, saia e entre de novo.'); return; }
+  $('recEnd').innerHTML=_recGrupos(addr);
+  $('recQr').innerHTML=_qrSvg(addr);   // endereço puro, sem "ethereum:" (a Coinbase lê o 0x direto)
+  const b=$('recCopiar'); b.dataset.copy=addr; b.textContent=b.dataset.label;
+  $('mReceber').classList.add('on');
+}
+// menu lateral: o endereço curto abre a mesma tela
+function _recAtalhos(){
+  if(IS_LOBIE) return;
+  if(_recModoView()){ const q=$('qk-rec'); if(q) q.style.display='none'; return; }
+  const s=$('sb-wallet'); if(!s) return;
+  s.classList.add('rec-link'); s.setAttribute('role','button'); s.tabIndex=0; s.title='Receber · endereço completo e QR';
+  s.addEventListener('click',abrirReceber);
+  s.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); abrirReceber(); } });
+}
+try{ _recAtalhos(); }catch(e){}   // roda no carregamento: um erro aqui não pode abortar o resto do script
+
+/* QR mínimo (ISO/IEC 18004): modo byte, nível M, versões 1–40, máscara pela penalidade padrão — sem lib
+   externa. _qrMatriz(txt[,mask]) → linhas de booleanos; _qrSvg(txt) → SVG com zona de silêncio de 4 módulos. */
+const _QR_ECC_M=[0,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28];
+const _QR_BLK_M=[0,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49];
+const _qrRaw=v=>{ let r=(16*v+128)*v+64; if(v>=2){ const n=Math.floor(v/7)+2; r-=(25*n-10)*n-55; if(v>=7) r-=36; } return r; };
+const _qrGfMul=(x,y)=>{ let z=0; for(let i=7;i>=0;i--){ z=(z<<1)^((z>>>7)*0x11D); z^=((y>>>i)&1)*x; } return z; };
+function _qrRs(dat,deg){
+  const dv=new Array(deg).fill(0); dv[deg-1]=1; let root=1;
+  for(let i=0;i<deg;i++){ for(let j=0;j<deg;j++){ dv[j]=_qrGfMul(dv[j],root); if(j+1<deg) dv[j]^=dv[j+1]; } root=_qrGfMul(root,2); }
+  const r=new Array(deg).fill(0);
+  for(const b of dat){ const f=b^r.shift(); r.push(0); for(let j=0;j<deg;j++) r[j]^=_qrGfMul(dv[j],f); }
+  return r;
+}
+function _qrMatriz(txt,maskFixa){
+  const bytes=Array.from(new TextEncoder().encode(String(txt)));
+  let v=1; for(;v<=40;v++){ const cap=Math.floor(_qrRaw(v)/8)-_QR_ECC_M[v]*_QR_BLK_M[v];
+    if(4+(v<10?8:16)+8*bytes.length<=cap*8) break; }
+  if(v>40) throw new Error('QR: texto longo demais');
+  const nDat=Math.floor(_qrRaw(v)/8)-_QR_ECC_M[v]*_QR_BLK_M[v];
+  // bits: modo 0100 + contagem + dados + terminador + bytes de enchimento 0xEC/0x11
+  const bits=[]; const put=(val,n)=>{ for(let i=n-1;i>=0;i--) bits.push((val>>>i)&1); };
+  put(4,4); put(bytes.length,v<10?8:16); bytes.forEach(b=>put(b,8));
+  put(0,Math.min(4,nDat*8-bits.length)); put(0,(8-bits.length%8)%8);
+  for(let p=0xEC;bits.length<nDat*8;p^=0xEC^0x11) put(p,8);
+  const dat=[]; for(let i=0;i<bits.length;i+=8){ let x=0; for(let j=0;j<8;j++) x=(x<<1)|bits[i+j]; dat.push(x); }
+  // blocos + ECC (Reed-Solomon) intercalados
+  const nb=_QR_BLK_M[v], ecl=_QR_ECC_M[v], raw=Math.floor(_qrRaw(v)/8), nCurto=nb-raw%nb, lenCurto=Math.floor(raw/nb);
+  const blocos=[]; for(let i=0,k=0;i<nb;i++){ const d=dat.slice(k,k+lenCurto-ecl+(i<nCurto?0:1)); k+=d.length;
+    const e=_qrRs(d,ecl); if(i<nCurto) d.push(0); blocos.push(d.concat(e)); }
+  const cw=[]; for(let i=0;i<blocos[0].length;i++) blocos.forEach((b,j)=>{ if(i!==lenCurto-ecl||j>=nCurto) cw.push(b[i]); });
+  // padrões fixos
+  const n=v*4+17, M=[], F=[];
+  for(let y=0;y<n;y++){ M.push(new Array(n).fill(false)); F.push(new Array(n).fill(false)); }
+  const set=(x,y,d)=>{ M[y][x]=d; F[y][x]=true; };
+  for(let i=0;i<n;i++){ set(6,i,i%2===0); set(i,6,i%2===0); }
+  const finder=(cx,cy)=>{ for(let dy=-4;dy<=4;dy++) for(let dx=-4;dx<=4;dx++){ const x=cx+dx, y=cy+dy, d=Math.max(Math.abs(dx),Math.abs(dy));
+    if(x>=0&&x<n&&y>=0&&y<n) set(x,y,d!==2&&d!==4); } };
+  finder(3,3); finder(n-4,3); finder(3,n-4);
+  if(v>1){ const na=Math.floor(v/7)+2, st=Math.floor((v*8+na*3+5)/(na*4-4))*2, pos=[6];
+    for(let p=n-7;pos.length<na;p-=st) pos.splice(1,0,p);
+    pos.forEach((a,i)=>pos.forEach((b,j)=>{ if((i===0&&j===0)||(i===0&&j===na-1)||(i===na-1&&j===0)) return;
+      for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++) set(a+dx,b+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1); })); }
+  const formato=mk=>{ const d=mk; let r=d; for(let i=0;i<10;i++) r=(r<<1)^((r>>>9)*0x537);   // nível M = 00
+    const b=((d<<10)|r)^0x5412, bit=i=>((b>>>i)&1)===1;
+    for(let i=0;i<=5;i++) set(8,i,bit(i)); set(8,7,bit(6)); set(8,8,bit(7)); set(7,8,bit(8));
+    for(let i=9;i<15;i++) set(14-i,8,bit(i));
+    for(let i=0;i<8;i++) set(n-1-i,8,bit(i)); for(let i=8;i<15;i++) set(8,n-15+i,bit(i)); set(8,n-8,true); };
+  formato(0);
+  if(v>=7){ let r=v; for(let i=0;i<12;i++) r=(r<<1)^((r>>>11)*0x1F25); const b=(v<<12)|r;
+    for(let i=0;i<18;i++){ const d=((b>>>i)&1)===1, a=n-11+i%3, c=Math.floor(i/3); set(a,c,d); set(c,a,d); } }
+  // dados em zigue-zague
+  for(let right=n-1,i=0;right>=1;right-=2){ if(right===6) right=5;
+    for(let vt=0;vt<n;vt++) for(let j=0;j<2;j++){ const x=right-j, up=((right+1)&2)===0, y=up?n-1-vt:vt;
+      if(!F[y][x]&&i<cw.length*8){ M[y][x]=((cw[i>>>3]>>>(7-(i&7)))&1)===1; i++; } } }
+  const MASK=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,
+    (x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+  const aplica=mk=>{ for(let y=0;y<n;y++) for(let x=0;x<n;x++) if(!F[y][x]&&MASK[mk](x,y)) M[y][x]=!M[y][x]; };
+  // penalidade (N1=3, N2=3, N3=40, N4=10), igual às implementações de referência
+  const penal=()=>{ let s=0;
+    const conta=h=>{ const k=h[1], core=k>0&&h[2]===k&&h[3]===k*3&&h[4]===k&&h[5]===k;
+      return (core&&h[0]>=k*4&&h[6]>=k?1:0)+(core&&h[6]>=k*4&&h[0]>=k?1:0); };
+    const hist=(len,h)=>{ if(h[0]===0) len+=n; h.pop(); h.unshift(len); };
+    for(let pass=0;pass<2;pass++) for(let a=0;a<n;a++){ let cor=false, run=0; const h=[0,0,0,0,0,0,0];
+      for(let b=0;b<n;b++){ const c=pass?M[b][a]:M[a][b];
+        if(c===cor){ run++; if(run===5) s+=3; else if(run>5) s++; }
+        else { hist(run,h); if(!cor) s+=conta(h)*40; cor=c; run=1; } }
+      if(cor){ hist(run,h); run=0; } run+=n; hist(run,h); s+=conta(h)*40; }
+    let esc=0;
+    for(let y=0;y<n;y++) for(let x=0;x<n;x++){ if(M[y][x]) esc++;
+      if(y<n-1&&x<n-1){ const c=M[y][x]; if(c===M[y][x+1]&&c===M[y+1][x]&&c===M[y+1][x+1]) s+=3; } }
+    const tot=n*n; return s+(Math.ceil(Math.abs(esc*20-tot*10)/tot)-1)*10; };
+  let mk=maskFixa;
+  if(mk===undefined){ let melhor=Infinity;
+    for(let t=0;t<8;t++){ aplica(t); formato(t); const p=penal(); if(p<melhor){ melhor=p; mk=t; } aplica(t); } }
+  aplica(mk); formato(mk);
+  return M;
+}
+function _qrSvg(txt){
+  const M=_qrMatriz(txt), q=4, n=M.length+2*q; let d='';
+  M.forEach((row,y)=>row.forEach((c,x)=>{ if(c) d+='M'+(x+q)+','+(y+q)+'h1v1h-1z'; }));
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+n+' '+n+'" shape-rendering="crispEdges" role="img" aria-label="QR code do endereço">'+
+    '<rect width="'+n+'" height="'+n+'" fill="#fff"/><path d="'+d+'" fill="#000"/></svg>';
 }
 
 /* ── depósito PIX nativo (endpoints da clássica: /deposit/qr + /deposit/confirm-paid) ── */
