@@ -1,11 +1,11 @@
 # EFIX Finance Protocol
 
-**Protocolo DeFi regulado para tokenização de ativos de renda fixa brasileiros (RWA)**
+**Protocolo DeFi para tokenização de ativos de renda fixa brasileiros (RWA)**
 
-EFIX é uma securitizadora registrada na CVM que conecta fundos DI brasileiros ao ecossistema DeFi através do token **efixDI+**, permitindo alavancagem on-chain via Morpho Blue e gastos via cartão Visa — tudo com custódia não-custodial e autenticação por email.
+A EFIX conecta fundos DI brasileiros ao ecossistema DeFi através do token **efixDI+**, lastreado em cotas de um fundo DI do BTG Pactual (os detentores do token não são cotistas do fundo), permitindo alavancagem on-chain via Morpho Blue e gastos via cartão Visa — tudo com custódia não-custodial e autenticação por email.
 
-> **CNPJ**: 60.756.859/0001-57 — Efix Securitizadora S.A.
-> **Regulação**: CVM Ato 23.635/2025 | Resolução CVM 88/2022
+> **CNPJ**: 60.756.859/0001-57 — EFIX Plataforma de Tokenização e Crowdfunding Ltda
+> **Ato CVM**: 23.635/2025
 
 ---
 
@@ -343,10 +343,10 @@ HF < 1.00  →  Liquidação (vermelho)
 | BRL −10% | −10% | 15.5% | Margem reduzida |
 | BRL −20% | −20% | 16.5% | Alerta de risco |
 | BRL −30% | −30% | 18.0% | Deleverage automático |
-| BRL −40% Black Swan | −40% | 20.0% | Proteção D+0 ativa |
+| BRL −40% Black Swan | −40% | 20.0% | Valor em BRL segue o NAV |
 | BRL +15% Rally | +15% | 13.5% | Ganho extra |
 
-**Proteção**: Resgate D+0 das cotas DI preserva 100% do capital em BRL independente da taxa de câmbio.
+**Nota**: o valor em BRL segue o NAV on-chain, independente do câmbio; não é garantia nem proteção de capital.
 
 ---
 
@@ -675,7 +675,7 @@ Por ser um site estático sem build system, algumas chaves ficam visíveis no cl
 - **EfixDINAVOracle**: NAV do fundo, atualizado pelo keeper
 - **Oracle V2**: aposentado (parado desde 28/05/2026)
 - **Chainlink BRL/USD**: Feed on-chain no Polygon
-- **Proteção**: D+0 redemption das cotas DI como backstop
+- **Resgate**: em BRL pelo portal da EFIX (não é resgate no fundo)
 
 ### Status de Auditoria
 

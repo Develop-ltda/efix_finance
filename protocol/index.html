@@ -399,8 +399,8 @@ function renderStress(){
       <td style="font-weight:${r.action!=='None'?700:400};color:${r.action.includes('EMERGENCY')?'var(--red)':r.action.includes('AUTO')?'var(--yellow)':'var(--gray-400)'}">${r.action}</td></tr>`;
   });
   html+='</tbody></table>';
-  if(st.s<=-20)html+=`<div class="info-box green"><div class="info-title">🛡️ D+0 Redemption Protection</div>
-    <div class="info-text">Underlying DI fund shares redeem instantly (D+0). The BRL value follows the fund-backed NAV regardless of the USD exchange rate; this is not a guarantee. Auto-deleverage triggers at HF < 1.15, reducing exposure before liquidation.</div></div>`;
+  if(st.s<=-20)html+=`<div class="info-box green"><div class="info-title">🛡️ BRL value follows the NAV</div>
+    <div class="info-text">The BRL value follows the on-chain NAV regardless of the USD exchange rate; this is not a guarantee. Auto-deleverage triggers at HF < 1.15, reducing exposure before liquidation.</div></div>`;
   document.getElementById('stressTable').innerHTML=html;
 }
 renderStress();

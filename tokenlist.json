@@ -13,11 +13,11 @@
     },
     "rwa": {
       "name": "Real World Asset",
-      "description": "Tokens backed by regulated assets held in custody"
+      "description": "Tokens backed by real world assets"
     }
   },
-  "timestamp": "2026-05-23T18:11:11.854Z",
-  "version": { "major": 1, "minor": 0, "patch": 0 },
+  "timestamp": "2026-10-13T11:00:02.000Z",
+  "version": { "major": 1, "minor": 0, "patch": 1 },
   "tokens": [
     {
       "chainId": 8453,

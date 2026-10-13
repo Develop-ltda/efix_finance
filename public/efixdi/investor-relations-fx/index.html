@@ -258,7 +258,7 @@
         <div class="drow"><span class="l">NAV · BRL / efixDI</span><span class="r" id="psm-navbrl">—</span></div>
         <div class="drow"><span class="l">FX · USD / BRL</span><span class="r" id="psm-fx">—</span></div>
         <div class="drow"><span class="l">Swap fee</span><span class="r" id="psm-fee">—</span></div>
-        <div class="pnote">Pool fees fully absorb the USDC round-trip against NAV: the on-chain price tracks the efixDI NAV (gross CDI, compounded daily) with no extractable arbitrage.</div>
+        <div class="pnote">Pool fees fully absorb the USDC round-trip against NAV: the on-chain price tracks the efixDI NAV (CDI net of a 0.20% a year fee, compounded daily) with no extractable arbitrage.</div>
       </div>
     </div>
   </div>
@@ -276,11 +276,11 @@
       <div class="panel">
         <h3>Transparency</h3>
         <div class="drow"><span class="l">Yield basis</span><span class="r">~100% CDI · gross of BR tax</span></div>
-        <div class="drow"><span class="l">NAV oracle</span><span class="r">Monotonic, on-chain (Base)</span></div>
-        <div class="drow"><span class="l">NAV source</span><span class="r">Gross CDI · BCB SGS 12 · compounded daily</span></div>
+        <div class="drow"><span class="l">NAV oracle</span><span class="r">On-chain (Base); keeper raises only; governance Safe can set any value (re-anchored −8.12 bps, 5 Oct 2026)</span></div>
+        <div class="drow"><span class="l">NAV source</span><span class="r">CDI net of 0.20% p.a. · BCB SGS 12 · compounded daily</span></div>
         <div class="drow"><span class="l">Independent audit</span><span class="r">OpenZeppelin · 15/15 · Polygon token only</span></div>
         <div class="drow"><span class="l">Token contract</span><span class="r"><a href="https://basescan.org/token/0xF5cA55f3ea5Bcd180aEa6dF9E05a0E63A66f5608" target="_blank" rel="noopener">Basescan &#8599;</a></span></div>
-        <div class="pnote">efixDI tracks Brazilian CDI in BRL; a USD holder takes BRL/USD FX risk. The on-chain NAV is gross CDI (BCB SGS series 12) compounded daily and published by the keeper; it is not the CVM cota of the fund and does not interpolate between cotas.</div>
+        <div class="pnote">efixDI tracks Brazilian CDI in BRL; a USD holder takes BRL/USD FX risk. The on-chain NAV is CDI (BCB SGS series 12) net of a 0.20% a year fee, compounded daily and published by the keeper. It was re-anchored to the fund's CVM cota on 5 Oct 2026; it is not the daily cota and does not interpolate between cotas.</div>
       </div>
     </div>
   </div>

@@ -150,7 +150,7 @@
     <span class="eyebrow"><span class="dot"></span>Risk Model · Bad-Debt</span>
     <h1>Stress Matrix<br>&amp; <span class="g">bad-debt model</span></h1>
     <p class="hero-sub">A live, parametric model of USDC-lender tail loss on the efixDI/USDC market. efixDI is a NAV-accreting token
-    redeemable at NAV the same business day; its BRL value follows a deterministic on-chain NAV, so liquidation reduces to an FX problem and bad-debt slippage stays bounded by two
+    whose BRL value follows a deterministic on-chain NAV, so liquidation reduces to an FX problem and bad-debt slippage stays bounded by two
     stress-testable inputs rather than by market liquidity.</p>
     <div class="hero-meta">Legacy vault 0xf4A3…ACBd5 · Market 0x31d6…345a · Morpho Blue Base · LLTV 77% · Oracle V1 (BRL/USD, backend-pushed from Chainlink)</div>
 
@@ -219,7 +219,7 @@
     <div class="seclabel">02 · Why Sharpe Diverges</div>
     <h2>Bad debt vs. FX shock</h2>
     <p class="lead">Expected tail loss decomposes as <code>P(stress) × E[slippage | stress] × notional</code>. The slippage term is
-    where RWA vaults separate. For D+0 NAV collateral it is two clean, stress-testable inputs. For volatile collateral it is an
+    where RWA vaults separate. For NAV-priced collateral it is two clean, stress-testable inputs. For volatile collateral it is an
     open-ended AMM walk.</p>
     <div class="chartbox"><canvas id="chart" width="1000" height="430"></canvas>
       <div class="legend">
@@ -267,7 +267,7 @@
     <h2>Assumptions and formulas, fully reproducible</h2>
     <h3>Why liquidation is an FX problem</h3>
     <p>efixDI is a NAV-accreting token backed by units of a Brazilian DI fund (BTG Pactual Tesouro Selic FI RF Referenciado DI,
-    held by Develop Participações, an EFIX group affiliate). Its BRL value is the on-chain NAV, gross CDI compounded daily, a slow
+    held by Develop Participações, an EFIX group affiliate). Its BRL value is the on-chain NAV, CDI net of a 0.20% a year fee, compounded daily, a slow
     and predictable series; yield accrues in the token price, with no cash distributions. Over a liquidation horizon the NAV barely
     moves, so the USD collateral value moves essentially with BRL/USD. Not a guaranteed product.</p>
     <div class="formula">collateral<sub>USD</sub> = quantity × <b>1 BRL</b> × FX<sub>BRL/USD</sub></div>
@@ -283,7 +283,7 @@
     <h3>Liquidation incentive (Morpho Blue)</h3>
     <div class="formula">LIF = min( 1.15 , 1 / ( 1 − 0.3 · (1 − LLTV) ) ) &nbsp;→&nbsp; at LLTV 77%, <b>LIF = 1.0741</b> (7.41% bonus)</div>
     <p>At the liquidation trigger the position holds 30% over-collateralisation against debt (1 / 0.77). A liquidator repays debt D,
-    seizes D × LIF of collateral at the oracle price, then clears it through the PSM to USDC at the BRL/USD rate on-chain, or via a DEX, in a single transaction. Redemption to BRL at NAV in the EFIX portal settles the same business day for size beyond on-chain capacity.</p>
+    seizes D × LIF of collateral at the oracle price, then clears it through the PSM to USDC at the BRL/USD rate on-chain, or via a DEX, in a single transaction.</p>
     <h3>Liquidator participation and lender bad debt</h3>
     <div class="formula">
       Liquidator clears if: &nbsp; (FX window move w) + (op cost c) ≤ <b>LIF − 1 = 6.9%</b><br><br>
@@ -296,8 +296,7 @@
     <h3>The binding operational parameter, for curator calibration</h3>
     <p>The primary on-chain path is the PSM: efixDI converts to USDC at the BRL/USD rate, instant, so a liquidator clears the seized
     collateral through it in the same transaction, directly or via a DEX or RFQ router. Uniswap pools add complementary secondary
-    depth. Behind both, efixDI redeems to BRL at NAV and BRLE at 1:1 in the EFIX portal, settling the same business day, the regulated
-    anchor for size beyond on-chain capacity. The safe supply cap therefore comes out of PSM USDC capacity plus DEX depth over the
+    depth. The EFIX portal's BRL redemption is not counted here: it pays BRL, not USDC, and is not a redemption at the fund. The safe supply cap therefore comes out of PSM USDC capacity plus DEX depth over the
     liquidation horizon, with the portal redemption bounding the tail. This is the parameter we want the curator's risk team to own
     and size, next to the IRM curve and the deleverage trigger.</p>
     <div class="callout warn"><div class="ct">Two scope honesties</div>
