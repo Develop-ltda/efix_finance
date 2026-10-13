@@ -2334,8 +2334,9 @@
                     // revisao 13/10: saque em BRL — estados internos da mesa viram "em análise"; o cliente so ve em analise / pago / devolvido
                     const saqueStatusLabel = { awaiting_approval: 'em análise', manual_paying: 'em análise', approved_paying: 'em análise', pix_unknown: 'em análise',
                         rejecting: 'em análise', refund_failed: 'em análise', pending: 'processando', burn_confirmed: 'processando', processing: 'processando',
-                        completed: 'PIX pago ✓', completed_trust_mode: 'PIX pago ✓', refunded: 'devolvido à carteira', failed: 'falhou — fale com o suporte' };
-                    Object.assign(statusColors, { 'em análise': '#eab308', 'processando': '#eab308', 'PIX pago ✓': 'var(--green)', 'devolvido à carteira': 'var(--red)', 'falhou — fale com o suporte': 'var(--red)' });
+                        completed: 'PIX pago ✓', completed_trust_mode: 'PIX pago ✓', refunded: 'devolvido à carteira', failed: 'falhou — fale com o suporte',
+                        cancelled: 'pedido duplicado — cancelado' };
+                    Object.assign(statusColors, { 'em análise': '#eab308', 'processando': '#eab308', 'PIX pago ✓': 'var(--green)', 'devolvido à carteira': 'var(--red)', 'falhou — fale com o suporte': 'var(--red)', 'pedido duplicado — cancelado': 'var(--gray-500)' });
 
                     let amountStr = tx.amount + ' efixDI';
                     if (tx.type === 'collateral') amountStr = tx.amount + ' efixDI → $' + tx.usdcCredit;
@@ -2888,6 +2889,21 @@
         // Com isto, repetir o MESMO saque reenvia o pedido com a MESMA queima.
         let _pendingWithdrawBurn = null;
 
+        // verificação final 13/10: os MESMOS formatos de chave PIX que o backend aceita (lib/saque-aprovacao.js
+        // normalizarChavePix) — CPF/CNPJ só dígitos, e-mail ASCII até 77, telefone +55 DDD número, chave aleatória.
+        function chavePixValidaSaque(k) {
+            const s = String(k || '').trim();
+            if (!s || s.length > 100 || /[^ -~]/.test(s)) return false;
+            if (/^\d{11}$/.test(s) || /^\d{14}$/.test(s)) return true;
+            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) return true;
+            if (s.indexOf('@') >= 0) {
+                const e = s.toLowerCase();
+                return e.length <= 77 && /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(e);
+            }
+            if (s.charAt(0) === '+') return /^\+55\d{10,11}$/.test(s.replace(/[\s()-]/g, ''));
+            return false;
+        }
+
         // Post-cutover withdrawal flow (Option B):
         //   1. User signs Account Kit UserOp to burn efixDIBase on Base
         //   2. Frontend gets burnTxHash, POSTs to backend with JWT
@@ -2900,6 +2916,11 @@
             const pixKey = document.getElementById('pixKey').value.trim();
             if (!amount || amount < 10) { alert('Mínimo 10 efixDI'); return; }
             if (!pixKey) { alert('Insira sua chave PIX'); return; }
+            // verificação final 13/10: só os formatos que o backend aceita (fora disso ele devolveria a queima)
+            if (!chavePixValidaSaque(pixKey)) {
+                alert('Chave PIX inválida — use CPF/CNPJ (só números), e-mail, telefone com +55 e DDD (ex.: +5511999998888) ou chave aleatória. Nada foi queimado.');
+                return;
+            }
 
             // 13/10: ja ha queima feita para ESTE pedido? reenvia sem queimar. Para OUTRO pedido? barra.
             const intentKeyAgora = (userAddress || '') + '|' + amount.toFixed(2) + '|' + pixKey;

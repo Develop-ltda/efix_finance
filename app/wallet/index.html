@@ -1034,7 +1034,7 @@ tr.grp:first-child td{padding-top:6px}
     <input id="sacAmt" class="fld mono" type="number" min="10" step="0.01" placeholder="0,00" oninput="sacarLimpaPreview()">
     <div class="muted" id="sacSaldo" style="margin:4px 0 10px"></div>
     <label class="fldl">Chave PIX de destino</label>
-    <input id="sacPix" class="fld mono" placeholder="CPF, e-mail, telefone ou chave aleatória" autocomplete="off">
+    <input id="sacPix" class="fld mono" placeholder="CPF, e-mail, +55 telefone ou chave aleatória" autocomplete="off">
     <button class="cta pri" id="sacBtnCotar" onclick="sacarCotar()">Cotar saque</button>
   </div>
   <div id="sac-quote" style="display:none">
@@ -2978,7 +2978,9 @@ async function garantirSaques(){
   if(_saques===null || _saquesDe!==dono){ _saquesDe = dono; _saques = await fetchMeusSaques(); }
 }
 const SAQ_ST = { em_analise:['PIX em análise','wait'], pago:['PIX pago','ok'], devolvido:['devolvido à carteira','bad'],
-  falhou:['falhou — fale com o suporte','bad'], processando:['processando','wait'] };
+  falhou:['falhou — fale com o suporte','bad'], processando:['processando','wait'],
+  // verificação final 13/10: pedido DUPLICADO da mesma queima (o desfecho fica no pedido original)
+  cancelado:['pedido duplicado — cancelado','bad'] };
 function _saqueDaTx(x){
   if(!_saques || !x || !x.hash) return null;
   const h = String(x.hash).toLowerCase();
@@ -4093,7 +4095,7 @@ async function sacarCotar(){
   // + recusa. Barrar aqui é mais barato que depender do refund.
   if(!chavePixValida(pix)){
     m.className='mmsg err';
-    m.textContent='chave PIX inválida — use CPF/CNPJ (só números), e-mail, telefone com DDD ou chave aleatória';
+    m.textContent='chave PIX inválida — use CPF/CNPJ (só números), e-mail, telefone com +55 e DDD (ex.: +5511999998888) ou chave aleatória';
     return;
   }
   // saldo desconhecido não pode virar "pode sacar": bloqueia até saber
@@ -4402,14 +4404,19 @@ async function sacarGarantirConta(sca){
   }catch(e){ console.warn('[sacar] deploy da conta falhou:', e.message); return false; }
 }
 
-// CPF/CNPJ (só dígitos), e-mail, telefone BR (+55DDD) ou chave aleatória (uuid)
+// (verificação final 13/10) os MESMOS formatos que o backend aceita (lib/saque-aprovacao.js normalizarChavePix):
+// CPF/CNPJ (só dígitos), e-mail (ASCII, até 77), telefone +55 DDD número, chave aleatória (uuid). Fora disso o
+// backend devolve a queima — barrar AQUI, antes de queimar. Só ASCII imprimível (nada de controle/invisíveis).
 function chavePixValida(k){
   const s = String(k||'').trim();
+  if(!s || s.length > 100 || /[^ -~]/.test(s)) return false;
   if(/^\d{11}$/.test(s) || /^\d{14}$/.test(s)) return true;                  // CPF / CNPJ
-  if(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) return true;                    // e-mail
-  if(/^\+?55\d{10,11}$/.test(s.replace(/[\s()-]/g,''))) return true;          // telefone
-  if(/^\d{10,11}$/.test(s.replace(/[\s()-]/g,''))) return true;              // telefone sem +55
   if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) return true; // EVP
+  if(s.indexOf('@') >= 0){                                                    // e-mail (o DICT guarda em minúsculo)
+    const e = s.toLowerCase();
+    return e.length <= 77 && /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(e);
+  }
+  if(s.charAt(0) === '+') return /^\+55\d{10,11}$/.test(s.replace(/[\s()-]/g,''));   // telefone: +55 DDD número
   return false;
 }
 
