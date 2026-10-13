@@ -1042,7 +1042,7 @@ tr.grp:first-child td{padding-top:6px}
       <div class="up">você recebe</div>
       <div class="code" id="sacQuoteBRL"></div>
       <div class="hint" id="sacQuoteDet"></div>
-      <div class="hint" id="sacNotaAprov" style="display:none;margin-top:6px;color:#d99e17">Saques em BRL passam por aprovação manual da EFIX: o PIX é enviado depois da aprovação, não na hora. Se o saque for recusado, seus efixDI voltam para a sua carteira.</div>
+      <div class="hint" id="sacNotaAprov" style="display:none;margin-top:6px;color:#d99e17">Saques em BRL passam por aprovação manual: o PIX é enviado depois da aprovação, não na hora. Se o saque for recusado, seus efixDI voltam para a sua carteira.</div>
     </div>
     <div class="steps" id="sacSteps">
       <div class="stp" data-s="1"><span class="b">1</span>Assinar a queima</div>
@@ -1758,6 +1758,7 @@ async function renderActivity(elId, n, chipsId){
   const el = $(elId); if(!el) return;
   try{
     if(!_transfers) _transfers = await fetchTransfers();
+    await garantirSaques();
     const cnt = $('act-cnt'); if(cnt) cnt.textContent = _transfers.length;
     if(chipsId && $(chipsId)) $(chipsId).innerHTML = chipsHtml();
     let list = _transfers;
@@ -1771,6 +1772,7 @@ async function renderActivity(elId, n, chipsId){
       const nome = t?t.nome:sym;
       const dt = x.metadata&&x.metadata.blockTimestamp ? new Date(x.metadata.blockTimestamp) : null;
       const when = dt ? dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' · '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+      const sq = _saqueDaTx(x);   // revisão 13/10: queima/refund de saque em BRL ganham a situação do PIX
       return '<div class="actcard">'+
         '<div class="route">'+
           '<div class="ep"><div class="k">de</div><div class="a">'+rotulo(x.from)+'</div></div>'+
@@ -1779,13 +1781,13 @@ async function renderActivity(elId, n, chipsId){
         '</div>'+
         '<div class="body">'+
           '<div class="dot">'+tokIcon(t, sym)+'</div>'+
-          '<div class="tk"><div class="t1">'+nome+'</div><div class="t2">'+sym+' · Base</div></div>'+
+          '<div class="tk"><div class="t1">'+(sq?_esc(sq.titulo):nome)+'</div><div class="t2">'+sym+' · Base'+(sq&&sq.brl?' · PIX '+_brlTxt(sq.brl):'')+'</div></div>'+
           '<div class="amt money">'+(x._dir==='in'?'+':'−')+Number(x.value||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+' '+sym+'</div>'+
         '</div>'+
         '<div class="hashrow"><span class="h">'+x.hash.slice(0,12)+'…'+x.hash.slice(-8)+'</span>'+
         '<button data-copy="'+x.hash+'">copiar</button>'+
         '<a href="https://basescan.org/tx/'+x.hash+'" target="_blank">abrir ↗</a></div>'+
-        '<div class="st"><span><span class="src src-w3">web3</span> Concluída</span><span class="when">'+when+'</span></div>'+
+        '<div class="st"><span><span class="src src-w3">web3</span> '+(sq?'<span class="stt '+sq.st[1]+'">'+_esc(sq.st[0])+'</span>':'Concluída')+'</span><span class="when">'+when+'</span></div>'+
         '<div class="stbar"></div>'+
       '</div>';
     }).join('');
@@ -2952,6 +2954,42 @@ document.addEventListener('click', async (ev)=>{
   }catch(e){ det.textContent=_erroHumano(e); }
 });
 
+// (revisão 13/10) Saque em BRL com aprovação manual: no extrato on-chain só aparece a QUEIMA ("Enviado · efixDI") e,
+// se recusado, o refund ("Recebido") — o PIX pendente sumia depois de recarregar. GET /wallet/withdrawals/mine (JWT;
+// só a carteira da sessão; sem chave PIX) dá a situação de cada saque e o extrato rotula a queima/o refund com ela.
+// Backend antigo (404) ou erro: {} e o extrato fica como antes.
+let _saques = null, _saquesDe = null;
+async function fetchMeusSaques(){
+  try{
+    if(!EfixAuth.isLoggedIn()) return {};
+    const r = await fetch(BACKEND+'/wallet/withdrawals/mine', { headers: EfixAuth.headers() });
+    if(!r.ok) return {};
+    const j = await r.json();
+    const porQueima = {}, porRefund = {};
+    for(const s of (j.itens||[])){
+      if(s && s.burn_tx_hash) porQueima[String(s.burn_tx_hash).toLowerCase()] = s;
+      if(s && s.refund_tx_hash) porRefund[String(s.refund_tx_hash).toLowerCase()] = s;
+    }
+    return { porQueima, porRefund };
+  }catch(e){ return {}; }
+}
+async function garantirSaques(){
+  const dono = ((EfixAuth.getUser()||{}).address||'').toLowerCase();
+  if(_saques===null || _saquesDe!==dono){ _saquesDe = dono; _saques = await fetchMeusSaques(); }
+}
+const SAQ_ST = { em_analise:['PIX em análise','wait'], pago:['PIX pago','ok'], devolvido:['devolvido à carteira','bad'],
+  falhou:['falhou — fale com o suporte','bad'], processando:['processando','wait'] };
+function _saqueDaTx(x){
+  if(!_saques || !x || !x.hash) return null;
+  const h = String(x.hash).toLowerCase();
+  const q = _saques.porQueima && _saques.porQueima[h];
+  if(x._dir==='out' && q) return { titulo:'Saque em BRL #'+q.id, st: SAQ_ST[q.situacao]||[String(q.situacao||''),'wait'], brl:q.valor_brl };
+  const d = _saques.porRefund && _saques.porRefund[h];
+  if(x._dir==='in' && d) return { titulo:'Devolução do saque #'+d.id, st:['efixDI devolvidos','ok'], brl:null };
+  return null;
+}
+const _brlTxt = v => 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
 let _web2 = null;
 async function fetchWeb2(){
   // allocations são SEMPRE produto EFIX (ofertas BTR): na marca Lobie nem
@@ -2977,6 +3015,7 @@ async function renderConsolidado(elId, n){
   try{
     if(!_transfers) _transfers = await fetchTransfers();
     if(_web2===null) _web2 = await fetchWeb2();
+    await garantirSaques();
     const w3 = _transfers.map(x=>({ kind:'w3', x, ts: x.metadata&&x.metadata.blockTimestamp||null }));
     const all = [..._web2, ...w3].sort((a,b)=>new Date(b.ts||0)-new Date(a.ts||0)).slice(0,n);
     if(!all.length){ el.innerHTML='<div class="empty">Sem lançamentos ainda.</div>'; return; }
@@ -2997,13 +3036,15 @@ async function renderConsolidado(elId, n){
       const x = it.x;
       const t = TOK_BY_ADDR[(x.rawContract&&x.rawContract.address||'').toLowerCase()];
       const sym = t?t.sym:(x.asset||'?');
+      const sq = _saqueDaTx(x);   // revisão 13/10: queima/refund de saque em BRL ganham a situação do PIX
       return '<div class="crow">'+
-        '<div class="ct"><div class="t">'+(x._dir==='in'?'Recebido':'Enviado')+' · '+sym+'</div>'+
+        '<div class="ct"><div class="t">'+(sq?_esc(sq.titulo):(x._dir==='in'?'Recebido':'Enviado'))+' · '+sym+'</div>'+
         '<div class="sdet"><span class="src src-w3">web3</span><span>'+when+'</span>'+
+        (sq&&sq.brl?'<span>PIX '+_brlTxt(sq.brl)+'</span>':'')+
         '<span>'+x.hash.slice(0,10)+'…</span><button class="hmini" data-copy="'+x.hash+'">copiar</button>'+
         '<a class="hmini" href="https://basescan.org/tx/'+x.hash+'" target="_blank">abrir ↗</a></div></div>'+
         '<div class="cv money">'+(x._dir==='in'?'+':'−')+Number(x.value||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+' '+sym+
-        '<span class="stt ok">Concluída</span></div>'+
+        (sq?'<span class="stt '+sq.st[1]+'">'+_esc(sq.st[0])+'</span>':'<span class="stt ok">Concluída</span>')+'</div>'+
       '</div>';
     }).join('');
     if(HIDDEN) document.querySelectorAll('.money').forEach(e2=>e2.classList.add('blur'));
@@ -4084,9 +4125,16 @@ async function sacarCotar(){
 }
 
 // 13/10: com aprovação manual o passo 2 é "PIX após aprovação" e a nota âmbar aparece na cotação
+// (revisão 13/10) prazo esperado + aviso por e-mail + contato — sem isso a espera vira chamado e saque repetido.
+// Marca Lobie: sem "EFIX" e sem o e-mail da EFIX (mesma régua do resto da página: "fale com o suporte").
+const SAC_PRAZO = 'normalmente em até 1 dia útil';
+const SAC_MARCA = IS_LOBIE ? '' : ' da EFIX';
+const SAC_CONTATO = IS_LOBIE ? 'fale com o suporte' : 'contato@efix.finance';
+const SAC_TXT_APROV = 'Saques em BRL passam por aprovação manual'+SAC_MARCA+': o PIX é enviado depois da aprovação ('+SAC_PRAZO+'), não na hora. '+
+  'Você recebe um e-mail quando o PIX for pago ou se o saque for recusado — nesse caso seus efixDI voltam para a sua carteira. Dúvidas: '+SAC_CONTATO+'.';
 function sacarRotulosAprovacao(manual){
   const n=$('sacNotaAprov'), l=$('sacStep2Lbl');
-  if(n) n.style.display = manual ? 'block' : 'none';
+  if(n){ n.style.display = manual ? 'block' : 'none'; if(manual) n.textContent = SAC_TXT_APROV; }
   if(l) l.textContent = manual ? 'Pedido recebido · PIX após aprovação' : 'PIX enviado';
 }
 
@@ -4145,8 +4193,9 @@ async function sacarExecutar(){
               ' via PIX (NAV R$ '+nav.toFixed(6)+' por efixDI).\nO valor final é recalculado no momento do pagamento e pode variar alguns centavos.\n'+
               'Chave PIX: '+pix+'\n\n'+
               (aprovacaoManual
-                ? 'Você vai assinar a QUEIMA dos tokens. A queima é irreversível e o saque passa por APROVAÇÃO MANUAL da EFIX: '+
-                  'o PIX é enviado depois da aprovação, não na hora. Se o saque for recusado, seus efixDI voltam para a sua carteira.'
+                ? 'Você vai assinar a QUEIMA dos tokens. A queima é irreversível e o saque passa por APROVAÇÃO MANUAL'+SAC_MARCA+': '+
+                  'o PIX é enviado depois da aprovação ('+SAC_PRAZO+'), não na hora. Você recebe um e-mail quando o PIX for pago. '+
+                  'Se o saque for recusado, seus efixDI voltam para a sua carteira.'
                 : 'Você vai assinar a QUEIMA dos tokens. A queima é irreversível e o PIX é enviado em seguida.'))) return;
 
   // mesma intenção (carteira+valor+chave) reusa o MESMO uuid, para o backend
@@ -4268,7 +4317,7 @@ async function sacarExecutar(){
       m.innerHTML='PIX enviado ✓ R$ '+Number(r.body.amountBRL||brl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+linkTx;
       _sacUuid=null; _sacKey=null; sacarEsqueceIntencao();
       $('sacBtnExec').style.display='none';
-      _transfers=null; _web2=null; carregar(u.email, u.address);
+      _transfers=null; _web2=null; _saques=null; carregar(u.email, u.address);
     } else if(st==='refunded'){
       // tokens voltaram: aqui é seguro tentar outro saque (e com uuid novo)
       depSetStep('sacSteps',2,'err');
@@ -4276,7 +4325,7 @@ async function sacarExecutar(){
       m.innerHTML='O PIX não foi aceito e seus tokens foram devolvidos (re-emitidos). Confira a chave e tente de novo.'+linkTx;
       _sacUuid=null; _sacKey=null; sacarEsqueceIntencao();
       sacarModoQueimar();
-      _transfers=null; carregar(u.email, u.address);
+      _transfers=null; _saques=null; carregar(u.email, u.address);
     } else if(r.body && (r.body.em_analise===true || st==='awaiting_approval')){
       // 13/10: RECEBIDO e em análise (aprovação manual) — não é erro e ainda não é PIX pago.
       // O pedido está registrado com esta queima: nada a reenviar e NUNCA queimar de novo
@@ -4285,11 +4334,12 @@ async function sacarExecutar(){
       m.className='mmsg';
       m.innerHTML='<span style="'+AMBAR+'">Saque recebido ✓ — em análise.</span> O PIX de ≈ R$ '+
         Number(r.body.amountBRL||brl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+
-        ' é enviado depois da aprovação manual da EFIX. Se o saque for recusado, seus efixDI voltam para a sua carteira.'+
-        (r.body.id?' Pedido #'+_esc(String(r.body.id))+'.':'')+linkTx;
+        ' é enviado depois da aprovação manual'+SAC_MARCA+' ('+SAC_PRAZO+'). Você recebe um e-mail quando o PIX for pago ou se o saque for recusado '+
+        '(nesse caso seus efixDI voltam para a sua carteira). Não é preciso repetir o saque — ele aparece no seu extrato como “PIX em análise”.'+
+        (r.body.id?' Pedido #'+_esc(String(r.body.id))+'.':'')+' Dúvidas: '+_esc(SAC_CONTATO)+'.'+linkTx;
       _sacUuid=null; _sacKey=null; sacarEsqueceIntencao();
       $('sacBtnExec').style.display='none'; delete $('sacBtnExec').dataset.modo;
-      _transfers=null; _web2=null; carregar(u.email, u.address);
+      _transfers=null; _web2=null; _saques=null; carregar(u.email, u.address);
     } else if(burnTxHash){
       // queimado e sem confirmação de PIX: NUNCA reoferecer a queima.
       depSetStep('sacSteps',2,'err');

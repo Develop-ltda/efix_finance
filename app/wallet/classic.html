@@ -2331,10 +2331,17 @@
                     const labels = { deposit: 'Depósito', collateral: 'Colateral', withdrawal: 'Saque', swap: 'Swap' };
                     const statusColors = { confirmed: 'var(--green)', minted: 'var(--green)', pending: '#eab308', failed: 'var(--red)', completed: 'var(--green)', 'liquidada ✓': 'var(--green)', 'aguardando entrega': '#eab308', 'aguardando PIX': '#eab308', 'em KYC': '#eab308', 'rejeitada': 'var(--red)', 'expirada': 'var(--red)', 'creditado ✓': 'var(--green)' };
                     const btrStatusLabel = { settled: 'liquidada ✓', ready_to_settle: 'aguardando entrega', deposit_received: 'aguardando entrega', awaiting_deposit: 'aguardando PIX', kyc_review: 'em KYC', rejected: 'rejeitada', expired: 'expirada' };
+                    // revisao 13/10: saque em BRL — estados internos da mesa viram "em análise"; o cliente so ve em analise / pago / devolvido
+                    const saqueStatusLabel = { awaiting_approval: 'em análise', manual_paying: 'em análise', approved_paying: 'em análise', pix_unknown: 'em análise',
+                        rejecting: 'em análise', refund_failed: 'em análise', pending: 'processando', burn_confirmed: 'processando', processing: 'processando',
+                        completed: 'PIX pago ✓', completed_trust_mode: 'PIX pago ✓', refunded: 'devolvido à carteira', failed: 'falhou — fale com o suporte' };
+                    Object.assign(statusColors, { 'em análise': '#eab308', 'processando': '#eab308', 'PIX pago ✓': 'var(--green)', 'devolvido à carteira': 'var(--red)', 'falhou — fale com o suporte': 'var(--red)' });
 
                     let amountStr = tx.amount + ' efixDI';
                     if (tx.type === 'collateral') amountStr = tx.amount + ' efixDI → $' + tx.usdcCredit;
                     if (tx.type === 'deposit')    amountStr = 'R$ ' + tx.amount;
+                    // revisao 13/10: a coluna amount do saque e o PIX em R$ (nao efixDI)
+                    if (tx.type === 'withdrawal') amountStr = 'R$ ' + tx.amount;
                     if (tx.type === 'btr')        amountStr = Number(tx.amount).toFixed(2) + ' ' + (tx.symbol || 'BTR');
                     if (tx.type === 'dividend')   amountStr = '+ ' + Number(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' BRLE';
                     if (tx.type === 'swap') {
@@ -2349,6 +2356,7 @@
                         tx = { ...tx, status: btrStatusLabel[tx.status] || tx.status };
                     }
                     if (type === 'dividend') labels.dividend = 'Dividendo ' + (tx.symbol || 'BTR');
+                    if (type === 'withdrawal') tx = { ...tx, status: saqueStatusLabel[tx.status] || tx.status };
                     const txHashLink = tx.txHash
                         ? `<a href="https://basescan.org/tx/${tx.txHash}" target="_blank" rel="noopener" style="color:var(--gray-500);text-decoration:none;font-family:var(--font-mono);font-size:10px;">${tx.txHash.slice(0,8)}…</a>`
                         : '';
@@ -2939,7 +2947,7 @@
                 if (!confirm('Reenviar o pedido do saque de ' + amount.toFixed(2) + ' efixDI para ' + pixKey + '?\n\nA queima já foi feita (' + queimaPendente.slice(0, 12) + '…) — não vamos queimar de novo.')) return;
             } else if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nVocê receberá ≈ R$ ' + quotedBRL + ' via PIX (NAV R$ ' + parseFloat(quotedNav).toFixed(6) + ' por efixDI).\nPIX será enviado para: ' + pixKey + '\n\n' +
                     (aprovacaoManual
-                        ? 'Você assinará uma transação para queimar os tokens (irreversível). O saque passa por APROVAÇÃO MANUAL da EFIX: o PIX é enviado depois da aprovação, não na hora. Se o saque for recusado, seus efixDI voltam para a sua carteira.'
+                        ? 'Você assinará uma transação para queimar os tokens (irreversível). O saque passa por APROVAÇÃO MANUAL da EFIX: o PIX é enviado depois da aprovação (normalmente em até 1 dia útil), não na hora. Você recebe um e-mail quando o PIX for pago. Se o saque for recusado, seus efixDI voltam para a sua carteira.'
                         : 'Você assinará uma transação para queimar os tokens. O PIX será enviado em seguida.'))) return;
 
             // Idempotency key: same intent = same UUID. Changing any of (address,
@@ -3037,8 +3045,9 @@
                     _pendingWithdrawKey = null;
                     _pendingWithdrawBurn = null;
                     alert('Saque recebido — em análise.' + (data.id ? ' Pedido #' + data.id + '.' : '') + '\n\n' +
-                          'O PIX de ≈ R$ ' + (data.amountBRL ?? quotedBRL ?? '—') + ' para ' + pixKey + ' é enviado depois da aprovação manual da EFIX. ' +
-                          'Se o saque for recusado, seus efixDI voltam para a sua carteira.\n\nNão é preciso repetir o saque.');
+                          'O PIX de ≈ R$ ' + (data.amountBRL ?? quotedBRL ?? '—') + ' para ' + pixKey + ' é enviado depois da aprovação manual da EFIX (normalmente em até 1 dia útil). ' +
+                          'Você recebe um e-mail quando o PIX for pago ou se o saque for recusado — nesse caso seus efixDI voltam para a sua carteira.\n\n' +
+                          'Não é preciso repetir o saque: ele aparece no Histórico como "em análise". Dúvidas: contato@efix.finance.');
                     document.getElementById('withdrawAmount').value = '';
                     document.getElementById('pixKey').value = '';
                     refreshBalance(userAddress);
