@@ -1045,7 +1045,7 @@
     <script src="/shared/js/config.js"></script>
     <script src="/shared/js/formatters.js"></script>
     <script src="/shared/js/ui.js"></script>
-    <script src="wallet.js"></script>
+    <script src="wallet.js?v=20261013"></script>
     <script src="owner-tabs.js"></script>
     <script>
         const BACKEND_URL = EFIX_CONFIG.backend;
@@ -2874,11 +2874,18 @@
         // triggering a second PIX. Cleared on terminal success/refund.
         let _pendingWithdrawUuid = null;
         let _pendingWithdrawKey = null;
+        // 13/10: queima JA FEITA cujo pedido ainda nao teve desfecho final ({ key: intencao, hash }).
+        // Antes, "tente novamente" depois da queima queimava DE NOVO (o backend deduplica o pedido pelo
+        // uuid ANTES de olhar a queima, entao a 2a queima ficava sem linha, sem PIX e sem refund).
+        // Com isto, repetir o MESMO saque reenvia o pedido com a MESMA queima.
+        let _pendingWithdrawBurn = null;
 
         // Post-cutover withdrawal flow (Option B):
         //   1. User signs Account Kit UserOp to burn efixDIBase on Base
         //   2. Frontend gets burnTxHash, POSTs to backend with JWT
         //   3. Backend verifies burn on-chain, sends PIX, or refund-mints on failure
+        //      (13/10: com aprovacao manual o backend RETEM o pedido — 202 awaiting_approval — e o PIX
+        //      sai depois da aprovacao da EFIX; recusado = efixDI de volta na carteira)
         async function handleWithdraw() {
             if (!guardOperable()) return;
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
@@ -2886,29 +2893,54 @@
             if (!amount || amount < 10) { alert('Mínimo 10 efixDI'); return; }
             if (!pixKey) { alert('Insira sua chave PIX'); return; }
 
-            const bal = parseFloat(document.getElementById('tokenBalance').textContent);
-            if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
+            // 13/10: ja ha queima feita para ESTE pedido? reenvia sem queimar. Para OUTRO pedido? barra.
+            const intentKeyAgora = (userAddress || '') + '|' + amount.toFixed(2) + '|' + pixKey;
+            const queimaPendente = (_pendingWithdrawBurn && _pendingWithdrawBurn.key === intentKeyAgora) ? _pendingWithdrawBurn.hash : null;
+            if (_pendingWithdrawBurn && !queimaPendente) {
+                const partes = _pendingWithdrawBurn.key.split('|');
+                alert('Você já queimou ' + partes[1] + ' efixDI para um saque (chave PIX ' + partes.slice(2).join('|') + ') que ainda não foi confirmado.\n\n' +
+                      'NÃO queime de novo: repita o saque com OS MESMOS dados para reenviar o pedido, ou fale com o suporte informando a queima ' + _pendingWithdrawBurn.hash + '.');
+                return;
+            }
+
+            if (!queimaPendente) {
+                const bal = parseFloat(document.getElementById('tokenBalance').textContent);
+                if (amount > bal) { alert('Saldo insuficiente. Você tem ' + bal.toFixed(2) + ' efixDI'); return; }
+            }
+
+            // 13/10: aprovacao manual — o usuario precisa saber ANTES da queima. Backend antigo (sem o
+            // campo) = PIX na hora, como antes; sem resposta = presume aprovacao manual.
+            let statusCarteira = null;
+            try { statusCarteira = await fetch(BACKEND_URL + '/api/wallet/status').then(r => r.json()); } catch (_) { statusCarteira = null; }
+            const aprovacaoManual = !statusCarteira || statusCarteira.withdraw_manual_approval === true;
 
             // M-NAV-RAILS M1: preview the BRL payout at NAV BEFORE burning —
             // the quote comes from the backend (services/pricing.js), never
             // computed here. If the quote is unavailable (oracle stale), abort
             // now: the backend would refuse after the burn and refund-mint,
-            // so don't burn-then-refund.
+            // so don't burn-then-refund. (Reenvio de queima ja feita: o backend cota sozinho.)
             let quotedBRL = null, quotedNav = null;
-            try {
-                const qr = await fetch(BACKEND_URL + '/api/quote/redeem?amountTokens=' + amount.toFixed(2));
-                if (qr.ok) {
-                    const qj = await qr.json();
-                    quotedBRL = qj.amountBRL;
-                    quotedNav = qj.navAtOp;
+            if (!queimaPendente) {
+                try {
+                    const qr = await fetch(BACKEND_URL + '/api/quote/redeem?amountTokens=' + amount.toFixed(2));
+                    if (qr.ok) {
+                        const qj = await qr.json();
+                        quotedBRL = qj.amountBRL;
+                        quotedNav = qj.navAtOp;
+                    }
+                } catch (_) { /* handled below */ }
+                if (quotedBRL == null) {
+                    alert('Cotação NAV indisponível no momento — saque temporariamente bloqueado. Tente novamente em alguns minutos.');
+                    return;
                 }
-            } catch (_) { /* handled below */ }
-            if (quotedBRL == null) {
-                alert('Cotação NAV indisponível no momento — saque temporariamente bloqueado. Tente novamente em alguns minutos.');
-                return;
             }
 
-            if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nVocê receberá ≈ R$ ' + quotedBRL + ' via PIX (NAV R$ ' + parseFloat(quotedNav).toFixed(6) + ' por efixDI).\nPIX será enviado para: ' + pixKey + '\n\nVocê assinará uma transação para queimar os tokens. O PIX será enviado em seguida.')) return;
+            if (queimaPendente) {
+                if (!confirm('Reenviar o pedido do saque de ' + amount.toFixed(2) + ' efixDI para ' + pixKey + '?\n\nA queima já foi feita (' + queimaPendente.slice(0, 12) + '…) — não vamos queimar de novo.')) return;
+            } else if (!confirm('Confirmar saque de ' + amount.toFixed(2) + ' efixDI?\nVocê receberá ≈ R$ ' + quotedBRL + ' via PIX (NAV R$ ' + parseFloat(quotedNav).toFixed(6) + ' por efixDI).\nPIX será enviado para: ' + pixKey + '\n\n' +
+                    (aprovacaoManual
+                        ? 'Você assinará uma transação para queimar os tokens (irreversível). O saque passa por APROVAÇÃO MANUAL da EFIX: o PIX é enviado depois da aprovação, não na hora. Se o saque for recusado, seus efixDI voltam para a sua carteira.'
+                        : 'Você assinará uma transação para queimar os tokens. O PIX será enviado em seguida.'))) return;
 
             // Idempotency key: same intent = same UUID. Changing any of (address,
             // amount, pixKey) starts a new intent and generates a fresh UUID.
@@ -2934,7 +2966,11 @@
                 } catch (e) { /* best-effort */ }
 
                 let burnTxHash = null;
-                if (trustMode) {
+                if (queimaPendente) {
+                    // 13/10: queima ja feita para este pedido — reenvia o pedido com ELA, nunca queima de novo
+                    burnTxHash = queimaPendente;
+                    if (btn) btn.disabled = true, btn.textContent = 'Reenviando pedido...';
+                } else if (trustMode) {
                     if (btn) btn.textContent = 'Modo confiança — enviando PIX...';
                     console.log('[Withdraw] TRUST MODE active — skipping burn UserOp');
                 } else {
@@ -2960,7 +2996,9 @@
                     // path which fails with "No orgId provided" when session storage is partial.
                     burnTxHash = await EfixWallet.sendUserOp(tokenAddr, burnData, '0x0', userAddress);
                     console.log('[Withdraw] burn confirmed:', burnTxHash);
-                    if (btn) btn.textContent = 'Enviando PIX...';
+                    // 13/10: grava a queima NA HORA — qualquer desfecho nao-final daqui em diante reenvia com ela
+                    _pendingWithdrawBurn = { key: intentKey, hash: burnTxHash };
+                    if (btn) btn.textContent = aprovacaoManual ? 'Enviando pedido...' : 'Enviando PIX...';
                 }
                 // Step 2: POST to backend (JWT-authenticated). Trust mode skips burnTxHash arg.
                 const data = await WalletLogic.requestWithdraw(BACKEND_URL, amount, pixKey, burnTxHash, requestUuid);
@@ -2970,6 +3008,7 @@
                     // same inputs gets a fresh UUID instead of an idempotent replay.
                     _pendingWithdrawUuid = null;
                     _pendingWithdrawKey = null;
+                    _pendingWithdrawBurn = null;
                     const trustNote = data.status === 'completed_trust_mode'
                         ? '\n\n(Modo confiança ativo: tokens permanecem na sua carteira on-chain até cleanup admin.)'
                         : '';
@@ -2987,7 +3026,21 @@
                 } else if (data.status === 'refunded') {
                     _pendingWithdrawUuid = null;
                     _pendingWithdrawKey = null;
+                    _pendingWithdrawBurn = null;
                     alert('PIX falhou, mas seus efixDI foram restaurados na sua carteira.\n\nRefund tx: ' + (data.refund_tx_hash || 'verificar histórico'));
+                    refreshBalance(userAddress);
+                    loadHistory(userAddress);
+                } else if (data.em_analise === true || data.status === 'awaiting_approval') {
+                    // 13/10: RECEBIDO e em analise (aprovacao manual) — nao e erro e ainda nao e PIX pago.
+                    // O pedido esta registrado com esta queima: nada a repetir (repetir devolve este mesmo estado).
+                    _pendingWithdrawUuid = null;
+                    _pendingWithdrawKey = null;
+                    _pendingWithdrawBurn = null;
+                    alert('Saque recebido — em análise.' + (data.id ? ' Pedido #' + data.id + '.' : '') + '\n\n' +
+                          'O PIX de ≈ R$ ' + (data.amountBRL ?? quotedBRL ?? '—') + ' para ' + pixKey + ' é enviado depois da aprovação manual da EFIX. ' +
+                          'Se o saque for recusado, seus efixDI voltam para a sua carteira.\n\nNão é preciso repetir o saque.');
+                    document.getElementById('withdrawAmount').value = '';
+                    document.getElementById('pixKey').value = '';
                     refreshBalance(userAddress);
                     loadHistory(userAddress);
                 } else if (data.idempotent_replay) {
@@ -2995,14 +3048,23 @@
                     // so the user's next click hits the same dedup path instead of
                     // queueing another PIX. Surface the existing status so they wait.
                     alert('Solicitação em andamento (status: ' + data.status + '). Aguarde — não é necessário tentar novamente.');
+                } else if (burnTxHash) {
+                    // 13/10: depois da queima "tente novamente" queimava DE NOVO. Agora o reenvio usa a mesma queima.
+                    alert('Seus tokens foram queimados, mas o pedido ainda não foi confirmado' + (data.error ? ' (' + data.error + ')' : '') + '.\n\n' +
+                          'NÃO queime de novo: clique em Solicitar Saque com OS MESMOS dados para reenviar o pedido (usamos a mesma queima), ou fale com o suporte informando a queima ' + burnTxHash + '.');
                 } else {
                     alert('Erro: ' + (data.error || 'tente novamente'));
                 }
             } catch (e) {
                 console.error('[Withdraw] failed', e);
                 const msg = e.message || String(e);
+                // 13/10: excecao DEPOIS da queima (POST falhou/rede caiu): a queima ficou gravada para este pedido
+                const queimouEstePedido = !!(_pendingWithdrawBurn && _pendingWithdrawBurn.key === intentKey);
                 // Common failure: user rejected the burn UserOp, or backend rejected after burn already happened
-                if (isAlchemySessionDeadError(e)) {
+                if (queimouEstePedido) {
+                    alert('Seus tokens foram queimados e não conseguimos confirmar o pedido (' + msg + ').\n\n' +
+                          'NÃO queime de novo: clique em Solicitar Saque com OS MESMOS dados para reenviar o pedido (usamos a mesma queima), ou fale com o suporte informando a queima ' + _pendingWithdrawBurn.hash + '.');
+                } else if (isAlchemySessionDeadError(e)) {
                     // Session died between preflight and signing — re-OTP cleanly and
                     // resume the SAME withdraw intent (same UUID) via _efixAuthCallback.
                     // The burn never landed (sign failed before submission), so no half-state.

@@ -1042,10 +1042,11 @@ tr.grp:first-child td{padding-top:6px}
       <div class="up">você recebe</div>
       <div class="code" id="sacQuoteBRL"></div>
       <div class="hint" id="sacQuoteDet"></div>
+      <div class="hint" id="sacNotaAprov" style="display:none;margin-top:6px;color:#d99e17">Saques em BRL passam por aprovação manual da EFIX: o PIX é enviado depois da aprovação, não na hora. Se o saque for recusado, seus efixDI voltam para a sua carteira.</div>
     </div>
     <div class="steps" id="sacSteps">
       <div class="stp" data-s="1"><span class="b">1</span>Assinar a queima</div>
-      <div class="stp" data-s="2"><span class="b">2</span>PIX enviado</div>
+      <div class="stp" data-s="2"><span class="b">2</span><span id="sacStep2Lbl">PIX enviado</span></div>
     </div>
     <button class="cta pri" id="sacBtnExec" onclick="sacarExecutar()">Assinar queima &amp; receber PIX</button>
     <button class="hmini" onclick="sacarLimpaPreview()">alterar valor</button>
@@ -4074,8 +4075,19 @@ async function sacarCotar(){
       '<br><span class="muted">valor recalculado no pagamento — pode variar alguns centavos</span>';
     $('sac-form').style.display='none'; $('sac-quote').style.display='block';
     m.textContent='';
+    // 13/10: aprovação manual — avisar já na cotação, antes de qualquer queima (o confirm() repete)
+    sacarRotulosAprovacao(false);
+    fetch(BACKEND+'/api/wallet/status').then(x=>x.json())
+      .then(st=>sacarRotulosAprovacao(!!st && st.withdraw_manual_approval === true)).catch(()=>{});
   }catch(e){ m.className='mmsg err'; m.textContent=e.message; }
   finally{ b.disabled=false; b.textContent='Cotar saque'; }
+}
+
+// 13/10: com aprovação manual o passo 2 é "PIX após aprovação" e a nota âmbar aparece na cotação
+function sacarRotulosAprovacao(manual){
+  const n=$('sacNotaAprov'), l=$('sacStep2Lbl');
+  if(n) n.style.display = manual ? 'block' : 'none';
+  if(l) l.textContent = manual ? 'Pedido recebido · PIX após aprovação' : 'PIX enviado';
 }
 
 /* POST do saque SEM lançar: o backend devolve todo desfecho pós-queima em
@@ -4120,11 +4132,22 @@ async function sacarExecutar(){
   // já queimado (nesta sessão ou numa anterior interrompida)? então só falta o PIX
   let burnTxHash = (pend && pend.burnTxHash) || null;
 
+  // 13/10: saque em BRL com APROVAÇÃO MANUAL — o usuário fica sabendo ANTES de queimar.
+  // Sem resposta do servidor presume aprovação manual (e a checagem fail-closed abaixo
+  // nem deixa queimar). Backend antigo (sem o campo) = PIX na hora, como antes.
+  let sttPre = null;
+  if(!burnTxHash){ try{ sttPre = await fetch(BACKEND+'/api/wallet/status').then(x=>x.json()); }catch(e){ sttPre = null; } }
+  const aprovacaoManual = !sttPre || sttPre.withdraw_manual_approval === true;
+  if(sttPre) sacarRotulosAprovacao(aprovacaoManual);
+
   if(!burnTxHash && !confirm('Confirmar saque de '+amount.toFixed(2)+' efixDI?\n\n'+
               'Você recebe ≈ R$ '+brl.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+
               ' via PIX (NAV R$ '+nav.toFixed(6)+' por efixDI).\nO valor final é recalculado no momento do pagamento e pode variar alguns centavos.\n'+
               'Chave PIX: '+pix+'\n\n'+
-              'Você vai assinar a QUEIMA dos tokens. A queima é irreversível e o PIX é enviado em seguida.')) return;
+              (aprovacaoManual
+                ? 'Você vai assinar a QUEIMA dos tokens. A queima é irreversível e o saque passa por APROVAÇÃO MANUAL da EFIX: '+
+                  'o PIX é enviado depois da aprovação, não na hora. Se o saque for recusado, seus efixDI voltam para a sua carteira.'
+                : 'Você vai assinar a QUEIMA dos tokens. A queima é irreversível e o PIX é enviado em seguida.'))) return;
 
   // mesma intenção (carteira+valor+chave) reusa o MESMO uuid, para o backend
   // deduplicar em vez de mandar um segundo PIX.
@@ -4231,7 +4254,7 @@ async function sacarExecutar(){
       depSetStep('sacSteps',1,'done');   // retomada: a queima já aconteceu
     }
 
-    b.textContent='Enviando PIX…'; depSetStep('sacSteps',2,'run');
+    b.textContent = aprovacaoManual ? 'Enviando pedido…' : 'Enviando PIX…'; depSetStep('sacSteps',2,'run');
     const r = await sacarPost({
       amount: Number(amount.toFixed(2)), pixKey: pix, requestUuid: _sacUuid,
       ...(burnTxHash ? { burnTxHash } : {}),
@@ -4254,6 +4277,19 @@ async function sacarExecutar(){
       _sacUuid=null; _sacKey=null; sacarEsqueceIntencao();
       sacarModoQueimar();
       _transfers=null; carregar(u.email, u.address);
+    } else if(r.body && (r.body.em_analise===true || st==='awaiting_approval')){
+      // 13/10: RECEBIDO e em análise (aprovação manual) — não é erro e ainda não é PIX pago.
+      // O pedido está registrado com esta queima: nada a reenviar e NUNCA queimar de novo
+      // (o replay do mesmo pedido devolve este mesmo estado).
+      depSetStep('sacSteps',2,'wait');
+      m.className='mmsg';
+      m.innerHTML='<span style="'+AMBAR+'">Saque recebido ✓ — em análise.</span> O PIX de ≈ R$ '+
+        Number(r.body.amountBRL||brl).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+
+        ' é enviado depois da aprovação manual da EFIX. Se o saque for recusado, seus efixDI voltam para a sua carteira.'+
+        (r.body.id?' Pedido #'+_esc(String(r.body.id))+'.':'')+linkTx;
+      _sacUuid=null; _sacKey=null; sacarEsqueceIntencao();
+      $('sacBtnExec').style.display='none'; delete $('sacBtnExec').dataset.modo;
+      _transfers=null; _web2=null; carregar(u.email, u.address);
     } else if(burnTxHash){
       // queimado e sem confirmação de PIX: NUNCA reoferecer a queima.
       depSetStep('sacSteps',2,'err');
@@ -4349,11 +4385,16 @@ function depSetStep(containerId, n, estado){
   el.classList.remove('done','run');
   el.style.color='';
   const bol = el.querySelector('.b');
+  bol.style.color='';   // 'err'/'wait' pintam o número de branco; sem isto ele sumia na reabertura
   if(estado==='done'){ el.classList.add('done'); bol.textContent='✓'; bol.style.background=''; }
   else if(estado==='run'){ el.classList.add('run'); bol.textContent=String(n); bol.style.background=''; }
   else if(estado==='err'){ // não existia: 'run' pintava de verde um passo que falhou
     bol.textContent='!'; bol.style.background='var(--neg,#b91c1c)'; bol.style.color='#fff';
     el.style.color='var(--neg,#b91c1c)';
+  }
+  else if(estado==='wait'){ // 13/10: saque recebido, aguardando aprovação manual (âmbar, não é erro nem ✓)
+    bol.textContent='…'; bol.style.background='#d99e17'; bol.style.color='#fff';
+    el.style.color='#d99e17';
   }
   else { bol.textContent=String(n); bol.style.background=''; }   // 'off' devolve o número
 }

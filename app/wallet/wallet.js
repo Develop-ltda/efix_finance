@@ -86,6 +86,9 @@ const WalletLogic = {
     // 409 with idempotent_replay means a previous attempt with this UUID already
     // exists — caller treats the returned status as authoritative instead of throwing.
     if (res.status === 409 && data.idempotent_replay) return data;
+    // 13/10: desfecho final que NAO e sucesso mas tambem nao e "erro para repetir": tokens devolvidos
+    // (ex.: 503 de manutencao com refund). O chamador mostra "efixDI restaurados" em vez de "tente de novo".
+    if (!res.ok && data && data.status === 'refunded') return data;
     if (!res.ok) throw new Error(data.error || 'Backend error');
     return data;
   },
