@@ -1459,7 +1459,9 @@ function legadoHtml(acao){
   const cart = u.address ? ' (<span class="mono">'+_esc(short(u.address))+'</span>)' : '';
   const contato = legadoContatoHtml(), Contato = contato.charAt(0).toUpperCase()+contato.slice(1);
   const fazer = acao==='sacar'
-    ? 'Precisa sacar agora? '+Contato+(IS_LOBIE?'':' a partir deste e-mail, com o valor')+' — a equipe acompanha o seu saque.'
+    // 14/10 (review): "a equipe acompanha o seu saque" prometia que a equipe faria o saque — ela não assina pela
+    // carteira do cliente; o que o suporte faz é responder com o caminho
+    ? 'Precisa sacar agora? '+Contato+(IS_LOBIE?'':' a partir deste e-mail')+' — respondemos com o caminho para o seu saque.'
     : 'Precisa movimentar agora? '+Contato+(IS_LOBIE?'':' a partir deste e-mail')+' — a equipe te ajuda.';
   return '<p class="lead" style="margin-bottom:10px"><b>Sua carteira está na fila da migração de assinatura.</b></p>'+
     '<div class="wz-nota" style="border-left:3px solid #d99e17">'+

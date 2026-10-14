@@ -342,6 +342,10 @@
         console.warn("[owner-tabs] receivables preview failed", e.message);
       }
     }
+    // 14/10 (review): a conta mudou enquanto os dados vinham (showApp de outra conta)? não escreve nada.
+    if (!overrideAddr && typeof window.userAddress === "string" && window.userAddress
+        && String(addr).toLowerCase() !== window.userAddress.toLowerCase()) return;
+
     window.__ownershipReceivablesPreview = receivablesPreview;
 
     // Master OTP bypass: ernesto.otero@efix.finance (and any future entry in
@@ -1142,7 +1146,11 @@
         }
       }
 
-      const client = await window.EfixWallet.getBaseClient();
+      // 14/10 (review): assina pela CONTA (addr = conta da tela), como o Enviar do classic. Sem o endereço o
+      // bundle montava o client da derivada LightAccount (0x10fe…): para uma conta MAv2 (0xa867…) o claim()
+      // direto saía como msg.sender errado (nada reivindicado para a conta) e o claimAll(addr) saía da conta
+      // errada — e a tela dizia "reivindicadas ✓".
+      const client = await window.EfixWallet.getBaseClient(addr);
 
       // Build the ordered list of (target, data) ops we need to broadcast.
       // 1st: router.claimAll(user) — covers SALRIO/LATITUDE if they have pending
