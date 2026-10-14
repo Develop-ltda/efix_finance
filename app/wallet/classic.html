@@ -1996,6 +1996,8 @@
             if (!address) { precisaAtivarNaWalletNova({ message: 'No wallet linked' }); return; }
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
+            // 14/10 (review): veio do "Sacar pelo acesso clássico" da carteira nova — abre direto na aba Sacar (uma vez)
+            try { if (sessionStorage.getItem('efix_classic_aba') === 'withdraw') { sessionStorage.removeItem('efix_classic_aba'); mostrarAbaSacar(); } } catch {}
             const short = address.slice(0,6) + '...' + address.slice(-4);
             document.getElementById('shortAddr').textContent = short;
             document.getElementById('userPillAddr').textContent = short;

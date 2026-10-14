@@ -1458,7 +1458,14 @@ function legadoHtml(acao){
   const u = (EfixAuth.getUser&&EfixAuth.getUser())||{};
   const cart = u.address ? ' (<span class="mono">'+_esc(short(u.address))+'</span>)' : '';
   const contato = legadoContatoHtml(), Contato = contato.charAt(0).toUpperCase()+contato.slice(1);
-  const fazer = acao==='sacar'
+  // 14/10 (review — DECISÃO DO ERNESTO, commit separado): o acesso clássico assina pela carteira das contas legadas
+  // (MAv2 ou a LightAccount do mesmo e-mail) e, sem sessão da conta, pede o código ali mesmo — não devolve para cá.
+  // Então o Saque (só EFIX: Lobie não tem saque) ganha UM botão real; o suporte fica como plano B.
+  const pelaClassica = acao==='sacar' && !IS_LOBIE;
+  const fazer = pelaClassica
+    ? 'Para sacar agora, use o acesso clássico (botão abaixo): ele assina pela sua carteira atual e, se precisar, pede o código do seu e-mail. '+
+      'Se lá o saque não for liberado, '+contato+' a partir deste e-mail — respondemos com o caminho.'
+    : acao==='sacar'
     // 14/10 (review): "a equipe acompanha o seu saque" prometia que a equipe faria o saque — ela não assina pela
     // carteira do cliente; o que o suporte faz é responder com o caminho
     ? 'Precisa sacar agora? '+Contato+(IS_LOBIE?'':' a partir deste e-mail')+' — respondemos com o caminho para o seu saque.'
@@ -1467,9 +1474,17 @@ function legadoHtml(acao){
     '<div class="wz-nota" style="border-left:3px solid #d99e17">'+
     '<p style="margin:0 0 8px"><b>Por quê:</b> sua conta é das primeiras'+(IS_LOBIE?'':' da EFIX')+' e ainda assina pelo sistema de chaves antigo, '+
       'que está sendo substituído. Até a sua chave ser migrada, '+legadoPausados()+' ficam pausados nesta carteira.</p>'+
-    '<p style="margin:0 0 8px"><b>Seu saldo:</b> está seguro e não muda — os tokens continuam na sua carteira'+cart+' e nada sai dela enquanto isso.</p>'+
+    '<p style="margin:0 0 8px"><b>Seu saldo:</b> está seguro e não muda — os tokens continuam na sua carteira'+cart+
+      (pelaClassica ? ' e só saem dela quando você mesmo assinar.' : ' e nada sai dela enquanto isso.')+'</p>'+
     '<p style="margin:0"><b>O que fazer:</b> '+fazer+' Quando a migração terminar, '+legadoPausados()+' voltam a funcionar aqui.</p>'+
-    '</div>';
+    '</div>'+
+    (pelaClassica ? '<button class="cta pri" style="margin-top:12px" onclick="sacarPeloClassico()">Sacar pelo acesso clássico</button>' : '');
+}
+// abre o acesso clássico já na aba Sacar (o classic lê e apaga a chave no showApp). A sessão da conta (JWT) é a
+// mesma desta página (mesma origem): o classic entra direto; a assinatura pede o código só na hora da queima.
+function sacarPeloClassico(){
+  try{ sessionStorage.setItem('efix_classic_aba','withdraw'); }catch(e){}
+  location.href = '/app/wallet/classic.html';
 }
 function mostrarContaLegada(acao){
   $('legTitulo').textContent = ({sacar:'Saque pausado nesta carteira', enviar:'Envio pausado nesta carteira',
