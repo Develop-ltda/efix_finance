@@ -144,6 +144,14 @@
         .tab.active{background:var(--gray-800);color:var(--white)}
         .tab-panel{display:none}.tab-panel.active{display:block}
         .action-card{background:var(--gray-900);border:1px solid var(--gray-800);border-radius:16px;padding:24px}
+        /* 14/10: estado único "conta parada" (Sacar/Depositar) no lugar do formulário — âmbar do aviso de aprovação manual */
+        .conta-parada{border:1px solid var(--gray-700);border-left:3px solid #d99e17;border-radius:12px;background:var(--black);padding:14px 16px;font-size:13px;line-height:1.6;color:var(--gray-300);text-align:left}
+        .conta-parada b.tit{display:block;color:var(--white);font-size:14px;margin-bottom:6px}
+        .conta-parada p{margin:0 0 8px}
+        .conta-parada a{color:var(--green);font-weight:600}
+        html[data-theme="light"] .conta-parada a{color:#15803d}
+        .conta-parada code{font-family:var(--font-mono);font-size:12px}
+        .conta-parada .btn{margin-top:6px}
         .action-card h3{font-size:14px;color:var(--gray-400);font-weight:600;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
         .amount-input-wrap{display:flex;align-items:center;gap:12px;margin-bottom:16px}
         .amount-input-wrap input{flex:1;padding:14px 16px;background:var(--gray-800);border:1px solid var(--gray-700);border-radius:12px;color:var(--white);font-family:var(--font-mono);font-size:20px;font-weight:700;outline:none}
@@ -495,6 +503,9 @@
             <div class="tab-panel active" id="panel-deposit">
                 <div class="action-card">
                     <h3 data-i18n="deposit_title">Depositar via PIX</h3>
+                    <!-- 14/10: conta que o app não consegue movimentar → depósito bloqueado com o motivo (antes: "Depósitos funcionam normalmente") -->
+                    <div id="deposit-parado" class="conta-parada" role="status" aria-live="polite" style="display:none"></div>
+                    <div id="deposit-area">
                     <div id="deposit-form">
                         <div class="amount-input-wrap">
                             <input type="number" id="depositAmount" placeholder="0,00" min="10" step="0.01">
@@ -526,11 +537,16 @@
                         <div id="deposit-msg" style="margin-top:12px;font-size:13px;color:var(--gray-500);font-family:var(--font-mono);text-align:center;min-height:20px;"></div>
                         <button class="btn btn-secondary" style="margin-top:12px;" onclick="resetDeposit()" data-i18n="btn_cancel">Cancelar</button>
                     </div>
+                    </div>
                 </div>
             </div>
             <div class="tab-panel" id="panel-withdraw">
                 <div class="action-card">
                     <h3 data-i18n="withdraw_title">Sacar via PIX</h3>
+                    <!-- 14/10: conta que esta sessão não assina → UM estado no lugar do formulário (motivo, saldo, o que fazer).
+                         Antes: formulário visível e um alert "MetaMask" só no clique. -->
+                    <div id="withdraw-parado" class="conta-parada" role="status" aria-live="polite" style="display:none"></div>
+                    <div id="withdraw-form">
                     <div class="amount-input-wrap">
                         <input type="number" id="withdrawAmount" placeholder="0,00" min="10" step="0.01">
                         <span class="currency">efixDI</span>
@@ -539,6 +555,7 @@
                         <input type="text" id="pixKey" placeholder="Chave PIX (CPF, email, telefone)" data-i18n-placeholder="pix_key_placeholder">
                     </div>
                     <button class="btn btn-primary" onclick="handleWithdraw()" data-i18n="btn_withdraw">Solicitar Saque</button>
+                    </div>
                 </div>
             </div>
 
@@ -1045,15 +1062,15 @@
     <script src="/shared/js/config.js"></script>
     <script src="/shared/js/formatters.js"></script>
     <script src="/shared/js/ui.js"></script>
-    <script src="wallet.js?v=20261013"></script>
-    <script src="owner-tabs.js"></script>
+    <script src="wallet.js?v=20261014"></script>
+    <script src="owner-tabs.js?v=20261014"></script>
     <script>
         const BACKEND_URL = EFIX_CONFIG.backend;
 
         // ═══ i18n — 8 languages ═══
         const i18n = {
-          pt: { hero_badge:'Live on Base Mainnet', hero_title:'Sua Renda Fixa em <span class="accent">Tokens</span>', hero_subtitle:'Deposite via PIX. Token lastreado em cotas de fundo DI: rende CDI nos dias úteis, resgate no mesmo dia (D+0) pelo NAV.<br>Smart wallet — sem MetaMask, sem taxas de gas. Só email.', stat_cdi:'CDI Base', stat_apy:'Target Leveraged', stat_redemption:'Resgate', stat_reg:'Regulação', features_label:'Dentro do seu Wallet', feat_deposit_title:'Depositar PIX', feat_deposit_desc:'BRL → efixDI on-chain via HausBank, instantâneo.', feat_withdraw_title:'Sacar PIX', feat_withdraw_desc:'Queime tokens, receba R$ na sua chave PIX.', feat_brle_title:'BRLE Swap', feat_brle_desc:'Converta para BRLE/USDC para usar em DeFi global.', feat_send_title:'USD/EUR Bridge', feat_send_desc:'Receba ACH/SEPA transfers via Bridge.xyz.', btn_login:'Entrar com Email', otp_prompt:'Verifique seu email e insira o código de 6 dígitos:', btn_verify:'Verificar Código', btn_back:'Voltar', your_balance:'Patrimônio Total', tab_deposit:'Depositar', tab_withdraw:'Sacar', deposit_title:'Depositar via PIX', btn_generate_qr:'Gerar QR Code PIX', scan_prompt:'Escaneie com seu app bancário', btn_copy_pix:'Copiar código PIX', btn_i_paid:'Já paguei o PIX', step_qr_generated:'QR Code gerado', step_pix_confirmed:'Pagamento PIX confirmado', step_minting:'Mintando tokens efixDI', step_credited:'Tokens creditados!', btn_cancel:'Cancelar', withdraw_title:'Sacar via PIX', pix_key_placeholder:'Chave PIX (CPF, email, telefone)', btn_withdraw:'Solicitar Saque', card_collateral:'Colateral efixDI', card_credit_rate:'Taxa de crédito', card_yield:'Rendimento do colateral', card_net_carry:'Carry líquido', btn_collateralize:'Depositar Colateral', card_desc:'Seu efixDI rende CDI enquanto colateral.<br>Crédito no cartão a ~5%. Carry líquido: CDI − 5% a.a.', card_waitlist:'O cartão EFIX está em fase de produção.<br>Deposite colateral agora para garantir prioridade.', card_waitlist_active:'Fila de espera ativa', btn_disconnect:'Desconectar', history_title:'Histórico', classic_banner:'Carteira clássica — só para contas antigas em migração. Conta nova? <a href="/app/wallet/">Criar conta na carteira nova →</a>', signup_text:'Ainda não tem conta? Crie a sua na carteira nova.', signup_btn:'Criar conta →', classic_conta_nova:'Este e-mail ainda não tem conta aqui. Contas novas são criadas na carteira nova — levando você para lá…', flag:'🇧🇷', code:'PT' },
-          en: { hero_badge:'Live on Base Mainnet', hero_title:'Fixed Income, <span class="accent">Tokenized</span>', hero_subtitle:'Deposit via PIX. Token backed by DI fund units: accrues CDI on business days, same-day (D+0) redemption at NAV.<br>Smart wallet — no MetaMask, no gas fees. Just email.', stat_cdi:'CDI Base', stat_apy:'Target Leveraged', stat_redemption:'Redemption', stat_reg:'Regulation', features_label:'Inside your Wallet', feat_deposit_title:'Deposit PIX', feat_deposit_desc:'BRL → efixDI on-chain via HausBank, instant.', feat_withdraw_title:'Withdraw PIX', feat_withdraw_desc:'Burn tokens, receive R$ to your PIX key.', feat_brle_title:'BRLE Swap', feat_brle_desc:'Convert to BRLE/USDC for global DeFi access.', feat_send_title:'USD/EUR Bridge', feat_send_desc:'Receive ACH/SEPA transfers via Bridge.xyz.', btn_login:'Login with Email', otp_prompt:'Check your email and enter the 6-digit code:', btn_verify:'Verify Code', btn_back:'Back', your_balance:'Total Portfolio', tab_deposit:'Deposit', tab_withdraw:'Withdraw', deposit_title:'Deposit via PIX', btn_generate_qr:'Generate PIX QR Code', scan_prompt:'Scan with your banking app', btn_copy_pix:'Copy PIX code', btn_i_paid:'I already paid', step_qr_generated:'QR Code generated', step_pix_confirmed:'PIX payment confirmed', step_minting:'Minting efixDI tokens', step_credited:'Tokens credited!', btn_cancel:'Cancel', withdraw_title:'Withdraw via PIX', pix_key_placeholder:'PIX Key (CPF, email, phone)', btn_withdraw:'Request Withdrawal', card_collateral:'efixDI Collateral', card_credit_rate:'Credit rate', card_yield:'Collateral yield', card_net_carry:'Net carry', btn_collateralize:'Deposit Collateral', card_desc:'Your efixDI earns CDI as collateral.<br>Card credit at ~5%. Net carry: CDI − 5% p.a.', card_waitlist:'The EFIX card is in production phase.<br>Deposit collateral now to secure priority.', card_waitlist_active:'Waitlist active', btn_disconnect:'Disconnect', history_title:'History', classic_banner:'Classic wallet — only for legacy accounts being migrated. New account? <a href="/app/wallet/">Create it in the new wallet →</a>', signup_text:'No account yet? Create yours in the new wallet.', signup_btn:'Create account →', classic_conta_nova:'This email has no account here yet. New accounts are created in the new wallet — taking you there…', flag:'🇺🇸', code:'EN' },
+          pt: { hero_badge:'Live on Base Mainnet', hero_title:'Sua Renda Fixa em <span class="accent">Tokens</span>', hero_subtitle:'Deposite via PIX. Token lastreado em cotas de fundo DI: rende CDI nos dias úteis, resgate no mesmo dia (D+0) pelo NAV.<br>Smart wallet — sem MetaMask, sem taxas de gas. Só email.', stat_cdi:'CDI Base', stat_apy:'Target Leveraged', stat_redemption:'Resgate', stat_reg:'Regulação', features_label:'Dentro do seu Wallet', feat_deposit_title:'Depositar PIX', feat_deposit_desc:'BRL → efixDI on-chain via HausBank, instantâneo.', feat_withdraw_title:'Sacar PIX', feat_withdraw_desc:'Queime tokens, receba R$ na sua chave PIX.', feat_brle_title:'BRLE Swap', feat_brle_desc:'Converta para BRLE/USDC para usar em DeFi global.', feat_send_title:'USD/EUR Bridge', feat_send_desc:'Receba ACH/SEPA transfers via Bridge.xyz.', btn_login:'Entrar com Email', otp_prompt:'Verifique seu email e insira o código de 6 dígitos:', btn_verify:'Verificar Código', btn_back:'Voltar', your_balance:'Patrimônio Total', tab_deposit:'Depositar', tab_withdraw:'Sacar', deposit_title:'Depositar via PIX', btn_generate_qr:'Gerar QR Code PIX', scan_prompt:'Escaneie com seu app bancário', btn_copy_pix:'Copiar código PIX', btn_i_paid:'Já paguei o PIX', step_qr_generated:'QR Code gerado', step_pix_confirmed:'Pagamento PIX confirmado', step_minting:'Mintando tokens efixDI', step_credited:'Tokens creditados!', btn_cancel:'Cancelar', withdraw_title:'Sacar via PIX', pix_key_placeholder:'Chave PIX (CPF, email, telefone)', btn_withdraw:'Solicitar Saque', card_collateral:'Colateral efixDI', card_credit_rate:'Taxa de crédito', card_yield:'Rendimento do colateral', card_net_carry:'Carry líquido', btn_collateralize:'Depositar Colateral', card_desc:'Seu efixDI rende CDI enquanto colateral.<br>Crédito no cartão a ~5%. Carry líquido: CDI − 5% a.a.', card_waitlist:'O cartão EFIX está em fase de produção.<br>Deposite colateral agora para garantir prioridade.', card_waitlist_active:'Fila de espera ativa', btn_disconnect:'Desconectar', history_title:'Histórico', classic_banner:'Carteira clássica — só para contas antigas em migração. Conta nova? <a href="/app/wallet/">Criar conta na carteira nova →</a>', signup_text:'Ainda não tem conta? Crie a sua na carteira nova.', signup_btn:'Criar conta →', classic_conta_nova:'Este e-mail ainda não tem conta aqui. Contas novas são criadas na carteira nova — levando você para lá…', cp_saldo:'Seu saldo está seguro e não muda: os tokens continuam na carteira desta conta e nada sai dela enquanto isso.', cp_ext_tit:'Saques e envios indisponíveis para esta conta', cp_ext_eoa:'A carteira registrada nesta conta ({addr}) é uma carteira externa (ex.: MetaMask): ela não foi criada por este app, então o app não tem como assinar a queima do saque nem envios por ela.', cp_ext_contrato:'A carteira registrada nesta conta ({addr}) é um contrato que esta sessão de assinatura não controla (por exemplo, uma conta de outro provedor ou de uma versão antiga do app), então o app não tem como assinar a queima do saque nem envios por ela.', cp_ext_saldo:'Seu saldo está seguro e não muda: os tokens continuam nessa carteira, sob o controle de quem tem a chave dela.', cp_ext_fazer_eoa:'O que fazer: para sacar em reais (PIX), escreva para {contato} a partir do e-mail desta conta. Para transferir tokens, use a própria carteira externa, que é quem tem a chave.', cp_ext_fazer_contrato:'O que fazer: para sacar em reais (PIX), escreva para {contato} a partir do e-mail desta conta.', cp_ext_dep_tit:'Depósito bloqueado para esta conta', cp_ext_dep:'O valor cairia na carteira registrada ({addr}), que o app não consegue movimentar: você não conseguiria sacar por aqui. Para depositar, escreva para {contato}.', cp_outra_tit:'Esta sessão de assinatura é de outro e-mail', cp_outra_porque:'Este navegador ainda está com a sessão de assinatura de outro e-mail, por isso não consegue assinar pela carteira desta conta ({addr}).', cp_outra_fazer:'O que fazer: saia da sessão de assinatura e confirme o código que vamos enviar para {email}; depois disso o saque fica disponível aqui. Se continuar aparecendo, escreva para {contato}.', cp_outra_btn:'Sair da sessão de assinatura e entrar com {email}', cp_indef_tit:'Não consegui verificar sua carteira agora', cp_indef_porque:'Para sua segurança, saques, envios e depósitos ficam em espera até conferirmos a carteira registrada nesta conta ({addr}).', cp_indef_fazer:'O que fazer: tente de novo em instantes. Se persistir, escreva para {contato}.', cp_indef_btn:'Verificar de novo', cp_aviso:'Detalhes e o que fazer na aba Sacar.', cp_curto:'{tit} — veja o motivo e o que fazer na aba Sacar.', flag:'🇧🇷', code:'PT' },
+          en: { hero_badge:'Live on Base Mainnet', hero_title:'Fixed Income, <span class="accent">Tokenized</span>', hero_subtitle:'Deposit via PIX. Token backed by DI fund units: accrues CDI on business days, same-day (D+0) redemption at NAV.<br>Smart wallet — no MetaMask, no gas fees. Just email.', stat_cdi:'CDI Base', stat_apy:'Target Leveraged', stat_redemption:'Redemption', stat_reg:'Regulation', features_label:'Inside your Wallet', feat_deposit_title:'Deposit PIX', feat_deposit_desc:'BRL → efixDI on-chain via HausBank, instant.', feat_withdraw_title:'Withdraw PIX', feat_withdraw_desc:'Burn tokens, receive R$ to your PIX key.', feat_brle_title:'BRLE Swap', feat_brle_desc:'Convert to BRLE/USDC for global DeFi access.', feat_send_title:'USD/EUR Bridge', feat_send_desc:'Receive ACH/SEPA transfers via Bridge.xyz.', btn_login:'Login with Email', otp_prompt:'Check your email and enter the 6-digit code:', btn_verify:'Verify Code', btn_back:'Back', your_balance:'Total Portfolio', tab_deposit:'Deposit', tab_withdraw:'Withdraw', deposit_title:'Deposit via PIX', btn_generate_qr:'Generate PIX QR Code', scan_prompt:'Scan with your banking app', btn_copy_pix:'Copy PIX code', btn_i_paid:'I already paid', step_qr_generated:'QR Code generated', step_pix_confirmed:'PIX payment confirmed', step_minting:'Minting efixDI tokens', step_credited:'Tokens credited!', btn_cancel:'Cancel', withdraw_title:'Withdraw via PIX', pix_key_placeholder:'PIX Key (CPF, email, phone)', btn_withdraw:'Request Withdrawal', card_collateral:'efixDI Collateral', card_credit_rate:'Credit rate', card_yield:'Collateral yield', card_net_carry:'Net carry', btn_collateralize:'Deposit Collateral', card_desc:'Your efixDI earns CDI as collateral.<br>Card credit at ~5%. Net carry: CDI − 5% p.a.', card_waitlist:'The EFIX card is in production phase.<br>Deposit collateral now to secure priority.', card_waitlist_active:'Waitlist active', btn_disconnect:'Disconnect', history_title:'History', classic_banner:'Classic wallet — only for legacy accounts being migrated. New account? <a href="/app/wallet/">Create it in the new wallet →</a>', signup_text:'No account yet? Create yours in the new wallet.', signup_btn:'Create account →', classic_conta_nova:'This email has no account here yet. New accounts are created in the new wallet — taking you there…', cp_saldo:'Your balance is safe and unchanged: the tokens stay in this account wallet and nothing leaves it meanwhile.', cp_ext_tit:'Withdrawals and transfers unavailable for this account', cp_ext_eoa:'The wallet registered to this account ({addr}) is an external wallet (e.g. MetaMask): it was not created by this app, so the app cannot sign the withdrawal burn or transfers for it.', cp_ext_contrato:'The wallet registered to this account ({addr}) is a contract this signing session does not control (for example, an account from another provider or from an old app version), so the app cannot sign the withdrawal burn or transfers for it.', cp_ext_saldo:'Your balance is safe and unchanged: the tokens stay in that wallet, controlled by whoever holds its key.', cp_ext_fazer_eoa:'What to do: to withdraw in BRL (PIX), write to {contato} from this account email. To transfer tokens, use the external wallet itself, which holds the key.', cp_ext_fazer_contrato:'What to do: to withdraw in BRL (PIX), write to {contato} from this account email.', cp_ext_dep_tit:'Deposits blocked for this account', cp_ext_dep:'The amount would land in the registered wallet ({addr}), which the app cannot move: you would not be able to withdraw here. To deposit, write to {contato}.', cp_outra_tit:'This signing session belongs to another email', cp_outra_porque:'This browser still holds the signing session of another email, so it cannot sign for this account wallet ({addr}).', cp_outra_fazer:'What to do: leave the signing session and confirm the code we will send to {email}; withdrawals then become available here. If this keeps showing up, write to {contato}.', cp_outra_btn:'Leave the signing session and sign in with {email}', cp_indef_tit:'Could not verify your wallet right now', cp_indef_porque:'For your safety, withdrawals, transfers and deposits are on hold until we check the wallet registered to this account ({addr}).', cp_indef_fazer:'What to do: try again in a moment. If it persists, write to {contato}.', cp_indef_btn:'Check again', cp_aviso:'Details and what to do in the Withdraw tab.', cp_curto:'{tit} — see why and what to do in the Withdraw tab.', flag:'🇺🇸', code:'EN' },
           es: { hero_title:'Renta Fija Tokenizada', hero_subtitle:'Deposite BRL vía PIX. Token respaldado por cuotas de un fondo DI: rinde CDI en días hábiles, rescate el mismo día (D+0) al NAV.<br>Sin MetaMask. Sin tarifas de gas. Solo email.', btn_login:'Entrar con Email', otp_prompt:'Verifique su email e ingrese el código de 6 dígitos:', btn_verify:'Verificar Código', btn_back:'Volver', your_balance:'Patrimonio Total', tab_deposit:'Depositar', tab_withdraw:'Retirar', deposit_title:'Depositar vía PIX', btn_generate_qr:'Generar QR Code PIX', scan_prompt:'Escanee con su app bancaria', btn_copy_pix:'Copiar código PIX', btn_i_paid:'Ya pagué el PIX', step_qr_generated:'QR Code generado', step_pix_confirmed:'Pago PIX confirmado', step_minting:'Acuñando tokens efixDI', step_credited:'¡Tokens acreditados!', btn_cancel:'Cancelar', withdraw_title:'Retirar vía PIX', pix_key_placeholder:'Clave PIX (CPF, email, teléfono)', btn_withdraw:'Solicitar Retiro', card_collateral:'Colateral efixDI', card_credit_rate:'Tasa de crédito', card_yield:'Rendimiento del colateral', card_net_carry:'Carry neto', btn_collateralize:'Depositar Colateral', card_desc:'Su efixDI rinde CDI como colateral.<br>Crédito en tarjeta a ~5%. Carry líquido: CDI − 5% a.a.', card_waitlist:'La tarjeta EFIX está en fase de producción.<br>Deposite colateral ahora para asegurar prioridad.', card_waitlist_active:'Lista de espera activa', btn_disconnect:'Desconectar', history_title:'Historial', flag:'🇪🇸', code:'ES' },
           fr: { hero_title:'Revenu Fixe Tokenisé', hero_subtitle:'Déposez des BRL via PIX. Token adossé à des parts de fonds DI : rendement CDI les jours ouvrés, rachat le jour même (D+0) à la valeur liquidative (NAV).<br>Sans MetaMask. Sans frais de gas. Juste un email.', btn_login:'Se connecter par Email', otp_prompt:'Vérifiez votre email et entrez le code à 6 chiffres:', btn_verify:'Vérifier le Code', btn_back:'Retour', your_balance:'Patrimoine Total', tab_deposit:'Déposer', tab_withdraw:'Retirer', deposit_title:'Déposer via PIX', btn_generate_qr:'Générer QR Code PIX', scan_prompt:'Scannez avec votre app bancaire', btn_copy_pix:'Copier le code PIX', btn_i_paid:'J\'ai déjà payé', step_qr_generated:'QR Code généré', step_pix_confirmed:'Paiement PIX confirmé', step_minting:'Frappe des tokens efixDI', step_credited:'Tokens crédités!', btn_cancel:'Annuler', withdraw_title:'Retirer via PIX', pix_key_placeholder:'Clé PIX (CPF, email, téléphone)', btn_withdraw:'Demander le Retrait', card_collateral:'Collatéral efixDI', card_credit_rate:'Taux de crédit', card_yield:'Rendement du collatéral', card_net_carry:'Carry net', btn_collateralize:'Déposer le Collatéral', card_desc:'Votre efixDI rapporte CDI en collatéral.<br>Crédit carte à ~5%. Carry net : CDI − 5% par an.', card_waitlist:'La carte EFIX est en phase de production.<br>Déposez du collatéral maintenant pour garantir la priorité.', card_waitlist_active:'Liste d\'attente active', btn_disconnect:'Déconnecter', history_title:'Historique', flag:'🇫🇷', code:'FR' },
           ja: { hero_title:'トークン化された固定利回り', hero_subtitle:'PIXでBRLを入金。DIファンド持分に裏付けられたトークン：営業日ごとにCDIで増加、当日（D+0）にNAVで償還。<br>MetaMask不要。ガス代不要。メールだけ。', btn_login:'メールでログイン', otp_prompt:'メールを確認し、6桁のコードを入力してください：', btn_verify:'コードを確認', btn_back:'戻る', your_balance:'総資産', tab_deposit:'入金', tab_withdraw:'出金', deposit_title:'PIXで入金', btn_generate_qr:'PIX QRコードを生成', scan_prompt:'銀行アプリでスキャン', btn_copy_pix:'PIXコードをコピー', btn_i_paid:'支払い済み', step_qr_generated:'QRコード生成済み', step_pix_confirmed:'PIX支払い確認済み', step_minting:'efixDIトークン発行中', step_credited:'トークン入金完了！', btn_cancel:'キャンセル', withdraw_title:'PIXで出金', pix_key_placeholder:'PIXキー（CPF、メール、電話）', btn_withdraw:'出金リクエスト', card_collateral:'efixDI担保', card_credit_rate:'信用レート', card_yield:'担保利回り', card_net_carry:'ネットキャリー', btn_collateralize:'担保を預ける', card_desc:'efixDIは担保としてCDIの利回り。<br>カード信用~5%。ネットキャリー：CDI − 5%。', card_waitlist:'EFIXカードは生産フェーズです。<br>今すぐ担保を預けて優先権を確保。', card_waitlist_active:'ウェイトリスト受付中', btn_disconnect:'切断', history_title:'履歴', flag:'🇯🇵', code:'JA' },
@@ -1092,6 +1109,8 @@
           document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
           // Store preference
           try { localStorage.setItem('efixLang', lang); } catch(e) {}
+          // 14/10: o estado "conta parada" é texto montado em JS — redesenha no idioma novo
+          try { if (window.__reaplicarEstadoConta) window.__reaplicarEstadoConta(); } catch(e) {}
         }
 
         // Auto-detect language on load
@@ -1122,6 +1141,8 @@
         // ═══ SEND MODAL — ERC-20 transfer from the smart account on Base via sendCalls ═══
         let _sendCtx = null;
         function openSendModal(payload) {
+            // 14/10: conta que esta sessão não assina → nada de formulário que termina em alert; o estado está na aba Sacar
+            if (!guardOperable()) return;
             _sendCtx = payload;
             document.getElementById('sendModalTitle').textContent = `Enviar ${payload.symbol}`;
             document.getElementById('sendModalBalance').textContent =
@@ -1143,7 +1164,7 @@
         }
         async function sendModalSubmit() {
             if (!_sendCtx) return;
-            if (!guardOperable()) return;
+            if (!guardOperable(function(m){ const el = document.getElementById('sendModalMsg'); el.style.color = 'var(--red)'; el.textContent = m; })) return;
             const recipient = document.getElementById('sendModalRecipient').value.trim();
             const amountStr = document.getElementById('sendModalAmount').value.trim();
             const msg = document.getElementById('sendModalMsg');
@@ -1178,8 +1199,11 @@
                 if (!window.EfixWallet?.getBaseClient) {
                     throw new Error('Base client indisponível neste bundle.');
                 }
-                const client = await window.EfixWallet.getBaseClient();
-                const from = await getSmartAccountAddress();
+                // 14/10: a conta que envia é a DA CONTA (userAddress = endereço do banco) — getBaseClient(explícito)
+                // escolhe o client pelo tipo real (MAv2 ou LightAccount). Antes: client sem endereço + from = derivada
+                // ⇒ para conta MAv2 enviaria da conta errada.
+                const client = await window.EfixWallet.getBaseClient(userAddress);
+                const from = userAddress;
 
                 const erc20 = new ethers.Interface(['function transfer(address,uint256) returns (bool)']);
                 const data = erc20.encodeFunctionData('transfer', [ethers.getAddress(recipient), amountWei]);
@@ -1227,7 +1251,7 @@
         // Prior allocations pay dividends + settle to that on-record wallet, so a
         // mismatch means the signed-in wallet is a different identity — warn.
         async function checkWalletBinding(email, smartAddr) {
-            detectGhostFunds(); // fire-and-forget: varre a carteira DERIVADA por fundos-fantasma (resolve sozinha)
+            // 14/10: detectGhostFunds (estado da conta + fantasma) agora sai direto do showApp — também sem e-mail
             try {
                 const res = await fetch(`${OFFERINGS_API}/v1/investor-lookup?email=${encodeURIComponent(email)}`, { headers: EfixAuth.headers() });   // 09/10: o offerings exige a sessão
                 if (!res.ok) return;
@@ -1258,24 +1282,25 @@
         ];
         async function detectGhostFunds() {
             try {
-                const canonical = (EfixAuth.getUser && EfixAuth.getUser()?.address) || userAddress || '';
-                // BUG FIX: os call-sites passavam a CANÔNICA (endereço da sessão),
-                // então a comparação era canônica×canônica e nunca detectava.
-                // A derivada — a única conta que esta sessão realmente assina —
-                // vem do próprio requestAccount().
-                const derivedAddr = await getSmartAccountAddress();
+                // 14/10: o estado da conta (esta sessão assina por ela? se não, por quê?) é decidido
+                // com FATOS em avaliarEstadoConta e desenhado num lugar só (aplicarEstadoConta).
+                const gen = ++_estadoContaGen;
+                _estadoContaPromise = avaliarEstadoConta();
+                const r = await _estadoContaPromise;
+                if (gen !== _estadoContaGen) return;
+                aplicarEstadoConta(r);
+                const canonical = r.canonical;
+                // A derivada — a conta que esta sessão (ou o pino do signer) realmente assina.
+                const derivedAddr = r.derivada;
                 if (!derivedAddr) return;
-                // Modo "carteira externa": a registrada não é a conta que esta
-                // sessão assina → desabilita operações on-chain (guardOperable)
-                // e explica, em vez do AA14 críptico.
-                const external = !!(canonical && canonical.toLowerCase() !== derivedAddr.toLowerCase());
-                window.IS_EXTERNAL_WALLET = external;
-                if (external) showExternalWalletBanner(canonical, derivedAddr);
+                // derivada de OUTRO e-mail (sessão alheia neste navegador): nunca oferecer varredura dela
+                if (r.estado === 'outra_sessao') return;
                 // ?enviar=1 força o card mesmo sem divergência — vira uma
                 // ferramenta manual de envio de tokens da conta ATUAL (útil
                 // p/ BRLE, que não tem UI própria de transferência).
                 const force = new URLSearchParams(location.search).has('enviar');
-                if (!force && !external) return; // sem fantasma
+                const diverge = !!(canonical && canonical.toLowerCase() !== derivedAddr.toLowerCase());
+                if (!force && !diverge) return; // sem fantasma
                 const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
                 const found = [];
                 for (const t of GHOST_TOKENS) {
@@ -1337,30 +1362,175 @@
         }
         window.sendGhostToken = sendGhostToken;
 
-        // ═══ MODO CARTEIRA EXTERNA ═══
-        // A carteira registrada (canônica) é uma EOA externa (ex.: MetaMask):
-        // o app não tem como assinar por ela. Depositar/ler funciona; sacar,
-        // enviar, swap e claim ficam bloqueados com explicação.
-        function showExternalWalletBanner(canonical, derived) {
+        // ═══ ESTADO DA CONTA (14/10 — labirinto do saque das contas legadas) ═══
+        // Antes: "registrada ≠ derivada LightAccount" ⇒ "carteira externa (MetaMask)", formulário de saque
+        // visível e um alert só no clique. Falso positivo para TODA conta MAv2 (ex.: 0xa867…6B38, que o
+        // bundle assina — getClient escolhe o client MAv2) e para o "pino" de signer de OUTRO e-mail.
+        // Agora o veredito sai de fatos — sessão do signer viva (e de quem), derivada, tipo on-chain da
+        // registrada — e cada caso tem UM estado escrito no lugar do formulário. Estados:
+        //   ok           → formulário normal (inclui MAv2 e sessão do signer expirada: o saque pede o
+        //                  código antes de assinar e o estado é reavaliado depois dele)
+        //   externa      → registrada sem código (EOA) ou contrato que esta sessão não controla; saque,
+        //                  envio e depósito bloqueados, com o motivo e o contato
+        //   outra_sessao → a sessão de assinatura deste navegador é de outro e-mail; botão real para sair dela
+        //   indefinido   → RPC não respondeu; nada se move até verificar (botão "Verificar de novo")
+        const ERC1967_IMPL_SLOT_CP = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
+        const MAV2_IMPL_SUFIXO_CP = 'c5a9089039570dd36455b5c07383';   // mesma régua do accountKind do bundle (entry.js)
+        let _estadoConta = { estado: 'ok' };
+        let _estadoContaPromise = null;
+        let _estadoContaGen = 0;   // showApp roda de novo depois do código: uma avaliação velha não sobrescreve a nova
+
+        async function rpcBaseCp(method, params) {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 4000);
             try {
-                if (sessionStorage.getItem('efix_bindwarn_dismissed')) return;
+                const r = await fetch('https://base-mainnet.g.alchemy.com/v2/' + EfixWallet.config.apiKey, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: ctrl.signal,
+                });
+                const j = await r.json();
+                return (j && !j.error && typeof j.result === 'string' && j.result.startsWith('0x')) ? j.result : null;
+            } catch { return null; } finally { clearTimeout(t); }
+        }
+        // 'eoa' (sem código) | 'mav2' | 'contrato' | null (RPC inconclusivo — nunca vira "externa")
+        async function tipoDaCarteira(addr) {
+            const code = await rpcBaseCp('eth_getCode', [addr, 'latest']);
+            if (code === null) return null;
+            if (code === '0x') return 'eoa';
+            const impl = await rpcBaseCp('eth_getStorageAt', [addr, ERC1967_IMPL_SLOT_CP, 'latest']);
+            if (impl === null) return null;
+            return impl.toLowerCase().endsWith(MAV2_IMPL_SUFIXO_CP) ? 'mav2' : 'contrato';
+        }
+        // sessão do signer VIVA (e de qual e-mail). Sem ela a "derivada" vem do pino em localStorage, que
+        // pode ser de outro e-mail — dela não se conclui nada.
+        async function sessaoDoSigner() {
+            try {
+                const sg = window.EfixWallet && EfixWallet.getSigner && EfixWallet.getSigner();
+                if (!sg || typeof sg.getAuthDetails !== 'function') return null;
+                const u = await Promise.race([
+                    sg.getAuthDetails(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000)),
+                ]);
+                return u || null;
+            } catch { return null; }
+        }
+        async function avaliarEstadoConta() {
+            const conta = (EfixAuth.getUser && EfixAuth.getUser()) || {};
+            const canonical = String(conta.address || userAddress || '');
+            const emailConta = String(conta.email || userEmail || '').trim().toLowerCase();
+            let derivada = null;
+            try { derivada = await getSmartAccountAddress(); } catch { derivada = null; }
+            const base = { estado: 'ok', canonical, derivada, emailConta };
+            if (!derivada || !canonical) return base;
+            const sessao = await sessaoDoSigner();
+            if (!sessao) return base;   // sem sessão viva: o saque pede o código antes e reavalia
+            const emailSessao = String(sessao.email || '').trim().toLowerCase();
+            if (emailSessao && emailConta && emailSessao !== emailConta) return { ...base, estado: 'outra_sessao' };
+            if (canonical.toLowerCase() === derivada.toLowerCase()) return base;
+            const tipo = await tipoDaCarteira(canonical);
+            if (tipo === 'mav2') return { ...base, tipo };   // MAv2 da era wallet-client: o bundle assina; a validação 4337 decide
+            if (tipo === null) return { ...base, estado: 'indefinido' };
+            return { ...base, estado: 'externa', tipo };
+        }
+        async function estadoContaPronto() {
+            if (_estadoContaPromise) {
+                try { await Promise.race([_estadoContaPromise, new Promise(res => setTimeout(res, 8000))]); } catch {}
+            }
+            return _estadoConta;
+        }
+        function _escCp(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function _cpTxt(key, r) {
+            const a = String(r.canonical || '');
+            const addr = a ? '<code>' + _escCp(a.slice(0, 8) + '…' + a.slice(-4)) + '</code>' : '';
+            return _escCp(T(key)).replace('{addr}', addr)
+                .replace('{email}', '<b>' + _escCp(r.emailConta || userEmail || '') + '</b>')
+                .replace('{contato}', '<a href="mailto:contato@efix.finance">contato@efix.finance</a>');
+        }
+        function _cpTitulo(r) {
+            return T(r.estado === 'outra_sessao' ? 'cp_outra_tit' : r.estado === 'indefinido' ? 'cp_indef_tit' : 'cp_ext_tit');
+        }
+        // UM estado por caso: por quê · saldo seguro · o que fazer (+ botão só quando há ação REAL)
+        function htmlContaParada(r, onde) {
+            const p = (k) => '<p>' + _cpTxt(k, r) + '</p>';
+            if (r.estado === 'externa') {
+                if (onde === 'depositar') return '<b class="tit">' + _escCp(T('cp_ext_dep_tit')) + '</b>' + p('cp_ext_dep') + p('cp_ext_saldo');
+                const eoa = r.tipo === 'eoa';
+                return '<b class="tit">' + _escCp(T('cp_ext_tit')) + '</b>' + p(eoa ? 'cp_ext_eoa' : 'cp_ext_contrato') +
+                    p('cp_ext_saldo') + p(eoa ? 'cp_ext_fazer_eoa' : 'cp_ext_fazer_contrato');
+            }
+            if (r.estado === 'outra_sessao') {
+                return '<b class="tit">' + _escCp(T('cp_outra_tit')) + '</b>' + p('cp_outra_porque') + p('cp_saldo') + p('cp_outra_fazer') +
+                    '<button type="button" class="btn btn-secondary" onclick="trocarSessaoAssinatura(this)">' + _cpTxt('cp_outra_btn', r) + '</button>';
+            }
+            return '<b class="tit">' + _escCp(T('cp_indef_tit')) + '</b>' + p('cp_indef_porque') + p('cp_saldo') + p('cp_indef_fazer') +
+                '<button type="button" class="btn btn-secondary" onclick="reverificarConta(this)">' + _escCp(T('cp_indef_btn')) + '</button>';
+        }
+        function aplicarEstadoConta(r) {
+            _estadoConta = r || { estado: 'ok' };
+            const parado = _estadoConta.estado !== 'ok';
+            window.IS_EXTERNAL_WALLET = parado;   // owner-tabs.js (claim) lê esta flag
+            const wf = document.getElementById('withdraw-form'), wp = document.getElementById('withdraw-parado');
+            if (wf) wf.style.display = parado ? 'none' : '';
+            if (wp) { wp.innerHTML = parado ? htmlContaParada(_estadoConta, 'sacar') : ''; wp.style.display = parado ? 'block' : 'none'; }
+            // depósito: só onde o dinheiro cairia numa carteira que o app não move (ou ainda não sabemos)
+            const depBloq = _estadoConta.estado === 'externa' || _estadoConta.estado === 'indefinido';
+            const da = document.getElementById('deposit-area'), dp = document.getElementById('deposit-parado');
+            if (da) da.style.display = depBloq ? 'none' : '';
+            if (dp) { dp.innerHTML = depBloq ? htmlContaParada(_estadoConta, 'depositar') : ''; dp.style.display = depBloq ? 'block' : 'none'; }
+            avisoContaParada(_estadoConta);
+        }
+        window.__reaplicarEstadoConta = () => { if (_estadoConta && _estadoConta.estado !== 'ok') aplicarEstadoConta(_estadoConta); };
+        // toast curto (o estado completo fica na aba Sacar); some quando o estado volta a ok
+        function avisoContaParada(r) {
+            try {
                 const el = document.getElementById('bindingWarn');
                 const txt = document.getElementById('bindingWarnText');
-                const line =
-                    `<b style="color:#e5e7eb">Conta em modo visualização</b><br>` +
-                    `A carteira registrada <code>${canonical.slice(0,8)}…${canonical.slice(-4)}</code> é externa; esta sessão assina por <code>${derived.slice(0,8)}…${derived.slice(-4)}</code> <button onclick="navigator.clipboard.writeText('${derived}');this.textContent='copiado ✓';setTimeout(()=>{this.textContent='copiar';},2000)" style="padding:1px 8px;border-radius:6px;border:1px solid #4b5563;background:transparent;color:inherit;font-size:10px;cursor:pointer;">copiar</button>.<br>` +
-                    `Depósitos funcionam normalmente. Saques e transferências: pela carteira externa, ou entrando com um e-mail cuja conta nasceu no app.`;
-                if (el.style.display === 'block') { txt.innerHTML += '<br><br>' + line; }
+                const velho = document.getElementById('cpAviso');
+                if (r.estado === 'ok') {
+                    if (velho) { velho.remove(); if (!txt.textContent.trim()) el.style.display = 'none'; }
+                    return;
+                }
+                if (sessionStorage.getItem('efix_bindwarn_dismissed')) return;
+                const line = '<span id="cpAviso"><b style="color:#e5e7eb">' + _escCp(_cpTitulo(r)) + '</b><br>' + _escCp(T('cp_aviso')) + '</span>';
+                if (velho) velho.outerHTML = line;
+                else if (el.style.display === 'block') txt.innerHTML += '<br><br>' + line;
                 else { txt.innerHTML = line; el.style.display = 'block'; }
             } catch {}
         }
+        function mostrarAbaSacar() {
+            const tab = Array.from(document.querySelectorAll('.tabs .tab')).find(b => /'withdraw'/.test(b.getAttribute('onclick') || ''));
+            if (tab && typeof switchTab === 'function') switchTab('withdraw', tab);
+            const wp = document.getElementById('withdraw-parado');
+            if (wp && wp.scrollIntoView) wp.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+        // Sai SÓ da sessão de assinatura (Alchemy); a sessão da conta (JWT) fica. Reload = iframe/signer
+        // limpos (mesma estratégia do handleDisconnect); na volta o código já é pedido para o e-mail DESTA conta.
+        async function trocarSessaoAssinatura(btn) {
+            if (btn) btn.disabled = true;
+            try { await window.EfixWallet?.disconnect?.(); } catch {}
+            try { Object.keys(localStorage).filter(k => k.startsWith('alchemy-signer-session')).forEach(k => localStorage.removeItem(k)); } catch {}
+            try { sessionStorage.setItem('efix_reassinar', '1'); } catch {}
+            location.reload();
+        }
+        window.trocarSessaoAssinatura = trocarSessaoAssinatura;
+        async function reverificarConta(btn) {
+            if (btn) btn.disabled = true;
+            const gen = ++_estadoContaGen;
+            _estadoContaPromise = avaliarEstadoConta();
+            try { const r = await _estadoContaPromise; if (gen === _estadoContaGen) aplicarEstadoConta(r); } catch { if (btn) btn.disabled = false; }
+        }
+        window.reverificarConta = reverificarConta;
+        // Sem alert: com msgFn o chamador escreve a linha curta no próprio lugar; sem ela, leva à aba Sacar,
+        // onde o estado completo (motivo, saldo, o que fazer) está escrito no lugar do formulário.
         function guardOperable(msgFn) {
             if (!window.IS_EXTERNAL_WALLET) return true;
-            const msg = 'Conta registrada é uma carteira externa (MetaMask) — o app não pode assinar por ela. Movimente pela MetaMask, ou entre com um e-mail cuja carteira foi criada aqui.';
-            if (typeof msgFn === 'function') msgFn(msg); else alert(msg);
+            const msg = T('cp_curto').replace('{tit}', _cpTitulo(_estadoConta || {}));
+            if (typeof msgFn === 'function') msgFn(msg); else mostrarAbaSacar();
             return false;
         }
-        window.guardOperable = guardOperable; // owner-tabs.js (claim) também usa
+        window.guardOperable = guardOperable;
 
         // Resolve smart account address (this is where tokens must live + where UserOps execute from)
         // @account-kit/wallet-client exposes requestAccount(); there is no client.account on the decorator.
@@ -1455,6 +1625,13 @@
                         try { localStorage.setItem('efix_last_email', userEmail.toLowerCase()); } catch {}
                     }
                     showApp(userAddress);
+                    // 14/10: voltou de "Sair da sessão de assinatura" (estado outra_sessao): já pede o código para o e-mail DESTA conta
+                    try {
+                        if (sessionStorage.getItem('efix_reassinar')) {
+                            sessionStorage.removeItem('efix_reassinar');
+                            promptReauthForPendingAction('sessao');
+                        }
+                    } catch {}
                     return;
                 }
 
@@ -1482,6 +1659,9 @@
                             const sess = await EfixAuth.login(cachedEmail, userAddress);
                             userEmail = sess.user.email || cachedEmail;
                             window.userEmail = userEmail;
+                            // 14/10: a conta é a do BANCO (o backend ignora o endereço do corpo para conta
+                            // existente). A derivada só assina. Antes tela e depósito usavam a derivada.
+                            if (sess.user && sess.user.address) { userAddress = sess.user.address; window.userAddress = userAddress; }
                             console.log('[EfixAuth] JWT re-minted on session restore for', userEmail);
                             showApp(userAddress);
                             return;
@@ -1564,15 +1744,19 @@
 
             try {
                 await EfixWallet.verifyOTP(code);
-                userAddress = await getSmartAccountAddress();
-                window.userAddress = userAddress;
+                // 14/10: a derivada é a conta que ESTA sessão assina; a conta do cliente é a do BANCO (volta
+                // no login). Antes userAddress virava a derivada — conta MAv2 (ex.: 0xa867…) via a 0x10fe…
+                // vazia, e depósito por aqui caía nela.
+                const derivada = await getSmartAccountAddress();
 
                 // Persist to backend. Surface real failures to the user instead of
                 // swallowing — without a backend JWT the app can't sync balance or
                 // withdraw, so a silent failure left the user in a broken session.
                 try {
-                    const session = await EfixAuth.login(userEmail, userAddress);
+                    const session = await EfixAuth.login(userEmail, derivada);
                     console.log(session.isNew ? 'New user registered' : 'User logged in');
+                    userAddress = (session && session.user && session.user.address) || derivada;
+                    window.userAddress = userAddress;
                 } catch(e) {
                     console.error('Backend login failed:', e.message);
                     // SEC 2026-08-18: vincular endereço a conta existente passou
@@ -1597,6 +1781,9 @@
                     if (pending === 'swap') {
                         setBrleSwapMsg('Sessão renovada. Refazendo swap…');
                         setTimeout(() => handleBrleSwap(), 400);
+                    } else if (pending === 'withdraw') {
+                        // 14/10: mesma retomada do _efixAuthCallback — quem pegasse o pendente primeiro aqui o descartava
+                        setTimeout(() => handleWithdraw(), 400);
                     }
                 }
             } catch(e) {
@@ -1620,10 +1807,11 @@
             // this, the user is stuck on the auth screen unable to return to
             // the app without completing OTP.
             if (window._pendingAction && userAddress) {
+                const eraSwap = window._pendingAction === 'swap';
                 delete window._pendingAction;
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('app-screen').style.display = 'block';
-                if (typeof setBrleSwapMsg === 'function') setBrleSwapMsg('Swap cancelado.');
+                if (eraSwap && typeof setBrleSwapMsg === 'function') setBrleSwapMsg('Swap cancelado.');
             }
         }
 
@@ -1733,6 +1921,8 @@
             ensureAccountDeployed(address);
             // Sync balance to backend (async, non-blocking)
             EfixAuth.syncBalance().catch(() => {});
+            // 14/10: estado da conta (pode assinar? por quê não?) + fantasma — sempre, não só com e-mail
+            detectGhostFunds();
             // Warn if this wallet differs from the EFIX Offerings on-record wallet for this email
             if (userEmail) checkWalletBinding(userEmail, address).catch(() => {});
             // Phase 4: lens-backed ownership tabs (Imóveis + Cotas BTR appear only if held)
@@ -2385,7 +2575,7 @@
             try {
                 const r = await fetch(BACKEND_URL + '/api/wallet/status');
                 const s = await r.json();
-                const withdrawBtn = document.querySelector('#panel-withdraw button.btn-primary');
+                const withdrawBtn = document.querySelector('#withdraw-form button.btn-primary');
                 const depositArea = document.getElementById('panel-deposit');
                 if (s.pause_withdrawals && withdrawBtn) {
                     withdrawBtn.disabled = true;
@@ -2694,6 +2884,10 @@
         let pollTimer = null;
 
         async function handleDeposit() {
+            // 14/10: conta que o app não consegue movimentar → o painel mostra o bloqueio (nada de QR)
+            await estadoContaPronto();
+            const estDep = (_estadoConta || {}).estado;
+            if (estDep === 'externa' || estDep === 'indefinido') { aplicarEstadoConta(_estadoConta); return; }
             const amount = parseFloat(document.getElementById('depositAmount').value);
             if (!amount || amount < 10) { alert('Mínimo R$ 10,00'); return; }
 
@@ -2911,6 +3105,8 @@
         //      (13/10: com aprovacao manual o backend RETEM o pedido — 202 awaiting_approval — e o PIX
         //      sai depois da aprovacao da EFIX; recusado = efixDI de volta na carteira)
         async function handleWithdraw() {
+            // 14/10: clique logo depois de entrar, com a avaliação da conta em voo: espera o veredito
+            await estadoContaPronto();
             if (!guardOperable()) return;
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const pixKey = document.getElementById('pixKey').value.trim();
@@ -2980,7 +3176,7 @@
             }
             const requestUuid = _pendingWithdrawUuid;
 
-            const btn = document.querySelector('#panel-withdraw button.btn-primary');
+            const btn = document.querySelector('#withdraw-form button.btn-primary');
             const originalLabel = btn ? btn.textContent : 'Solicitar Saque';
             try {
                 // Check trust mode via status endpoint — when WITHDRAW_TRUST_MODE=true on backend,
@@ -3016,7 +3212,9 @@
                     if (btn) btn.disabled = true, btn.textContent = 'Queimando tokens...';
                     // Step 1: burn efixDIBase on Base via Account Kit v4 UserOp (gas-sponsored)
                     // burn(uint256) selector = 0x42966c68
-                    const amountWei = BigInt(Math.round(amount * 1e18));
+                    // 14/10: o backend confere parseEther(Number(amount).toFixed(2)) — Math.round(amount*1e18)
+                    // com 3+ casas dava AMOUNT_MISMATCH (400 sem devolução, queima órfã para a mesa)
+                    const amountWei = ethers.parseEther(amount.toFixed(2));
                     const padded = amountWei.toString(16).padStart(64, '0');
                     const burnData = '0x42966c68' + padded;
                     const tokenAddr = EfixWallet.config.contracts.efixDI;

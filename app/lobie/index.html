@@ -511,6 +511,8 @@ tr.grp:first-child td{padding-top:6px}
           </table>
         </div>
 
+        <!-- 14/10: conta legada (signer antigo, fila da migração) — aviso fixo desde o boot; ver aplicarEstadoLegado() -->
+        <div class="card" id="aviso-legado" role="status" style="display:none;border-left:3px solid #d99e17;font-size:13px;line-height:1.6"></div>
         <div class="quick" data-reveal style="animation-delay:.08s">
           <button class="primary" id="qk-dep" onclick="abrirDepositar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14m-7-7h14"/></svg>Depositar</button>
           <button id="qk-rem" onclick="go('remessas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h16"/><path d="m13 6 6 6-6 6"/></svg>Nova remessa</button>
@@ -827,6 +829,14 @@ tr.grp:first-child td{padding-top:6px}
   <button class="x" onclick="fecharModal('mDep')">&times;</button>
   <h3 id="depTitulo">Depositar via PIX</h3>
   <p class="lead" id="depLead">Pague o PIX e seus tokens são emitidos automaticamente.</p>
+  <!-- 14/10: conta legada — avisa ANTES de gerar o PIX; o formulário (e as abas US$/€) só aparece depois do "Entendi" -->
+  <div id="depLegado" style="display:none">
+    <div class="wz-nota" id="depLegadoTxt" style="border-left:3px solid #d99e17"></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:12.5px;cursor:pointer">
+      <input type="checkbox" id="depLegadoOk" onchange="depLegadoAceite(this.checked)" style="margin-top:3px">
+      <span>Entendi — quero depositar mesmo assim</span>
+    </label>
+  </div>
   <div id="depAbas" role="tablist" style="display:none;margin:-6px 0 12px;gap:6px;flex-wrap:wrap">
     <button type="button" class="mini on" role="tab" aria-selected="true" data-dep-aba="pix" style="padding:6px 12px" onclick="depAba('pix')">PIX</button>
     <button type="button" class="mini" role="tab" aria-selected="false" data-dep-aba="usd" style="padding:6px 12px;display:none" onclick="depAba('usd')">USD · ACH/Wire</button>
@@ -1068,6 +1078,15 @@ tr.grp:first-child td{padding-top:6px}
     <button class="cta pri" id="atvVerify" onclick="ativarVerificar()">Ativar carteira</button>
   </div>
   <div class="mmsg" id="atvMsg"></div>
+</div></div>
+
+<!-- 14/10: conta legada (signer antigo, na fila da migração): UM estado no lugar dos formulários de
+     Sacar/Enviar/Trocar/Ativar — por quê, saldo seguro, o que fazer. Nada aponta para o acesso clássico. -->
+<div class="modal" id="mLegado"><div class="mbox" style="position:relative">
+  <button class="x" onclick="fecharModal('mLegado')">&times;</button>
+  <h3 id="legTitulo">Carteira na fila da migração</h3>
+  <div id="legCorpo" role="status"></div>
+  <button class="cta" onclick="fecharModal('mLegado')">Entendi</button>
 </div></div>
 
 <!-- bottom-nav mobile -->
@@ -1325,6 +1344,7 @@ async function balanceOf(token, addr){
   $('chip-email').textContent = email;
   $('chip-init').textContent = (email[0]||'·').toUpperCase();
   carregar(email, user.address);
+  aplicarEstadoLegado();   // 14/10: conta legada — aviso fixo + Sacar/Enviar/Trocar abrem só o estado
   // F1 (21/09): link direto — efix.finance/app/wallet/#remessas abre a aba certa (antes o hash só era ESCRITO por go()).
   const h0 = (_hash0||location.hash||'').replace('#','');
   if(h0 && h0!=='inicio' && document.getElementById('view-'+h0)) go(h0);
@@ -1390,8 +1410,9 @@ async function scaDaSessao(){
    Os 7 holders legados ainda assinam com o signer Alchemy; a chave deles migra
    TEE→TEE em breve. Se logassem na Privy AGORA, nasceria uma embedded wallet
    prematura que atrapalha o import da chave — então TODO caminho de auth do
-   signer (ativação e renovação afunilam em abrirAtivar) recusa esses e-mails
-   e aponta o acesso clássico (bundle v3/Alchemy, intocado). Lista = SHA-256
+   signer (ativação e renovação afunilam em abrirAtivar) recusa esses e-mails.
+   14/10: e mostra o estado único da conta legada (contaLegada/mostrarContaLegada,
+   abaixo) — não aponta mais o acesso clássico. Lista = SHA-256
    do e-mail lowercase (sem PII no fonte). Ao concluir a migração de cada um,
    remover o hash; quando zerar, apagar o bloco inteiro. */
 const LEGACY_SIGNER_SHA256 = new Set([
@@ -1414,6 +1435,63 @@ async function isLegacyEmail(email){
     // não bloquear aqui — o saque continua fail-closed pela checagem de SCA
     return false;
   }
+}
+/* 14/10 · UM estado para a conta legada (labirinto do saque relatado pelo CEO em 14/10).
+   Antes: Sacar/Enviar/Trocar abriam o formulário, cotavam, pediam a confirmação da queima e só então diziam
+   "chave expirou" → "renovar" → "Ativar carteira" ("Criamos uma conta…", falso para quem já tem) → "use o
+   acesso clássico" → classic "modo visualização (MetaMask)" → de volta aqui. Agora a lista acima decide no
+   boot e esses botões abrem SÓ o estado: por quê, saldo seguro e o que fazer (contato). Nada leva ao acesso
+   clássico. Apagar junto com LEGACY_SIGNER_SHA256 quando a lista zerar. */
+const _legadoCache = {};
+function contaLegada(){
+  const email = String(((EfixAuth.getUser&&EfixAuth.getUser())||{}).email||'').trim().toLowerCase();
+  if(!email) return Promise.resolve(false);
+  if(!_legadoCache[email]) _legadoCache[email] = isLegacyEmail(email);
+  return _legadoCache[email];
+}
+function legadoContatoHtml(){
+  return IS_LOBIE ? 'fale com o suporte'
+    : 'escreva para <a href="mailto:contato@efix.finance" style="color:var(--mag);text-decoration:underline">contato@efix.finance</a>';
+}
+function legadoPausados(){ return IS_LOBIE ? 'envios e trocas' : 'saques, envios e trocas'; }
+function legadoHtml(acao){
+  const u = (EfixAuth.getUser&&EfixAuth.getUser())||{};
+  const cart = u.address ? ' (<span class="mono">'+_esc(short(u.address))+'</span>)' : '';
+  const contato = legadoContatoHtml(), Contato = contato.charAt(0).toUpperCase()+contato.slice(1);
+  const fazer = acao==='sacar'
+    ? 'Precisa sacar agora? '+Contato+(IS_LOBIE?'':' a partir deste e-mail, com o valor')+' — a equipe acompanha o seu saque.'
+    : 'Precisa movimentar agora? '+Contato+(IS_LOBIE?'':' a partir deste e-mail')+' — a equipe te ajuda.';
+  return '<p class="lead" style="margin-bottom:10px"><b>Sua carteira está na fila da migração de assinatura.</b></p>'+
+    '<div class="wz-nota" style="border-left:3px solid #d99e17">'+
+    '<p style="margin:0 0 8px"><b>Por quê:</b> sua conta é das primeiras'+(IS_LOBIE?'':' da EFIX')+' e ainda assina pelo sistema de chaves antigo, '+
+      'que está sendo substituído. Até a sua chave ser migrada, '+legadoPausados()+' ficam pausados nesta carteira.</p>'+
+    '<p style="margin:0 0 8px"><b>Seu saldo:</b> está seguro e não muda — os tokens continuam na sua carteira'+cart+' e nada sai dela enquanto isso.</p>'+
+    '<p style="margin:0"><b>O que fazer:</b> '+fazer+' Quando a migração terminar, '+legadoPausados()+' voltam a funcionar aqui.</p>'+
+    '</div>';
+}
+function mostrarContaLegada(acao){
+  $('legTitulo').textContent = ({sacar:'Saque pausado nesta carteira', enviar:'Envio pausado nesta carteira',
+    trocar:'Troca pausada nesta carteira'})[acao] || 'Carteira na fila da migração';
+  $('legCorpo').innerHTML = legadoHtml(acao);
+  $('mLegado').classList.add('on');
+}
+async function aplicarEstadoLegado(){
+  if(!(await contaLegada())) return;
+  const av = $('aviso-legado');
+  if(av){
+    av.innerHTML = '<b>Sua carteira está na fila da migração de assinatura.</b> '+
+      (IS_LOBIE?'Envios e trocas':'Saques, envios e trocas')+' ficam pausados até a migração; seu saldo está seguro e não muda. '+
+      '<a href="#" onclick="mostrarContaLegada(\'info\');return false" style="color:var(--mag);text-decoration:underline">Entenda e veja o que fazer →</a>';
+    av.style.display = 'block';
+  }
+  ['qk-sac','qk-env','qk-tro'].forEach(id=>{ const b=$(id); const g=b&&b.querySelector('.badge'); if(g) g.textContent='pausado'; });
+}
+function legadoDepositoHtml(){
+  const u = (EfixAuth.getUser&&EfixAuth.getUser())||{};
+  const cart = u.address ? ' (<span class="mono">'+_esc(short(u.address))+'</span>)' : '';
+  return '<b>Antes de depositar:</b> sua carteira está na fila da migração de assinatura. O depósito cai normalmente na sua carteira'+cart+
+    ', mas '+legadoPausados()+' ficam pausados até a migração — o valor só pode ser sacado por aqui depois dela. '+
+    'Seu saldo está seguro. Se precisar sacar antes, '+legadoContatoHtml()+'.';
 }
 // 09/10: investidores antigos do offerings (carteira registrada lá + reserva, sem
 // carteira na conta efixdi; SQL só leitura 09/10). MESMA lista da /app/offerings/:
@@ -1439,15 +1517,13 @@ let CARTEIRA_NAO_CONFIRMADA = false;   // lookup de investidor antigo falhou: n�
 async function abrirAtivar(){
   if(!EfixAuth.isLoggedIn()){ location.reload(); return; }
   const email = ((EfixAuth.getUser()||{}).email||'').toLowerCase();
+  // 14/10: conta legada nunca vê o "Ativar carteira" (o lead dele é falso para quem já tem conta) nem o
+  // acesso clássico — vê o estado único
+  if(await isLegacyEmail(email)){ mostrarContaLegada('ativar'); return; }
   $('atv-email').textContent = email;
   $('atv-step1').style.display='block'; $('atv-step2').style.display='none';
   $('atvCode').value=''; $('atvMsg').textContent=''; $('atvMsg').className='mmsg';
   $('mAtivar').classList.add('on');
-  if(await isLegacyEmail(email)){
-    $('atv-step1').style.display='none';
-    const m=$('atvMsg'); m.className='mmsg err';
-    m.innerHTML='Sua carteira está na fila da migração de assinatura e será migrada em breve — o endereço e o saldo não mudam. Até lá, para movimentar use o <a href="/app/wallet/classic.html" style="color:var(--mag);text-decoration:underline">acesso clássico</a>.';
-  }
 }
 // 09/10: sem carteira NA CONTA ≠ sem carteira. O investidor antigo do offerings
 // tem a registrada (WALLETS, vinda do lookup) sem vínculo no efixdi: ativar
@@ -1470,7 +1546,7 @@ async function ativarEnviarCodigo(){
   // holder legado nunca inicia auth Privy (ver LEGACY_SIGNER_SHA256)
   if(await isLegacyEmail(((EfixAuth.getUser()||{}).email||''))){
     m.className='mmsg err';
-    m.textContent='Carteira na fila de migração — use o acesso clássico para movimentar até concluirmos.';
+    m.textContent='Sua carteira está na fila da migração de assinatura: movimentações pausadas até a migração; seu saldo está seguro e não muda.';
     b.disabled=false; return;
   }
   // rejeição tardia do authenticate() em background (padrão do classic —
@@ -4056,6 +4132,7 @@ function sacarLimpaPreview(){
 
 async function abrirSacar(){
   if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para sacar.'); return; }
+  if(await contaLegada()){ mostrarContaLegada('sacar'); return; }   // 14/10: estado único, sem formulário
   const u = EfixAuth.getUser()||{};
   if(!u.address){ semCarteiraNaConta(); return; }   // sem carteira on-chain não há o que queimar
   if(!walletPodeAssinar()){
@@ -4457,6 +4534,7 @@ function depSetStep(containerId, n, estado){
 }
 
 async function abrirEnviar(){
+  if(await contaLegada()){ mostrarContaLegada('enviar'); return; }   // 14/10: estado único, sem formulário
   if(!walletPodeAssinar()){ alert('Envio disponível para contas criadas no app. Carteira externa (MetaMask) assina pela própria carteira.'); return; }
   // sem carteira ≠ "sem ativos". getUser().address já está populado antes do
   // render; WALLETS só depois do lookup — checar os dois evita falso positivo
@@ -4574,6 +4652,7 @@ async function enviarOnchain(){
 }
 
 async function abrirTrocar(){
+  if(await contaLegada()){ mostrarContaLegada('trocar'); return; }   // 14/10: estado único, sem formulário
   // guardas do abrirEnviar: sem carteira/sem saldo o cliente recebia
   // "escolha ativos diferentes", que não tem relação com o problema dele
   if(!walletPodeAssinar()){ alert('Troca disponível para contas criadas no app. Carteira externa (MetaMask) opera pela própria carteira.'); return; }
@@ -4895,7 +4974,8 @@ function depCopiar(srcId, btnId, rotulo){
     setTimeout(()=>{ $(btnId).textContent=rotulo; },1800); });
 }
 // aba: 'usd'|'eur' abre direto nela SE o backend liberar (vem da nota do Investir); sem isso, PIX
-function abrirDepositar(aba){
+let _depAbaPedida = null;
+async function abrirDepositar(aba){
   if(!EfixAuth.isLoggedIn()){ alert('Entre com sua conta para depositar.'); return; }
   // o depósito minta tokens PARA a carteira — sem ela, o backend recusa (e
   // antes do fix 18/08 mintaria para um placeholder). Ativa primeiro.
@@ -4907,10 +4987,31 @@ function abrirDepositar(aba){
   // 09/10: abre sempre em PIX com as abas ocultas; elas só aparecem se o /onramp/status liberar
   $('depAbas').style.display='none';
   depAba('pix');
+  // 14/10: conta legada — o aviso vem ANTES de gerar o PIX; formulário e abas US$/€ só depois do "Entendi"
+  const legado = await contaLegada();
+  $('depLegado').style.display = legado ? 'block' : 'none';
+  if(legado){
+    $('depLegadoTxt').innerHTML = legadoDepositoHtml();
+    $('depLegadoOk').checked = false; $('depLegadoOk').disabled = false;
+    _onrMostra('dep-pix', false);
+    _depAbaPedida = aba;
+    $('mDep').classList.add('on');
+    return;
+  }
   $('mDep').classList.add('on');
   depAbasCarregar(aba);
 }
+function depLegadoAceite(ok){
+  if(!ok) return;
+  $('depLegadoOk').disabled = true;
+  _onrMostra('dep-pix', true);
+  depAbasCarregar(_depAbaPedida);
+}
 async function depGerar(){
+  // 14/10: conta legada só gera o PIX depois do "Entendi" (o formulário fica oculto até lá — isto é a trava)
+  if($('depLegado').style.display==='block' && !$('depLegadoOk').checked){
+    $('depMsg').className='mmsg err'; $('depMsg').textContent='leia o aviso acima e marque "Entendi" para gerar o PIX'; return;
+  }
   const amount = parseFloat($('depAmt').value);
   if(!amount || amount<10){ $('depMsg').className='mmsg err'; $('depMsg').textContent='mínimo R$ 10,00'; return; }
   const b=$('depBtn'); b.disabled=true; b.textContent='Gerando…';

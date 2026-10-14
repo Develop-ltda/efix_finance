@@ -9,10 +9,17 @@ const WalletLogic = {
     return (amount_100 * ltv_100 * fx_100) / 1000000;
   },
 
+  // 14/10: com sessão, os depósitos vão com o JWT (como a wallet nova). O backend aceita os dois
+  // (walletOrUserAuth); sem sessão segue pelo endereço do corpo, como antes.
+  _headers() {
+    try { if (typeof EfixAuth !== 'undefined' && EfixAuth && EfixAuth.headers) return EfixAuth.headers(); } catch (e) {}
+    return { 'Content-Type': 'application/json' };
+  },
+
   async createDeposit(backend, amount, address) {
     const res = await fetch(backend + '/deposit/qr', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this._headers(),
       body: JSON.stringify({ amount, address })
     });
     const data = await res.json();
@@ -26,7 +33,7 @@ const WalletLogic = {
     // See F-005-residual in SEC_AUDIT_2026-05-26.md.
     const res = await fetch(backend + '/deposit/confirm-paid', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this._headers(),
       body: JSON.stringify({ reference, address })
     });
     const data = await res.json();

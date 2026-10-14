@@ -1080,7 +1080,9 @@
     if (window.IS_EXTERNAL_WALLET) {
       if (status) {
         status.className = "ownership-claim-status error";
-        status.textContent = "Conta externa (MetaMask) — claim indisponível neste login; use a MetaMask ou entre com o e-mail dono da carteira.";
+        // 14/10: sem supor MetaMask — o motivo real (e o que fazer) está escrito na aba Sacar
+        status.textContent = (typeof window.guardOperable === "function" && (() => { let m = ""; window.guardOperable((t) => { m = t; }); return m; })())
+          || "Esta sessão não assina pela carteira registrada — veja o motivo e o que fazer na aba Sacar.";
       }
       return;
     }
