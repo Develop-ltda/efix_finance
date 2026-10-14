@@ -2000,6 +2000,10 @@
             document.getElementById('shortAddr').textContent = short;
             document.getElementById('userPillAddr').textContent = short;
             document.getElementById('userPill').classList.add('active');
+            // 14/10 (review): estado da conta (pode assinar? por quê não?) + fantasma — ANTES do saldo. O saque pendente
+            // retoma 400 ms depois da entrada e espera estadoContaPronto(): com a avaliação só depois do saldo (rede), ele
+            // pegava o veredito da entrada ANTERIOR (sem sessão da assinatura = "ok") em vez do desta sessão.
+            detectGhostFunds();
             await refreshBalance(address);
             loadHistory(address);
             loadOfferings(address);
@@ -2009,8 +2013,6 @@
             ensureAccountDeployed(address);
             // Sync balance to backend (async, non-blocking)
             EfixAuth.syncBalance().catch(() => {});
-            // 14/10: estado da conta (pode assinar? por quê não?) + fantasma — sempre, não só com e-mail
-            detectGhostFunds();
             // Warn if this wallet differs from the EFIX Offerings on-record wallet for this email
             if (userEmail) checkWalletBinding(userEmail, address).catch(() => {});
             // Phase 4: lens-backed ownership tabs (Imóveis + Cotas BTR appear only if held)
