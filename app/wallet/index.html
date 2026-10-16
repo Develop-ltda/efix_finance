@@ -4683,7 +4683,8 @@ async function abrirTrocar(){
   // destino = o outro lado do par PSM, não o primeiro da lista (na marca Lobie a
   // lista começa em BRLE e o default virava "comprar BRLE", inverso do fluxo)
   const de = $('swFrom').value;
-  $('swTo').value = (de==='BRLE') ? 'USDC' : 'BRLE';
+  // 16/10: USDC → efixDI (PSMLite) é o par natural de quem chega com dólar na marca EFIX; na Lobie segue BRLE
+  $('swTo').value = de==='BRLE' ? 'USDC' : (de==='USDC' ? (IS_LOBIE ? 'BRLE' : 'efixDI') : (de==='efixDI' ? 'USDC' : 'BRLE'));
   $('swAmt').value=''; $('swMsg').textContent=''; $('swMsg').className='mmsg';
   trocarLimpa();
   $('mTrocar').classList.add('on');
@@ -4706,6 +4707,21 @@ const PSM_SEL = {
 };
 const hex32 = (v) => BigInt(v).toString(16).padStart(64,'0');
 const psmRead = async (sel, args) => rpc('eth_call',[{to:PSM_SWAP, data:sel+(args||[]).map(hex32).join('')},'latest']);
+/* ═══ 16/10: SWAP USDC → efixDI pelo EfixDIPSMLite (permissionless, preço = NAV × BRL/USD dos agregadores) ═══
+   Mesmo padrão do EfixPSM: a conta DO CLIENTE assina (gasless), approve do valor exato + swap com minOut.
+   Limites do contrato checados ANTES de assinar: paused, cap DIÁRIO de saída (dia UTC) e reserva acima do piso.
+   Venda efixDI → USDC fica FECHADA (PSML_VENDA_ON=false): a reserva de USDC deste PSM é o piso de saída
+   público (Morpho/Philidor) — a saída do cliente segue pelo Sacar (PIX) até decisão do Ernesto. */
+const PSML = '0x068C6c11b4A369e4011E008Da2aa58B6A58a85e4';
+const PSML_VENDA_ON = false;
+// selectors via keccak256 (16/10) e conferidos on-chain (quote(true,100 USDC) = 478,05 efixDI a NAV US$ 0,2086):
+const PSML_SEL = {
+  quote: '0x4df60b01', u2e: '0x43bf05bc', e2u: '0x6f02e0a1', reserves: '0x75172a8b', today: '0x439bf468',
+  capUsdc: '0xcdad4bb6', capEfix: '0xef9ee12b', floorUsdc: '0xb6630f08', floorEfix: '0x9bbaf80c',
+  paused: '0x5c975abb', fee: '0x2ffdaf89',
+};
+const psmlRead = async (sel, args) => rpc('eth_call',[{to:PSML, data:sel+(args||[]).map(hex32).join('')},'latest']);
+const _w = (r, i) => BigInt('0x'+(String(r||'').slice(2+64*i, 66+64*i) || '0'));   // i-ésima palavra de 32 bytes
 const _fmtTok = (v,d) => (Number(v)/Math.pow(10,d)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 
 let _sw = null;                 // cotação vigente
@@ -4718,8 +4734,15 @@ async function trocarCotar(){
   const f=$('swFrom').value, t=$('swTo').value, m=$('swMsg');
   _sw = null;
   if(f===t){ m.className='mmsg err'; m.textContent='escolha ativos diferentes'; return null; }
-  const par = (f==='BRLE'&&t==='USDC') ? 'b2u' : ((f==='USDC'&&t==='BRLE') ? 'u2b' : null);
-  if(!par){ m.className='mmsg err'; m.textContent='Par '+f+'→'+t+': só BRLE↔USDC tem liquidez hoje (PSM). Para mover os outros, use Enviar.'; return null; }
+  const par = (f==='BRLE'&&t==='USDC') ? 'b2u' : (f==='USDC'&&t==='BRLE') ? 'u2b'
+            : (f==='USDC'&&t==='efixDI') ? 'u2e' : (f==='efixDI'&&t==='USDC') ? 'e2u' : null;
+  if(!par){ m.className='mmsg err'; m.textContent='Par '+f+'→'+t+': as trocas disponíveis são BRLE↔USDC e USDC→efixDI. Para mover os outros, use Enviar.'; return null; }
+  if(par==='e2u' && !PSML_VENDA_ON){
+    m.className='mmsg err';
+    m.textContent='Para sair de efixDI use Sacar (resgate em reais por PIX). A troca efixDI→USDC ainda não está aberta.';
+    return null;
+  }
+  if(par==='u2e' || par==='e2u') return trocarCotarLite(par, f, t, m);
   const dec = par==='b2u' ? 18 : 6, decOut = par==='b2u' ? 6 : 18;
   const wei = weiDeToken($('swAmt').value, dec);
   if(wei<=0n){ m.className='mmsg err'; m.textContent='informe a quantidade'; return null; }
@@ -4752,6 +4775,47 @@ async function trocarCotar(){
   }
 }
 
+// 16/10: cotação USDC↔efixDI no PSMLite. O contrato limita a SAÍDA por dia (UTC) e exige reserva ≥ saída + piso:
+// os dois são checados aqui para o cliente não assinar uma troca que reverte.
+async function trocarCotarLite(par, f, t, m){
+  const dec = par==='u2e' ? 6 : 18, decOut = par==='u2e' ? 18 : 6;
+  const wei = weiDeToken($('swAmt').value, dec);
+  if(wei<=0n){ m.className='mmsg err'; m.textContent='informe a quantidade'; return null; }
+  m.className='mmsg'; m.textContent='cotando no PSM do efixDI…';
+  try{
+    if(_w(await psmlRead(PSML_SEL.paused), 0) !== 0n){ m.className='mmsg err'; m.textContent='A troca de efixDI está pausada no momento.'; return null; }
+    const r = await psmlRead(PSML_SEL.quote, [par==='u2e' ? 1n : 0n, wei]);
+    if(!r || r.length < 130) throw new Error('sem cotação');
+    const out = _w(r, 0), navUsd = _w(r, 1);
+    if(out<=0n || navUsd<=0n) throw new Error('cotação zero');
+    const feeBps = _w(await psmlRead(PSML_SEL.fee), 0);
+    const fee = (feeBps>0n && feeBps<10000n) ? (out*feeBps)/(10000n-feeBps) : 0n;   // bruto − líquido, na moeda de saída
+    // cap DIÁRIO de saída (dia UTC): cap − já saído hoje; 0 = fechado
+    const cap = _w(await psmlRead(par==='u2e' ? PSML_SEL.capEfix : PSML_SEL.capUsdc), 0);
+    const hoje = await psmlRead(PSML_SEL.today);                  // (usdcOut, efixOut)
+    const usado = _w(hoje, par==='u2e' ? 1 : 0);
+    const livre = cap > usado ? cap - usado : 0n;
+    if(cap===0n){ m.className='mmsg err'; m.textContent='A troca de efixDI está fechada no momento.'; return null; }
+    if(livre===0n){ m.className='mmsg err'; m.textContent='O limite diário desta troca já foi usado hoje — renova às 21:00 (Brasília).'; return null; }
+    if(out > livre){
+      const tetoEntrada = (wei*livre)/out;
+      m.className='mmsg err';
+      m.textContent='Hoje ainda cabem '+_fmtTok(livre,decOut)+' '+t+' (≈ '+_fmtTok(tetoEntrada,dec)+' '+f+'). Troque menos ou depois das 21:00 (Brasília).';
+      return null;
+    }
+    _sw = { par, wei, out, fee, dec, decOut, from:f, to:t, em:Date.now(), lite:true };
+    const nav = (Number(navUsd)/1e18).toLocaleString('pt-BR',{minimumFractionDigits:4,maximumFractionDigits:4});
+    m.className='mmsg ok';
+    m.innerHTML = 'Você recebe <b>'+_fmtTok(out,decOut)+' '+t+'</b> · taxa do PSM '+_fmtTok(fee,decOut)+' '+t+' · cota US$ '+nav+' por efixDI.';
+    const b=$('swBtn'); if(b) b.textContent='Trocar '+_fmtTok(wei,dec)+' '+f+' →';
+    return _sw;
+  }catch(e){
+    m.className='mmsg err';
+    m.textContent='Não consegui cotar agora — o preço do efixDI pode estar desatualizado ou a rota sem reserva neste momento.';
+    return null;
+  }
+}
+
 async function trocarOnchain(){
   const m=$('swMsg'), b=$('swBtn');
   // sempre recotar antes de assinar: taxa, reserva e caps mudam
@@ -4764,7 +4828,7 @@ async function trocarOnchain(){
   const q = _sw;
   // o que valida é o que assina: se o formulário mudou desde a cotação, recotar
   const fAgora=$('swFrom').value, tAgora=$('swTo').value;
-  const decAgora = fAgora==='BRLE' ? 18 : 6;
+  const decAgora = ((TOKENS_ALL.find(x=>x.sym===fAgora))||{}).dec || 18;   // 16/10: efixDI (18) entrou no par
   if(fAgora!==q.from || tAgora!==q.to || weiDeToken($('swAmt').value, decAgora)!==q.wei){
     trocarLimpa();
     m.className='mmsg err'; m.textContent='Os dados mudaram — cote de novo antes de confirmar.';
@@ -4782,10 +4846,20 @@ async function trocarOnchain(){
     if(bal < q.wei){ m.className='mmsg err'; m.textContent='saldo de '+q.from+' insuficiente'; return; }
     // reserva DISPONÍVEL (o contrato exige saldo ≥ saída + fees acumuladas;
     // balanceOf cru liberava swap que reverte por InsufficientReserve)
-    const rr = await psmRead(PSM_SEL.reserves);
-    if(!rr || rr.length < 130){ m.className='mmsg err'; m.textContent='não consegui ler a reserva do PSM agora'; return; }
-    const resBrl = BigInt('0x'+rr.slice(2,66)), resUsdc = BigInt('0x'+rr.slice(66,130));
-    const res = q.par==='b2u' ? resUsdc : resBrl;
+    let res;
+    if(q.lite){
+      // PSMLite: reserves() = (usdc, efixDI) em saldo bruto; o contrato exige saldo ≥ saída + PISO
+      const rr = await psmlRead(PSML_SEL.reserves);
+      if(!rr || rr.length < 130){ m.className='mmsg err'; m.textContent='não consegui ler a reserva do PSM agora'; return; }
+      const bruto = q.par==='u2e' ? _w(rr, 1) : _w(rr, 0);
+      const piso = _w(await psmlRead(q.par==='u2e' ? PSML_SEL.floorEfix : PSML_SEL.floorUsdc), 0);
+      res = bruto > piso ? bruto - piso : 0n;
+    } else {
+      const rr = await psmRead(PSM_SEL.reserves);
+      if(!rr || rr.length < 130){ m.className='mmsg err'; m.textContent='não consegui ler a reserva do PSM agora'; return; }
+      const resBrl = BigInt('0x'+rr.slice(2,66)), resUsdc = BigInt('0x'+rr.slice(66,130));
+      res = q.par==='b2u' ? resUsdc : resBrl;
+    }
     if(res < q.out){
       m.className='mmsg err';
       m.textContent='A reserva do PSM não cobre esse valor agora ('+_fmtTok(res,q.decOut)+' '+q.to+' disponível). Tente menos.';
@@ -4819,11 +4893,12 @@ async function trocarOnchain(){
     // prova de que trocou. A prova é o saldo ter mudado.
     const antes = BigInt(await rpc('eth_call',[{to:tokTo.addr, data:'0x70a08231'+padHex(dona)},'latest'])||'0x0');
     b.textContent='Autorizando…';
-    await EfixWallet.sendUserOp(tokFrom.addr, '0x095ea7b3'+padHex(PSM_SWAP)+hex32(q.wei), '0x0', dona);
+    const alvo = q.lite ? PSML : PSM_SWAP;   // 16/10: approve e swap vão ao PSM do PAR cotado
+    const selSwap = q.lite ? (q.par==='u2e' ? PSML_SEL.u2e : PSML_SEL.e2u) : (q.par==='b2u' ? PSM_SEL.swapB2U : PSM_SEL.swapU2B);
+    await EfixWallet.sendUserOp(tokFrom.addr, '0x095ea7b3'+padHex(alvo)+hex32(q.wei), '0x0', dona);
     b.textContent='Trocando…';
     _swEnviado = true;   // a partir daqui NUNCA reoferecer o botão sem conferir
-    const tx = await EfixWallet.sendUserOp(PSM_SWAP,
-      (q.par==='b2u'?PSM_SEL.swapB2U:PSM_SEL.swapU2B)+hex32(q.wei)+hex32(minOut), '0x0', dona);
+    const tx = await EfixWallet.sendUserOp(alvo, selSwap+hex32(q.wei)+hex32(minOut), '0x0', dona);
     const depois = BigInt(await rpc('eth_call',[{to:tokTo.addr, data:'0x70a08231'+padHex(dona)},'latest'])||'0x0');
     const recebeu = depois > antes ? (depois - antes) : 0n;
     const link = '<a href="https://basescan.org/tx/'+tx+'" target="_blank" style="color:var(--mag)">'+String(tx).slice(0,12)+'…</a>';
