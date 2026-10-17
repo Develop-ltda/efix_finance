@@ -523,6 +523,16 @@ tr.grp:first-child td{padding-top:6px}
           <button class="oc" id="qk-tro" onclick="abrirTrocar()"><span class="badge">on-chain</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 8h11m0 0-3-3m3 3-3 3"/><path d="M17 16H6m0 0 3 3m-3-3 3-3"/></svg>Trocar</button>
           <button id="qk-ext" onclick="go('extrato')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v17l-2.5-1.7L14 21l-2-1.4L10 21l-2.5-1.7L5 21z"/><path d="M9 9h6m-6 4h6"/></svg>Extrato</button>
         </div>
+        <!-- 17/10: endereço COMPLETO da carteira sempre à vista (pedido Ernesto: o cliente transaciona on-chain).
+             Fonte = getUser().address, a MESMA do Receber; fora da Lobie e do ?view=. Ver _minhaCarteira(). -->
+        <div class="card" id="minha-carteira" style="display:none;font-size:13px;line-height:1.6">
+          <div class="up">sua carteira on-chain · rede Base · your on-chain wallet</div>
+          <div class="mono" id="mc-end" style="word-break:break-all;margin:4px 0 8px"></div>
+          <button type="button" class="hmini" id="mc-copiar" data-copy="" data-label="copiar endereço · copy">copiar endereço · copy</button>
+          <button type="button" class="hmini" onclick="abrirReceber()">QR · receber</button>
+          <a class="hmini" id="mc-scan" href="#" target="_blank" rel="noopener">basescan ↗</a>
+          <div class="muted" style="font-size:12px;margin-top:6px">Depósito on-chain: <b>só USDC na rede Base</b>. Para mandar tokens a outro endereço, use <b>Enviar</b>. · On-chain deposits: USDC on Base only. To send tokens out, use Enviar.</div>
+        </div>
 
         <div class="card" data-reveal style="animation-delay:.2s">
           <h2>Extrato consolidado <span class="up">web2 · web3</span></h2>
@@ -841,6 +851,8 @@ tr.grp:first-child td{padding-top:6px}
     <button type="button" class="mini on" role="tab" aria-selected="true" data-dep-aba="pix" style="padding:6px 12px" onclick="depAba('pix')">PIX</button>
     <button type="button" class="mini" role="tab" aria-selected="false" data-dep-aba="usd" style="padding:6px 12px;display:none" onclick="depAba('usd')">USD · ACH/Wire</button>
     <button type="button" class="mini" role="tab" aria-selected="false" data-dep-aba="eur" style="padding:6px 12px;display:none" onclick="depAba('eur')">EUR · SEPA</button>
+    <!-- 17/10: depósito on-chain para TODOS (fora da Lobie) — abre o Receber (endereço completo + QR + "só USDC na Base") -->
+    <button type="button" class="mini" role="tab" aria-selected="false" data-dep-aba="chain" style="padding:6px 12px;display:none" onclick="depAba('chain')">USDC · on-chain (Base)</button>
   </div>
   <div id="dep-fiat" style="display:none">
     <div class="refbox" style="display:block;text-align:left">
@@ -1668,6 +1680,7 @@ async function carregar(email, sessAddr){
 
 async function carregarCore(email, wallets){
   WALLETS = wallets;
+  try{ _minhaCarteira(); }catch(e){}   // 17/10: cartão do endereço completo (um erro aqui não aborta o carregar)
   maybeShowPosicao();
   maybeShowImoveis();   // aba Imóveis só para quem tem unidade Lobie
   // NAV + FX + CDI (fonte: efixdi-backend, público)
@@ -4967,6 +4980,19 @@ function _recAtalhos(){
   s.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); abrirReceber(); } });
 }
 try{ _recAtalhos(); }catch(e){}   // roda no carregamento: um erro aqui não pode abortar o resto do script
+// 17/10: cartão "sua carteira on-chain" na home — mesma fonte e mesmas travas do Receber (Lobie/?view= fora; sessão
+// numa carteira diferente da exibida = não mostra, para ninguém copiar o endereço errado)
+function _minhaCarteira(){
+  const c=$('minha-carteira'); if(!c) return;
+  if(IS_LOBIE || _recModoView() || !EfixAuth.isLoggedIn()){ c.style.display='none'; return; }
+  const addr=_onrAddr((EfixAuth.getUser()||{}).address);
+  const dona=_onrAddr(WALLETS[0]);
+  if(!addr || (dona && dona!==addr)){ c.style.display='none'; return; }
+  $('mc-end').innerHTML=_recGrupos(addr);
+  const b=$('mc-copiar'); b.dataset.copy=addr; b.textContent=b.dataset.label;
+  $('mc-scan').href='https://basescan.org/address/'+addr;
+  c.style.display='block';
+}
 
 /* QR mínimo (ISO/IEC 18004): modo byte, nível M, versões 1–40, máscara pela penalidade padrão — sem lib
    externa. _qrMatriz(txt[,mask]) → linhas de booleanos; _qrSvg(txt) → SVG com zona de silêncio de 4 módulos. */
@@ -5351,6 +5377,8 @@ function _onrAvisosHtml(avisos,sem){
 
 // abas do modal: PIX segue intocado; USD/EUR desenham o onramp
 function depAba(aba){
+  // 17/10: on-chain = o Receber (endereço completo + QR); não há formulário de depósito para isso
+  if(aba==='chain'){ fecharModal('mDep'); abrirReceber(); return; }
   if(aba!=='usd'&&aba!=='eur') aba='pix';
   _depAbaAtual=aba; _onrGen++; _onrPosLink=false;
   document.querySelectorAll('#depAbas [data-dep-aba]').forEach(b=>{ const on=b.dataset.depAba===aba; b.classList.toggle('on',on); b.setAttribute('aria-selected',on?'true':'false'); });
@@ -5362,9 +5390,13 @@ function depAba(aba){
 }
 // mostra só as abas das moedas liberadas (nenhuma = sem barra de abas, modal só PIX)
 function _depAbasAplicar(ms){
-  document.querySelectorAll('#depAbas [data-dep-aba]').forEach(b=>{ const c=b.dataset.depAba; if(c!=='pix') b.style.display=ms.includes(c)?'':'none'; });
-  $('depAbas').style.display=ms.length?'flex':'none';
-  if(_depAbaAtual==='pix') $('depTitulo').textContent=ms.length?'Depositar':'Depositar via PIX';
+  // 17/10: a aba on-chain aparece para todos fora da Lobie (receber na própria carteira não depende do onramp)
+  const chain = !IS_LOBIE && !_recModoView();
+  document.querySelectorAll('#depAbas [data-dep-aba]').forEach(b=>{ const c=b.dataset.depAba;
+    if(c==='chain') b.style.display=chain?'':'none'; else if(c!=='pix') b.style.display=ms.includes(c)?'':'none'; });
+  const algum = ms.length || chain;
+  $('depAbas').style.display=algum?'flex':'none';
+  if(_depAbaAtual==='pix') $('depTitulo').textContent=algum?'Depositar':'Depositar via PIX';
 }
 // ao abrir o modal: as abas USD/EUR só aparecem com 200 + enabled===true (sem resposta, erro, 404, 410 = modal só PIX)
 async function depAbasCarregar(aba){
